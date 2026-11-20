@@ -1,4 +1,8 @@
-# NekOS
+<h1>
+  <img src="master_assets/NekOS_logo.png" alt="Logo" width="32" height="32" align="center" />
+  NekOS
+</h1>
+
 
 <p align="center">
   <img src="main_assets/nekos_1.jpg" alt="NekOS 1" width="300" />
