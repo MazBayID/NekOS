@@ -373,10 +373,19 @@ private fun FavoriteSlot(
         app.icon.toBitmap(96, 96).asImageBitmap()
     }
     val touchSlop = LocalViewConfiguration.current.touchSlop
+    var dragOffset by remember { mutableStateOf(Offset.Zero) }
+    var isDragging by remember { mutableStateOf(false) }
 
     Column(
         modifier = modifier
             .aspectRatio(1f)
+            .graphicsLayer {
+                translationX = dragOffset.x
+                translationY = dragOffset.y
+                scaleX = if (isDragging) 1.08f else 1f
+                scaleY = if (isDragging) 1.08f else 1f
+                shadowElevation = if (isDragging) 12.dp.toPx() else 0f
+            }
             .pointerInput(slotIndex, cellSizePx, cellGapPx, app?.packageName) {
                 var dragStart = Offset.Zero
                 var dragDistance = Offset.Zero
@@ -386,14 +395,19 @@ private fun FavoriteSlot(
                     onDragStart = {
                         dragStart = it
                         dragDistance = Offset.Zero
+                        dragOffset = Offset.Zero
+                        isDragging = true
                         hasMoved = false
                     },
                     onDrag = { change, dragAmount ->
                         dragDistance += dragAmount
+                        dragOffset += dragAmount
                         if (dragDistance.getDistance() > touchSlop) hasMoved = true
                         change.consume()
                     },
                     onDragEnd = {
+                        isDragging = false
+                        dragOffset = Offset.Zero
                         if (app != null) {
                             if (hasMoved) {
                                 val columnDelta = (
@@ -413,6 +427,8 @@ private fun FavoriteSlot(
                         }
                     },
                     onDragCancel = {
+                        isDragging = false
+                        dragOffset = Offset.Zero
                         if (app != null && !hasMoved) onLongPress()
                     }
                 )
