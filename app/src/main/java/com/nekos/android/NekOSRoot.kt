@@ -8,6 +8,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.produceState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -202,53 +203,54 @@ private fun HomeScreen(
             .statusBarsPadding()
             .navigationBarsPadding()
             .pointerInput(drawerOpenThresholdPx) {
-                // Keep suspendable Animatable updates outside awaitEachGesture's
-                // restricted scope. A conflated channel retains only the newest
-                // drag position while a single worker processes updates in order.
-                val dragEvents = Channel<Pair<Float, Boolean>>(capacity = Channel.CONFLATED)
-                val dragUpdater = launch {
-                    for ((totalDrag, ended) in dragEvents) {
-                        if (ended) {
-                            onDrawerDragEnd(totalDrag)
-                        } else {
-                            onDrawerDrag(totalDrag)
-                        }
-                    }
-                }
-
-                try {
-                    awaitEachGesture {
-                        val down = awaitFirstDown(requireUnconsumed = false)
-                        var totalDrag = 0f
-                        var acceptedUpwardDrag = false
-
-                        val dragStart = awaitVerticalTouchSlopOrCancellation(down.id) { change, overSlop ->
-                            if (overSlop < 0f) {
-                                acceptedUpwardDrag = true
-                                totalDrag = overSlop - viewConfiguration.touchSlop
-                                change.consume()
+                coroutineScope {
+                    // Animatable updates run in this child coroutine, outside
+                    // awaitEachGesture's restricted pointer-event scope.
+                    val dragEvents = Channel<Pair<Float, Boolean>>(capacity = Channel.CONFLATED)
+                    val dragUpdater = launch {
+                        for ((totalDrag, ended) in dragEvents) {
+                            if (ended) {
+                                onDrawerDragEnd(totalDrag)
+                            } else {
+                                onDrawerDrag(totalDrag)
                             }
                         }
+                    }
 
-                        if (dragStart != null && acceptedUpwardDrag) {
-                            dragEvents.trySend(totalDrag to false)
+                    try {
+                        awaitEachGesture {
+                            val down = awaitFirstDown(requireUnconsumed = false)
+                            var totalDrag = 0f
+                            var acceptedUpwardDrag = false
 
-                            var change = dragStart
-                            while (change != null && change.pressed) {
-                                change = awaitVerticalDragOrCancellation(change.id)
-                                if (change != null && change.pressed) {
-                                    totalDrag += change.positionChange().y
-                                    dragEvents.trySend(totalDrag.coerceAtMost(0f) to false)
+                            val dragStart = awaitVerticalTouchSlopOrCancellation(down.id) { change, overSlop ->
+                                if (overSlop < 0f) {
+                                    acceptedUpwardDrag = true
+                                    totalDrag = overSlop - viewConfiguration.touchSlop
                                     change.consume()
                                 }
                             }
 
-                            dragEvents.trySend(totalDrag to true)
+                            if (dragStart != null && acceptedUpwardDrag) {
+                                dragEvents.trySend(totalDrag to false)
+
+                                var change = dragStart
+                                while (change != null && change.pressed) {
+                                    change = awaitVerticalDragOrCancellation(change.id)
+                                    if (change != null && change.pressed) {
+                                        totalDrag += change.positionChange().y
+                                        dragEvents.trySend(totalDrag.coerceAtMost(0f) to false)
+                                        change.consume()
+                                    }
+                                }
+
+                                dragEvents.trySend(totalDrag to true)
+                            }
                         }
+                    } finally {
+                        dragEvents.close()
+                        dragUpdater.cancel()
                     }
-                } finally {
-                    dragEvents.close()
-                    dragUpdater.cancel()
                 }
             }
             .padding(horizontal = 24.dp, vertical = 26.dp),
