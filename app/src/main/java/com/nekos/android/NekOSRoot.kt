@@ -136,10 +136,17 @@ private fun FavoritesPlaceholder() {
 }
 
 @Composable
+@Composable
 private fun AppDrawer(
     apps: List<InstalledApp>,
     onAppClick: (InstalledApp) -> Unit
 ) {
+    var searchQuery by remember { mutableStateOf("") }
+    val filteredApps = remember(apps, searchQuery) {
+        if (searchQuery.isBlank()) apps
+        else apps.filter { it.label.contains(searchQuery.trim(), ignoreCase = true) }
+    }
+
     Column(modifier = Modifier.fillMaxSize().padding(top = 22.dp)) {
         Text(
             "Applications",
@@ -148,15 +155,28 @@ private fun AppDrawer(
             fontWeight = FontWeight.SemiBold,
             modifier = Modifier.padding(horizontal = 22.dp, vertical = 12.dp)
         )
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(5),
-            contentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 28.dp),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
-            modifier = Modifier.fillMaxSize()
-        ) {
-            items(apps, key = { it.packageName }) { app ->
-                AppGridItem(app = app, onClick = { onAppClick(app) })
+        TextField(
+            value = searchQuery,
+            onValueChange = { searchQuery = it },
+            placeholder = { Text("Search apps") },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)
+        )
+        if (filteredApps.isEmpty()) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("No apps found", color = Muted)
+            }
+        } else {
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(5),
+                contentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 28.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp),
+                modifier = Modifier.fillMaxSize()
+            ) {
+                items(filteredApps, key = { it.packageName }) { app ->
+                    AppGridItem(app = app, onClick = { onAppClick(app) })
+                }
             }
         }
     }
