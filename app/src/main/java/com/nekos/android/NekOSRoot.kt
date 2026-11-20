@@ -7,15 +7,21 @@ import androidx.compose.animation.core.spring
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.BlurEffect
 import androidx.compose.ui.graphics.TileMode
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.layout.ContentScale
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.produceState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.background
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
@@ -60,6 +66,27 @@ private val TagSurface = Color(0xFFE7E1D6)
 
 @Composable
 fun NekOSRoot() {
+    var showBrandSplash by remember { mutableStateOf(true) }
+    LaunchedEffect(Unit) {
+        delay(900L)
+        showBrandSplash = false
+    }
+
+    if (showBrandSplash) {
+        Box(
+            modifier = Modifier.fillMaxSize().background(WarmBackground),
+            contentAlignment = Alignment.Center
+        ) {
+            Image(
+                painter = painterResource(R.drawable.nekos_text_logo),
+                contentDescription = "NekOS",
+                contentScale = ContentScale.Fit,
+                modifier = Modifier.fillMaxWidth(0.84f)
+            )
+        }
+        return
+    }
+
     val context = LocalContext.current
     val apps by remember { mutableStateOf(loadLaunchableApps(context)) }
     val iconBitmapCache = remember(apps) {
@@ -219,6 +246,18 @@ private fun HomeScreen(
     onFavoriteLongPress: (Int) -> Unit
 ) {
     val appByPackage = remember(apps) { apps.associateBy { it.packageName } }
+    var clockText by remember {
+        mutableStateOf(LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")))
+    }
+    LaunchedEffect(Unit) {
+        while (true) {
+            val now = LocalTime.now()
+            clockText = now.format(DateTimeFormatter.ofPattern("HH:mm"))
+            val millisToNextMinute =
+                60_000L - (now.second * 1_000L + now.nano / 1_000_000L)
+            delay(millisToNextMinute.coerceAtLeast(1L))
+        }
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -265,7 +304,7 @@ private fun HomeScreen(
         verticalArrangement = Arrangement.SpaceBetween
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
-            Text("NekOS", color = Ink, fontSize = 27.sp, fontWeight = FontWeight.SemiBold)
+            Text(clockText, color = Ink, fontSize = 27.sp, fontWeight = FontWeight.SemiBold)
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) { TagPill("Your tags") }
         }
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
