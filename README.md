@@ -1,5 +1,5 @@
 <h1>
-  <img src="main_assets/app_logo.jpg" alt="Logo" width="32" height="32" align="center" />
+  <img src="main_assets/app_logo.png" alt="Logo" width="32" height="32" align="center" />
   NekOS
 </h1>
 
