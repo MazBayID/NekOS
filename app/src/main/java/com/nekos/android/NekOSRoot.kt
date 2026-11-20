@@ -90,9 +90,6 @@ fun NekOSRoot(refreshToken: Int) {
 
     val context = LocalContext.current
     var apps by remember { mutableStateOf(loadLaunchableApps(context)) }
-    LaunchedEffect(refreshToken) {
-        apps = loadLaunchableApps(context)
-    }
     val iconBitmapCache = remember(apps) {
         mutableMapOf<String, androidx.compose.ui.graphics.ImageBitmap>()
     }
@@ -128,6 +125,19 @@ fun NekOSRoot(refreshToken: Int) {
         val moved = updated.removeAt(from)
         updated.add(to.coerceIn(0, updated.lastIndex), moved)
         updateFavorites(updated)
+    }
+
+    LaunchedEffect(refreshToken) {
+        val refreshedApps = loadLaunchableApps(context)
+        apps = refreshedApps
+        val installedPackages = refreshedApps.mapTo(mutableSetOf()) { it.packageName }
+        val cleanedFavorites = favoritePackages.map { packageName ->
+            packageName?.takeIf { it in installedPackages }
+        }
+        if (cleanedFavorites != favoritePackages) {
+            favoritePackages = cleanedFavorites
+            saveFavoritePackages(context, cleanedFavorites)
+        }
     }
 
     BoxWithConstraints(Modifier.fillMaxSize().background(WarmBackground)) {
