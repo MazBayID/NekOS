@@ -31,7 +31,8 @@ NekOS uses a single Activity with Jetpack Compose. Keep the Activity responsible
 
 - `main_assets/ikon/icons_index.json` and `main_assets/ikon/ui_index.json` are the machine-readable catalogs.
 - The matching Markdown files are human-readable references only.
-- Catalog paths are relative to `main_assets/ikon/`; UI icons resolve under `ui/`, and tag/catalog icons under `icons/`.
+- Tag icon filenames in `icons_index.json` are relative to the `icons/` directory; UI icon paths in `ui_index.json` are relative to `main_assets/ikon/` and begin with `ui/`.
+- The runtime tag catalog is bundled under `app/src/main/assets/ikon/`; its copied JSON paths are normalized to begin with `icons/` so they resolve relative to the bundled index.
 - Keep source PNGs untouched. Copy only selected runtime assets into the Android app until the icon-picker/catalog pipeline is implemented.
 - Keep source icon IDs and filenames intact when mapping them into app resources.
 
