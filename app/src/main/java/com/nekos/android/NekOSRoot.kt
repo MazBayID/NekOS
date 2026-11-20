@@ -66,7 +66,7 @@ private val Muted = Color(0xFF8B8982)
 private val TagSurface = Color(0xFFE7E1D6)
 
 @Composable
-fun NekOSRoot() {
+fun NekOSRoot(refreshToken: Int) {
     var showBrandSplash by remember { mutableStateOf(true) }
     LaunchedEffect(Unit) {
         delay(900L)
@@ -89,7 +89,10 @@ fun NekOSRoot() {
     }
 
     val context = LocalContext.current
-    val apps by remember { mutableStateOf(loadLaunchableApps(context)) }
+    var apps by remember { mutableStateOf(loadLaunchableApps(context)) }
+    LaunchedEffect(refreshToken) {
+        apps = loadLaunchableApps(context)
+    }
     val iconBitmapCache = remember(apps) {
         mutableMapOf<String, androidx.compose.ui.graphics.ImageBitmap>()
     }

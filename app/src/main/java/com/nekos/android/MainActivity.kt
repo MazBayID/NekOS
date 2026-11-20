@@ -8,10 +8,19 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 
 class MainActivity : ComponentActivity() {
+    private var appRefreshToken by mutableIntStateOf(0)
+
+    override fun onResume() {
+        super.onResume()
+        appRefreshToken++
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
@@ -25,7 +34,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             MaterialTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    NekOSRoot()
+                    NekOSRoot(refreshToken = appRefreshToken)
                 }
             }
         }
