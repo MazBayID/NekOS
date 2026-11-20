@@ -337,6 +337,7 @@ private fun AppDrawer(
     onCloseDrawer: () -> Unit
 ) {
     var searchQuery by remember { mutableStateOf("") }
+    val currentOnCloseDrawer by rememberUpdatedState(onCloseDrawer)
     val filteredApps = remember(apps, searchQuery) {
         val query = searchQuery.trim()
         if (query.isBlank()) apps
@@ -354,12 +355,12 @@ private fun AppDrawer(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(38.dp)
-                .pointerInput(onCloseDrawer) {
+                .pointerInput(Unit) {
                     var totalDrag = 0f
                     detectVerticalDragGestures(
                         onVerticalDrag = { _, dragAmount -> totalDrag += dragAmount },
                         onDragEnd = {
-                            if (totalDrag > 45f) onCloseDrawer()
+                            if (totalDrag > 45f) currentOnCloseDrawer()
                             totalDrag = 0f
                         },
                         onDragCancel = { totalDrag = 0f }
@@ -394,7 +395,7 @@ private fun AppDrawer(
         } else {
             val gridState = rememberLazyGridState()
             val closeThreshold = with(androidx.compose.ui.platform.LocalDensity.current) { 72.dp.toPx() }
-            val closeConnection = remember(gridState, closeThreshold, onCloseDrawer) {
+            val closeConnection = remember(gridState, closeThreshold) {
                 object : NestedScrollConnection {
                     private var gestureActive = false
                     private var closeEligibleForGesture = false
@@ -433,7 +434,7 @@ private fun AppDrawer(
                             downwardPull += available.y
                             if (downwardPull >= closeThreshold) {
                                 resetGesture()
-                                onCloseDrawer()
+                                currentOnCloseDrawer()
                                 return Offset(0f, available.y)
                             }
                         }
