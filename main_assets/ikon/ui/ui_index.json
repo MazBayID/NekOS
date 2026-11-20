@@ -1,0 +1,1087 @@
+{
+  "total": 120,
+  "size": "512x512",
+  "layout": "12 kolom x 10 baris",
+  "items": [
+    {
+      "id": 1,
+      "file": "icons/icon_001.png",
+      "row": 1,
+      "column": 1,
+      "name": "pencil",
+      "visual": "Pensil",
+      "description": "edit / tulis"
+    },
+    {
+      "id": 2,
+      "file": "icons/icon_002.png",
+      "row": 1,
+      "column": 2,
+      "name": "heart",
+      "visual": "Hati",
+      "description": "suka / favorit / kesehatan"
+    },
+    {
+      "id": 3,
+      "file": "icons/icon_003.png",
+      "row": 1,
+      "column": 3,
+      "name": "settings_a",
+      "visual": "Roda gigi",
+      "description": "pengaturan"
+    },
+    {
+      "id": 4,
+      "file": "icons/icon_004.png",
+      "row": 1,
+      "column": 4,
+      "name": "search_a",
+      "visual": "Kaca pembesar (garis)",
+      "description": "pencarian"
+    },
+    {
+      "id": 5,
+      "file": "icons/icon_005.png",
+      "row": 1,
+      "column": 5,
+      "name": "search_b",
+      "visual": "Kaca pembesar (tebal/solid)",
+      "description": "pencarian varian"
+    },
+    {
+      "id": 6,
+      "file": "icons/icon_006.png",
+      "row": 1,
+      "column": 6,
+      "name": "home",
+      "visual": "Rumah",
+      "description": "beranda"
+    },
+    {
+      "id": 7,
+      "file": "icons/icon_007.png",
+      "row": 1,
+      "column": 7,
+      "name": "user",
+      "visual": "Siluet satu orang",
+      "description": "profil / akun"
+    },
+    {
+      "id": 8,
+      "file": "icons/icon_008.png",
+      "row": 1,
+      "column": 8,
+      "name": "group",
+      "visual": "Tiga siluet orang",
+      "description": "grup / komunitas / tim"
+    },
+    {
+      "id": 9,
+      "file": "icons/icon_009.png",
+      "row": 1,
+      "column": 9,
+      "name": "folder_a",
+      "visual": "Folder",
+      "description": "file manager / berkas"
+    },
+    {
+      "id": 10,
+      "file": "icons/icon_010.png",
+      "row": 1,
+      "column": 10,
+      "name": "folder_b",
+      "visual": "Folder (varian)",
+      "description": "folder alternatif"
+    },
+    {
+      "id": 11,
+      "file": "icons/icon_011.png",
+      "row": 1,
+      "column": 11,
+      "name": "document",
+      "visual": "Dokumen dengan teks",
+      "description": "file dokumen"
+    },
+    {
+      "id": 12,
+      "file": "icons/icon_012.png",
+      "row": 1,
+      "column": 12,
+      "name": "more_horizontal",
+      "visual": "Tiga titik horizontal",
+      "description": "menu lainnya / opsi"
+    },
+    {
+      "id": 13,
+      "file": "icons/icon_013.png",
+      "row": 2,
+      "column": 1,
+      "name": "star",
+      "visual": "Bintang",
+      "description": "favorit / rating"
+    },
+    {
+      "id": 14,
+      "file": "icons/icon_014.png",
+      "row": 2,
+      "column": 2,
+      "name": "bookmark",
+      "visual": "Penanda buku",
+      "description": "bookmark / simpan"
+    },
+    {
+      "id": 15,
+      "file": "icons/icon_015.png",
+      "row": 2,
+      "column": 3,
+      "name": "tag",
+      "visual": "Label harga",
+      "description": "tag / label"
+    },
+    {
+      "id": 16,
+      "file": "icons/icon_016.png",
+      "row": 2,
+      "column": 4,
+      "name": "bell_a",
+      "visual": "Lonceng",
+      "description": "notifikasi"
+    },
+    {
+      "id": 17,
+      "file": "icons/icon_017.png",
+      "row": 2,
+      "column": 5,
+      "name": "bell_b",
+      "visual": "Lonceng (varian)",
+      "description": "notifikasi alternatif"
+    },
+    {
+      "id": 18,
+      "file": "icons/icon_018.png",
+      "row": 2,
+      "column": 6,
+      "name": "calendar_a",
+      "visual": "Kalender kosong",
+      "description": "kalender / jadwal"
+    },
+    {
+      "id": 19,
+      "file": "icons/icon_019.png",
+      "row": 2,
+      "column": 7,
+      "name": "calendar_day",
+      "visual": "Kalender dengan huruf L",
+      "description": "kalender dengan penanda hari / agenda"
+    },
+    {
+      "id": 20,
+      "file": "icons/icon_020.png",
+      "row": 2,
+      "column": 8,
+      "name": "alarm_a",
+      "visual": "Jam weker",
+      "description": "alarm"
+    },
+    {
+      "id": 21,
+      "file": "icons/icon_021.png",
+      "row": 2,
+      "column": 9,
+      "name": "alarm_b",
+      "visual": "Jam weker (varian)",
+      "description": "alarm alternatif"
+    },
+    {
+      "id": 22,
+      "file": "icons/icon_022.png",
+      "row": 2,
+      "column": 10,
+      "name": "brightness",
+      "visual": "Matahari bersinar",
+      "description": "kecerahan / mode terang"
+    },
+    {
+      "id": 23,
+      "file": "icons/icon_023.png",
+      "row": 2,
+      "column": 11,
+      "name": "location_a",
+      "visual": "Pin lokasi",
+      "description": "peta / lokasi"
+    },
+    {
+      "id": 24,
+      "file": "icons/icon_024.png",
+      "row": 2,
+      "column": 12,
+      "name": "location_b",
+      "visual": "Pin lokasi (varian)",
+      "description": "lokasi alternatif"
+    },
+    {
+      "id": 25,
+      "file": "icons/icon_025.png",
+      "row": 3,
+      "column": 1,
+      "name": "mail",
+      "visual": "Amplop",
+      "description": "email"
+    },
+    {
+      "id": 26,
+      "file": "icons/icon_026.png",
+      "row": 3,
+      "column": 2,
+      "name": "chat_dots",
+      "visual": "Gelembung chat dengan tiga titik",
+      "description": "pesan / obrolan"
+    },
+    {
+      "id": 27,
+      "file": "icons/icon_027.png",
+      "row": 3,
+      "column": 3,
+      "name": "chat_bubble",
+      "visual": "Gelembung chat polos",
+      "description": "komentar / pesan"
+    },
+    {
+      "id": 28,
+      "file": "icons/icon_028.png",
+      "row": 3,
+      "column": 4,
+      "name": "reply",
+      "visual": "Panah balik melengkung ke kiri",
+      "description": "balas"
+    },
+    {
+      "id": 29,
+      "file": "icons/icon_029.png",
+      "row": 3,
+      "column": 5,
+      "name": "forward",
+      "visual": "Panah melengkung ke kanan",
+      "description": "teruskan"
+    },
+    {
+      "id": 30,
+      "file": "icons/icon_030.png",
+      "row": 3,
+      "column": 6,
+      "name": "arrow_right",
+      "visual": "Panah tebal ke kanan",
+      "description": "lanjut / berikutnya"
+    },
+    {
+      "id": 31,
+      "file": "icons/icon_031.png",
+      "row": 3,
+      "column": 7,
+      "name": "share",
+      "visual": "Tiga titik terhubung",
+      "description": "bagikan"
+    },
+    {
+      "id": 32,
+      "file": "icons/icon_032.png",
+      "row": 3,
+      "column": 8,
+      "name": "attachment",
+      "visual": "Klip kertas",
+      "description": "lampiran"
+    },
+    {
+      "id": 33,
+      "file": "icons/icon_033.png",
+      "row": 3,
+      "column": 9,
+      "name": "link_a",
+      "visual": "Rantai",
+      "description": "tautan / link"
+    },
+    {
+      "id": 34,
+      "file": "icons/icon_034.png",
+      "row": 3,
+      "column": 10,
+      "name": "link_b",
+      "visual": "Rantai (varian)",
+      "description": "tautan alternatif"
+    },
+    {
+      "id": 35,
+      "file": "icons/icon_035.png",
+      "row": 3,
+      "column": 11,
+      "name": "image",
+      "visual": "Bingkai foto dengan gunung",
+      "description": "galeri / gambar"
+    },
+    {
+      "id": 36,
+      "file": "icons/icon_036.png",
+      "row": 3,
+      "column": 12,
+      "name": "camera",
+      "visual": "Kamera",
+      "description": "kamera / foto"
+    },
+    {
+      "id": 37,
+      "file": "icons/icon_037.png",
+      "row": 4,
+      "column": 1,
+      "name": "play",
+      "visual": "Tombol play dalam lingkaran",
+      "description": "putar media / video"
+    },
+    {
+      "id": 38,
+      "file": "icons/icon_038.png",
+      "row": 4,
+      "column": 2,
+      "name": "music",
+      "visual": "Not musik",
+      "description": "musik / audio"
+    },
+    {
+      "id": 39,
+      "file": "icons/icon_039.png",
+      "row": 4,
+      "column": 3,
+      "name": "microphone",
+      "visual": "Mikrofon",
+      "description": "rekam suara / input suara"
+    },
+    {
+      "id": 40,
+      "file": "icons/icon_040.png",
+      "row": 4,
+      "column": 4,
+      "name": "volume",
+      "visual": "Speaker dengan gelombang",
+      "description": "volume / suara"
+    },
+    {
+      "id": 41,
+      "file": "icons/icon_041.png",
+      "row": 4,
+      "column": 5,
+      "name": "volume_mute",
+      "visual": "Speaker dengan tanda silang",
+      "description": "senyap / mute"
+    },
+    {
+      "id": 42,
+      "file": "icons/icon_042.png",
+      "row": 4,
+      "column": 6,
+      "name": "battery_a",
+      "visual": "Baterai",
+      "description": "status baterai"
+    },
+    {
+      "id": 43,
+      "file": "icons/icon_043.png",
+      "row": 4,
+      "column": 7,
+      "name": "battery_b",
+      "visual": "Baterai (varian)",
+      "description": "status baterai alternatif"
+    },
+    {
+      "id": 44,
+      "file": "icons/icon_044.png",
+      "row": 4,
+      "column": 8,
+      "name": "wifi",
+      "visual": "Sinyal Wi-Fi",
+      "description": "Wi-Fi"
+    },
+    {
+      "id": 45,
+      "file": "icons/icon_045.png",
+      "row": 4,
+      "column": 9,
+      "name": "bluetooth",
+      "visual": "Simbol Bluetooth",
+      "description": "Bluetooth"
+    },
+    {
+      "id": 46,
+      "file": "icons/icon_046.png",
+      "row": 4,
+      "column": 10,
+      "name": "nfc",
+      "visual": "Huruf N (NFC)",
+      "description": "NFC / pembayaran nirsentuh"
+    },
+    {
+      "id": 47,
+      "file": "icons/icon_047.png",
+      "row": 4,
+      "column": 11,
+      "name": "flashlight_a",
+      "visual": "Senter",
+      "description": "senter / lampu LED"
+    },
+    {
+      "id": 48,
+      "file": "icons/icon_048.png",
+      "row": 4,
+      "column": 12,
+      "name": "flashlight_b",
+      "visual": "Senter (varian)",
+      "description": "senter alternatif"
+    },
+    {
+      "id": 49,
+      "file": "icons/icon_049.png",
+      "row": 5,
+      "column": 1,
+      "name": "refresh",
+      "visual": "Satu panah melingkar",
+      "description": "muat ulang / refresh"
+    },
+    {
+      "id": 50,
+      "file": "icons/icon_050.png",
+      "row": 5,
+      "column": 2,
+      "name": "sync_a",
+      "visual": "Dua panah melingkar",
+      "description": "sinkronisasi"
+    },
+    {
+      "id": 51,
+      "file": "icons/icon_051.png",
+      "row": 5,
+      "column": 3,
+      "name": "backup_restore",
+      "visual": "Panah turun dalam lingkaran melengkung",
+      "description": "cadangan / pulihkan"
+    },
+    {
+      "id": 52,
+      "file": "icons/icon_052.png",
+      "row": 5,
+      "column": 4,
+      "name": "download",
+      "visual": "Panah turun ke garis",
+      "description": "unduh"
+    },
+    {
+      "id": 53,
+      "file": "icons/icon_053.png",
+      "row": 5,
+      "column": 5,
+      "name": "upload",
+      "visual": "Panah naik dari garis",
+      "description": "unggah"
+    },
+    {
+      "id": 54,
+      "file": "icons/icon_054.png",
+      "row": 5,
+      "column": 6,
+      "name": "cloud",
+      "visual": "Awan",
+      "description": "cloud / penyimpanan awan"
+    },
+    {
+      "id": 55,
+      "file": "icons/icon_055.png",
+      "row": 5,
+      "column": 7,
+      "name": "cloud_upload_a",
+      "visual": "Awan dengan panah naik",
+      "description": "unggah ke cloud / backup"
+    },
+    {
+      "id": 56,
+      "file": "icons/icon_056.png",
+      "row": 5,
+      "column": 8,
+      "name": "cloud_upload_b",
+      "visual": "Awan dengan panah naik (varian)",
+      "description": "unggah ke cloud alternatif"
+    },
+    {
+      "id": 57,
+      "file": "icons/icon_057.png",
+      "row": 5,
+      "column": 9,
+      "name": "database_a",
+      "visual": "Silinder database",
+      "description": "database / data"
+    },
+    {
+      "id": 58,
+      "file": "icons/icon_058.png",
+      "row": 5,
+      "column": 10,
+      "name": "database_b",
+      "visual": "Silinder database (varian)",
+      "description": "database alternatif"
+    },
+    {
+      "id": 59,
+      "file": "icons/icon_059.png",
+      "row": 5,
+      "column": 11,
+      "name": "network",
+      "visual": "Diagram hierarki jaringan",
+      "description": "jaringan / struktur"
+    },
+    {
+      "id": 60,
+      "file": "icons/icon_060.png",
+      "row": 5,
+      "column": 12,
+      "name": "shield_check",
+      "visual": "Perisai dengan centang",
+      "description": "keamanan terverifikasi / proteksi aktif"
+    },
+    {
+      "id": 61,
+      "file": "icons/icon_061.png",
+      "row": 6,
+      "column": 1,
+      "name": "lock",
+      "visual": "Gembok tertutup",
+      "description": "kunci / terkunci"
+    },
+    {
+      "id": 62,
+      "file": "icons/icon_062.png",
+      "row": 6,
+      "column": 2,
+      "name": "unlock",
+      "visual": "Gembok terbuka",
+      "description": "buka kunci"
+    },
+    {
+      "id": 63,
+      "file": "icons/icon_063.png",
+      "row": 6,
+      "column": 3,
+      "name": "key",
+      "visual": "Kunci",
+      "description": "kata sandi / akses"
+    },
+    {
+      "id": 64,
+      "file": "icons/icon_064.png",
+      "row": 6,
+      "column": 4,
+      "name": "dialpad",
+      "visual": "Papan tombol titik-titik",
+      "description": "dial pad / keypad"
+    },
+    {
+      "id": 65,
+      "file": "icons/icon_065.png",
+      "row": 6,
+      "column": 5,
+      "name": "calculator",
+      "visual": "Kalkulator",
+      "description": "kalkulator"
+    },
+    {
+      "id": 66,
+      "file": "icons/icon_066.png",
+      "row": 6,
+      "column": 6,
+      "name": "ruler",
+      "visual": "Penggaris",
+      "description": "ukur / penggaris"
+    },
+    {
+      "id": 67,
+      "file": "icons/icon_067.png",
+      "row": 6,
+      "column": 7,
+      "name": "ruler_pencil",
+      "visual": "Penggaris dengan pensil",
+      "description": "desain / gambar teknis"
+    },
+    {
+      "id": 68,
+      "file": "icons/icon_068.png",
+      "row": 6,
+      "column": 8,
+      "name": "compass",
+      "visual": "Kompas",
+      "description": "kompas / navigasi"
+    },
+    {
+      "id": 69,
+      "file": "icons/icon_069.png",
+      "row": 6,
+      "column": 9,
+      "name": "barcode",
+      "visual": "Barcode",
+      "description": "pemindai barcode"
+    },
+    {
+      "id": 70,
+      "file": "icons/icon_070.png",
+      "row": 6,
+      "column": 10,
+      "name": "qr_code",
+      "visual": "Kode QR",
+      "description": "pemindai QR"
+    },
+    {
+      "id": 71,
+      "file": "icons/icon_071.png",
+      "row": 6,
+      "column": 11,
+      "name": "fingerprint_a",
+      "visual": "Sidik jari",
+      "description": "biometrik"
+    },
+    {
+      "id": 72,
+      "file": "icons/icon_072.png",
+      "row": 6,
+      "column": 12,
+      "name": "fingerprint_b",
+      "visual": "Sidik jari (varian)",
+      "description": "biometrik alternatif"
+    },
+    {
+      "id": 73,
+      "file": "icons/icon_073.png",
+      "row": 7,
+      "column": 1,
+      "name": "printer",
+      "visual": "Printer",
+      "description": "cetak"
+    },
+    {
+      "id": 74,
+      "file": "icons/icon_074.png",
+      "row": 7,
+      "column": 2,
+      "name": "scan_frame",
+      "visual": "Bingkai pemindai dengan garis tengah",
+      "description": "pindai / screenshot / pemindai dokumen"
+    },
+    {
+      "id": 75,
+      "file": "icons/icon_075.png",
+      "row": 7,
+      "column": 3,
+      "name": "cast",
+      "visual": "Layar dengan sinyal cast",
+      "description": "cast layar / mirroring"
+    },
+    {
+      "id": 76,
+      "file": "icons/icon_076.png",
+      "row": 7,
+      "column": 4,
+      "name": "monitor",
+      "visual": "Monitor desktop",
+      "description": "layar / komputer"
+    },
+    {
+      "id": 77,
+      "file": "icons/icon_077.png",
+      "row": 7,
+      "column": 5,
+      "name": "tv",
+      "visual": "Televisi / layar datar",
+      "description": "TV / layar"
+    },
+    {
+      "id": 78,
+      "file": "icons/icon_078.png",
+      "row": 7,
+      "column": 6,
+      "name": "tablet",
+      "visual": "Tablet",
+      "description": "perangkat tablet"
+    },
+    {
+      "id": 79,
+      "file": "icons/icon_079.png",
+      "row": 7,
+      "column": 7,
+      "name": "phone",
+      "visual": "Ponsel",
+      "description": "perangkat ponsel"
+    },
+    {
+      "id": 80,
+      "file": "icons/icon_080.png",
+      "row": 7,
+      "column": 8,
+      "name": "vr_headset",
+      "visual": "Headset VR",
+      "description": "realitas virtual / VR"
+    },
+    {
+      "id": 81,
+      "file": "icons/icon_081.png",
+      "row": 7,
+      "column": 9,
+      "name": "gamepad",
+      "visual": "Stik game",
+      "description": "game / hiburan"
+    },
+    {
+      "id": 82,
+      "file": "icons/icon_082.png",
+      "row": 7,
+      "column": 10,
+      "name": "palette",
+      "visual": "Palet cat",
+      "description": "tema / warna / personalisasi"
+    },
+    {
+      "id": 83,
+      "file": "icons/icon_083.png",
+      "row": 7,
+      "column": 11,
+      "name": "brush_a",
+      "visual": "Kuas",
+      "description": "lukis / edit"
+    },
+    {
+      "id": 84,
+      "file": "icons/icon_084.png",
+      "row": 7,
+      "column": 12,
+      "name": "brush_b",
+      "visual": "Kuas (varian)",
+      "description": "lukis / edit alternatif"
+    },
+    {
+      "id": 85,
+      "file": "icons/icon_085.png",
+      "row": 8,
+      "column": 1,
+      "name": "add",
+      "visual": "Tanda plus",
+      "description": "tambah"
+    },
+    {
+      "id": 86,
+      "file": "icons/icon_086.png",
+      "row": 8,
+      "column": 2,
+      "name": "remove",
+      "visual": "Tanda minus",
+      "description": "kurangi / hapus item"
+    },
+    {
+      "id": 87,
+      "file": "icons/icon_087.png",
+      "row": 8,
+      "column": 3,
+      "name": "trash",
+      "visual": "Tempat sampah",
+      "description": "hapus / sampah"
+    },
+    {
+      "id": 88,
+      "file": "icons/icon_088.png",
+      "row": 8,
+      "column": 4,
+      "name": "archive",
+      "visual": "Kotak arsip",
+      "description": "arsip"
+    },
+    {
+      "id": 89,
+      "file": "icons/icon_089.png",
+      "row": 8,
+      "column": 5,
+      "name": "translate",
+      "visual": "Huruf 文 dan A",
+      "description": "terjemahan / bahasa"
+    },
+    {
+      "id": 90,
+      "file": "icons/icon_090.png",
+      "row": 8,
+      "column": 6,
+      "name": "edit_square",
+      "visual": "Kotak dengan pensil",
+      "description": "tulis / edit catatan"
+    },
+    {
+      "id": 91,
+      "file": "icons/icon_091.png",
+      "row": 8,
+      "column": 7,
+      "name": "clipboard",
+      "visual": "Papan klip",
+      "description": "tempel / clipboard"
+    },
+    {
+      "id": 92,
+      "file": "icons/icon_092.png",
+      "row": 8,
+      "column": 8,
+      "name": "clipboard_copy",
+      "visual": "Papan klip dengan dokumen ganda",
+      "description": "salin / clipboard"
+    },
+    {
+      "id": 93,
+      "file": "icons/icon_093.png",
+      "row": 8,
+      "column": 9,
+      "name": "cut",
+      "visual": "Gunting",
+      "description": "potong"
+    },
+    {
+      "id": 94,
+      "file": "icons/icon_094.png",
+      "row": 8,
+      "column": 10,
+      "name": "undo_a",
+      "visual": "Panah melengkung ke kiri",
+      "description": "urungkan"
+    },
+    {
+      "id": 95,
+      "file": "icons/icon_095.png",
+      "row": 8,
+      "column": 11,
+      "name": "undo_b",
+      "visual": "Panah melengkung ke kiri (varian)",
+      "description": "urungkan alternatif"
+    },
+    {
+      "id": 96,
+      "file": "icons/icon_096.png",
+      "row": 8,
+      "column": 12,
+      "name": "redo",
+      "visual": "Panah melengkung ke kanan",
+      "description": "ulangi"
+    },
+    {
+      "id": 97,
+      "file": "icons/icon_097.png",
+      "row": 9,
+      "column": 1,
+      "name": "power",
+      "visual": "Simbol power",
+      "description": "daya / matikan"
+    },
+    {
+      "id": 98,
+      "file": "icons/icon_098.png",
+      "row": 9,
+      "column": 2,
+      "name": "reload",
+      "visual": "Panah melingkar tunggal",
+      "description": "muat ulang / reload"
+    },
+    {
+      "id": 99,
+      "file": "icons/icon_099.png",
+      "row": 9,
+      "column": 3,
+      "name": "eject",
+      "visual": "Simbol eject",
+      "description": "keluarkan media"
+    },
+    {
+      "id": 100,
+      "file": "icons/icon_100.png",
+      "row": 9,
+      "column": 4,
+      "name": "sort_updown",
+      "visual": "Panah naik-turun bersusun",
+      "description": "urutkan / geser vertikal"
+    },
+    {
+      "id": 101,
+      "file": "icons/icon_101.png",
+      "row": 9,
+      "column": 5,
+      "name": "swap_vertical",
+      "visual": "Panah dua arah vertikal",
+      "description": "tukar / ubah ukuran vertikal"
+    },
+    {
+      "id": 102,
+      "file": "icons/icon_102.png",
+      "row": 9,
+      "column": 6,
+      "name": "filter",
+      "visual": "Corong",
+      "description": "filter"
+    },
+    {
+      "id": 103,
+      "file": "icons/icon_103.png",
+      "row": 9,
+      "column": 7,
+      "name": "zoom_in",
+      "visual": "Kaca pembesar dengan plus",
+      "description": "perbesar"
+    },
+    {
+      "id": 104,
+      "file": "icons/icon_104.png",
+      "row": 9,
+      "column": 8,
+      "name": "zoom_out",
+      "visual": "Kaca pembesar dengan minus",
+      "description": "perkecil"
+    },
+    {
+      "id": 105,
+      "file": "icons/icon_105.png",
+      "row": 9,
+      "column": 9,
+      "name": "fullscreen",
+      "visual": "Empat panah ke sudut",
+      "description": "layar penuh / perluas"
+    },
+    {
+      "id": 106,
+      "file": "icons/icon_106.png",
+      "row": 9,
+      "column": 10,
+      "name": "crop_a",
+      "visual": "Alat potong gambar",
+      "description": "crop / pangkas"
+    },
+    {
+      "id": 107,
+      "file": "icons/icon_107.png",
+      "row": 9,
+      "column": 11,
+      "name": "crop_b",
+      "visual": "Alat potong gambar (varian)",
+      "description": "crop alternatif"
+    },
+    {
+      "id": 108,
+      "file": "icons/icon_108.png",
+      "row": 9,
+      "column": 12,
+      "name": "sync_b",
+      "visual": "Dua panah melingkar (varian)",
+      "description": "sinkronisasi alternatif"
+    },
+    {
+      "id": 109,
+      "file": "icons/icon_109.png",
+      "row": 10,
+      "column": 1,
+      "name": "check",
+      "visual": "Tanda centang",
+      "description": "selesai / benar / setuju"
+    },
+    {
+      "id": 110,
+      "file": "icons/icon_110.png",
+      "row": 10,
+      "column": 2,
+      "name": "close",
+      "visual": "Tanda silang",
+      "description": "tutup / batal"
+    },
+    {
+      "id": 111,
+      "file": "icons/icon_111.png",
+      "row": 10,
+      "column": 3,
+      "name": "info",
+      "visual": "Huruf i dalam lingkaran",
+      "description": "informasi"
+    },
+    {
+      "id": 112,
+      "file": "icons/icon_112.png",
+      "row": 10,
+      "column": 4,
+      "name": "warning",
+      "visual": "Segitiga peringatan",
+      "description": "peringatan"
+    },
+    {
+      "id": 113,
+      "file": "icons/icon_113.png",
+      "row": 10,
+      "column": 5,
+      "name": "help_a",
+      "visual": "Tanda tanya dalam lingkaran",
+      "description": "bantuan"
+    },
+    {
+      "id": 114,
+      "file": "icons/icon_114.png",
+      "row": 10,
+      "column": 6,
+      "name": "help_b",
+      "visual": "Tanda tanya dalam lingkaran (varian)",
+      "description": "bantuan alternatif"
+    },
+    {
+      "id": 115,
+      "file": "icons/icon_115.png",
+      "row": 10,
+      "column": 7,
+      "name": "menu",
+      "visual": "Tiga garis horizontal",
+      "description": "menu hamburger"
+    },
+    {
+      "id": 116,
+      "file": "icons/icon_116.png",
+      "row": 10,
+      "column": 8,
+      "name": "apps_grid",
+      "visual": "Empat kotak",
+      "description": "aplikasi / grid / dashboard"
+    },
+    {
+      "id": 117,
+      "file": "icons/icon_117.png",
+      "row": 10,
+      "column": 9,
+      "name": "list_a",
+      "visual": "Daftar dengan titik",
+      "description": "daftar / list"
+    },
+    {
+      "id": 118,
+      "file": "icons/icon_118.png",
+      "row": 10,
+      "column": 10,
+      "name": "list_b",
+      "visual": "Daftar dengan titik (varian)",
+      "description": "daftar alternatif"
+    },
+    {
+      "id": 119,
+      "file": "icons/icon_119.png",
+      "row": 10,
+      "column": 11,
+      "name": "settings_b",
+      "visual": "Roda gigi (varian)",
+      "description": "pengaturan alternatif"
+    },
+    {
+      "id": 120,
+      "file": "icons/icon_120.png",
+      "row": 10,
+      "column": 12,
+      "name": "shield",
+      "visual": "Perisai polos",
+      "description": "keamanan / proteksi"
+    }
+  ]
+}
