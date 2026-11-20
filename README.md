@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="main_assets/app_logo.png" alt="NekOS logo" width="96" />
+  <img src="main_assets/nekos_3.jpg" alt="NekOS logo" width="500" />
 </p>
 
 # NekOS
