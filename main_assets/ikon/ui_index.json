@@ -5,7 +5,7 @@
   "items": [
     {
       "id": 1,
-      "file": "icons/icon_001.png",
+      "file": "ui/icon_001.png",
       "row": 1,
       "column": 1,
       "name": "pencil",
@@ -14,7 +14,7 @@
     },
     {
       "id": 2,
-      "file": "icons/icon_002.png",
+      "file": "ui/icon_002.png",
       "row": 1,
       "column": 2,
       "name": "heart",
@@ -23,7 +23,7 @@
     },
     {
       "id": 3,
-      "file": "icons/icon_003.png",
+      "file": "ui/icon_003.png",
       "row": 1,
       "column": 3,
       "name": "settings_a",
@@ -32,7 +32,7 @@
     },
     {
       "id": 4,
-      "file": "icons/icon_004.png",
+      "file": "ui/icon_004.png",
       "row": 1,
       "column": 4,
       "name": "search_a",
@@ -41,7 +41,7 @@
     },
     {
       "id": 5,
-      "file": "icons/icon_005.png",
+      "file": "ui/icon_005.png",
       "row": 1,
       "column": 5,
       "name": "search_b",
@@ -50,7 +50,7 @@
     },
     {
       "id": 6,
-      "file": "icons/icon_006.png",
+      "file": "ui/icon_006.png",
       "row": 1,
       "column": 6,
       "name": "home",
@@ -59,7 +59,7 @@
     },
     {
       "id": 7,
-      "file": "icons/icon_007.png",
+      "file": "ui/icon_007.png",
       "row": 1,
       "column": 7,
       "name": "user",
@@ -68,7 +68,7 @@
     },
     {
       "id": 8,
-      "file": "icons/icon_008.png",
+      "file": "ui/icon_008.png",
       "row": 1,
       "column": 8,
       "name": "group",
@@ -77,7 +77,7 @@
     },
     {
       "id": 9,
-      "file": "icons/icon_009.png",
+      "file": "ui/icon_009.png",
       "row": 1,
       "column": 9,
       "name": "folder_a",
@@ -86,7 +86,7 @@
     },
     {
       "id": 10,
-      "file": "icons/icon_010.png",
+      "file": "ui/icon_010.png",
       "row": 1,
       "column": 10,
       "name": "folder_b",
@@ -95,7 +95,7 @@
     },
     {
       "id": 11,
-      "file": "icons/icon_011.png",
+      "file": "ui/icon_011.png",
       "row": 1,
       "column": 11,
       "name": "document",
@@ -104,7 +104,7 @@
     },
     {
       "id": 12,
-      "file": "icons/icon_012.png",
+      "file": "ui/icon_012.png",
       "row": 1,
       "column": 12,
       "name": "more_horizontal",
@@ -113,7 +113,7 @@
     },
     {
       "id": 13,
-      "file": "icons/icon_013.png",
+      "file": "ui/icon_013.png",
       "row": 2,
       "column": 1,
       "name": "star",
@@ -122,7 +122,7 @@
     },
     {
       "id": 14,
-      "file": "icons/icon_014.png",
+      "file": "ui/icon_014.png",
       "row": 2,
       "column": 2,
       "name": "bookmark",
@@ -131,7 +131,7 @@
     },
     {
       "id": 15,
-      "file": "icons/icon_015.png",
+      "file": "ui/icon_015.png",
       "row": 2,
       "column": 3,
       "name": "tag",
@@ -140,7 +140,7 @@
     },
     {
       "id": 16,
-      "file": "icons/icon_016.png",
+      "file": "ui/icon_016.png",
       "row": 2,
       "column": 4,
       "name": "bell_a",
@@ -149,7 +149,7 @@
     },
     {
       "id": 17,
-      "file": "icons/icon_017.png",
+      "file": "ui/icon_017.png",
       "row": 2,
       "column": 5,
       "name": "bell_b",
@@ -158,7 +158,7 @@
     },
     {
       "id": 18,
-      "file": "icons/icon_018.png",
+      "file": "ui/icon_018.png",
       "row": 2,
       "column": 6,
       "name": "calendar_a",
@@ -167,7 +167,7 @@
     },
     {
       "id": 19,
-      "file": "icons/icon_019.png",
+      "file": "ui/icon_019.png",
       "row": 2,
       "column": 7,
       "name": "calendar_day",
@@ -176,7 +176,7 @@
     },
     {
       "id": 20,
-      "file": "icons/icon_020.png",
+      "file": "ui/icon_020.png",
       "row": 2,
       "column": 8,
       "name": "alarm_a",
@@ -185,7 +185,7 @@
     },
     {
       "id": 21,
-      "file": "icons/icon_021.png",
+      "file": "ui/icon_021.png",
       "row": 2,
       "column": 9,
       "name": "alarm_b",
@@ -194,7 +194,7 @@
     },
     {
       "id": 22,
-      "file": "icons/icon_022.png",
+      "file": "ui/icon_022.png",
       "row": 2,
       "column": 10,
       "name": "brightness",
@@ -203,7 +203,7 @@
     },
     {
       "id": 23,
-      "file": "icons/icon_023.png",
+      "file": "ui/icon_023.png",
       "row": 2,
       "column": 11,
       "name": "location_a",
@@ -212,7 +212,7 @@
     },
     {
       "id": 24,
-      "file": "icons/icon_024.png",
+      "file": "ui/icon_024.png",
       "row": 2,
       "column": 12,
       "name": "location_b",
@@ -221,7 +221,7 @@
     },
     {
       "id": 25,
-      "file": "icons/icon_025.png",
+      "file": "ui/icon_025.png",
       "row": 3,
       "column": 1,
       "name": "mail",
@@ -230,7 +230,7 @@
     },
     {
       "id": 26,
-      "file": "icons/icon_026.png",
+      "file": "ui/icon_026.png",
       "row": 3,
       "column": 2,
       "name": "chat_dots",
@@ -239,7 +239,7 @@
     },
     {
       "id": 27,
-      "file": "icons/icon_027.png",
+      "file": "ui/icon_027.png",
       "row": 3,
       "column": 3,
       "name": "chat_bubble",
@@ -248,7 +248,7 @@
     },
     {
       "id": 28,
-      "file": "icons/icon_028.png",
+      "file": "ui/icon_028.png",
       "row": 3,
       "column": 4,
       "name": "reply",
@@ -257,7 +257,7 @@
     },
     {
       "id": 29,
-      "file": "icons/icon_029.png",
+      "file": "ui/icon_029.png",
       "row": 3,
       "column": 5,
       "name": "forward",
@@ -266,7 +266,7 @@
     },
     {
       "id": 30,
-      "file": "icons/icon_030.png",
+      "file": "ui/icon_030.png",
       "row": 3,
       "column": 6,
       "name": "arrow_right",
@@ -275,7 +275,7 @@
     },
     {
       "id": 31,
-      "file": "icons/icon_031.png",
+      "file": "ui/icon_031.png",
       "row": 3,
       "column": 7,
       "name": "share",
@@ -284,7 +284,7 @@
     },
     {
       "id": 32,
-      "file": "icons/icon_032.png",
+      "file": "ui/icon_032.png",
       "row": 3,
       "column": 8,
       "name": "attachment",
@@ -293,7 +293,7 @@
     },
     {
       "id": 33,
-      "file": "icons/icon_033.png",
+      "file": "ui/icon_033.png",
       "row": 3,
       "column": 9,
       "name": "link_a",
@@ -302,7 +302,7 @@
     },
     {
       "id": 34,
-      "file": "icons/icon_034.png",
+      "file": "ui/icon_034.png",
       "row": 3,
       "column": 10,
       "name": "link_b",
@@ -311,7 +311,7 @@
     },
     {
       "id": 35,
-      "file": "icons/icon_035.png",
+      "file": "ui/icon_035.png",
       "row": 3,
       "column": 11,
       "name": "image",
@@ -320,7 +320,7 @@
     },
     {
       "id": 36,
-      "file": "icons/icon_036.png",
+      "file": "ui/icon_036.png",
       "row": 3,
       "column": 12,
       "name": "camera",
@@ -329,7 +329,7 @@
     },
     {
       "id": 37,
-      "file": "icons/icon_037.png",
+      "file": "ui/icon_037.png",
       "row": 4,
       "column": 1,
       "name": "play",
@@ -338,7 +338,7 @@
     },
     {
       "id": 38,
-      "file": "icons/icon_038.png",
+      "file": "ui/icon_038.png",
       "row": 4,
       "column": 2,
       "name": "music",
@@ -347,7 +347,7 @@
     },
     {
       "id": 39,
-      "file": "icons/icon_039.png",
+      "file": "ui/icon_039.png",
       "row": 4,
       "column": 3,
       "name": "microphone",
@@ -356,7 +356,7 @@
     },
     {
       "id": 40,
-      "file": "icons/icon_040.png",
+      "file": "ui/icon_040.png",
       "row": 4,
       "column": 4,
       "name": "volume",
@@ -365,7 +365,7 @@
     },
     {
       "id": 41,
-      "file": "icons/icon_041.png",
+      "file": "ui/icon_041.png",
       "row": 4,
       "column": 5,
       "name": "volume_mute",
@@ -374,7 +374,7 @@
     },
     {
       "id": 42,
-      "file": "icons/icon_042.png",
+      "file": "ui/icon_042.png",
       "row": 4,
       "column": 6,
       "name": "battery_a",
@@ -383,7 +383,7 @@
     },
     {
       "id": 43,
-      "file": "icons/icon_043.png",
+      "file": "ui/icon_043.png",
       "row": 4,
       "column": 7,
       "name": "battery_b",
@@ -392,7 +392,7 @@
     },
     {
       "id": 44,
-      "file": "icons/icon_044.png",
+      "file": "ui/icon_044.png",
       "row": 4,
       "column": 8,
       "name": "wifi",
@@ -401,7 +401,7 @@
     },
     {
       "id": 45,
-      "file": "icons/icon_045.png",
+      "file": "ui/icon_045.png",
       "row": 4,
       "column": 9,
       "name": "bluetooth",
@@ -410,7 +410,7 @@
     },
     {
       "id": 46,
-      "file": "icons/icon_046.png",
+      "file": "ui/icon_046.png",
       "row": 4,
       "column": 10,
       "name": "nfc",
@@ -419,7 +419,7 @@
     },
     {
       "id": 47,
-      "file": "icons/icon_047.png",
+      "file": "ui/icon_047.png",
       "row": 4,
       "column": 11,
       "name": "flashlight_a",
@@ -428,7 +428,7 @@
     },
     {
       "id": 48,
-      "file": "icons/icon_048.png",
+      "file": "ui/icon_048.png",
       "row": 4,
       "column": 12,
       "name": "flashlight_b",
@@ -437,7 +437,7 @@
     },
     {
       "id": 49,
-      "file": "icons/icon_049.png",
+      "file": "ui/icon_049.png",
       "row": 5,
       "column": 1,
       "name": "refresh",
@@ -446,7 +446,7 @@
     },
     {
       "id": 50,
-      "file": "icons/icon_050.png",
+      "file": "ui/icon_050.png",
       "row": 5,
       "column": 2,
       "name": "sync_a",
@@ -455,7 +455,7 @@
     },
     {
       "id": 51,
-      "file": "icons/icon_051.png",
+      "file": "ui/icon_051.png",
       "row": 5,
       "column": 3,
       "name": "backup_restore",
@@ -464,7 +464,7 @@
     },
     {
       "id": 52,
-      "file": "icons/icon_052.png",
+      "file": "ui/icon_052.png",
       "row": 5,
       "column": 4,
       "name": "download",
@@ -473,7 +473,7 @@
     },
     {
       "id": 53,
-      "file": "icons/icon_053.png",
+      "file": "ui/icon_053.png",
       "row": 5,
       "column": 5,
       "name": "upload",
@@ -482,7 +482,7 @@
     },
     {
       "id": 54,
-      "file": "icons/icon_054.png",
+      "file": "ui/icon_054.png",
       "row": 5,
       "column": 6,
       "name": "cloud",
@@ -491,7 +491,7 @@
     },
     {
       "id": 55,
-      "file": "icons/icon_055.png",
+      "file": "ui/icon_055.png",
       "row": 5,
       "column": 7,
       "name": "cloud_upload_a",
@@ -500,7 +500,7 @@
     },
     {
       "id": 56,
-      "file": "icons/icon_056.png",
+      "file": "ui/icon_056.png",
       "row": 5,
       "column": 8,
       "name": "cloud_upload_b",
@@ -509,7 +509,7 @@
     },
     {
       "id": 57,
-      "file": "icons/icon_057.png",
+      "file": "ui/icon_057.png",
       "row": 5,
       "column": 9,
       "name": "database_a",
@@ -518,7 +518,7 @@
     },
     {
       "id": 58,
-      "file": "icons/icon_058.png",
+      "file": "ui/icon_058.png",
       "row": 5,
       "column": 10,
       "name": "database_b",
@@ -527,7 +527,7 @@
     },
     {
       "id": 59,
-      "file": "icons/icon_059.png",
+      "file": "ui/icon_059.png",
       "row": 5,
       "column": 11,
       "name": "network",
@@ -536,7 +536,7 @@
     },
     {
       "id": 60,
-      "file": "icons/icon_060.png",
+      "file": "ui/icon_060.png",
       "row": 5,
       "column": 12,
       "name": "shield_check",
@@ -545,7 +545,7 @@
     },
     {
       "id": 61,
-      "file": "icons/icon_061.png",
+      "file": "ui/icon_061.png",
       "row": 6,
       "column": 1,
       "name": "lock",
@@ -554,7 +554,7 @@
     },
     {
       "id": 62,
-      "file": "icons/icon_062.png",
+      "file": "ui/icon_062.png",
       "row": 6,
       "column": 2,
       "name": "unlock",
@@ -563,7 +563,7 @@
     },
     {
       "id": 63,
-      "file": "icons/icon_063.png",
+      "file": "ui/icon_063.png",
       "row": 6,
       "column": 3,
       "name": "key",
@@ -572,7 +572,7 @@
     },
     {
       "id": 64,
-      "file": "icons/icon_064.png",
+      "file": "ui/icon_064.png",
       "row": 6,
       "column": 4,
       "name": "dialpad",
@@ -581,7 +581,7 @@
     },
     {
       "id": 65,
-      "file": "icons/icon_065.png",
+      "file": "ui/icon_065.png",
       "row": 6,
       "column": 5,
       "name": "calculator",
@@ -590,7 +590,7 @@
     },
     {
       "id": 66,
-      "file": "icons/icon_066.png",
+      "file": "ui/icon_066.png",
       "row": 6,
       "column": 6,
       "name": "ruler",
@@ -599,7 +599,7 @@
     },
     {
       "id": 67,
-      "file": "icons/icon_067.png",
+      "file": "ui/icon_067.png",
       "row": 6,
       "column": 7,
       "name": "ruler_pencil",
@@ -608,7 +608,7 @@
     },
     {
       "id": 68,
-      "file": "icons/icon_068.png",
+      "file": "ui/icon_068.png",
       "row": 6,
       "column": 8,
       "name": "compass",
@@ -617,7 +617,7 @@
     },
     {
       "id": 69,
-      "file": "icons/icon_069.png",
+      "file": "ui/icon_069.png",
       "row": 6,
       "column": 9,
       "name": "barcode",
@@ -626,7 +626,7 @@
     },
     {
       "id": 70,
-      "file": "icons/icon_070.png",
+      "file": "ui/icon_070.png",
       "row": 6,
       "column": 10,
       "name": "qr_code",
@@ -635,7 +635,7 @@
     },
     {
       "id": 71,
-      "file": "icons/icon_071.png",
+      "file": "ui/icon_071.png",
       "row": 6,
       "column": 11,
       "name": "fingerprint_a",
@@ -644,7 +644,7 @@
     },
     {
       "id": 72,
-      "file": "icons/icon_072.png",
+      "file": "ui/icon_072.png",
       "row": 6,
       "column": 12,
       "name": "fingerprint_b",
@@ -653,7 +653,7 @@
     },
     {
       "id": 73,
-      "file": "icons/icon_073.png",
+      "file": "ui/icon_073.png",
       "row": 7,
       "column": 1,
       "name": "printer",
@@ -662,7 +662,7 @@
     },
     {
       "id": 74,
-      "file": "icons/icon_074.png",
+      "file": "ui/icon_074.png",
       "row": 7,
       "column": 2,
       "name": "scan_frame",
@@ -671,7 +671,7 @@
     },
     {
       "id": 75,
-      "file": "icons/icon_075.png",
+      "file": "ui/icon_075.png",
       "row": 7,
       "column": 3,
       "name": "cast",
@@ -680,7 +680,7 @@
     },
     {
       "id": 76,
-      "file": "icons/icon_076.png",
+      "file": "ui/icon_076.png",
       "row": 7,
       "column": 4,
       "name": "monitor",
@@ -689,7 +689,7 @@
     },
     {
       "id": 77,
-      "file": "icons/icon_077.png",
+      "file": "ui/icon_077.png",
       "row": 7,
       "column": 5,
       "name": "tv",
@@ -698,7 +698,7 @@
     },
     {
       "id": 78,
-      "file": "icons/icon_078.png",
+      "file": "ui/icon_078.png",
       "row": 7,
       "column": 6,
       "name": "tablet",
@@ -707,7 +707,7 @@
     },
     {
       "id": 79,
-      "file": "icons/icon_079.png",
+      "file": "ui/icon_079.png",
       "row": 7,
       "column": 7,
       "name": "phone",
@@ -716,7 +716,7 @@
     },
     {
       "id": 80,
-      "file": "icons/icon_080.png",
+      "file": "ui/icon_080.png",
       "row": 7,
       "column": 8,
       "name": "vr_headset",
@@ -725,7 +725,7 @@
     },
     {
       "id": 81,
-      "file": "icons/icon_081.png",
+      "file": "ui/icon_081.png",
       "row": 7,
       "column": 9,
       "name": "gamepad",
@@ -734,7 +734,7 @@
     },
     {
       "id": 82,
-      "file": "icons/icon_082.png",
+      "file": "ui/icon_082.png",
       "row": 7,
       "column": 10,
       "name": "palette",
@@ -743,7 +743,7 @@
     },
     {
       "id": 83,
-      "file": "icons/icon_083.png",
+      "file": "ui/icon_083.png",
       "row": 7,
       "column": 11,
       "name": "brush_a",
@@ -752,7 +752,7 @@
     },
     {
       "id": 84,
-      "file": "icons/icon_084.png",
+      "file": "ui/icon_084.png",
       "row": 7,
       "column": 12,
       "name": "brush_b",
@@ -761,7 +761,7 @@
     },
     {
       "id": 85,
-      "file": "icons/icon_085.png",
+      "file": "ui/icon_085.png",
       "row": 8,
       "column": 1,
       "name": "add",
@@ -770,7 +770,7 @@
     },
     {
       "id": 86,
-      "file": "icons/icon_086.png",
+      "file": "ui/icon_086.png",
       "row": 8,
       "column": 2,
       "name": "remove",
@@ -779,7 +779,7 @@
     },
     {
       "id": 87,
-      "file": "icons/icon_087.png",
+      "file": "ui/icon_087.png",
       "row": 8,
       "column": 3,
       "name": "trash",
@@ -788,7 +788,7 @@
     },
     {
       "id": 88,
-      "file": "icons/icon_088.png",
+      "file": "ui/icon_088.png",
       "row": 8,
       "column": 4,
       "name": "archive",
@@ -797,7 +797,7 @@
     },
     {
       "id": 89,
-      "file": "icons/icon_089.png",
+      "file": "ui/icon_089.png",
       "row": 8,
       "column": 5,
       "name": "translate",
@@ -806,7 +806,7 @@
     },
     {
       "id": 90,
-      "file": "icons/icon_090.png",
+      "file": "ui/icon_090.png",
       "row": 8,
       "column": 6,
       "name": "edit_square",
@@ -815,7 +815,7 @@
     },
     {
       "id": 91,
-      "file": "icons/icon_091.png",
+      "file": "ui/icon_091.png",
       "row": 8,
       "column": 7,
       "name": "clipboard",
@@ -824,7 +824,7 @@
     },
     {
       "id": 92,
-      "file": "icons/icon_092.png",
+      "file": "ui/icon_092.png",
       "row": 8,
       "column": 8,
       "name": "clipboard_copy",
@@ -833,7 +833,7 @@
     },
     {
       "id": 93,
-      "file": "icons/icon_093.png",
+      "file": "ui/icon_093.png",
       "row": 8,
       "column": 9,
       "name": "cut",
@@ -842,7 +842,7 @@
     },
     {
       "id": 94,
-      "file": "icons/icon_094.png",
+      "file": "ui/icon_094.png",
       "row": 8,
       "column": 10,
       "name": "undo_a",
@@ -851,7 +851,7 @@
     },
     {
       "id": 95,
-      "file": "icons/icon_095.png",
+      "file": "ui/icon_095.png",
       "row": 8,
       "column": 11,
       "name": "undo_b",
@@ -860,7 +860,7 @@
     },
     {
       "id": 96,
-      "file": "icons/icon_096.png",
+      "file": "ui/icon_096.png",
       "row": 8,
       "column": 12,
       "name": "redo",
@@ -869,7 +869,7 @@
     },
     {
       "id": 97,
-      "file": "icons/icon_097.png",
+      "file": "ui/icon_097.png",
       "row": 9,
       "column": 1,
       "name": "power",
@@ -878,7 +878,7 @@
     },
     {
       "id": 98,
-      "file": "icons/icon_098.png",
+      "file": "ui/icon_098.png",
       "row": 9,
       "column": 2,
       "name": "reload",
@@ -887,7 +887,7 @@
     },
     {
       "id": 99,
-      "file": "icons/icon_099.png",
+      "file": "ui/icon_099.png",
       "row": 9,
       "column": 3,
       "name": "eject",
@@ -896,7 +896,7 @@
     },
     {
       "id": 100,
-      "file": "icons/icon_100.png",
+      "file": "ui/icon_100.png",
       "row": 9,
       "column": 4,
       "name": "sort_updown",
@@ -905,7 +905,7 @@
     },
     {
       "id": 101,
-      "file": "icons/icon_101.png",
+      "file": "ui/icon_101.png",
       "row": 9,
       "column": 5,
       "name": "swap_vertical",
@@ -914,7 +914,7 @@
     },
     {
       "id": 102,
-      "file": "icons/icon_102.png",
+      "file": "ui/icon_102.png",
       "row": 9,
       "column": 6,
       "name": "filter",
@@ -923,7 +923,7 @@
     },
     {
       "id": 103,
-      "file": "icons/icon_103.png",
+      "file": "ui/icon_103.png",
       "row": 9,
       "column": 7,
       "name": "zoom_in",
@@ -932,7 +932,7 @@
     },
     {
       "id": 104,
-      "file": "icons/icon_104.png",
+      "file": "ui/icon_104.png",
       "row": 9,
       "column": 8,
       "name": "zoom_out",
@@ -941,7 +941,7 @@
     },
     {
       "id": 105,
-      "file": "icons/icon_105.png",
+      "file": "ui/icon_105.png",
       "row": 9,
       "column": 9,
       "name": "fullscreen",
@@ -950,7 +950,7 @@
     },
     {
       "id": 106,
-      "file": "icons/icon_106.png",
+      "file": "ui/icon_106.png",
       "row": 9,
       "column": 10,
       "name": "crop_a",
@@ -959,7 +959,7 @@
     },
     {
       "id": 107,
-      "file": "icons/icon_107.png",
+      "file": "ui/icon_107.png",
       "row": 9,
       "column": 11,
       "name": "crop_b",
@@ -968,7 +968,7 @@
     },
     {
       "id": 108,
-      "file": "icons/icon_108.png",
+      "file": "ui/icon_108.png",
       "row": 9,
       "column": 12,
       "name": "sync_b",
@@ -977,7 +977,7 @@
     },
     {
       "id": 109,
-      "file": "icons/icon_109.png",
+      "file": "ui/icon_109.png",
       "row": 10,
       "column": 1,
       "name": "check",
@@ -986,7 +986,7 @@
     },
     {
       "id": 110,
-      "file": "icons/icon_110.png",
+      "file": "ui/icon_110.png",
       "row": 10,
       "column": 2,
       "name": "close",
@@ -995,7 +995,7 @@
     },
     {
       "id": 111,
-      "file": "icons/icon_111.png",
+      "file": "ui/icon_111.png",
       "row": 10,
       "column": 3,
       "name": "info",
@@ -1004,7 +1004,7 @@
     },
     {
       "id": 112,
-      "file": "icons/icon_112.png",
+      "file": "ui/icon_112.png",
       "row": 10,
       "column": 4,
       "name": "warning",
@@ -1013,7 +1013,7 @@
     },
     {
       "id": 113,
-      "file": "icons/icon_113.png",
+      "file": "ui/icon_113.png",
       "row": 10,
       "column": 5,
       "name": "help_a",
@@ -1022,7 +1022,7 @@
     },
     {
       "id": 114,
-      "file": "icons/icon_114.png",
+      "file": "ui/icon_114.png",
       "row": 10,
       "column": 6,
       "name": "help_b",
@@ -1031,7 +1031,7 @@
     },
     {
       "id": 115,
-      "file": "icons/icon_115.png",
+      "file": "ui/icon_115.png",
       "row": 10,
       "column": 7,
       "name": "menu",
@@ -1040,7 +1040,7 @@
     },
     {
       "id": 116,
-      "file": "icons/icon_116.png",
+      "file": "ui/icon_116.png",
       "row": 10,
       "column": 8,
       "name": "apps_grid",
@@ -1049,7 +1049,7 @@
     },
     {
       "id": 117,
-      "file": "icons/icon_117.png",
+      "file": "ui/icon_117.png",
       "row": 10,
       "column": 9,
       "name": "list_a",
@@ -1058,7 +1058,7 @@
     },
     {
       "id": 118,
-      "file": "icons/icon_118.png",
+      "file": "ui/icon_118.png",
       "row": 10,
       "column": 10,
       "name": "list_b",
@@ -1067,7 +1067,7 @@
     },
     {
       "id": 119,
-      "file": "icons/icon_119.png",
+      "file": "ui/icon_119.png",
       "row": 10,
       "column": 11,
       "name": "settings_b",
@@ -1076,7 +1076,7 @@
     },
     {
       "id": 120,
-      "file": "icons/icon_120.png",
+      "file": "ui/icon_120.png",
       "row": 10,
       "column": 12,
       "name": "shield",
