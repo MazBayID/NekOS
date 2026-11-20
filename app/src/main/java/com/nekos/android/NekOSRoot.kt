@@ -22,9 +22,9 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
-import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.awaitLongPressOrCancellation
 import androidx.compose.foundation.gestures.awaitVerticalDragOrCancellation
 import androidx.compose.foundation.gestures.awaitVerticalTouchSlopOrCancellation
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
@@ -343,7 +343,7 @@ private fun HomeScreen(
                     painter = painterResource(R.drawable.text_logo_sec),
                     contentDescription = "NekOS",
                     contentScale = ContentScale.Fit,
-                    modifier = Modifier.offset(x = (-18).dp).width(140.dp).height(50.dp)
+                    modifier = Modifier.offset(x = (-28).dp).width(150.dp).height(60.dp)
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) { TagPill("Your tags") }
             }
@@ -400,38 +400,54 @@ private fun FavoriteSlot(
                 scaleY = if (isDragging) 1.08f else 1f
                 shadowElevation = if (isDragging) 12.dp.toPx() else 0f
             }
-            .pointerInput(slotIndex, cellSizePx, cellGapPx, app?.packageName) {
-                var dragStart = Offset.Zero
-                var dragDistance = Offset.Zero
-                var hasMoved = false
+            .pointerInput(slotIndex, cellSizePx, cellGapPx, touchSlop, app?.packageName) {
+                if (app != null) {
+                    awaitEachGesture {
+                        val down = awaitFirstDown(requireUnconsumed = false)
+                        val longPress = awaitLongPressOrCancellation(down.id)
 
-                detectDragGesturesAfterLongPress(
-                    onDragStart = {
-                        dragStart = it
-                        dragDistance = Offset.Zero
-                        dragOffset = Offset.Zero
-                        isDragging = true
-                        hasMoved = false
-                    },
-                    onDrag = { change, dragAmount ->
-                        dragDistance += dragAmount
-                        dragOffset += dragAmount
-                        if (dragDistance.getDistance() > touchSlop) hasMoved = true
-                        change.consume()
-                    },
-                    onDragEnd = {
-                        isDragging = false
-                        dragOffset = Offset.Zero
-                        if (app != null) {
+                        if (longPress != null) {
+                            longPress.consume()
+                            var dragDistance = Offset.Zero
+                            var hasMoved = false
+                            var pointerReleased = false
+
+                            while (!pointerReleased) {
+                                val event = awaitPointerEvent()
+                                val change = event.changes.firstOrNull { it.id == down.id }
+                                    ?: break
+
+                                if (!change.pressed) {
+                                    pointerReleased = true
+                                    break
+                                }
+
+                                val delta = change.positionChange()
+                                if (delta != Offset.Zero) {
+                                    dragDistance += delta
+
+                                    if (!hasMoved && dragDistance.getDistance() > touchSlop) {
+                                        hasMoved = true
+                                        isDragging = true
+                                    }
+
+                                    if (hasMoved) {
+                                        dragOffset += delta
+                                        change.consume()
+                                    }
+                                }
+                            }
+
+                            isDragging = false
+                            dragOffset = Offset.Zero
+
                             if (hasMoved) {
                                 val columnDelta = (
-                                    (dragDistance.x + dragStart.x - cellSizePx / 2f) /
-                                        (cellSizePx + cellGapPx)
-                                    ).roundToInt()
+                                    dragDistance.x / (cellSizePx + cellGapPx)
+                                ).roundToInt()
                                 val rowDelta = (
-                                    (dragDistance.y + dragStart.y - cellSizePx / 2f) /
-                                        (cellSizePx + cellGapPx)
-                                    ).roundToInt()
+                                    dragDistance.y / (cellSizePx + cellGapPx)
+                                ).roundToInt()
                                 val targetColumn = (slotIndex % 5 + columnDelta).coerceIn(0, 4)
                                 val targetRow = (slotIndex / 5 + rowDelta).coerceIn(0, 2)
                                 onMove(slotIndex, targetRow * 5 + targetColumn)
@@ -439,13 +455,8 @@ private fun FavoriteSlot(
                                 onLongPress()
                             }
                         }
-                    },
-                    onDragCancel = {
-                        isDragging = false
-                        dragOffset = Offset.Zero
-                        if (app != null && !hasMoved) onLongPress()
                     }
-                )
+                }
             }
             .clickable(enabled = app != null, onClick = onClick)
             .padding(5.dp),
