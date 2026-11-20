@@ -130,7 +130,7 @@ fun NekOSRoot(refreshToken: Int) {
     LaunchedEffect(refreshToken) {
         val refreshedApps = loadLaunchableApps(context)
         apps = refreshedApps
-        val installedPackages = refreshedApps.mapTo(mutableSetOf()) { it.packageName }
+        val installedPackages = refreshedApps.mapTo(mutableSetOf<String>()) { it.packageName }
         val cleanedFavorites = favoritePackages.map { packageName ->
             packageName?.takeIf { it in installedPackages }
         }
