@@ -291,7 +291,7 @@ private fun HomeScreen(
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
             Image(
-                painter = painterResource(R.drawable.app_logo),
+                painter = painterResource(R.drawable.text_logo_sec),
                 contentDescription = "NekOS",
                 contentScale = ContentScale.Fit,
                 modifier = Modifier.size(42.dp)
