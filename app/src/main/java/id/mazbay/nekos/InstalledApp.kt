@@ -1,4 +1,4 @@
-package id.mazbay.nekos
+package com.nekos.android
 
 import android.content.Context
 import android.content.Intent
