@@ -1,4 +1,4 @@
-package id.mazbay.nekos
+package com.nekos.android
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
