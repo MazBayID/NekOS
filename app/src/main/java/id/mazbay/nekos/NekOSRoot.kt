@@ -1,8 +1,7 @@
 package id.mazbay.nekos
 
-import android.graphics.drawable.Drawable
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -62,13 +61,13 @@ fun NekOSRoot() {
                 onClose = { drawerOpen = false }
             )
         } else {
-            HomeScreen(onOpenDrawer = { drawerOpen = true })
+            HomeScreen()
         }
     }
 }
 
 @Composable
-private fun HomeScreen(onOpenDrawer: () -> Unit) {
+private fun HomeScreen() {
     Column(
         modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 26.dp),
         verticalArrangement = Arrangement.SpaceBetween
@@ -76,9 +75,7 @@ private fun HomeScreen(onOpenDrawer: () -> Unit) {
         Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
             Text("NekOS", color = Ink, fontSize = 27.sp, fontWeight = FontWeight.SemiBold)
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                TagPill("Personal")
-                TagPill("Work")
-                TagPill("Create")
+                TagPill("Your tags")
             }
         }
 
@@ -99,7 +96,7 @@ private fun HomeScreen(onOpenDrawer: () -> Unit) {
             )
         }
 
-        FavoritesPlaceholder(onOpenDrawer)
+        FavoritesPlaceholder()
     }
 }
 
@@ -116,7 +113,7 @@ private fun TagPill(label: String) {
 }
 
 @Composable
-private fun FavoritesPlaceholder(onOpenDrawer: () -> Unit) {
+private fun FavoritesPlaceholder() {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         repeat(3) {
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -170,7 +167,7 @@ private fun AppGridItem(app: InstalledApp, onClick: () -> Unit) {
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
             .padding(vertical = 5.dp)
-            .clickableCompat(onClick),
+            .clickable(onClick = onClick),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         androidx.compose.foundation.Image(
@@ -191,6 +188,3 @@ private fun AppGridItem(app: InstalledApp, onClick: () -> Unit) {
     }
 }
 
-@Composable
-private fun Modifier.clickableCompat(onClick: () -> Unit): Modifier =
-    androidx.compose.foundation.clickable(onClick = onClick)
