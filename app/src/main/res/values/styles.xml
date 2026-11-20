@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.NekOS" parent="android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+        <item name="android:windowBackground">#F4F1EA</item>
+    </style>
+
+    <style name="Theme.NekOS.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">#F4F1EA</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_transparent</item>
+        <item name="postSplashScreenTheme">@style/Theme.NekOS</item>
+    </style>
+</resources>
