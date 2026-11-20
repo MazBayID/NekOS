@@ -18,6 +18,8 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.awaitVerticalDragOrCancellation
+import androidx.compose.foundation.gestures.awaitVerticalTouchSlopOrCancellation
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.positionChange
@@ -76,30 +78,27 @@ fun NekOSRoot() {
 
     BoxWithConstraints(Modifier.fillMaxSize().background(WarmBackground)) {
         val drawerHeightPx = constraints.maxHeight.toFloat().coerceAtLeast(1f)
+        val drawerOpenThresholdPx = with(androidx.compose.ui.platform.LocalDensity.current) { 64.dp.toPx() }
         val drawerOffset = remember { Animatable(1f) }
         val scope = rememberCoroutineScope()
 
         HomeScreen(
             apps = apps,
             favoritePackages = favoritePackages,
+            drawerOpenThresholdPx = drawerOpenThresholdPx,
             onDrawerDrag = { totalDrag ->
-                scope.launch {
-                    drawerOffset.snapTo(
-                        (1f + totalDrag / drawerHeightPx).coerceIn(0f, 1f)
-                    )
-                }
+                drawerOffset.snapTo(
+                    (1f + totalDrag / drawerHeightPx).coerceIn(0f, 1f)
+                )
             },
-            onDrawerDragEnd = {
-                scope.launch {
-                    val target = if (drawerOffset.value < 0.82f) 0f else 1f
-                    drawerOffset.animateTo(
-                        target,
-                        animationSpec = spring(
-                            dampingRatio = 0.82f,
-                            stiffness = 420f
-                        )
+            onDrawerDragEnd = { totalDrag ->
+                drawerOffset.animateTo(
+                    if (totalDrag <= -drawerOpenThresholdPx) 0f else 1f,
+                    animationSpec = spring(
+                        dampingRatio = 0.82f,
+                        stiffness = 420f
                     )
-                }
+                )
             },
             onFavoriteClick = { launchApp(context, it) },
             onFavoriteLongPress = { editingFavoriteSlot = it }
@@ -189,8 +188,9 @@ fun NekOSRoot() {
 private fun HomeScreen(
     apps: List<InstalledApp>,
     favoritePackages: List<String?>,
-    onDrawerDrag: (Float) -> Unit,
-    onDrawerDragEnd: () -> Unit,
+    drawerOpenThresholdPx: Float,
+    onDrawerDrag: suspend (Float) -> Unit,
+    onDrawerDragEnd: suspend (Float) -> Unit,
     onFavoriteClick: (String) -> Unit,
     onFavoriteLongPress: (Int) -> Unit
 ) {
@@ -200,28 +200,36 @@ private fun HomeScreen(
             .fillMaxSize()
             .statusBarsPadding()
             .navigationBarsPadding()
-            .pointerInput(Unit) {
-                var totalDrag = 0f
-                var drawerDragStarted = false
-                detectVerticalDragGestures(
-                    onVerticalDrag = { _, dragAmount ->
-                        totalDrag += dragAmount
-                        if (totalDrag < 0f) {
-                            drawerDragStarted = true
-                            onDrawerDrag(totalDrag)
+            .pointerInput(drawerOpenThresholdPx) {
+                awaitEachGesture {
+                    val down = awaitFirstDown(requireUnconsumed = false)
+                    var totalDrag = 0f
+                    var acceptedUpwardDrag = false
+
+                    val dragStart = awaitVerticalTouchSlopOrCancellation(down.id) { change, overSlop ->
+                        if (overSlop < 0f) {
+                            acceptedUpwardDrag = true
+                            totalDrag = overSlop - viewConfiguration.touchSlop
+                            change.consume()
                         }
-                    },
-                    onDragEnd = {
-                        if (drawerDragStarted) onDrawerDragEnd()
-                        totalDrag = 0f
-                        drawerDragStarted = false
-                    },
-                    onDragCancel = {
-                        if (drawerDragStarted) onDrawerDragEnd()
-                        totalDrag = 0f
-                        drawerDragStarted = false
                     }
-                )
+
+                    if (dragStart != null && acceptedUpwardDrag) {
+                        onDrawerDrag(totalDrag)
+
+                        var change = dragStart
+                        while (change != null && change.pressed) {
+                            change = awaitVerticalDragOrCancellation(change.id)
+                            if (change != null && change.pressed) {
+                                totalDrag += change.positionChange().y
+                                onDrawerDrag(totalDrag.coerceAtMost(0f))
+                                change.consume()
+                            }
+                        }
+
+                        onDrawerDragEnd(totalDrag)
+                    }
+                }
             }
             .padding(horizontal = 24.dp, vertical = 26.dp),
         verticalArrangement = Arrangement.SpaceBetween
@@ -339,6 +347,7 @@ private fun AppDrawer(
 ) {
     var searchQuery by remember { mutableStateOf("") }
     val currentOnCloseDrawer by rememberUpdatedState(onCloseDrawer)
+    val closeThreshold = with(androidx.compose.ui.platform.LocalDensity.current) { 64.dp.toPx() }
     val filteredApps = remember(apps, searchQuery) {
         val query = searchQuery.trim()
         if (query.isBlank()) apps
@@ -361,7 +370,7 @@ private fun AppDrawer(
                     detectVerticalDragGestures(
                         onVerticalDrag = { _, dragAmount -> totalDrag += dragAmount },
                         onDragEnd = {
-                            if (totalDrag > 45f) currentOnCloseDrawer()
+                            if (totalDrag > closeThreshold) currentOnCloseDrawer()
                             totalDrag = 0f
                         },
                         onDragCancel = { totalDrag = 0f }
@@ -395,7 +404,6 @@ private fun AppDrawer(
             }
         } else {
             val gridState = rememberLazyGridState()
-            val closeThreshold = with(androidx.compose.ui.platform.LocalDensity.current) { 64.dp.toPx() }
             val touchSlop = LocalViewConfiguration.current.touchSlop
             val edgeCloseGesture = Modifier.pointerInput(gridState, closeThreshold, touchSlop) {
                 awaitEachGesture {
