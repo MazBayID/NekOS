@@ -1,11 +1,11 @@
 # NekOS
 
 <p align="center">
-  <img src="main_assets/nekos_1.jpg" alt="NekOS 1" width="500" />
+  <img src="main_assets/nekos_1.jpg" alt="NekOS 1" width="300" />
 </p>
 <p align="center">
-  <img src="main_assets/nekos_2.jpg" alt="NekOS 2" width="250" />
-  <img src="main_assets/nekos_3.jpg" alt="NekOS 3" width="250" />
+  <img src="main_assets/nekos_2.jpg" alt="NekOS 2" width="150" />
+  <img src="main_assets/nekos_3.jpg" alt="NekOS 3" width="150" />
 </p>
 
 This project was inspired by my headache of searching
