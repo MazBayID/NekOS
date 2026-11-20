@@ -361,6 +361,7 @@ private fun HomeScreen(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun FavoriteSlot(
     app: InstalledApp?,
