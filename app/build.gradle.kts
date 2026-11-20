@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "id.mazbay.nekos"
+    namespace = "com.nekos.android"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "id.mazbay.nekos"
+        applicationId = "com.nekos.android"
         minSdk = 26
         targetSdk = 35
         versionCode = 1
