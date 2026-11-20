@@ -1,9 +1,12 @@
 package com.nekos.android
 
 import android.content.Context
+import android.os.Build
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.spring
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.BlurEffect
+import androidx.compose.ui.graphics.TileMode
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.produceState
 import kotlinx.coroutines.Dispatchers
@@ -80,6 +83,7 @@ fun NekOSRoot() {
         val drawerHeightPx = constraints.maxHeight.toFloat().coerceAtLeast(1f)
         val homeSwipeThresholdPx = with(androidx.compose.ui.platform.LocalDensity.current) { 64.dp.toPx() }
         val drawerCloseThresholdPx = drawerHeightPx * 0.18f
+        val backgroundBlurRadiusPx = with(androidx.compose.ui.platform.LocalDensity.current) { 16.dp.toPx() }
         val drawerOffset = remember { Animatable(1f) }
         val scope = rememberCoroutineScope()
 
@@ -87,6 +91,7 @@ fun NekOSRoot() {
             apps = apps,
             favoritePackages = favoritePackages,
             homeSwipeThresholdPx = homeSwipeThresholdPx,
+            backgroundBlurRadiusPx = backgroundBlurRadiusPx * (1f - drawerOffset.value),
             onDrawerDrag = { totalDrag ->
                 scope.launch {
                     drawerOffset.snapTo(
@@ -110,6 +115,18 @@ fun NekOSRoot() {
         )
 
         if (drawerOffset.value < 1f) {
+            // A subtle warm translucent veil keeps the blurred home screen legible
+            // and provides a graceful dimmed fallback on Android versions below 12.
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .background(
+                        WarmBackground.copy(
+                            alpha = 0.28f * (1f - drawerOffset.value)
+                        )
+                    )
+            )
+
             AppDrawer(
                 apps = apps,
                 iconBitmapCache = iconBitmapCache,
@@ -195,6 +212,7 @@ private fun HomeScreen(
     apps: List<InstalledApp>,
     favoritePackages: List<String?>,
     homeSwipeThresholdPx: Float,
+    backgroundBlurRadiusPx: Float,
     onDrawerDrag: (Float) -> Unit,
     onDrawerDragEnd: (Float) -> Unit,
     onFavoriteClick: (String) -> Unit,
@@ -206,6 +224,20 @@ private fun HomeScreen(
             .fillMaxSize()
             .statusBarsPadding()
             .navigationBarsPadding()
+            .graphicsLayer {
+                renderEffect = if (
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+                    backgroundBlurRadiusPx > 0.5f
+                ) {
+                    BlurEffect(
+                        backgroundBlurRadiusPx,
+                        backgroundBlurRadiusPx,
+                        TileMode.Decal
+                    )
+                } else {
+                    null
+                }
+            }
             .pointerInput(homeSwipeThresholdPx) {
                 var totalDrag = 0f
                 var drawerDragStarted = false
