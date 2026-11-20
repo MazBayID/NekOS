@@ -18,6 +18,11 @@ NekOS is a calm, personal Android launcher: fast to scan, easy to arrange, and i
 - The icon catalog JSON/Markdown is the source of truth for names and metadata; avoid duplicating catalog labels in code.
 - Icon tinting is technically possible for PNGs using alpha as a mask, but it replaces their existing colors and can flatten multicolor artwork. For the MVP, keep catalog icons in their original colors. Tag color customization applies to the tag's surface/accent, not the icon itself. Do not expose icon-color customization unless it can preserve the artwork well and is visually tested; it can be reconsidered later.
 
+## Branding & startup
+- Use `main_assets/app_logo.png` for the Android launcher icon.
+- Use `main_assets/NekOS_text_logo.png` (wordmark + slogan) on a brief, understated startup splash. Keep the home screen free of persistent branding so it remains minimal.
+- Splash should be short, avoid artificial loading delays, and transition into the launcher home as soon as initialization is complete.
+
 ## Visual direction
 - Cozy-tech: warm, rounded, understated, with precise spacing and restrained accent colors.
 - Avoid Cyclauncher's distinctive side alphabet rail, wheel, color-search system, widget hub, and multi-feature panels. NekOS should be recognizable through its **top tag strip + 5×3 favorite grid + gesture-only clean home**.
