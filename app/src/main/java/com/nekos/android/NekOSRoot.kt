@@ -291,6 +291,7 @@ private fun AppDrawer(
     onCloseDrawer: () -> Unit
 ) {
     var searchQuery by remember { mutableStateOf("") }
+    val iconBitmapCache = remember(apps) { mutableMapOf<String, androidx.compose.ui.graphics.ImageBitmap>() }
     val filteredApps = remember(apps, searchQuery) {
         val query = searchQuery.trim()
         if (query.isBlank()) apps
@@ -390,7 +391,10 @@ private fun AppDrawer(
                 modifier = Modifier.weight(1f).fillMaxWidth().nestedScroll(closeConnection)
             ) {
                 items(filteredApps, key = { it.packageName }) { app ->
-                    AppGridItem(app = app, onClick = { onAppClick(app) })
+                    val iconBitmap = iconBitmapCache.getOrPut(app.packageName) {
+                        app.icon.toBitmap(96, 96).asImageBitmap()
+                    }
+                    AppGridItem(app = app, bitmap = iconBitmap, onClick = { onAppClick(app) })
                 }
             }
         }
@@ -398,8 +402,11 @@ private fun AppDrawer(
 }
 
 @Composable
-private fun AppGridItem(app: InstalledApp, onClick: () -> Unit) {
-    val bitmap = remember(app.packageName) { app.icon.toBitmap(96, 96).asImageBitmap() }
+private fun AppGridItem(
+    app: InstalledApp,
+    bitmap: androidx.compose.ui.graphics.ImageBitmap,
+    onClick: () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
