@@ -1,13 +1,14 @@
 package com.nekos.android
 
 import android.content.Context
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.animation.togetherWith
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.spring
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.produceState
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -53,9 +54,11 @@ private val TagSurface = Color(0xFFE7E1D6)
 
 @Composable
 fun NekOSRoot() {
-    var drawerOpen by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val apps by remember { mutableStateOf(loadLaunchableApps(context)) }
+    val iconBitmapCache = remember(apps) {
+        mutableMapOf<String, androidx.compose.ui.graphics.ImageBitmap>()
+    }
     var favoritePackages by remember { mutableStateOf(loadFavoritePackages(context)) }
     var editingFavoriteSlot by remember { mutableStateOf<Int?>(null) }
     val preferences = remember(context) {
@@ -70,38 +73,70 @@ fun NekOSRoot() {
         saveFavoritePackages(context, updated)
     }
 
-    Box(Modifier.fillMaxSize().background(WarmBackground)) {
-        AnimatedContent(
-            targetState = drawerOpen,
-            transitionSpec = {
-                if (targetState) {
-                    (slideInVertically(tween(180)) { it } + fadeIn(tween(120))) togetherWith
-                        (slideOutVertically(tween(130)) { -it / 8 } + fadeOut(tween(100)))
-                } else {
-                    (slideInVertically(tween(160)) { -it / 8 } + fadeIn(tween(120))) togetherWith
-                        (slideOutVertically(tween(180)) { it } + fadeOut(tween(120)))
+    BoxWithConstraints(Modifier.fillMaxSize().background(WarmBackground)) {
+        val drawerHeightPx = constraints.maxHeight.toFloat().coerceAtLeast(1f)
+        val drawerOffset = remember { Animatable(1f) }
+        val scope = rememberCoroutineScope()
+
+        HomeScreen(
+            apps = apps,
+            favoritePackages = favoritePackages,
+            onDrawerDrag = { totalDrag ->
+                scope.launch {
+                    drawerOffset.snapTo(
+                        (1f + totalDrag / drawerHeightPx).coerceIn(0f, 1f)
+                    )
                 }
             },
-            label = "home-drawer-transition"
-        ) { isDrawerOpen ->
-            if (isDrawerOpen) {
-                AppDrawer(
-                    apps = apps,
-                    onAppClick = { app ->
-                        launchApp(context, app.packageName)
-                        drawerOpen = false
+            onDrawerDragEnd = {
+                scope.launch {
+                    val target = if (drawerOffset.value < 0.82f) 0f else 1f
+                    drawerOffset.animateTo(
+                        target,
+                        animationSpec = spring(
+                            dampingRatio = 0.82f,
+                            stiffness = 420f
+                        )
+                    )
+                }
+            },
+            onFavoriteClick = { launchApp(context, it) },
+            onFavoriteLongPress = { editingFavoriteSlot = it }
+        )
+
+        if (drawerOffset.value < 1f) {
+            AppDrawer(
+                apps = apps,
+                iconBitmapCache = iconBitmapCache,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer {
+                        translationY = drawerOffset.value * size.height
                     },
-                    onCloseDrawer = { drawerOpen = false }
-                )
-            } else {
-                HomeScreen(
-                    apps = apps,
-                    favoritePackages = favoritePackages,
-                    onOpenDrawer = { drawerOpen = true },
-                    onFavoriteClick = { launchApp(context, it) },
-                    onFavoriteLongPress = { editingFavoriteSlot = it }
-                )
-            }
+                onAppClick = { app ->
+                    launchApp(context, app.packageName)
+                    scope.launch {
+                        drawerOffset.animateTo(
+                            1f,
+                            animationSpec = spring(
+                                dampingRatio = 0.86f,
+                                stiffness = 420f
+                            )
+                        )
+                    }
+                },
+                onCloseDrawer = {
+                    scope.launch {
+                        drawerOffset.animateTo(
+                            1f,
+                            animationSpec = spring(
+                                dampingRatio = 0.86f,
+                                stiffness = 420f
+                            )
+                        )
+                    }
+                }
+            )
         }
 
         editingFavoriteSlot?.let { slot ->
@@ -136,7 +171,7 @@ fun NekOSRoot() {
                 },
                 title = { Text("Welcome to NekOS") },
                 text = {
-                    Text("Swipe up from the home screen to open your apps. Swipe down from the small handle at the top of the app drawer to return home.")
+                    Text("Swipe up from the home screen to open your apps. At the top of the app list, swipe down again to return home.")
                 },
                 confirmButton = {
                     TextButton(onClick = {
@@ -153,7 +188,8 @@ fun NekOSRoot() {
 private fun HomeScreen(
     apps: List<InstalledApp>,
     favoritePackages: List<String?>,
-    onOpenDrawer: () -> Unit,
+    onDrawerDrag: (Float) -> Unit,
+    onDrawerDragEnd: () -> Unit,
     onFavoriteClick: (String) -> Unit,
     onFavoriteLongPress: (Int) -> Unit
 ) {
@@ -163,19 +199,27 @@ private fun HomeScreen(
             .fillMaxSize()
             .statusBarsPadding()
             .navigationBarsPadding()
-            .pointerInput(onOpenDrawer) {
+            .pointerInput(Unit) {
                 var totalDrag = 0f
-                var opened = false
+                var drawerDragStarted = false
                 detectVerticalDragGestures(
                     onVerticalDrag = { _, dragAmount ->
                         totalDrag += dragAmount
-                        if (!opened && totalDrag < -70f) {
-                            opened = true
-                            onOpenDrawer()
+                        if (totalDrag < 0f) {
+                            drawerDragStarted = true
+                            onDrawerDrag(totalDrag)
                         }
                     },
-                    onDragEnd = { totalDrag = 0f; opened = false },
-                    onDragCancel = { totalDrag = 0f; opened = false }
+                    onDragEnd = {
+                        if (drawerDragStarted) onDrawerDragEnd()
+                        totalDrag = 0f
+                        drawerDragStarted = false
+                    },
+                    onDragCancel = {
+                        if (drawerDragStarted) onDrawerDragEnd()
+                        totalDrag = 0f
+                        drawerDragStarted = false
+                    }
                 )
             }
             .padding(horizontal = 24.dp, vertical = 26.dp),
@@ -287,11 +331,12 @@ private fun TagPill(label: String) {
 @Composable
 private fun AppDrawer(
     apps: List<InstalledApp>,
+    iconBitmapCache: MutableMap<String, androidx.compose.ui.graphics.ImageBitmap>,
+    modifier: Modifier = Modifier,
     onAppClick: (InstalledApp) -> Unit,
     onCloseDrawer: () -> Unit
 ) {
     var searchQuery by remember { mutableStateOf("") }
-    val iconBitmapCache = remember(apps) { mutableMapOf<String, androidx.compose.ui.graphics.ImageBitmap>() }
     val filteredApps = remember(apps, searchQuery) {
         val query = searchQuery.trim()
         if (query.isBlank()) apps
@@ -300,8 +345,7 @@ private fun AppDrawer(
     }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
+        modifier = modifier
             .statusBarsPadding()
             .navigationBarsPadding()
             .padding(top = 4.dp)
@@ -310,7 +354,7 @@ private fun AppDrawer(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(38.dp)
-                .pointerInput(Unit) {
+                .pointerInput(onCloseDrawer) {
                     var totalDrag = 0f
                     detectVerticalDragGestures(
                         onVerticalDrag = { _, dragAmount -> totalDrag += dragAmount },
@@ -352,36 +396,65 @@ private fun AppDrawer(
             val closeThreshold = with(androidx.compose.ui.platform.LocalDensity.current) { 72.dp.toPx() }
             val closeConnection = remember(gridState, closeThreshold, onCloseDrawer) {
                 object : NestedScrollConnection {
+                    private var gestureActive = false
+                    private var closeEligibleForGesture = false
                     private var downwardPull = 0f
 
-                    override fun onPostScroll(
-                        consumed: Offset,
+                    private fun resetGesture() {
+                        gestureActive = false
+                        closeEligibleForGesture = false
+                        downwardPull = 0f
+                    }
+
+                    override fun onPreScroll(
                         available: Offset,
                         source: NestedScrollSource
                     ): Offset {
-                        val atTop = gridState.firstVisibleItemIndex == 0 &&
-                            gridState.firstVisibleItemScrollOffset == 0
-                        if (atTop && available.y > 0f) {
-                            downwardPull += available.y
-                            if (downwardPull >= closeThreshold) {
-                                downwardPull = 0f
-                                onCloseDrawer()
-                            }
-                        } else if (available.y < 0f || !atTop) {
+                        if (source != NestedScrollSource.UserInput) return Offset.Zero
+
+                        if (!gestureActive) {
+                            gestureActive = true
+                            closeEligibleForGesture =
+                                gridState.firstVisibleItemIndex == 0 &&
+                                gridState.firstVisibleItemScrollOffset == 0
                             downwardPull = 0f
                         }
+
+                        if (!closeEligibleForGesture) return Offset.Zero
+
+                        if (available.y < 0f) {
+                            // Once this gesture moves upward, it cannot become a close gesture.
+                            closeEligibleForGesture = false
+                            downwardPull = 0f
+                            return Offset.Zero
+                        }
+
+                        if (available.y > 0f) {
+                            downwardPull += available.y
+                            if (downwardPull >= closeThreshold) {
+                                resetGesture()
+                                onCloseDrawer()
+                                return Offset(0f, available.y)
+                            }
+                        }
                         return Offset.Zero
+                    }
+
+                    override suspend fun onPreFling(available: Velocity): Velocity {
+                        resetGesture()
+                        return Velocity.Zero
                     }
 
                     override suspend fun onPostFling(
                         consumed: Velocity,
                         available: Velocity
                     ): Velocity {
-                        downwardPull = 0f
+                        resetGesture()
                         return Velocity.Zero
                     }
                 }
             }
+
             LazyVerticalGrid(
                 state = gridState,
                 columns = GridCells.Fixed(5),
@@ -391,10 +464,24 @@ private fun AppDrawer(
                 modifier = Modifier.weight(1f).fillMaxWidth().nestedScroll(closeConnection)
             ) {
                 items(filteredApps, key = { it.packageName }) { app ->
-                    val iconBitmap = iconBitmapCache.getOrPut(app.packageName) {
-                        app.icon.toBitmap(96, 96).asImageBitmap()
+                    val cachedBitmap = iconBitmapCache[app.packageName]
+                    val bitmap by produceState(
+                        initialValue = cachedBitmap,
+                        key1 = app.packageName
+                    ) {
+                        if (value == null) {
+                            val loadedBitmap = withContext(Dispatchers.Default) {
+                                app.icon.toBitmap(96, 96).asImageBitmap()
+                            }
+                            iconBitmapCache[app.packageName] = loadedBitmap
+                            value = loadedBitmap
+                        }
                     }
-                    AppGridItem(app = app, bitmap = iconBitmap, onClick = { onAppClick(app) })
+                    AppGridItem(
+                        app = app,
+                        bitmap = bitmap,
+                        onClick = { onAppClick(app) }
+                    )
                 }
             }
         }
@@ -404,7 +491,7 @@ private fun AppDrawer(
 @Composable
 private fun AppGridItem(
     app: InstalledApp,
-    bitmap: androidx.compose.ui.graphics.ImageBitmap,
+    bitmap: androidx.compose.ui.graphics.ImageBitmap?,
     onClick: () -> Unit
 ) {
     Column(
@@ -415,11 +502,15 @@ private fun AppGridItem(
             .clickable(onClick = onClick),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        androidx.compose.foundation.Image(
-            bitmap = bitmap,
-            contentDescription = app.label,
-            modifier = Modifier.size(56.dp)
-        )
+        if (bitmap != null) {
+            androidx.compose.foundation.Image(
+                bitmap = bitmap,
+                contentDescription = app.label,
+                modifier = Modifier.size(56.dp)
+            )
+        } else {
+            Spacer(Modifier.size(56.dp))
+        }
         Spacer(Modifier.height(5.dp))
         Text(
             app.label,
@@ -432,4 +523,3 @@ private fun AppGridItem(
         )
     }
 }
-
