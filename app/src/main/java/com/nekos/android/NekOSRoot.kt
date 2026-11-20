@@ -9,8 +9,6 @@ import androidx.compose.ui.graphics.BlurEffect
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.layout.ContentScale
-import java.time.LocalTime
-import java.time.format.DateTimeFormatter
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.produceState
 import kotlinx.coroutines.Dispatchers
@@ -246,18 +244,6 @@ private fun HomeScreen(
     onFavoriteLongPress: (Int) -> Unit
 ) {
     val appByPackage = remember(apps) { apps.associateBy { it.packageName } }
-    var clockText by remember {
-        mutableStateOf(LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")))
-    }
-    LaunchedEffect(Unit) {
-        while (true) {
-            val now = LocalTime.now()
-            clockText = now.format(DateTimeFormatter.ofPattern("HH:mm"))
-            val millisToNextMinute =
-                60_000L - (now.second * 1_000L + now.nano / 1_000_000L)
-            delay(millisToNextMinute.coerceAtLeast(1L))
-        }
-    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -304,7 +290,12 @@ private fun HomeScreen(
         verticalArrangement = Arrangement.SpaceBetween
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
-            Text(clockText, color = Ink, fontSize = 27.sp, fontWeight = FontWeight.SemiBold)
+            Image(
+                painter = painterResource(R.drawable.app_logo),
+                contentDescription = "NekOS",
+                contentScale = ContentScale.Fit,
+                modifier = Modifier.size(42.dp)
+            )
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) { TagPill("Your tags") }
         }
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
