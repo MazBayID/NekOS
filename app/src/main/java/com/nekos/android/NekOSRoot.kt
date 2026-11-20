@@ -1,5 +1,13 @@
 package com.nekos.android
 
+import android.content.Context
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -44,46 +52,50 @@ fun NekOSRoot() {
     val apps by remember { mutableStateOf(loadLaunchableApps(context)) }
     var favoritePackages by remember { mutableStateOf(loadFavoritePackages(context)) }
     var editingFavoriteSlot by remember { mutableStateOf<Int?>(null) }
+    val preferences = remember(context) {
+        context.getSharedPreferences("nekos_preferences", Context.MODE_PRIVATE)
+    }
+    var showFirstLaunchTip by remember {
+        mutableStateOf(!preferences.getBoolean("has_seen_drawer_tip", false))
+    }
 
     fun updateFavorites(updated: List<String?>) {
         favoritePackages = updated
         saveFavoritePackages(context, updated)
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .statusBarsPadding()
-            .navigationBarsPadding()
-            .background(WarmBackground)
-            .pointerInput(drawerOpen) {
-                var totalDrag = 0f
-                detectVerticalDragGestures(
-                    onVerticalDrag = { _, dragAmount -> totalDrag += dragAmount },
-                    onDragEnd = {
-                        if (!drawerOpen && totalDrag < -70f) drawerOpen = true
-                        if (drawerOpen && totalDrag > 70f) drawerOpen = false
-                        totalDrag = 0f
+    Box(Modifier.fillMaxSize().background(WarmBackground)) {
+        AnimatedContent(
+            targetState = drawerOpen,
+            transitionSpec = {
+                if (targetState) {
+                    (slideInVertically(tween(280)) { it } + fadeIn(tween(220))) togetherWith
+                        (slideOutVertically(tween(180)) { -it / 8 } + fadeOut(tween(150)))
+                } else {
+                    (slideInVertically(tween(220)) { -it / 8 } + fadeIn(tween(180))) togetherWith
+                        (slideOutVertically(tween(260)) { it } + fadeOut(tween(180)))
+                }
+            },
+            label = "home-drawer-transition"
+        ) { isDrawerOpen ->
+            if (isDrawerOpen) {
+                AppDrawer(
+                    apps = apps,
+                    onAppClick = { app ->
+                        launchApp(context, app.packageName)
+                        drawerOpen = false
                     },
-                    onDragCancel = { totalDrag = 0f }
+                    onCloseDrawer = { drawerOpen = false }
+                )
+            } else {
+                HomeScreen(
+                    apps = apps,
+                    favoritePackages = favoritePackages,
+                    onOpenDrawer = { drawerOpen = true },
+                    onFavoriteClick = { launchApp(context, it) },
+                    onFavoriteLongPress = { editingFavoriteSlot = it }
                 )
             }
-    ) {
-        if (drawerOpen) {
-            AppDrawer(
-                apps = apps,
-                onAppClick = { app ->
-                    launchApp(context, app.packageName)
-                    drawerOpen = false
-                },
-            )
-        } else {
-            HomeScreen(
-                apps = apps,
-                favoritePackages = favoritePackages,
-                onFavoriteClick = { launchApp(context, it) },
-                onFavoriteLongPress = { editingFavoriteSlot = it }
-            )
         }
 
         editingFavoriteSlot?.let { slot ->
@@ -109,6 +121,25 @@ fun NekOSRoot() {
                 onDismiss = { editingFavoriteSlot = null }
             )
         }
+
+        if (showFirstLaunchTip) {
+            AlertDialog(
+                onDismissRequest = {
+                    preferences.edit().putBoolean("has_seen_drawer_tip", true).apply()
+                    showFirstLaunchTip = false
+                },
+                title = { Text("Welcome to NekOS") },
+                text = {
+                    Text("Swipe up from the home screen to open your apps. Swipe down from the small handle at the top of the app drawer to return home.")
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        preferences.edit().putBoolean("has_seen_drawer_tip", true).apply()
+                        showFirstLaunchTip = false
+                    }) { Text("Got it") }
+                }
+            )
+        }
     }
 }
 
@@ -116,22 +147,33 @@ fun NekOSRoot() {
 private fun HomeScreen(
     apps: List<InstalledApp>,
     favoritePackages: List<String?>,
+    onOpenDrawer: () -> Unit,
     onFavoriteClick: (String) -> Unit,
     onFavoriteLongPress: (Int) -> Unit
 ) {
     val appByPackage = remember(apps) { apps.associateBy { it.packageName } }
     Column(
-        modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 26.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .statusBarsPadding()
+            .navigationBarsPadding()
+            .pointerInput(Unit) {
+                var totalDrag = 0f
+                detectVerticalDragGestures(
+                    onVerticalDrag = { _, dragAmount -> totalDrag += dragAmount },
+                    onDragEnd = {
+                        if (totalDrag < -70f) onOpenDrawer()
+                        totalDrag = 0f
+                    },
+                    onDragCancel = { totalDrag = 0f }
+                )
+            }
+            .padding(horizontal = 24.dp, vertical = 26.dp),
         verticalArrangement = Arrangement.SpaceBetween
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
             Text("NekOS", color = Ink, fontSize = 27.sp, fontWeight = FontWeight.SemiBold)
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) { TagPill("Your tags") }
-        }
-        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-            Text("Swipe up to open apps", color = Muted, fontSize = 13.sp, textAlign = TextAlign.Center)
-            Spacer(Modifier.height(12.dp))
-            Box(Modifier.width(44.dp).height(4.dp).clip(RoundedCornerShape(50)).background(Color(0xFFD5CFC4)))
         }
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             repeat(3) { row ->
@@ -172,9 +214,11 @@ private fun FavoriteSlot(
         verticalArrangement = Arrangement.Center
     ) {
         if (app != null && bitmap != null) {
-            androidx.compose.foundation.Image(bitmap = bitmap, contentDescription = app.label, modifier = Modifier.size(38.dp))
-            Spacer(Modifier.height(3.dp))
-            Text(app.label, color = Ink, fontSize = 9.sp, maxLines = 1, textAlign = TextAlign.Center)
+            androidx.compose.foundation.Image(
+                bitmap = bitmap,
+                contentDescription = app.label,
+                modifier = Modifier.size(44.dp)
+            )
         } else {
             Text("+", color = Muted, fontSize = 22.sp)
         }
@@ -236,15 +280,60 @@ private fun TagPill(label: String) {
 @Composable
 private fun AppDrawer(
     apps: List<InstalledApp>,
-    onAppClick: (InstalledApp) -> Unit
+    onAppClick: (InstalledApp) -> Unit,
+    onCloseDrawer: () -> Unit
 ) {
     var searchQuery by remember { mutableStateOf("") }
     val filteredApps = remember(apps, searchQuery) {
-        if (searchQuery.isBlank()) apps
-        else apps.filter { it.label.contains(searchQuery.trim(), ignoreCase = true) }
+        val query = searchQuery.trim()
+        if (query.isBlank()) {
+            apps
+        } else {
+            apps.filter { it.label.contains(query, ignoreCase = true) }
+                .sortedWith(
+                    compareBy<InstalledApp> { app ->
+                        when {
+                            app.label.startsWith(query, ignoreCase = true) -> 0
+                            app.label.split(Regex("\\s+")).any {
+                                it.startsWith(query, ignoreCase = true)
+                            } -> 1
+                            else -> 2
+                        }
+                    }.thenBy { it.label.lowercase() }
+                )
+        }
     }
 
-    Column(modifier = Modifier.fillMaxSize().padding(top = 22.dp)) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .statusBarsPadding()
+            .navigationBarsPadding()
+            .padding(top = 4.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(38.dp)
+                .pointerInput(Unit) {
+                    var totalDrag = 0f
+                    detectVerticalDragGestures(
+                        onVerticalDrag = { _, dragAmount -> totalDrag += dragAmount },
+                        onDragEnd = {
+                            if (totalDrag > 45f) onCloseDrawer()
+                            totalDrag = 0f
+                        },
+                        onDragCancel = { totalDrag = 0f }
+                    )
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            Box(
+                Modifier.width(38.dp).height(4.dp)
+                    .clip(RoundedCornerShape(50))
+                    .background(Color(0xFFD5CFC4))
+            )
+        }
         Text(
             "Applications",
             color = Ink,
