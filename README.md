@@ -14,6 +14,12 @@ A calm, customizable Android launcher.
 - Tap an app to launch it.
 - Swipe down to return to the home screen.
 
+## Branding assets
+
+- `main_assets/app_logo.png`: Android launcher icon.
+- `main_assets/NekOS_text_logo.png`: transparent wordmark with the “Purrfectly Minimal” slogan; intended for a short, calm startup splash screen, not persistent home-screen decoration.
+- Applied image assets should be copied into `drawable-nodpi` to preserve their source proportions.
+
 ## Android project
 
 - Application ID / namespace: `com.nekos.android`
