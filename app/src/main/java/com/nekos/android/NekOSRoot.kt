@@ -16,12 +16,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
-import androidx.compose.ui.input.nestedscroll.NestedScrollSource
-import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.unit.Velocity
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -41,10 +40,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlin.math.abs
 import androidx.core.graphics.drawable.toBitmap
 
 private val WarmBackground = Color(0xFFF4F1EA)
@@ -394,64 +395,51 @@ private fun AppDrawer(
             }
         } else {
             val gridState = rememberLazyGridState()
-            val closeThreshold = with(androidx.compose.ui.platform.LocalDensity.current) { 72.dp.toPx() }
-            val closeConnection = remember(gridState, closeThreshold) {
-                object : NestedScrollConnection {
-                    private var gestureActive = false
-                    private var closeEligibleForGesture = false
-                    private var downwardPull = 0f
+            val closeThreshold = with(androidx.compose.ui.platform.LocalDensity.current) { 64.dp.toPx() }
+            val touchSlop = LocalViewConfiguration.current.touchSlop
+            val edgeCloseGesture = Modifier.pointerInput(gridState, closeThreshold, touchSlop) {
+                awaitEachGesture {
+                    val down = awaitFirstDown(
+                        requireUnconsumed = false,
+                        pass = PointerEventPass.Initial
+                    )
 
-                    private fun resetGesture() {
-                        gestureActive = false
-                        closeEligibleForGesture = false
-                        downwardPull = 0f
-                    }
+                    // Lock eligibility at ACTION_DOWN-equivalent time. A gesture that
+                    // starts while the grid is scrolled cannot close the drawer later,
+                    // even if that same gesture scrolls the grid back to its top.
+                    val startedAtTop = !gridState.canScrollBackward
+                    var totalMovement = androidx.compose.ui.geometry.Offset.Zero
+                    var directionDecided = false
+                    var isDownwardCloseGesture = false
+                    var closeTriggered = false
 
-                    override fun onPreScroll(
-                        available: Offset,
-                        source: NestedScrollSource
-                    ): Offset {
-                        if (source != NestedScrollSource.UserInput) return Offset.Zero
+                    while (true) {
+                        val event = awaitPointerEvent(PointerEventPass.Initial)
+                        val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                        if (!change.pressed) break
 
-                        if (!gestureActive) {
-                            gestureActive = true
-                            closeEligibleForGesture =
-                                gridState.firstVisibleItemIndex == 0 &&
-                                gridState.firstVisibleItemScrollOffset == 0
-                            downwardPull = 0f
+                        totalMovement += change.positionChange()
+
+                        if (!directionDecided &&
+                            (abs(totalMovement.x) > touchSlop || abs(totalMovement.y) > touchSlop)
+                        ) {
+                            directionDecided = true
+                            isDownwardCloseGesture =
+                                startedAtTop &&
+                                totalMovement.y > 0f &&
+                                abs(totalMovement.y) > abs(totalMovement.x)
                         }
 
-                        if (!closeEligibleForGesture) return Offset.Zero
+                        if (isDownwardCloseGesture) {
+                            // Consume in the Initial pass so the grid cannot interpret
+                            // this edge pull as a list scroll or overscroll gesture.
+                            change.consume()
 
-                        if (available.y < 0f) {
-                            // Once this gesture moves upward, it cannot become a close gesture.
-                            closeEligibleForGesture = false
-                            downwardPull = 0f
-                            return Offset.Zero
-                        }
-
-                        if (available.y > 0f) {
-                            downwardPull += available.y
-                            if (downwardPull >= closeThreshold) {
-                                resetGesture()
+                            if (!closeTriggered && totalMovement.y >= closeThreshold) {
+                                closeTriggered = true
                                 currentOnCloseDrawer()
-                                return Offset(0f, available.y)
                             }
                         }
-                        return Offset.Zero
-                    }
-
-                    override suspend fun onPreFling(available: Velocity): Velocity {
-                        resetGesture()
-                        return Velocity.Zero
-                    }
-
-                    override suspend fun onPostFling(
-                        consumed: Velocity,
-                        available: Velocity
-                    ): Velocity {
-                        resetGesture()
-                        return Velocity.Zero
                     }
                 }
             }
@@ -462,7 +450,7 @@ private fun AppDrawer(
                 contentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 28.dp),
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp),
-                modifier = Modifier.weight(1f).fillMaxWidth().nestedScroll(closeConnection)
+                modifier = Modifier.weight(1f).fillMaxWidth().then(edgeCloseGesture)
             ) {
                 items(filteredApps, key = { it.packageName }) { app ->
                     val cachedBitmap = iconBitmapCache[app.packageName]
