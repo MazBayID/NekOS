@@ -8,8 +8,7 @@
 
     <style name="Theme.NekOS.Starting" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">#F4F1EA</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/app_logo</item>
-        <item name="android:windowSplashScreenBrandingImage">@drawable/nekos_text_logo</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_transparent</item>
         <item name="postSplashScreenTheme">@style/Theme.NekOS</item>
     </style>
 </resources>
