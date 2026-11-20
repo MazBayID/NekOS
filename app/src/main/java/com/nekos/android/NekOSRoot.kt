@@ -156,7 +156,9 @@ private fun FavoriteSlot(
     onLongClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val bitmap = app?.let { remember(it.packageName) { it.icon.toBitmap(96, 96).asImageBitmap() } }
+    val bitmap = if (app == null) null else remember(app.packageName) {
+        app.icon.toBitmap(96, 96).asImageBitmap()
+    }
     Column(
         modifier = modifier.aspectRatio(1f).clip(RoundedCornerShape(19.dp))
             .background(Color(0xFFECE8E0))
@@ -190,7 +192,7 @@ private fun FavoritePickerDialog(
     }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Favorite slot \${slotIndex + 1}") },
+        title = { Text("Favorite slot ${slotIndex + 1}") },
         text = {
             Column {
                 if (currentPackage != null) {
@@ -224,25 +226,6 @@ private fun TagPill(label: String) {
             .padding(horizontal = 15.dp, vertical = 9.dp)
     ) {
         Text(label, color = Ink, fontSize = 13.sp, fontWeight = FontWeight.Medium)
-    }
-}
-
-@Composable
-private fun FavoritesPlaceholder() {
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        repeat(3) {
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                repeat(5) {
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .aspectRatio(1f)
-                            .clip(RoundedCornerShape(19.dp))
-                            .background(Color(0xFFECE8E0))
-                    )
-                }
-            }
-        }
     }
 }
 
