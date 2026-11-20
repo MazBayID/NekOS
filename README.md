@@ -1,5 +1,13 @@
 # NekOS
 
+<p align="center">
+  <img src="nekos_1.jpg" alt="NekOS 1" width="100" />
+</p>
+<p align="center">
+  <img src="nekos_2.jpg" alt="NekOS 2" width="100" />
+  <img src="nekos_3.jpg" alt="NekOS 3" width="100" />
+</p>
+
 This project was inspired by my headache of searching
 and sorting the applications I have based on my needs.
 
