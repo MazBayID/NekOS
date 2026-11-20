@@ -294,7 +294,7 @@ private fun HomeScreen(
                 painter = painterResource(R.drawable.text_logo_sec),
                 contentDescription = "NekOS",
                 contentScale = ContentScale.Fit,
-                modifier = Modifier.offset(x = (-8).dp).width(140.dp).height(50.dp)
+                modifier = Modifier.offset(x = (-18).dp).width(140.dp).height(50.dp)
             )
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) { TagPill("Your tags") }
         }
