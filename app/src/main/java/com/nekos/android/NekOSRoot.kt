@@ -2,6 +2,7 @@ package com.nekos.android
 
 import android.content.Context
 import android.os.Build
+import android.widget.Toast
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.spring
 import androidx.compose.ui.graphics.graphicsLayer
@@ -23,6 +24,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.awaitVerticalDragOrCancellation
@@ -43,18 +45,21 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlin.math.abs
+import kotlin.math.roundToInt
 import androidx.core.graphics.drawable.toBitmap
 
 private val WarmBackground = Color(0xFFF4F1EA)
@@ -91,7 +96,7 @@ fun NekOSRoot() {
         mutableMapOf<String, androidx.compose.ui.graphics.ImageBitmap>()
     }
     var favoritePackages by remember { mutableStateOf(loadFavoritePackages(context)) }
-    var editingFavoriteSlot by remember { mutableStateOf<Int?>(null) }
+    var actionMenuApp by remember { mutableStateOf<InstalledApp?>(null) }
     val preferences = remember(context) {
         context.getSharedPreferences("nekos_preferences", Context.MODE_PRIVATE)
     }
@@ -102,6 +107,26 @@ fun NekOSRoot() {
     fun updateFavorites(updated: List<String?>) {
         favoritePackages = updated
         saveFavoritePackages(context, updated)
+    }
+
+    fun addFavorite(packageName: String) {
+        if (packageName in favoritePackages) return
+        val updated = favoritePackages.toMutableList()
+        val emptySlot = updated.indexOfFirst { it == null }
+        if (emptySlot < 0) {
+            Toast.makeText(context, "Favorite slots are full", Toast.LENGTH_SHORT).show()
+            return
+        }
+        updated[emptySlot] = packageName
+        updateFavorites(updated)
+    }
+
+    fun moveFavorite(from: Int, to: Int) {
+        if (from == to) return
+        val updated = favoritePackages.toMutableList()
+        val moved = updated.removeAt(from)
+        updated.add(to.coerceIn(0, updated.lastIndex), moved)
+        updateFavorites(updated)
     }
 
     BoxWithConstraints(Modifier.fillMaxSize().background(WarmBackground)) {
@@ -136,7 +161,12 @@ fun NekOSRoot() {
                 }
             },
             onFavoriteClick = { launchApp(context, it) },
-            onFavoriteLongPress = { editingFavoriteSlot = it }
+            onFavoriteLongPress = { index ->
+                favoritePackages.getOrNull(index)?.let { packageName ->
+                    apps.firstOrNull { it.packageName == packageName }?.let { actionMenuApp = it }
+                }
+            },
+            onFavoriteMove = { from, to -> moveFavorite(from, to) }
         )
 
         if (drawerOffset.value < 1f) {
@@ -173,6 +203,7 @@ fun NekOSRoot() {
                         )
                     }
                 },
+                onAppLongPress = { actionMenuApp = it },
                 onCloseDrawer = {
                     scope.launch {
                         drawerOffset.animateTo(
@@ -187,27 +218,28 @@ fun NekOSRoot() {
             )
         }
 
-        editingFavoriteSlot?.let { slot ->
-            FavoritePickerDialog(
-                slotIndex = slot,
-                apps = apps,
-                currentPackage = favoritePackages.getOrNull(slot),
-                favoritePackages = favoritePackages,
-                onSelect = { packageName ->
-                    val updated = favoritePackages.toMutableList()
-                    while (updated.size < 15) updated.add(null)
-                    updated[slot] = packageName
-                    updateFavorites(updated)
-                    editingFavoriteSlot = null
+        actionMenuApp?.let { app ->
+            val isFavorite = app.packageName in favoritePackages.filterNotNull()
+            AppActionsDialog(
+                app = app,
+                isFavorite = isFavorite,
+                onInfo = {
+                    actionMenuApp = null
+                    openAppInfo(context, app.packageName)
                 },
-                onRemove = {
-                    val updated = favoritePackages.toMutableList()
-                    while (updated.size < 15) updated.add(null)
-                    updated[slot] = null
-                    updateFavorites(updated)
-                    editingFavoriteSlot = null
+                onFavorite = {
+                    if (isFavorite) {
+                        updateFavorites(favoritePackages.map { if (it == app.packageName) null else it })
+                    } else {
+                        addFavorite(app.packageName)
+                    }
+                    actionMenuApp = null
                 },
-                onDismiss = { editingFavoriteSlot = null }
+                onUninstall = {
+                    actionMenuApp = null
+                    requestAppUninstall(context, app.packageName)
+                },
+                onDismiss = { actionMenuApp = null }
             )
         }
 
@@ -241,75 +273,86 @@ private fun HomeScreen(
     onDrawerDrag: (Float) -> Unit,
     onDrawerDragEnd: (Float) -> Unit,
     onFavoriteClick: (String) -> Unit,
-    onFavoriteLongPress: (Int) -> Unit
+    onFavoriteLongPress: (Int) -> Unit,
+    onFavoriteMove: (Int, Int) -> Unit
 ) {
     val appByPackage = remember(apps) { apps.associateBy { it.packageName } }
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .statusBarsPadding()
-            .navigationBarsPadding()
-            .graphicsLayer {
-                renderEffect = if (
-                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
-                    backgroundBlurRadiusPx > 0.5f
-                ) {
-                    BlurEffect(
-                        backgroundBlurRadiusPx,
-                        backgroundBlurRadiusPx,
-                        TileMode.Decal
-                    )
-                } else {
-                    null
-                }
-            }
-            .pointerInput(homeSwipeThresholdPx) {
-                var totalDrag = 0f
-                var drawerDragStarted = false
-                detectVerticalDragGestures(
-                    onVerticalDrag = { _, dragAmount ->
-                        totalDrag += dragAmount
-                        if (totalDrag < 0f) {
-                            drawerDragStarted = true
-                            onDrawerDrag(totalDrag)
-                        }
-                    },
-                    onDragEnd = {
-                        if (drawerDragStarted) onDrawerDragEnd(totalDrag)
-                        totalDrag = 0f
-                        drawerDragStarted = false
-                    },
-                    onDragCancel = {
-                        if (drawerDragStarted) onDrawerDragEnd(totalDrag)
-                        totalDrag = 0f
-                        drawerDragStarted = false
-                    }
-                )
-            }
-            .padding(horizontal = 24.dp, vertical = 26.dp),
-        verticalArrangement = Arrangement.SpaceBetween
-    ) {
-        Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
-            Image(
-                painter = painterResource(R.drawable.text_logo_sec),
-                contentDescription = "NekOS",
-                contentScale = ContentScale.Fit,
-                modifier = Modifier.offset(x = (-18).dp).width(140.dp).height(50.dp)
-            )
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) { TagPill("Your tags") }
-        }
-        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            repeat(3) { row ->
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    repeat(5) { column ->
-                        val index = row * 5 + column
-                        val app = favoritePackages.getOrNull(index)?.let { appByPackage[it] }
-                        FavoriteSlot(
-                            app = app,
-                            onClick = { app?.let { onFavoriteClick(it.packageName) } },
-                            onLongClick = { onFavoriteLongPress(index) },
-                            modifier = Modifier.weight(1f)
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        val density = LocalDensity.current
+        val favoriteCellSizePx = with(density) { ((maxWidth - 48.dp - 40.dp) / 5).toPx() }
+        val favoriteCellGapPx = with(density) { 10.dp.toPx() }
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding()
+                .navigationBarsPadding()
+                .graphicsLayer {
+                    renderEffect = if (
+                        Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+                        backgroundBlurRadiusPx > 0.5f
+                    ) {
+                        BlurEffect(
+                            backgroundBlurRadiusPx,
+                            backgroundBlurRadiusPx,
+                            TileMode.Decal
                         )
+                    } else {
+                        null
+                    }
+                }
+                .pointerInput(homeSwipeThresholdPx) {
+                    var totalDrag = 0f
+                    var drawerDragStarted = false
+                    detectVerticalDragGestures(
+                        onVerticalDrag = { _, dragAmount ->
+                            totalDrag += dragAmount
+                            if (totalDrag < 0f) {
+                                drawerDragStarted = true
+                                onDrawerDrag(totalDrag)
+                            }
+                        },
+                        onDragEnd = {
+                            if (drawerDragStarted) onDrawerDragEnd(totalDrag)
+                            totalDrag = 0f
+                            drawerDragStarted = false
+                        },
+                        onDragCancel = {
+                            if (drawerDragStarted) onDrawerDragEnd(totalDrag)
+                            totalDrag = 0f
+                            drawerDragStarted = false
+                        }
+                    )
+                }
+                .padding(horizontal = 24.dp, vertical = 26.dp),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
+                Image(
+                    painter = painterResource(R.drawable.text_logo_sec),
+                    contentDescription = "NekOS",
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.offset(x = (-18).dp).width(140.dp).height(50.dp)
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) { TagPill("Your tags") }
+            }
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                repeat(3) { row ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        repeat(5) { column ->
+                            val index = row * 5 + column
+                            val app = favoritePackages.getOrNull(index)?.let { appByPackage[it] }
+                            FavoriteSlot(
+                                app = app,
+                                slotIndex = index,
+                                cellSizePx = favoriteCellSizePx,
+                                cellGapPx = favoriteCellGapPx,
+                                onClick = { app?.let { onFavoriteClick(it.packageName) } },
+                                onLongPress = { onFavoriteLongPress(index) },
+                                onMove = onFavoriteMove,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
                     }
                 }
             }
@@ -317,31 +360,130 @@ private fun HomeScreen(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun FavoriteSlot(
     app: InstalledApp?,
+    slotIndex: Int,
+    cellSizePx: Float,
+    cellGapPx: Float,
     onClick: () -> Unit,
-    onLongClick: () -> Unit,
+    onLongPress: () -> Unit,
+    onMove: (Int, Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val bitmap = if (app == null) null else remember(app.packageName) {
         app.icon.toBitmap(96, 96).asImageBitmap()
     }
+    val touchSlop = LocalViewConfiguration.current.touchSlop
+
     Column(
-        modifier = modifier.aspectRatio(1f).clip(RoundedCornerShape(19.dp))
-            .combinedClickable(onClick = onClick, onLongClick = onLongClick)
+        modifier = modifier
+            .aspectRatio(1f)
+            .pointerInput(slotIndex, cellSizePx, cellGapPx, app?.packageName) {
+                var dragStart = Offset.Zero
+                var dragDistance = Offset.Zero
+                var hasMoved = false
+
+                detectDragGesturesAfterLongPress(
+                    onDragStart = {
+                        dragStart = it
+                        dragDistance = Offset.Zero
+                        hasMoved = false
+                    },
+                    onDrag = { change, dragAmount ->
+                        dragDistance += dragAmount
+                        if (dragDistance.getDistance() > touchSlop) hasMoved = true
+                        change.consume()
+                    },
+                    onDragEnd = {
+                        if (app != null) {
+                            if (hasMoved) {
+                                val columnDelta = (
+                                    (dragDistance.x + dragStart.x - cellSizePx / 2f) /
+                                        (cellSizePx + cellGapPx)
+                                    ).roundToInt()
+                                val rowDelta = (
+                                    (dragDistance.y + dragStart.y - cellSizePx / 2f) /
+                                        (cellSizePx + cellGapPx)
+                                    ).roundToInt()
+                                val targetColumn = (slotIndex % 5 + columnDelta).coerceIn(0, 4)
+                                val targetRow = (slotIndex / 5 + rowDelta).coerceIn(0, 2)
+                                onMove(slotIndex, targetRow * 5 + targetColumn)
+                            } else {
+                                onLongPress()
+                            }
+                        }
+                    },
+                    onDragCancel = {
+                        if (app != null && !hasMoved) onLongPress()
+                    }
+                )
+            }
+            .clickable(enabled = app != null, onClick = onClick)
             .padding(5.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
         if (app != null && bitmap != null) {
-            androidx.compose.foundation.Image(
+            Image(
                 bitmap = bitmap,
                 contentDescription = app.label,
                 modifier = Modifier.size(54.dp)
             )
         }
+    }
+}
+
+@Composable
+private fun AppActionsDialog(
+    app: InstalledApp,
+    isFavorite: Boolean,
+    onInfo: () -> Unit,
+    onFavorite: () -> Unit,
+    onUninstall: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(app.label, color = Ink, fontWeight = FontWeight.SemiBold) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                AppActionRow(R.drawable.nekos_ui_info, "App info", onInfo)
+                AppActionRow(
+                    R.drawable.nekos_ui_favorite,
+                    if (isFavorite) "Remove from favorite" else "Add to favorite",
+                    onFavorite
+                )
+                AppActionRow(R.drawable.nekos_ui_trash, "Uninstall", onUninstall)
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text("Close") }
+        }
+    )
+}
+
+@Composable
+private fun AppActionRow(
+    iconRes: Int,
+    label: String,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 10.dp, vertical = 9.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Image(
+            painter = painterResource(iconRes),
+            contentDescription = null,
+            modifier = Modifier.size(30.dp)
+        )
+        Spacer(Modifier.width(12.dp))
+        Text(label, color = Ink, fontSize = 15.sp, fontWeight = FontWeight.Medium)
     }
 }
 
@@ -404,6 +546,7 @@ private fun AppDrawer(
     closeThresholdPx: Float,
     modifier: Modifier = Modifier,
     onAppClick: (InstalledApp) -> Unit,
+    onAppLongPress: (InstalledApp) -> Unit,
     onCloseDrawer: () -> Unit
 ) {
     var searchQuery by remember { mutableStateOf("") }
@@ -537,7 +680,8 @@ private fun AppDrawer(
                     AppGridItem(
                         app = app,
                         bitmap = bitmap,
-                        onClick = { onAppClick(app) }
+                        onClick = { onAppClick(app) },
+                        onLongClick = { onAppLongPress(app) }
                     )
                 }
             }
@@ -545,22 +689,24 @@ private fun AppDrawer(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun AppGridItem(
     app: InstalledApp,
     bitmap: androidx.compose.ui.graphics.ImageBitmap?,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onLongClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
             .padding(vertical = 5.dp)
-            .clickable(onClick = onClick),
+            .combinedClickable(onClick = onClick, onLongClick = onLongClick),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         if (bitmap != null) {
-            androidx.compose.foundation.Image(
+            Image(
                 bitmap = bitmap,
                 contentDescription = app.label,
                 modifier = Modifier.size(56.dp)
