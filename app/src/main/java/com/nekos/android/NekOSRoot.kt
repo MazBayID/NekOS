@@ -15,6 +15,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.unit.Velocity
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -69,11 +75,11 @@ fun NekOSRoot() {
             targetState = drawerOpen,
             transitionSpec = {
                 if (targetState) {
-                    (slideInVertically(tween(280)) { it } + fadeIn(tween(220))) togetherWith
-                        (slideOutVertically(tween(180)) { -it / 8 } + fadeOut(tween(150)))
+                    (slideInVertically(tween(180)) { it } + fadeIn(tween(120))) togetherWith
+                        (slideOutVertically(tween(130)) { -it / 8 } + fadeOut(tween(100)))
                 } else {
-                    (slideInVertically(tween(220)) { -it / 8 } + fadeIn(tween(180))) togetherWith
-                        (slideOutVertically(tween(260)) { it } + fadeOut(tween(180)))
+                    (slideInVertically(tween(160)) { -it / 8 } + fadeIn(tween(120))) togetherWith
+                        (slideOutVertically(tween(180)) { it } + fadeOut(tween(120)))
                 }
             },
             label = "home-drawer-transition"
@@ -157,15 +163,19 @@ private fun HomeScreen(
             .fillMaxSize()
             .statusBarsPadding()
             .navigationBarsPadding()
-            .pointerInput(Unit) {
+            .pointerInput(onOpenDrawer) {
                 var totalDrag = 0f
+                var opened = false
                 detectVerticalDragGestures(
-                    onVerticalDrag = { _, dragAmount -> totalDrag += dragAmount },
-                    onDragEnd = {
-                        if (totalDrag < -70f) onOpenDrawer()
-                        totalDrag = 0f
+                    onVerticalDrag = { _, dragAmount ->
+                        totalDrag += dragAmount
+                        if (!opened && totalDrag < -70f) {
+                            opened = true
+                            onOpenDrawer()
+                        }
                     },
-                    onDragCancel = { totalDrag = 0f }
+                    onDragEnd = { totalDrag = 0f; opened = false },
+                    onDragCancel = { totalDrag = 0f; opened = false }
                 )
             }
             .padding(horizontal = 24.dp, vertical = 26.dp),
@@ -207,7 +217,6 @@ private fun FavoriteSlot(
     }
     Column(
         modifier = modifier.aspectRatio(1f).clip(RoundedCornerShape(19.dp))
-            .background(Color(0xFFECE8E0))
             .combinedClickable(onClick = onClick, onLongClick = onLongClick)
             .padding(5.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -217,10 +226,8 @@ private fun FavoriteSlot(
             androidx.compose.foundation.Image(
                 bitmap = bitmap,
                 contentDescription = app.label,
-                modifier = Modifier.size(44.dp)
+                modifier = Modifier.size(54.dp)
             )
-        } else {
-            Text("+", color = Muted, fontSize = 22.sp)
         }
     }
 }
@@ -286,22 +293,9 @@ private fun AppDrawer(
     var searchQuery by remember { mutableStateOf("") }
     val filteredApps = remember(apps, searchQuery) {
         val query = searchQuery.trim()
-        if (query.isBlank()) {
-            apps
-        } else {
-            apps.filter { it.label.contains(query, ignoreCase = true) }
-                .sortedWith(
-                    compareBy<InstalledApp> { app ->
-                        when {
-                            app.label.startsWith(query, ignoreCase = true) -> 0
-                            app.label.split(Regex("\\s+")).any {
-                                it.startsWith(query, ignoreCase = true)
-                            } -> 1
-                            else -> 2
-                        }
-                    }.thenBy { it.label.lowercase() }
-                )
-        }
+        if (query.isBlank()) apps
+        else apps.filter { it.label.trimStart().startsWith(query, ignoreCase = true) }
+            .sortedBy { it.label.lowercase() }
     }
 
     Column(
@@ -353,12 +347,47 @@ private fun AppDrawer(
                 Text("No apps found", color = Muted)
             }
         } else {
+            val gridState = rememberLazyGridState()
+            val closeThreshold = with(androidx.compose.ui.platform.LocalDensity.current) { 72.dp.toPx() }
+            val closeConnection = remember(gridState, closeThreshold, onCloseDrawer) {
+                object : NestedScrollConnection {
+                    private var downwardPull = 0f
+
+                    override fun onPostScroll(
+                        consumed: Offset,
+                        available: Offset,
+                        source: NestedScrollSource
+                    ): Offset {
+                        val atTop = gridState.firstVisibleItemIndex == 0 &&
+                            gridState.firstVisibleItemScrollOffset == 0
+                        if (atTop && available.y > 0f) {
+                            downwardPull += available.y
+                            if (downwardPull >= closeThreshold) {
+                                downwardPull = 0f
+                                onCloseDrawer()
+                            }
+                        } else if (available.y < 0f || !atTop) {
+                            downwardPull = 0f
+                        }
+                        return Offset.Zero
+                    }
+
+                    override suspend fun onPostFling(
+                        consumed: Velocity,
+                        available: Velocity
+                    ): Velocity {
+                        downwardPull = 0f
+                        return Velocity.Zero
+                    }
+                }
+            }
             LazyVerticalGrid(
+                state = gridState,
                 columns = GridCells.Fixed(5),
                 contentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 28.dp),
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp),
-                modifier = Modifier.weight(1f).fillMaxWidth()
+                modifier = Modifier.weight(1f).fillMaxWidth().nestedScroll(closeConnection)
             ) {
                 items(filteredApps, key = { it.packageName }) { app ->
                     AppGridItem(app = app, onClick = { onAppClick(app) })
@@ -382,7 +411,7 @@ private fun AppGridItem(app: InstalledApp, onClick: () -> Unit) {
         androidx.compose.foundation.Image(
             bitmap = bitmap,
             contentDescription = app.label,
-            modifier = Modifier.size(48.dp)
+            modifier = Modifier.size(56.dp)
         )
         Spacer(Modifier.height(5.dp))
         Text(
