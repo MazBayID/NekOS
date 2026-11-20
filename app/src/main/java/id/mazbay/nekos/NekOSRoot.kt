@@ -1,4 +1,4 @@
-package id.mazbay.nekos
+package com.nekos.android
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
