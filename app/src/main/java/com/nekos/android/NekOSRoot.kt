@@ -17,8 +17,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.background
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -485,46 +483,6 @@ private fun AppActionRow(
         Spacer(Modifier.width(12.dp))
         Text(label, color = Ink, fontSize = 15.sp, fontWeight = FontWeight.Medium)
     }
-}
-
-@Composable
-private fun FavoritePickerDialog(
-    slotIndex: Int,
-    apps: List<InstalledApp>,
-    currentPackage: String?,
-    favoritePackages: List<String?>,
-    onSelect: (String) -> Unit,
-    onRemove: () -> Unit,
-    onDismiss: () -> Unit
-) {
-    val availableApps = apps.filter { app ->
-        app.packageName == currentPackage || app.packageName !in favoritePackages.filterNotNull()
-    }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Favorite slot ${slotIndex + 1}") },
-        text = {
-            Column {
-                if (currentPackage != null) {
-                    TextButton(onClick = onRemove) { Text("Remove from favorites") }
-                }
-                LazyColumn(modifier = Modifier.heightIn(max = 360.dp)) {
-                    items(availableApps, key = { it.packageName }) { app ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth().clickable { onSelect(app.packageName) }.padding(vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            val icon = remember(app.packageName) { app.icon.toBitmap(72, 72).asImageBitmap() }
-                            androidx.compose.foundation.Image(bitmap = icon, contentDescription = app.label, modifier = Modifier.size(36.dp))
-                            Spacer(Modifier.width(12.dp))
-                            Text(app.label, color = Ink)
-                        }
-                    }
-                }
-            }
-        },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("Close") } }
-    )
 }
 
 @Composable
