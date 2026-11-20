@@ -58,7 +58,6 @@ fun NekOSRoot() {
                     launchApp(context, app.packageName)
                     drawerOpen = false
                 },
-                onClose = { drawerOpen = false }
             )
         } else {
             HomeScreen()
@@ -134,8 +133,7 @@ private fun FavoritesPlaceholder() {
 @Composable
 private fun AppDrawer(
     apps: List<InstalledApp>,
-    onAppClick: (InstalledApp) -> Unit,
-    onClose: () -> Unit
+    onAppClick: (InstalledApp) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxSize().padding(top = 22.dp)) {
         Text(
