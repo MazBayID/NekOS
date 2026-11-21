@@ -107,7 +107,9 @@ fun NekOSRoot(refreshToken: Int) {
         return
     }
 
-undefined    var apps by remember { mutableStateOf(emptyList<InstalledApp>()) }
+    val context = LocalContext.current
+    val launchSourceView = LocalView.current
+    var apps by remember { mutableStateOf(emptyList<InstalledApp>()) }
     val iconBitmapCache = remember(apps) {
         mutableMapOf<String, androidx.compose.ui.graphics.ImageBitmap>()
     }
@@ -938,7 +940,8 @@ private fun FavoriteSlot(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun TagPill(tag: NekTag, onClick: () -> Unit, onLongClick: () -> Unit) {
-undefined    var tagIcon by remember(tag.iconId) {
+    val context = LocalContext.current
+    var tagIcon by remember(tag.iconId) {
         mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null)
     }
     LaunchedEffect(tag.iconId) {
