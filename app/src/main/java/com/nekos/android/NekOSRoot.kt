@@ -329,8 +329,8 @@ fun NekOSRoot(refreshToken: Int) {
                     )
                 }
             },
-            onFavoriteClick = { packageName, bounds ->
-                apps.firstOrNull { it.id == packageName }?.let { app -> launchApp(context, app, launchSourceView, bounds.left.roundToInt(), bounds.top.roundToInt(), bounds.width.roundToInt(), bounds.height.roundToInt()) }
+            onFavoriteClick = { app, bounds ->
+                launchApp(context, app, launchSourceView, bounds.left.roundToInt(), bounds.top.roundToInt(), bounds.width.roundToInt(), bounds.height.roundToInt())
             },
             onFavoriteLongPress = { index, position ->
                 favoritePackages.getOrNull(index)?.let { packageName ->
