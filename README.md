@@ -10,7 +10,7 @@ A calm, customizable Android launcher.
 - App drawer uses a five-column grid, native Android application icons, alphabetical order, and prefix search.
 - Long-press an app in the drawer to open App info, Add to favorite, and Uninstall actions.
 - Uninstall requests are handed to Android's system confirmation UI.
-- Tag management is functional: create, rename, delete, choose from the bundled icon catalog, set a palette color, and assign installed apps. Tag data persists locally.
+- Tag collections: create, rename, delete, choose catalog icons/colors, assign installed apps, then tap a tag to open its app collection.
 
 ## Branding assets
 
