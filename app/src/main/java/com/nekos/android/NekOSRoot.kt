@@ -28,7 +28,6 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.awaitLongPressOrCancellation
 import androidx.compose.foundation.gestures.awaitVerticalDragOrCancellation
 import androidx.compose.foundation.gestures.awaitVerticalTouchSlopOrCancellation
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
@@ -565,14 +564,30 @@ private fun FavoriteSlot(
                 slotOrigin = it.positionInRoot()
                 onBoundsChanged(it.boundsInRoot())
             }
-            .clickable(enabled = app != null, onClick = onClick)
             .pointerInput(app?.packageName) {
                 if (app != null) {
                     awaitEachGesture {
                         val down = awaitFirstDown(requireUnconsumed = false)
-                        val longPress = awaitLongPressOrCancellation(down.id)
-                        if (longPress != null) {
-                            var lastPosition = longPress.position
+                        var releasedBeforeLongPress = false
+                        val longPressReached = kotlinx.coroutines.withTimeoutOrNull(viewConfiguration.longPressTimeoutMillis) {
+                            while (true) {
+                                val event = awaitPointerEvent()
+                                val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                                if (!change.pressed) {
+                                    releasedBeforeLongPress = true
+                                    return@withTimeoutOrNull false
+                                }
+                                if ((change.position - down.position).getDistance() > viewConfiguration.touchSlop) {
+                                    return@withTimeoutOrNull false
+                                }
+                            }
+                            false
+                        } ?: true
+
+                        if (!longPressReached) {
+                            if (releasedBeforeLongPress) onClick()
+                        } else {
+                            var lastPosition = down.position
                             var accumulated = Offset.Zero
                             var rootPosition = currentSlotOrigin + lastPosition
                             var dragging = false
@@ -892,13 +907,29 @@ private fun AppGridItem(
             .clip(RoundedCornerShape(14.dp))
             .padding(vertical = 5.dp)
             .onGloballyPositioned { itemOrigin = it.positionInRoot() }
-            .clickable(onClick = onClick)
             .pointerInput(app.packageName) {
                 awaitEachGesture {
                     val down = awaitFirstDown(requireUnconsumed = false)
-                    val longPress = awaitLongPressOrCancellation(down.id)
-                    if (longPress != null) {
-                        var lastPosition = longPress.position
+                    var releasedBeforeLongPress = false
+                    val longPressReached = kotlinx.coroutines.withTimeoutOrNull(viewConfiguration.longPressTimeoutMillis) {
+                        while (true) {
+                            val event = awaitPointerEvent()
+                            val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                            if (!change.pressed) {
+                                releasedBeforeLongPress = true
+                                return@withTimeoutOrNull false
+                            }
+                            if ((change.position - down.position).getDistance() > viewConfiguration.touchSlop) {
+                                return@withTimeoutOrNull false
+                            }
+                        }
+                        false
+                    } ?: true
+
+                    if (!longPressReached) {
+                        if (releasedBeforeLongPress) onClick()
+                    } else {
+                        var lastPosition = down.position
                         var accumulated = Offset.Zero
                         var rootPosition = currentItemOrigin + lastPosition
                         var dragging = false
