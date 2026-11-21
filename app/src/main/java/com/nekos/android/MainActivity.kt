@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.LauncherApps
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -91,6 +92,18 @@ class MainActivity : ComponentActivity() {
                 addAction(Intent.ACTION_MANAGED_PROFILE_REMOVED)
                 addAction(Intent.ACTION_MANAGED_PROFILE_AVAILABLE)
                 addAction(Intent.ACTION_MANAGED_PROFILE_UNAVAILABLE)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    addAction(Intent.ACTION_PROFILE_ACCESSIBLE)
+                    addAction(Intent.ACTION_PROFILE_INACCESSIBLE)
+                }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                    addAction(Intent.ACTION_PROFILE_ADDED)
+                    addAction(Intent.ACTION_PROFILE_REMOVED)
+                }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+                    addAction(Intent.ACTION_PROFILE_AVAILABLE)
+                    addAction(Intent.ACTION_PROFILE_UNAVAILABLE)
+                }
             }
             ContextCompat.registerReceiver(
                 this,
