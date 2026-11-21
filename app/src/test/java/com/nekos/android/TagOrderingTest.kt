@@ -27,6 +27,24 @@ class TagOrderingTest {
     }
 
     @Test
+    fun movesTagToDropTargetIndex() {
+        assertEquals(listOf(third, first, second), moveTagToIndex(tags, "third", 0))
+        assertEquals(listOf(first, third, second), moveTagToIndex(tags, "second", 2))
+    }
+
+    @Test
+    fun keepsOrderWhenDropTargetIsInvalidOrTagIsMissing() {
+        assertSame(tags, moveTagToIndex(tags, "missing", 1))
+        assertSame(tags, moveTagToIndex(tags, "second", -1))
+        assertSame(tags, moveTagToIndex(tags, "second", tags.size))
+    }
+
+    @Test
+    fun keepsOrderWhenDroppedOnSamePosition() {
+        assertSame(tags, moveTagToIndex(tags, "second", 1))
+    }
+
+    @Test
     fun keepsOrderWhenTagDoesNotExistOrDirectionIsInvalid() {
         assertSame(tags, moveTag(tags, "missing", 1))
         assertSame(tags, moveTag(tags, "second", 0))
