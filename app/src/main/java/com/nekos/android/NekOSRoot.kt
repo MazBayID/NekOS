@@ -49,6 +49,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.geometry.Offset
@@ -1044,9 +1045,20 @@ private fun AppDrawer(
         TextField(
             value = searchQuery,
             onValueChange = { searchQuery = it },
-            placeholder = { Text("Search apps") },
+            placeholder = { Text("Search apps", color = Muted) },
             singleLine = true,
             shape = RoundedCornerShape(18.dp),
+            colors = TextFieldDefaults.colors(
+                focusedTextColor = Ink,
+                unfocusedTextColor = Ink,
+                focusedContainerColor = TagSurface.copy(alpha = 0.78f),
+                unfocusedContainerColor = TagSurface.copy(alpha = 0.58f),
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+                cursorColor = Ink,
+                focusedPlaceholderColor = Muted,
+                unfocusedPlaceholderColor = Muted
+            ),
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)
         )
         if (tags.isNotEmpty()) {
