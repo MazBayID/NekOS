@@ -6,12 +6,10 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.LauncherApps
-import android.graphics.Rect
 import android.net.Uri
 import android.os.Process
 import android.os.UserHandle
 import android.os.UserManager
-import android.provider.Settings
 import android.graphics.drawable.Drawable
 import android.util.LruCache
 import android.view.View
@@ -53,6 +51,9 @@ data class InstalledApp(
     /** Stable across process restarts and distinct for identical packages in separate profiles. */
     val id: String
         get() = launcherAppId(packageName, profileSerialNumber)
+
+    val isInCurrentProfile: Boolean
+        get() = user == Process.myUserHandle()
 }
 
 internal fun launcherAppId(packageName: String, profileSerialNumber: Long): String =
@@ -73,8 +74,17 @@ fun loadLaunchableApps(context: Context): LauncherAppScanResult {
                 return@flatMap emptyList()
             }
 
-            launcherApps.getActivityList(null, profile)
-                .distinctBy { it.applicationInfo.packageName }
+            val activities = try {
+                launcherApps.getActivityList(null, profile)
+            } catch (_: SecurityException) {
+                unavailableProfileSerialNumbers += profileSerial
+                return@flatMap emptyList()
+            } catch (_: IllegalStateException) {
+                unavailableProfileSerialNumbers += profileSerial
+                return@flatMap emptyList()
+            }
+
+            activities.distinctBy { it.applicationInfo.packageName }
                 .map { activity ->
                     val icon = runCatching { activity.getBadgedIcon(densityDpi) }
                         .getOrElse { context.packageManager.defaultActivityIcon }
@@ -133,6 +143,12 @@ fun launchApp(
         Toast.makeText(
             context,
             "NekOS is not allowed to open this app",
+            Toast.LENGTH_SHORT
+        ).show()
+    } catch (error: IllegalStateException) {
+        Toast.makeText(
+            context,
+            "This app's profile is currently unavailable",
             Toast.LENGTH_SHORT
         ).show()
     }
