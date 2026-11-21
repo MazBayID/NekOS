@@ -118,6 +118,24 @@ class LauncherItemGestureTest {
     }
 
     @Test
+    fun secondPointerCancelsThePendingMenuPreview() {
+        setGestureContent()
+
+        composeRule.onNodeWithTag(GESTURE_TARGET).performTouchInput {
+            down(pointerId = 0)
+            advanceEventTime(viewConfiguration.longPressTimeoutMillis + 50)
+            move()
+            down(pointerId = 1, position = Offset(80f, 80f))
+            up(pointerId = 1)
+            up(pointerId = 0)
+        }
+
+        composeRule.runOnIdle {
+            assertEquals(listOf("preview", "longPressCancel"), events)
+        }
+    }
+
+    @Test
     fun pointerCancellationDuringDragCancelsDrag() {
         setGestureContent()
 
