@@ -1,6 +1,10 @@
 package com.nekos.android
 
+import android.content.pm.LauncherApps
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.os.UserHandle
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -16,6 +20,65 @@ import androidx.compose.ui.Modifier
 
 class MainActivity : ComponentActivity() {
     private var appRefreshToken by mutableIntStateOf(0)
+    private val launcherApps by lazy { getSystemService(LauncherApps::class.java) }
+    private val packageCallback = object : LauncherApps.Callback() {
+        override fun onPackageAdded(packageName: String, user: UserHandle) {
+            refreshInstalledApps()
+        }
+
+        override fun onPackageRemoved(packageName: String, user: UserHandle) {
+            refreshInstalledApps()
+        }
+
+        override fun onPackageChanged(packageName: String, user: UserHandle) {
+            refreshInstalledApps()
+        }
+
+        override fun onPackagesAvailable(
+            packageNames: Array<out String>,
+            user: UserHandle,
+            replacing: Boolean
+        ) {
+            refreshInstalledApps()
+        }
+
+        override fun onPackagesUnavailable(
+            packageNames: Array<out String>,
+            user: UserHandle,
+            replacing: Boolean
+        ) {
+            refreshInstalledApps()
+        }
+
+        override fun onPackagesSuspended(packageNames: Array<out String>, user: UserHandle) {
+            refreshInstalledApps()
+        }
+
+        override fun onPackagesUnsuspended(packageNames: Array<out String>, user: UserHandle) {
+            refreshInstalledApps()
+        }
+    }
+    private var isPackageCallbackRegistered = false
+
+    private fun refreshInstalledApps() {
+        appRefreshToken++
+    }
+
+    override fun onStart() {
+        super.onStart()
+        if (!isPackageCallbackRegistered) {
+            launcherApps.registerCallback(packageCallback, Handler(Looper.getMainLooper()))
+            isPackageCallbackRegistered = true
+        }
+    }
+
+    override fun onStop() {
+        if (isPackageCallbackRegistered) {
+            launcherApps.unregisterCallback(packageCallback)
+            isPackageCallbackRegistered = false
+        }
+        super.onStop()
+    }
 
     override fun onResume() {
         super.onResume()
