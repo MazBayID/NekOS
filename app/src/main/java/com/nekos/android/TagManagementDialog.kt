@@ -114,11 +114,11 @@ fun TagManagementDialog(
                         Box(
                             Modifier.size(34.dp).clip(CircleShape)
                                 .background(color)
-                                .clickable { selectedColor = color.toArgb().toLong() }
+                                .clickable { selectedColor = color.toArgb().toLong() and 0xFFFFFFFFL }
                                 .padding(3.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            if (selectedColor == color.toArgb().toLong()) {
+                            if (selectedColor == (color.toArgb().toLong() and 0xFFFFFFFFL)) {
                                 Text("✓", color = Color(0xFF34332F))
                             }
                         }
