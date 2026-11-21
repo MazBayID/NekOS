@@ -7,9 +7,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
-import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertHasClickAction
-import androidx.compose.ui.test.createComposeRule
+import androidx.compose.ui.test.fetchSemanticsNode
+import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.dp
@@ -40,16 +40,16 @@ class LauncherItemAccessibilityTest {
         }
 
         val appNode = composeRule.onNodeWithContentDescription("Example app")
-        appNode
-            .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button))
-            .assertHasClickAction()
-            .performClick()
+        appNode.assertHasClickAction().performClick()
 
-        val customActions = appNode.fetchSemanticsNode().config[SemanticsActions.CustomActions]
+        val semantics = appNode.fetchSemanticsNode().config
+        assertEquals(Role.Button, semantics[SemanticsProperties.Role])
+        val customActions = semantics[SemanticsActions.CustomActions]
         assertEquals(listOf("App actions"), customActions.map { it.label })
+
         composeRule.runOnIdle {
-            assertTrue(customActions.single().action())
             assertEquals(1, activationCount.intValue)
+            assertTrue(customActions.single().action())
             assertEquals(1, actionCount.intValue)
         }
     }
