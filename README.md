@@ -4,13 +4,13 @@ A calm, customizable Android launcher.
 
 ## MVP
 
-- Clean home screen with a minimal tag placeholder and a 5 × 3 favorite-slot layout.
+- Clean home screen with user-created tag pills and a 5 × 3 favorite-slot layout.
 - Favorites persist locally; tap to launch, long-press to open app actions, and drag after long-press to reorder.
 - Swipe up to open the installed-app drawer; swipe down to return home.
 - App drawer uses a five-column grid, native Android application icons, alphabetical order, and prefix search.
 - Long-press an app in the drawer to open App info, Add to favorite, and Uninstall actions.
 - Uninstall requests are handed to Android's system confirmation UI.
-- Tag collection persistence foundation is in place: names, stable IDs, optional icon IDs, colors, and assigned package names are stored locally.
+- Tag management is functional: create, rename, delete, choose from the bundled icon catalog, set a palette color, and assign installed apps. Tag data persists locally.
 
 ## Branding assets
 
@@ -28,4 +28,4 @@ A calm, customizable Android launcher.
 
 Open this repository in Android Studio, sync Gradle, and run the `app` module on an Android device or emulator.
 
-The current vertical slice includes local favorite persistence, the bundled 100-icon tag catalog, and the tag-storage model. The catalog-backed icon picker, tag management UI, app assignment flow, and settings remain under development.
+The current vertical slice includes local favorite and tag persistence, the bundled 100-icon catalog, tag CRUD, icon selection, palette colors, and app assignment. Settings and deeper launcher polish remain under development.
