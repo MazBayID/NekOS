@@ -1238,6 +1238,7 @@ private fun AddTagPill(onClick: () -> Unit) {
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun AppDrawer(
     apps: List<InstalledApp>,
