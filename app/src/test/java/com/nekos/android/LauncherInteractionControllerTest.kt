@@ -110,4 +110,23 @@ class LauncherInteractionControllerTest {
         assertNull(controller.updateDrag(Offset(1f, 1f), 0))
         assertNull(controller.activeDrag)
     }
+
+    @Test
+    fun drawerOpensOnlyAfterCompletedUpwardSwipeBeyondThreshold() {
+        assertTrue(shouldOpenDrawerAfterDrag(totalDrag = -80f, threshold = 64f))
+        assertFalse(shouldOpenDrawerAfterDrag(totalDrag = -40f, threshold = 64f))
+        assertFalse(shouldOpenDrawerAfterDrag(totalDrag = 80f, threshold = 64f))
+    }
+
+    @Test
+    fun cancelledDrawerSwipeNeverOpensDrawer() {
+        assertFalse(
+            shouldOpenDrawerAfterDrag(
+                totalDrag = -120f,
+                threshold = 64f,
+                cancelled = true
+            )
+        )
+    }
+
 }

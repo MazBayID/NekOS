@@ -276,10 +276,10 @@ fun NekOSRoot(refreshToken: Int) {
                     )
                 }
             },
-            onDrawerDragEnd = { totalDrag ->
+            onDrawerDragEnd = { totalDrag, cancelled ->
                 scope.launch {
                     drawerOffset.animateTo(
-                        if (totalDrag <= -homeSwipeThresholdPx) 0f else 1f,
+                        if (shouldOpenDrawerAfterDrag(totalDrag, homeSwipeThresholdPx, cancelled)) 0f else 1f,
                         animationSpec = spring(
                             dampingRatio = 0.82f,
                             stiffness = 420f
@@ -627,7 +627,7 @@ private fun HomeScreen(
     homeSwipeThresholdPx: Float,
     backgroundBlurRadiusPx: Float,
     onDrawerDrag: (Float) -> Unit,
-    onDrawerDragEnd: (Float) -> Unit,
+    onDrawerDragEnd: (totalDrag: Float, cancelled: Boolean) -> Unit,
     onFavoriteClick: (String, Rect) -> Unit,
     onFavoriteLongPress: (Int, Offset) -> Unit,
     onFavoriteLongPressEnd: () -> Unit,
@@ -696,12 +696,12 @@ private fun HomeScreen(
                             }
                         },
                         onDragEnd = {
-                            if (drawerDragStarted) onDrawerDragEnd(totalDrag)
+                            if (drawerDragStarted) onDrawerDragEnd(totalDrag, false)
                             totalDrag = 0f
                             drawerDragStarted = false
                         },
                         onDragCancel = {
-                            if (drawerDragStarted) onDrawerDragEnd(totalDrag)
+                            if (drawerDragStarted) onDrawerDragEnd(totalDrag, true)
                             totalDrag = 0f
                             drawerDragStarted = false
                         }

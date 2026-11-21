@@ -69,3 +69,13 @@ class LauncherInteractionController {
         activeDrag = null
     }
 }
+
+
+/**
+ * A cancelled pointer sequence must never commit an open-drawer transition.
+ */
+internal fun shouldOpenDrawerAfterDrag(
+    totalDrag: Float,
+    threshold: Float,
+    cancelled: Boolean = false
+): Boolean = !cancelled && totalDrag <= -threshold
