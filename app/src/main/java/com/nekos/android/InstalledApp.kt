@@ -71,7 +71,11 @@ fun loadLaunchableApps(context: Context): LauncherAppScanResult {
         .flatMap { profile ->
             val profileSerial = userManager.getSerialNumberForUser(profile)
             if (profileSerial < 0L) return@flatMap emptyList()
-            if (!userManager.isUserRunning(profile) || !userManager.isUserUnlocked(profile)) {
+            if (
+                !userManager.isUserRunning(profile) ||
+                !userManager.isUserUnlocked(profile) ||
+                userManager.isQuietModeEnabled(profile)
+            ) {
                 unavailableProfileSerialNumbers += profileSerial
                 return@flatMap emptyList()
             }
