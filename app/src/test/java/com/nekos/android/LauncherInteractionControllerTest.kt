@@ -13,7 +13,7 @@ class LauncherInteractionControllerTest {
         val controller = LauncherInteractionController()
 
         val drawerDrag = controller.startDrag(
-            packageName = "com.example.drawer",
+            appId = "com.example.drawer",
             source = LauncherDragSource.APP_DRAWER,
             position = Offset.Zero
         )
@@ -38,7 +38,7 @@ class LauncherInteractionControllerTest {
             position = position
         )
 
-        assertEquals("com.example.app", session.packageName)
+        assertEquals("com.example.app", session.appId)
         assertEquals(LauncherDragSource.APP_DRAWER, session.source)
         assertEquals(position, session.position)
         assertFalse(session.hasMoved)
