@@ -1013,6 +1013,11 @@ private fun FavoriteSlot(
             bitmap = loadedBitmap
         }
     }
+    val slotBackground by animateColorAsState(
+        targetValue = if (isDropTarget) Color(0xFFDCD3C4) else Color.Transparent,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = 520f),
+        label = "favorite-drop-target"
+    )
     var slotCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
     val currentSlotCoordinates by rememberUpdatedState(slotCoordinates)
     val currentOnClick by rememberUpdatedState(onClick)
@@ -1027,7 +1032,7 @@ private fun FavoriteSlot(
         modifier = modifier
             .aspectRatio(1f)
             .clip(RoundedCornerShape(18.dp))
-            .background(if (isDropTarget) Color(0xFFDCD3C4) else Color.Transparent)
+            .background(slotBackground)
             .onGloballyPositioned {
                 slotCoordinates = it
                 onBoundsChanged(it.boundsInRoot())
@@ -1407,12 +1412,12 @@ private fun AppDrawer(
                     }
                     AppGridItem(
                         modifier = Modifier.animateItem(
-                            fadeInSpec = tween(durationMillis = 180),
+                            fadeInSpec = null,
                             placementSpec = spring(
                                 dampingRatio = 0.86f,
                                 stiffness = 380f
                             ),
-                            fadeOutSpec = tween(durationMillis = 120)
+                            fadeOutSpec = null
                         ),
                         app = app,
                         bitmap = bitmap,
