@@ -50,8 +50,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.zIndex
@@ -116,6 +118,7 @@ fun NekOSRoot(refreshToken: Int) {
     var actionMenuApp by remember { mutableStateOf<InstalledApp?>(null) }
     var actionMenuPreviewApp by remember { mutableStateOf<InstalledApp?>(null) }
     var actionMenuPreviewPosition by remember { mutableStateOf(Offset.Zero) }
+    var actionMenuPopupSize by remember { mutableStateOf(IntSize.Zero) }
     val preferences = remember(context) {
         context.getSharedPreferences("nekos_preferences", Context.MODE_PRIVATE)
     }
@@ -363,10 +366,12 @@ fun NekOSRoot(refreshToken: Int) {
             val isInteractive = actionMenuApp != null
             Column(
                 modifier = Modifier
+                    .onSizeChanged { actionMenuPopupSize = it }
                     .offset {
-                        IntOffset(
-                            (actionMenuPreviewPosition.x + 12f).roundToInt(),
-                            (actionMenuPreviewPosition.y + 12f).roundToInt()
+                        calculateLauncherPopupOffset(
+                            anchorPosition = actionMenuPreviewPosition,
+                            popupSize = actionMenuPopupSize,
+                            containerSize = IntSize(constraints.maxWidth, constraints.maxHeight)
                         )
                     }
                     .zIndex(20f)
