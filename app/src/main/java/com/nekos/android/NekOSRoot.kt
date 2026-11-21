@@ -557,8 +557,29 @@ fun NekOSRoot(refreshToken: Int) {
         }
 
         actionMenuTag?.let { tag ->
+            val tagIndex = tags.indexOfFirst { it.id == tag.id }
             TagActionsDialog(
                 tag = tag,
+                canMoveUp = tagIndex > 0,
+                canMoveDown = tagIndex >= 0 && tagIndex < tags.lastIndex,
+                onMoveUp = {
+                    if (tagIndex > 0) {
+                        val reordered = tags.toMutableList()
+                        val previous = reordered[tagIndex - 1]
+                        reordered[tagIndex - 1] = reordered[tagIndex]
+                        reordered[tagIndex] = previous
+                        saveTags(reordered)
+                    }
+                },
+                onMoveDown = {
+                    if (tagIndex >= 0 && tagIndex < tags.lastIndex) {
+                        val reordered = tags.toMutableList()
+                        val next = reordered[tagIndex + 1]
+                        reordered[tagIndex + 1] = reordered[tagIndex]
+                        reordered[tagIndex] = next
+                        saveTags(reordered)
+                    }
+                },
                 onEdit = {
                     actionMenuTag = null
                     tagEditorTarget = tag
