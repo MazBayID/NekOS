@@ -60,6 +60,20 @@ class LauncherItemGestureTest {
     }
 
     @Test
+    fun cancellationBeforeLongPressDoesNotFireTap() {
+        setGestureContent()
+
+        composeRule.onNodeWithTag(GESTURE_TARGET).performTouchInput {
+            down()
+            cancel()
+        }
+
+        composeRule.runOnIdle {
+            assertEquals(emptyList<String>(), events)
+        }
+    }
+
+    @Test
     fun stationaryLongPressPreviewsBeforeReleaseAndActivatesAfterRelease() {
         setGestureContent()
         val target = composeRule.onNodeWithTag(GESTURE_TARGET)
