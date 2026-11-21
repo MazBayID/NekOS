@@ -692,6 +692,7 @@ fun NekOSRoot(refreshToken: Int) {
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun HomeScreen(
     apps: List<InstalledApp>,
@@ -810,7 +811,8 @@ private fun HomeScreen(
                             .fillMaxHeight()
                             .combinedClickable(
                                 onClick = {},
-                                onLongClick = onOpenSettings
+                                onLongClick = onOpenSettings,
+                                onLongClickLabel = "Open launcher settings"
                             )
                     ) {
                         Image(
