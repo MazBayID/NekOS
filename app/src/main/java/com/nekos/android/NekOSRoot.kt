@@ -797,16 +797,25 @@ private fun AppGridItem(
     onDragEnd: () -> Unit
 ) {
     var itemOrigin by remember { mutableStateOf(Offset.Zero) }
+    val currentItemOrigin by rememberUpdatedState(itemOrigin)
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
             .padding(vertical = 5.dp)
             .onGloballyPositioned { itemOrigin = it.positionInRoot() }
-            .pointerInput(app.packageName, itemOrigin) {
+            .pointerInput(app.packageName) {
+                var rootPosition = Offset.Zero
                 detectDragGesturesAfterLongPress(
-                    onDragStart = { local -> onDragStart(itemOrigin + local) },
-                    onDrag = { change, amount -> change.consume(); onDrag(itemOrigin + change.position) },
+                    onDragStart = { local ->
+                        rootPosition = currentItemOrigin + local
+                        onDragStart(rootPosition)
+                    },
+                    onDrag = { change, amount ->
+                        change.consume()
+                        rootPosition += amount
+                        onDrag(rootPosition)
+                    },
                     onDragEnd = onDragEnd,
                     onDragCancel = onDragEnd
                 )
