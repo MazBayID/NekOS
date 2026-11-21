@@ -15,10 +15,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -206,6 +208,17 @@ fun TagManagementDialog(
                     onValueChange = { name = it.take(24) },
                     label = { Text("Tag name") },
                     singleLine = true,
+                    colors = TextFieldDefaults.colors(
+                        focusedTextColor = Color(0xFF34332F),
+                        unfocusedTextColor = Color(0xFF34332F),
+                        focusedContainerColor = Color(0xFFF4F1EA),
+                        unfocusedContainerColor = Color(0xFFF4F1EA),
+                        focusedIndicatorColor = Color(0xFF746657),
+                        unfocusedIndicatorColor = Color(0xFF8B8982).copy(alpha = 0.28f),
+                        focusedLabelColor = Color(0xFF746657),
+                        unfocusedLabelColor = Color(0xFF8B8982),
+                        cursorColor = Color(0xFF746657)
+                    ),
                     modifier = Modifier.fillMaxWidth()
                 )
                 Text("Color", style = MaterialTheme.typography.labelMedium)
@@ -260,9 +273,14 @@ fun TagManagementDialog(
                                 onCheckedChange = { checked ->
                                     selectedPackages = if (checked) selectedPackages + app.packageName
                                     else selectedPackages - app.packageName
-                                }
+                                },
+                                colors = CheckboxDefaults.colors(
+                                    checkedColor = Color(0xFF746657),
+                                    uncheckedColor = Color(0xFF8B8982),
+                                    checkmarkColor = Color.White
+                                )
                             )
-                            Text(app.label, modifier = Modifier.weight(1f))
+                            Text(app.label, modifier = Modifier.weight(1f), color = Color(0xFF34332F))
                         }
                     }
                 }
