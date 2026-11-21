@@ -68,7 +68,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.StarBorder
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -424,7 +424,7 @@ fun NekOSRoot(refreshToken: Int) {
                 }
                 PopupAction(
                     if (isFavorite) "Remove from favorite" else "Add to favorite",
-                    if (isFavorite) Icons.Filled.StarBorder else Icons.Filled.Star,
+                    if (isFavorite) Icons.Filled.Check else Icons.Filled.Star,
                     enabled = isInteractive
                 ) {
                     if (isFavorite) {
