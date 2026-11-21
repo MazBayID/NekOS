@@ -1129,7 +1129,7 @@ private fun AppDrawer(
                 label = app.label,
                 query = searchQuery
             )
-        }.sortedBy { it.label.lowercase() }
+        }.sortedWith(compareBy(appLabelComparator()) { it.label })
     }
 
     Column(
