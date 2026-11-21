@@ -6,28 +6,19 @@ import org.junit.Test
 
 class AppDrawerFilterTest {
     @Test
-    fun showsAllAppsWhenNoTagIsSelected() {
-        assertTrue(matchesAppDrawerFilter("pkg.one", "One App", "", null))
+    fun showsAllAppsWhenQueryIsBlank() {
+        assertTrue(matchesAppDrawerSearch("One App", ""))
     }
 
     @Test
-    fun filtersAppsBySelectedTagPackages() {
-        val tagPackages = setOf("pkg.one", "pkg.three")
-        assertTrue(matchesAppDrawerFilter("pkg.one", "One App", "", tagPackages))
-        assertFalse(matchesAppDrawerFilter("pkg.two", "Two App", "", tagPackages))
-    }
-
-    @Test
-    fun combinesTagAndPrefixSearchFilters() {
-        val tagPackages = setOf("pkg.one", "pkg.two")
-        assertTrue(matchesAppDrawerFilter("pkg.one", "  Notes", "no", tagPackages))
-        assertFalse(matchesAppDrawerFilter("pkg.three", "Notes", "no", tagPackages))
-        assertFalse(matchesAppDrawerFilter("pkg.two", "Browser", "no", tagPackages))
+    fun searchesByLabelPrefixOnly() {
+        assertTrue(matchesAppDrawerSearch("One App", "one"))
+        assertFalse(matchesAppDrawerSearch("One App", "app"))
     }
 
     @Test
     fun searchIsCaseInsensitiveAndIgnoresSurroundingWhitespace() {
-        assertTrue(matchesAppDrawerFilter("pkg.one", "  Notes", " no ", null))
-        assertFalse(matchesAppDrawerFilter("pkg.one", "Notes", "tes", null))
+        assertTrue(matchesAppDrawerSearch("  Notes", " no "))
+        assertFalse(matchesAppDrawerSearch("Notes", "tes"))
     }
 }

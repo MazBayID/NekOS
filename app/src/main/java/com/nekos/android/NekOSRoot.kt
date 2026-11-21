@@ -888,11 +888,9 @@ private fun AppDrawer(
     val currentOnCloseDrawer by rememberUpdatedState(onCloseDrawer)
     val filteredApps = remember(apps, searchQuery) {
         apps.filter { app ->
-            matchesAppDrawerFilter(
-                packageName = app.packageName,
+            matchesAppDrawerSearch(
                 label = app.label,
-                query = searchQuery,
-                tagPackages = null
+                query = searchQuery
             )
         }.sortedBy { it.label.lowercase() }
     }
