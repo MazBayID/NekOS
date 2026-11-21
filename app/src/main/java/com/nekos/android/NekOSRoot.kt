@@ -534,7 +534,7 @@ fun NekOSRoot(refreshToken: Int) {
                     cancelDropBounds = null
                 },
                 onCloseDrawer = { totalDrag, velocityY ->
-                    if ((totalDrag == 0f && velocityY == 0f) || totalDrag > drawerCloseThresholdPx || velocityY > 900f) closeDrawer()
+                    if ((totalDrag == 0f && velocityY == 0f) || shouldCloseDrawerAfterDrag(totalDrag, drawerCloseThresholdPx, velocityY)) closeDrawer()
                 }
             )
         }
