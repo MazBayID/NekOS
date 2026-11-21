@@ -214,10 +214,11 @@ fun TagManagementDialog(
                         val bitmap by produceState<androidx.compose.ui.graphics.ImageBitmap?>(
                             initialValue = null, key1 = icon.id
                         ) {
-                            value = withContext(Dispatchers.IO) {
+                            val loadedBitmap = withContext(Dispatchers.IO) {
                                 runCatching { IconCatalogRepository(context).loadBitmap(icon)?.asImageBitmap() }
                                     .getOrNull()
                             }
+                            value = loadedBitmap
                         }
                         Box(
                             Modifier.aspectRatio(1f).padding(4.dp)
