@@ -44,10 +44,6 @@ jobs:
           gradle-version: '8.9'
           cache-provider: basic
 
-      # The Termux AAPT2 override is device-specific and must not be used on GitHub-hosted Linux.
-      - name: Remove local Termux AAPT2 override
-        run: sed -i '/^android\.aapt2FromMavenOverride=/d' gradle.properties
-
       - name: Build APK, run unit tests, and lint
         run: gradle --no-daemon assembleDebug testDebugUnitTest lintDebug -Pandroid.aapt2FromMavenOverride="$ANDROID_HOME/build-tools/35.0.0/aapt2" --stacktrace
 
