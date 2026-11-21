@@ -68,7 +68,7 @@ suspend fun PointerInputScope.detectLauncherItemGesture(
                 onDrag(rootPosition)
             } else if (dragging) {
                 change.consume()
-                onDrag(rootOrigin() + change.position)
+                onDrag(toRootPosition(change.position))
             }
         }
 
