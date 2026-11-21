@@ -28,15 +28,10 @@ fun cleanupLauncherReferences(
 internal fun migrateLegacyLauncherReferences(
     favorites: List<String?>,
     tags: List<NekTag>,
-    apps: List<InstalledApp>,
-    currentProfileSerialNumber: Long
+    currentProfileAppIds: Map<String, String>
 ): LauncherReferenceCleanupResult {
-    val currentProfileIds = apps
-        .filter { it.profileSerialNumber == currentProfileSerialNumber }
-        .associate { it.packageName to it.id }
-
     fun migrate(appReference: String): String =
-        if ('|' in appReference) appReference else currentProfileIds[appReference] ?: appReference
+        if ('|' in appReference) appReference else currentProfileAppIds[appReference] ?: appReference
 
     return LauncherReferenceCleanupResult(
         favorites = favorites.map { it?.let(::migrate) },
