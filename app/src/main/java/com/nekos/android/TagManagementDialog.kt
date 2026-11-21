@@ -211,14 +211,14 @@ fun TagManagementDialog(
                     contentPadding = PaddingValues(4.dp)
                 ) {
                     items(catalog, key = { it.id }) { icon ->
-                        val bitmap by produceState<androidx.compose.ui.graphics.ImageBitmap?>(
-                            initialValue = null, key1 = icon.id
-                        ) {
-                            val loadedBitmap = withContext(Dispatchers.IO) {
+                        var bitmap by remember(icon.id) {
+                            mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null)
+                        }
+                        LaunchedEffect(icon.id) {
+                            bitmap = withContext(Dispatchers.IO) {
                                 runCatching { IconCatalogRepository(context).loadBitmap(icon)?.asImageBitmap() }
                                     .getOrNull()
                             }
-                            value = loadedBitmap
                         }
                         Box(
                             Modifier.aspectRatio(1f).padding(4.dp)
