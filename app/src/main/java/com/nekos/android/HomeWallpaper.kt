@@ -11,13 +11,26 @@ import java.io.File
 private const val HOME_WALLPAPER_FILE = "home_wallpaper"
 private const val HOME_WALLPAPER_TEMP_FILE = "home_wallpaper.tmp"
 private const val HOME_WALLPAPER_MAX_DIMENSION = 2048
+private const val HOME_WALLPAPER_MAX_FILE_BYTES = 40L * 1024L * 1024L
 
 internal fun saveHomeWallpaper(context: Context, source: Uri): String? = runCatching {
     val target = File(context.filesDir, HOME_WALLPAPER_FILE)
     val temporary = File(context.filesDir, HOME_WALLPAPER_TEMP_FILE)
 
     context.contentResolver.openInputStream(source)?.use { input ->
-        temporary.outputStream().use { output -> input.copyTo(output) }
+        temporary.outputStream().use { output ->
+            val buffer = ByteArray(16 * 1024)
+            var totalBytes = 0L
+            while (true) {
+                val count = input.read(buffer)
+                if (count < 0) break
+                totalBytes += count
+                check(totalBytes <= HOME_WALLPAPER_MAX_FILE_BYTES) {
+                    "Selected image exceeds the size limit"
+                }
+                output.write(buffer, 0, count)
+            }
+        }
     } ?: error("Unable to open selected image")
 
     check(temporary.length() > 0L) { "Selected image is empty" }
