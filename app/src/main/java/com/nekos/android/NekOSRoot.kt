@@ -818,20 +818,7 @@ private fun HomeScreen(
                 .fillMaxSize()
                 .statusBarsPadding()
                 .navigationBarsPadding()
-                .graphicsLayer {
-                    renderEffect = if (
-                        Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
-                        backgroundBlurRadiusPx > 0.5f
-                    ) {
-                        BlurEffect(
-                            backgroundBlurRadiusPx,
-                            backgroundBlurRadiusPx,
-                            TileMode.Decal
-                        )
-                    } else {
-                        null
-                    }
-                }
+                // Keep launcher controls sharp while the wallpaper behind them blurs.
                 .pointerInput(homeSwipeThresholdPx) {
                     var totalDrag = 0f
                     var drawerDragStarted = false
