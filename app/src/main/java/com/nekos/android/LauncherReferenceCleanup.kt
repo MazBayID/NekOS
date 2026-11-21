@@ -9,13 +9,13 @@ data class LauncherReferenceCleanupResult(
 fun cleanupLauncherReferences(
     favorites: List<String?>,
     tags: List<NekTag>,
-    installedPackages: Set<String>
+    installedAppIds: Set<String>
 ): LauncherReferenceCleanupResult {
     val cleanedFavorites = favorites.map { packageName ->
-        packageName?.takeIf(installedPackages::contains)
+        packageName?.takeIf(installedAppIds::contains)
     }
     val cleanedTags = tags.map { tag ->
-        tag.copy(appPackages = tag.appPackages.filter(installedPackages::contains))
+        tag.copy(appPackages = tag.appPackages.filter(installedAppIds::contains))
     }
     return LauncherReferenceCleanupResult(cleanedFavorites, cleanedTags)
 }
