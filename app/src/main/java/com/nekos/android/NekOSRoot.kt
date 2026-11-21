@@ -906,7 +906,7 @@ private fun AppDrawer(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(40.dp)
+                .height(60.dp)
                 .clickable(onClick = currentOnCloseDrawer)
                 .pointerInput(closeThresholdPx) {
                     var totalDrag = 0f
