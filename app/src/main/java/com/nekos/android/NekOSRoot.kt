@@ -631,7 +631,7 @@ fun NekOSRoot(refreshToken: Int) {
         }
 
         favoriteDrag?.takeIf { it.hasMoved }?.let { drag ->
-            val draggedApp = apps.firstOrNull { it.id == drag.packageName }
+            val draggedApp = apps.firstOrNull { it.id == drag.appId }
             if (draggedApp != null) {
                 val cachedBitmap = iconBitmapCache[draggedApp.id]
                 var bitmap by remember(draggedApp.id) { mutableStateOf(cachedBitmap) }
