@@ -47,27 +47,89 @@ fun TagAppsDialog(
         val byPackage = apps.associateBy { it.packageName }
         tag.appPackages.mapNotNull(byPackage::get)
     }
+    val tagColor = Color(tag.colorArgb.toInt())
+
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(tag.name) },
+        title = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Box(
+                    Modifier.size(12.dp).clip(CircleShape).background(tagColor)
+                )
+                Text(
+                    text = tag.name,
+                    modifier = Modifier.weight(1f),
+                    style = MaterialTheme.typography.titleLarge
+                )
+            }
+        },
         text = {
-            if (assignedApps.isEmpty()) {
-                Text("No apps assigned yet.")
-            } else {
-                LazyColumn(Modifier.heightIn(max = 340.dp)) {
-                    items(assignedApps, key = { it.packageName }) { app ->
-                        Row(
-                            Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
-                                .clickable { onLaunch(app) }.padding(10.dp),
-                            verticalAlignment = Alignment.CenterVertically
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    text = "${assignedApps.size} ${if (assignedApps.size == 1) "app" else "apps"}",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = Color(0xFF8B8982)
+                )
+
+                if (assignedApps.isEmpty()) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth()
+                            .clip(RoundedCornerShape(18.dp))
+                            .background(Color(0xFFF4F1EA))
+                            .padding(horizontal = 20.dp, vertical = 28.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Box(
+                            Modifier.size(42.dp).clip(CircleShape).background(tagColor),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Image(
-                                bitmap = app.icon.toBitmap(64, 64).asImageBitmap(),
-                                contentDescription = null,
-                                modifier = Modifier.size(36.dp)
-                            )
-                            Spacer(Modifier.width(12.dp))
-                            Text(app.label)
+                            Text("＋", color = Color(0xFF34332F), style = MaterialTheme.typography.titleLarge)
+                        }
+                        Text(
+                            "No apps in this tag yet",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = Color(0xFF34332F)
+                        )
+                        Text(
+                            "Edit this tag to add your apps.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color(0xFF8B8982)
+                        )
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.heightIn(max = 360.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        items(assignedApps, key = { it.packageName }) { app ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth()
+                                    .clip(RoundedCornerShape(14.dp))
+                                    .background(Color(0xFFF7F5F0))
+                                    .clickable { onLaunch(app) }
+                                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Image(
+                                    bitmap = app.icon.toBitmap(72, 72).asImageBitmap(),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(40.dp)
+                                        .clip(RoundedCornerShape(11.dp))
+                                )
+                                Text(
+                                    text = app.label,
+                                    modifier = Modifier.weight(1f),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = Color(0xFF34332F),
+                                    maxLines = 1
+                                )
+                            }
                         }
                     }
                 }
