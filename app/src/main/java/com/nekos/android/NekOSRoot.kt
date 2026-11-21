@@ -148,19 +148,27 @@ fun NekOSRoot(refreshToken: Int) {
     }
 
     fun placeFavoriteFromDrawer(packageName: String, targetIndex: Int) {
-        if (packageName in favoritePackages) return
         val updated = favoritePackages.toMutableList()
         while (updated.size < 15) updated.add(null)
+        val sourceIndex = updated.indexOf(packageName)
+        if (sourceIndex == targetIndex) return
+
         val displaced = updated[targetIndex]
-        if (displaced != null) {
-            val emptyIndex = updated.indexOfFirst { it == null }
-            if (emptyIndex < 0) {
-                Toast.makeText(context, "Favorite slots are full", Toast.LENGTH_SHORT).show()
-                return
+        if (sourceIndex >= 0) {
+            // Reordering an existing Favorite swaps slots without losing either app.
+            updated[targetIndex] = packageName
+            updated[sourceIndex] = displaced
+        } else {
+            if (displaced != null) {
+                val emptyIndex = updated.indexOfFirst { it == null }
+                if (emptyIndex < 0) {
+                    Toast.makeText(context, "Favorite slots are full", Toast.LENGTH_SHORT).show()
+                    return
+                }
+                updated[emptyIndex] = displaced
             }
-            updated[emptyIndex] = displaced
+            updated[targetIndex] = packageName
         }
-        updated[targetIndex] = packageName
         updateFavorites(updated)
     }
 
