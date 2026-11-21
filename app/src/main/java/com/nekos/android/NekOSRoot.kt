@@ -608,6 +608,7 @@ private fun AppActionRow(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun TagPill(tag: NekTag, apps: List<InstalledApp>, onClick: () -> Unit, onLongClick: () -> Unit) {
     val assigned = remember(tag.appPackages, apps) {
