@@ -7,12 +7,16 @@ import android.os.Build
 import android.os.Process
 import android.os.UserManager
 import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.scaleIn
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -1051,12 +1055,25 @@ private fun FavoriteSlot(
         verticalArrangement = Arrangement.Center
     ) {
         val iconBitmap = bitmap
-        if (app != null && iconBitmap != null) {
-            Image(
-                bitmap = iconBitmap,
-                contentDescription = app.label,
-                modifier = Modifier.size(50.dp)
-            )
+        Box(
+            modifier = Modifier.size(56.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            AnimatedVisibility(
+                visible = app != null && iconBitmap != null,
+                enter = fadeIn(tween(180)) + scaleIn(
+                    initialScale = 0.90f,
+                    animationSpec = tween(180)
+                )
+            ) {
+                if (app != null && iconBitmap != null) {
+                    Image(
+                        bitmap = iconBitmap,
+                        contentDescription = app.label,
+                        modifier = Modifier.size(50.dp)
+                    )
+                }
+            }
         }
     }
 }
@@ -1221,6 +1238,7 @@ private fun AddTagPill(onClick: () -> Unit) {
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun AppDrawer(
     apps: List<InstalledApp>,
@@ -1358,6 +1376,14 @@ private fun AppDrawer(
                         }
                     }
                     AppGridItem(
+                        modifier = Modifier.animateItem(
+                            fadeInSpec = tween(durationMillis = 180),
+                            placementSpec = spring(
+                                dampingRatio = 0.86f,
+                                stiffness = 380f
+                            ),
+                            fadeOutSpec = tween(durationMillis = 120)
+                        ),
                         app = app,
                         bitmap = bitmap,
                         onClick = { bounds -> onAppClick(app, bounds) },
@@ -1378,6 +1404,7 @@ private fun AppDrawer(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun AppGridItem(
+    modifier: Modifier = Modifier,
     app: InstalledApp,
     bitmap: androidx.compose.ui.graphics.ImageBitmap?,
     onClick: (Rect) -> Unit,
@@ -1400,7 +1427,7 @@ private fun AppGridItem(
     val currentOnDragEnd by rememberUpdatedState(onDragEnd)
     val currentOnDragCancel by rememberUpdatedState(onDragCancel)
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
             .padding(vertical = 7.dp)
@@ -1430,14 +1457,25 @@ private fun AppGridItem(
             ),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        if (bitmap != null) {
-            Image(
-                bitmap = bitmap,
-                contentDescription = app.label,
-                modifier = Modifier.size(52.dp)
-            )
-        } else {
-            Spacer(Modifier.size(56.dp))
+        Box(
+            modifier = Modifier.size(56.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            AnimatedVisibility(
+                visible = bitmap != null,
+                enter = fadeIn(tween(180)) + scaleIn(
+                    initialScale = 0.90f,
+                    animationSpec = tween(180)
+                )
+            ) {
+                bitmap?.let { loadedBitmap ->
+                    Image(
+                        bitmap = loadedBitmap,
+                        contentDescription = app.label,
+                        modifier = Modifier.size(52.dp)
+                    )
+                }
+            }
         }
         Spacer(Modifier.height(5.dp))
         Text(
