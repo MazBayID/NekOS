@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.Modifier
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material.icons.Icons
@@ -23,6 +25,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+private val ActionMenuInk = Color(0xFF34332F)
+private val ActionMenuMuted = Color(0xFF8B8982)
+
 @Composable
 internal fun LauncherAppActionMenuContent(
     app: InstalledApp,
@@ -35,7 +40,7 @@ internal fun LauncherAppActionMenuContent(
     Text(
         app.label,
         modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
-        color = Ink,
+        color = ActionMenuInk,
         fontWeight = FontWeight.SemiBold,
         maxLines = 1
     )
@@ -76,7 +81,7 @@ private fun PopupAction(
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = if (enabled) Ink else Muted,
+            tint = if (enabled) ActionMenuInk else ActionMenuMuted,
             modifier = Modifier.size(18.dp)
         )
         Text(
