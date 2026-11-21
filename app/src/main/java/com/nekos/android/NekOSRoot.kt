@@ -5,7 +5,11 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.widget.Toast
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -66,6 +70,7 @@ import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.zIndex
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
@@ -829,6 +834,14 @@ private fun HomeScreen(
                     ) {
                         items(tags, key = { it.id }) { tag ->
                             TagPill(
+                                modifier = Modifier.animateItem(
+                                    fadeInSpec = null,
+                                    placementSpec = spring(
+                                        dampingRatio = 0.82f,
+                                        stiffness = 420f
+                                    ),
+                                    fadeOutSpec = null
+                                ),
                                 tag = tag,
                                 isDragging = draggedTagId == tag.id,
                                 isDropTarget = tagDropTargetId == tag.id && draggedTagId != tag.id,
@@ -960,9 +973,40 @@ private fun TagPill(
     onDragStart: (Offset) -> Unit,
     onDrag: (Offset) -> Unit,
     onDragEnd: () -> Unit,
-    onDragCancel: () -> Unit
+    onDragCancel: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val dragScale by animateFloatAsState(
+        targetValue = if (isDragging) 1.045f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "tag-drag-scale"
+    )
+    val dragAlpha by animateFloatAsState(
+        targetValue = if (isDragging) 0.94f else 1f,
+        animationSpec = spring(stiffness = Spring.StiffnessMedium),
+        label = "tag-drag-alpha"
+    )
+    val dragElevation by animateDpAsState(
+        targetValue = when {
+            isDragging -> 10.dp
+            isDropTarget -> 2.dp
+            else -> 0.dp
+        },
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioNoBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "tag-drag-elevation"
+    )
+    val pillColor by animateColorAsState(
+        targetValue = if (isDropTarget) Color(0xFFD5C8B5) else Color(tag.colorArgb.toInt()),
+        animationSpec = spring(stiffness = Spring.StiffnessMedium),
+        label = "tag-drop-color"
+    )
     var tagIcon by remember(tag.iconId) {
         mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null)
     }
@@ -982,14 +1026,18 @@ private fun TagPill(
         }
     }
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .onGloballyPositioned { onBoundsChanged(it.boundsInRoot()) }
-            .graphicsLayer { alpha = if (isDragging) 0.55f else 1f }
+            .zIndex(if (isDragging) 1f else 0f)
+            .graphicsLayer {
+                alpha = dragAlpha
+                scaleX = dragScale
+                scaleY = dragScale
+            }
+            .shadow(dragElevation, RoundedCornerShape(18.dp))
             .clip(RoundedCornerShape(18.dp))
-            .background(
-                if (isDropTarget) Color(0xFFD5C8B5) else Color(tag.colorArgb.toInt())
-            ),
+            .background(pillColor),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Row(
