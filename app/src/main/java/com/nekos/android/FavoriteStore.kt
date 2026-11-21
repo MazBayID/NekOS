@@ -31,6 +31,7 @@ internal fun normalizeFavoritePackages(packages: List<String?>): List<String?> {
     val normalized = packages.take(FAVORITE_SLOT_COUNT).map { packageName ->
         packageName?.takeIf { it.isNotBlank() && seen.add(it) }
     }
+
     return normalized + List(FAVORITE_SLOT_COUNT - normalized.size) { null }
 }
 

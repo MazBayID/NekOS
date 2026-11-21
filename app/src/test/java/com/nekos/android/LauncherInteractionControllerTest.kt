@@ -119,6 +119,87 @@ class LauncherInteractionControllerTest {
     }
 
     @Test
+    fun quickUpwardFlingOpensDrawerBeforeDistanceThreshold() {
+        assertTrue(
+            shouldOpenDrawerAfterDrag(
+                totalDrag = -24f,
+                threshold = 64f,
+                velocityY = -1100f
+            )
+        )
+    }
+
+    @Test
+    fun quickDownwardFlingDoesNotOpenDrawer() {
+        assertFalse(
+            shouldOpenDrawerAfterDrag(
+                totalDrag = -24f,
+                threshold = 64f,
+                velocityY = 1100f
+            )
+        )
+    }
+
+    @Test
+    fun slowShortSwipeDoesNotOpenDrawer() {
+        assertFalse(
+            shouldOpenDrawerAfterDrag(
+                totalDrag = -24f,
+                threshold = 64f,
+                velocityY = -300f
+            )
+        )
+    }
+
+    @Test
+    fun fastReverseFlingOverridesTheAccumulatedSwipeDistance() {
+        assertFalse(
+            shouldOpenDrawerAfterDrag(
+                totalDrag = -100f,
+                threshold = 64f,
+                velocityY = 1200f
+            )
+        )
+        assertTrue(
+            shouldOpenDrawerAfterDrag(
+                totalDrag = 100f,
+                threshold = 64f,
+                velocityY = -1200f
+            )
+        )
+    }
+
+    @Test
+    fun drawerCloseUsesReleaseDirectionBeforeDistance() {
+        assertFalse(
+            shouldCloseDrawerAfterDrag(
+                totalDrag = 100f,
+                threshold = 72f,
+                velocityY = -1200f
+            )
+        )
+        assertTrue(
+            shouldCloseDrawerAfterDrag(
+                totalDrag = 20f,
+                threshold = 72f,
+                velocityY = 1200f
+            )
+        )
+    }
+
+    @Test
+    fun cancelledDrawerCloseNeverClosesDrawer() {
+        assertFalse(
+            shouldCloseDrawerAfterDrag(
+                totalDrag = 120f,
+                threshold = 72f,
+                velocityY = 0f,
+                cancelled = true
+            )
+        )
+    }
+
+    @Test
     fun cancelledDrawerSwipeNeverOpensDrawer() {
         assertFalse(
             shouldOpenDrawerAfterDrag(
