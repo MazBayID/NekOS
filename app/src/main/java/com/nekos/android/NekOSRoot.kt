@@ -901,14 +901,12 @@ private fun AppDrawer(
         modifier = modifier
             .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
             .background(WarmBackground.copy(alpha = 0.98f))
-            .statusBarsPadding()
             .navigationBarsPadding()
-            .padding(top = 4.dp)
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(52.dp)
+                .height(40.dp)
                 .clickable(onClick = currentOnCloseDrawer)
                 .pointerInput(closeThresholdPx) {
                     var totalDrag = 0f
