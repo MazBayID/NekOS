@@ -110,8 +110,6 @@ class LauncherInteractionControllerTest {
         assertNull(controller.updateDrag(Offset(1f, 1f), 0))
         assertNull(controller.activeDrag)
     }
-}
-
 
     @Test
     fun drawerOpensOnlyAfterCompletedUpwardSwipeBeyondThreshold() {
@@ -130,3 +128,5 @@ class LauncherInteractionControllerTest {
             )
         )
     }
+
+}
