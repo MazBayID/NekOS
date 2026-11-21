@@ -125,11 +125,13 @@ fun NekOSRoot(refreshToken: Int) {
             .getSerialNumberForUser(Process.myUserHandle())
         // Legacy data stored only package names because earlier versions queried
         // the current profile only. Upgrade those references before profile-aware cleanup.
+        val currentProfileAppIds = refreshedApps
+            .filter { it.profileSerialNumber == currentProfileSerialNumber }
+            .associate { it.packageName to it.id }
         val migratedReferences = migrateLegacyLauncherReferences(
             favorites = latestFavoritePackages,
             tags = latestTags,
-            apps = refreshedApps,
-            currentProfileSerialNumber = currentProfileSerialNumber
+            currentProfileAppIds = currentProfileAppIds
         )
         val installedAppIds = refreshedApps.mapTo(mutableSetOf<String>()) { it.id }
         // Read the latest user-edited collections after the background query so
