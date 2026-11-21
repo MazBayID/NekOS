@@ -4,13 +4,16 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsButton
+import androidx.compose.ui.test.fetchSemanticsNode
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.dp
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
@@ -35,14 +38,18 @@ class LauncherItemAccessibilityTest {
             )
         }
 
-        composeRule.onNodeWithContentDescription("Example app")
-            .assertIsButton()
+        val appNode = composeRule.onNodeWithContentDescription("Example app")
+        appNode.assertIsButton()
             .assertHasClickAction()
             .performClick()
 
+        val customActions = appNode.fetchSemanticsNode().config[SemanticsProperties.CustomActions]
+        assertEquals(listOf("App actions"), customActions.map { it.label })
+        assertTrue(customActions.single().action())
+
         composeRule.runOnIdle {
             assertEquals(1, activationCount.intValue)
-            assertEquals(0, actionCount.intValue)
+            assertEquals(1, actionCount.intValue)
         }
     }
 }
