@@ -39,7 +39,7 @@ data class InstalledApp(
 fun loadLaunchableApps(context: Context): List<InstalledApp> {
     val pm = context.packageManager
     val intent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
-    return pm.queryIntentActivities(intent, PackageManager.MATCH_ALL)
+    return pm.queryIntentActivities(intent, 0)
         .distinctBy { it.activityInfo.packageName }
         .mapNotNull { info ->
             val packageName = info.activityInfo.packageName
