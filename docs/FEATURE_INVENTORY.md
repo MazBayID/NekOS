@@ -39,7 +39,9 @@ This inventory records what exists today, what is only partially implemented, an
 - Choose an optional icon from the bundled 100-icon catalog.
 - Assign and unassign installed apps to a tag.
 - Tap a tag to open its app collection; tap an app in the collection to launch it.
-- Long-press a tag to access edit/delete actions.
+- Tap a tag body to open its app collection; the body has no long-press action.
+- Tap the dedicated six-dot handle to open Edit/Delete options.
+- Long-press and drag the same handle to reorder tags; the handle also exposes an accessible button action for opening options.
 - Tag data is stored as versioned JSON in private SharedPreferences, with basic malformed-data and duplicate filtering.
 - Uninstalled app references are cleaned from tags.
 - Tags can be persistently reordered by dragging a dedicated handle; the handle is anchored at the right edge of each Tag pill.
@@ -66,7 +68,7 @@ This inventory records what exists today, what is only partially implemented, an
 ## 2. Partially implemented / needs product follow-through
 
 - **Settings:** the agreed MVP scope is implemented: Appearance (background presets and custom wallpaper), Home behavior (show the App Drawer hint again), and About (version, MIT license information, and repository link). A broader settings system is intentionally out of scope.
-- **Tag customization:** create/edit/color/icon/app assignment and persistent drag ordering are implemented. Tag ordering uses the dedicated drag handle; Move up / Move down actions are no longer part of the Tag action dialog.
+- **Tag customization:** create/edit/color/icon/app assignment and persistent drag ordering are implemented. Tap the dedicated six-dot handle for options; long-press and drag it to reorder. Move up / Move down actions are not part of the Tag action dialog.
 - **Onboarding:** a dismissible first-use App Drawer hint exists, with a Settings action to show it again; a broader first-run walkthrough is not implemented.
 - **Persistence:** favorites and tags persist locally, but the project does not yet provide user-facing export/import or a documented migration/backup workflow.
 - **Visual customization:** home background and wallpaper are supported; a broader theme engine, typography controls, and configurable accent system are not implemented.
