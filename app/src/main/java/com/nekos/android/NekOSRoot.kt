@@ -20,6 +20,8 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -94,12 +96,20 @@ fun NekOSRoot(refreshToken: Int) {
         mutableMapOf<String, androidx.compose.ui.graphics.ImageBitmap>()
     }
     var favoritePackages by remember { mutableStateOf(loadFavoritePackages(context)) }
+    var tags by remember { mutableStateOf(TagStore.load(context)) }
+    var tagEditorTarget by remember { mutableStateOf<NekTag?>(null) }
+    var showTagEditor by remember { mutableStateOf(false) }
     var actionMenuApp by remember { mutableStateOf<InstalledApp?>(null) }
     val preferences = remember(context) {
         context.getSharedPreferences("nekos_preferences", Context.MODE_PRIVATE)
     }
     var showFirstLaunchTip by remember {
         mutableStateOf(!preferences.getBoolean("has_seen_drawer_tip", false))
+    }
+
+    fun saveTags(updated: List<NekTag>) {
+        tags = updated.distinctBy { it.id }
+        TagStore.save(context, tags)
     }
 
     fun updateFavorites(updated: List<String?>) {
@@ -138,6 +148,8 @@ fun NekOSRoot(refreshToken: Int) {
             favoritePackages = cleanedFavorites
             saveFavoritePackages(context, cleanedFavorites)
         }
+        val cleanedTags = tags.map { tag -> tag.copy(appPackages = tag.appPackages.filter { it in installedPackages }) }
+        if (cleanedTags != tags) saveTags(cleanedTags)
     }
 
     BoxWithConstraints(Modifier.fillMaxSize().background(WarmBackground)) {
@@ -151,6 +163,7 @@ fun NekOSRoot(refreshToken: Int) {
         HomeScreen(
             apps = apps,
             favoritePackages = favoritePackages,
+            tags = tags,
             homeSwipeThresholdPx = homeSwipeThresholdPx,
             backgroundBlurRadiusPx = backgroundBlurRadiusPx * (1f - drawerOffset.value),
             onDrawerDrag = { totalDrag ->
@@ -177,7 +190,9 @@ fun NekOSRoot(refreshToken: Int) {
                     apps.firstOrNull { it.packageName == packageName }?.let { actionMenuApp = it }
                 }
             },
-            onFavoriteMove = { from, to -> moveFavorite(from, to) }
+            onFavoriteMove = { from, to -> moveFavorite(from, to) },
+            onTagClick = { tag -> tagEditorTarget = tag; showTagEditor = true },
+            onAddTag = { tagEditorTarget = null; showTagEditor = true }
         )
 
         if (drawerOffset.value < 1f) {
@@ -226,6 +241,29 @@ fun NekOSRoot(refreshToken: Int) {
                         )
                     }
                 }
+            )
+        }
+
+        if (showTagEditor) {
+            TagManagementDialog(
+                tag = tagEditorTarget,
+                apps = apps,
+                onSave = { saved ->
+                    val duplicateName = tags.any { it.id != saved.id && it.name.equals(saved.name, ignoreCase = true) }
+                    if (duplicateName) {
+                        Toast.makeText(context, "Tag name already exists", Toast.LENGTH_SHORT).show()
+                    } else {
+                        saveTags(if (tagEditorTarget == null) tags + saved else tags.map { if (it.id == saved.id) saved else it })
+                        showTagEditor = false
+                        tagEditorTarget = null
+                    }
+                },
+                onDelete = { deleted ->
+                    saveTags(tags.filterNot { it.id == deleted.id })
+                    showTagEditor = false
+                    tagEditorTarget = null
+                },
+                onDismiss = { showTagEditor = false; tagEditorTarget = null }
             )
         }
 
@@ -279,13 +317,16 @@ fun NekOSRoot(refreshToken: Int) {
 private fun HomeScreen(
     apps: List<InstalledApp>,
     favoritePackages: List<String?>,
+    tags: List<NekTag>,
     homeSwipeThresholdPx: Float,
     backgroundBlurRadiusPx: Float,
     onDrawerDrag: (Float) -> Unit,
     onDrawerDragEnd: (Float) -> Unit,
     onFavoriteClick: (String) -> Unit,
     onFavoriteLongPress: (Int) -> Unit,
-    onFavoriteMove: (Int, Int) -> Unit
+    onFavoriteMove: (Int, Int) -> Unit,
+    onTagClick: (NekTag) -> Unit,
+    onAddTag: () -> Unit
 ) {
     val appByPackage = remember(apps) { apps.associateBy { it.packageName } }
     BoxWithConstraints(Modifier.fillMaxSize()) {
@@ -345,7 +386,13 @@ private fun HomeScreen(
                     contentScale = ContentScale.Fit,
                     modifier = Modifier.offset(x = (-28).dp).width(150.dp).height(60.dp)
                 )
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) { TagPill("Your tags") }
+                Row(
+                    modifier = Modifier.horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    tags.forEach { tag -> TagPill(tag, onClick = { onTagClick(tag) }) }
+                    AddTagPill(onClick = onAddTag)
+                }
             }
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 repeat(3) { row ->
@@ -527,14 +574,27 @@ private fun AppActionRow(
 }
 
 @Composable
-private fun TagPill(label: String) {
+private fun TagPill(tag: NekTag, onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(18.dp))
-            .background(TagSurface)
+            .background(Color(tag.colorArgb))
+            .clickable(onClick = onClick)
             .padding(horizontal = 15.dp, vertical = 9.dp)
     ) {
-        Text(label, color = Ink, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+        Text(tag.name, color = Ink, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+    }
+}
+
+@Composable
+private fun AddTagPill(onClick: () -> Unit) {
+    Box(
+        Modifier.clip(RoundedCornerShape(18.dp))
+            .background(TagSurface.copy(alpha = 0.72f))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 13.dp, vertical = 9.dp)
+    ) {
+        Text("+", color = Ink, fontSize = 15.sp, fontWeight = FontWeight.Medium)
     }
 }
 
