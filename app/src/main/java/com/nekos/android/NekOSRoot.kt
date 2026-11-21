@@ -916,9 +916,9 @@ private fun HomeScreen(
                                     .clip(RoundedCornerShape(14.dp))
                                     .background(TagSurface.copy(alpha = 0.72f))
                                     .clickable(onClick = onOpenSettings)
-                                    .semantics { contentDescription = "Open launcher settings" },
+                                    .semantics { contentDescription = "Open launcher settings"; role = Role.Button },
                                 contentAlignment = Alignment.Center
-                            ) { Text("⚙", color = Ink, fontSize = 19.sp) }
+                            ) { Text("⚙︎", color = Ink, fontSize = 19.sp) }
                         }
                     }
                     LazyColumn(
