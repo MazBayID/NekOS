@@ -30,8 +30,11 @@ internal fun nekosBackgroundColor(preset: String): Color = when (preset) {
 internal fun NekOSSettingsDialog(
     backgroundPreset: String,
     showDock: Boolean,
+    hasWallpaper: Boolean,
     onBackgroundPresetChange: (String) -> Unit,
     onShowDockChange: (Boolean) -> Unit,
+    onChooseWallpaper: () -> Unit,
+    onClearWallpaper: () -> Unit,
     onDismiss: () -> Unit
 ) {
     AlertDialog(
@@ -62,6 +65,21 @@ internal fun NekOSSettingsDialog(
                                 color = Color(0xFF34332F),
                                 fontWeight = FontWeight.SemiBold
                             )
+                        }
+                    }
+                }
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text("Home wallpaper", fontWeight = FontWeight.SemiBold)
+                    Text(
+                        if (hasWallpaper) "A custom image is currently applied." else "Use an image from your photo library."
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        TextButton(onClick = onChooseWallpaper) { Text("Choose image") }
+                        if (hasWallpaper) {
+                            TextButton(onClick = onClearWallpaper) { Text("Remove") }
                         }
                     }
                 }
