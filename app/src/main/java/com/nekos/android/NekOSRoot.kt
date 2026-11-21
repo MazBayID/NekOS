@@ -574,48 +574,21 @@ private fun FavoriteSlot(
             .aspectRatio(1f)
             .clip(RoundedCornerShape(18.dp))
             .background(if (isDropTarget) Color(0xFFDCD3C4) else Color.Transparent)
-            .clickable(enabled = app != null, onClick = onClick)
             .onGloballyPositioned {
                 slotOrigin = it.positionInRoot()
                 onBoundsChanged(it.boundsInRoot())
             }
             .pointerInput(app?.packageName) {
                 if (app != null) {
-                    awaitEachGesture {
-                        val down = awaitFirstDown(requireUnconsumed = false)
-                        val longPress = awaitLongPressOrCancellation(down.id)
-                        if (longPress != null) {
-                            var lastPosition = longPress.position
-                            var accumulated = Offset.Zero
-                            var rootPosition = currentSlotOrigin + lastPosition
-                            var dragging = false
-                            var completed = false
-                            while (true) {
-                                val event = awaitPointerEvent()
-                                val change = event.changes.firstOrNull { it.id == down.id } ?: break
-                                if (!change.pressed) {
-                                    if (dragging) onDragEnd() else onLongPress()
-                                    completed = true
-                                    break
-                                }
-                                val delta = change.position - lastPosition
-                                accumulated += delta
-                                if (!dragging && accumulated.getDistance() > viewConfiguration.touchSlop) {
-                                    dragging = true
-                                    rootPosition = currentSlotOrigin + change.position
-                                    onDragStart(rootPosition)
-                                    change.consume()
-                                    onDrag(rootPosition)
-                                } else if (dragging) {
-                                    rootPosition += delta
-                                    change.consume()
-                                    onDrag(rootPosition)
-                                }
-                                lastPosition = change.position
-                            }
-                            if (dragging && !completed) onDragCancel()
-                        }
-                    }
+                    detectLauncherItemGesture(
+                        rootOrigin = { currentSlotOrigin },
+                        onTap = onClick,
+                        onLongPress = onLongPress,
+                        onDragStart = onDragStart,
+                        onDrag = onDrag,
+                        onDragEnd = onDragEnd,
+                        onDragCancel = onDragCancel
+                    )
                 }
             }
             .padding(5.dp),
@@ -905,43 +878,16 @@ private fun AppGridItem(
             .clip(RoundedCornerShape(14.dp))
             .padding(vertical = 5.dp)
             .onGloballyPositioned { itemOrigin = it.positionInRoot() }
-            .clickable(onClick = onClick)
             .pointerInput(app.packageName) {
-                awaitEachGesture {
-                    val down = awaitFirstDown(requireUnconsumed = false)
-                    val longPress = awaitLongPressOrCancellation(down.id)
-                        if (longPress != null) {
-                            var lastPosition = longPress.position
-                        var accumulated = Offset.Zero
-                        var rootPosition = currentItemOrigin + lastPosition
-                        var dragging = false
-                        var completed = false
-                        while (true) {
-                            val event = awaitPointerEvent()
-                            val change = event.changes.firstOrNull { it.id == down.id } ?: break
-                            if (!change.pressed) {
-                                if (dragging) onDragEnd() else onLongPress()
-                                completed = true
-                                break
-                            }
-                            val delta = change.position - lastPosition
-                            accumulated += delta
-                            if (!dragging && accumulated.getDistance() > viewConfiguration.touchSlop) {
-                                dragging = true
-                                rootPosition = currentItemOrigin + change.position
-                                onDragStart(rootPosition)
-                                change.consume()
-                                onDrag(rootPosition)
-                            } else if (dragging) {
-                                rootPosition += delta
-                                change.consume()
-                                onDrag(rootPosition)
-                            }
-                            lastPosition = change.position
-                        }
-                        if (dragging && !completed) onDragCancel()
-                    }
-                }
+                detectLauncherItemGesture(
+                    rootOrigin = { currentItemOrigin },
+                    onTap = onClick,
+                    onLongPress = onLongPress,
+                    onDragStart = onDragStart,
+                    onDrag = onDrag,
+                    onDragEnd = onDragEnd,
+                    onDragCancel = onDragCancel
+                )
             },
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
