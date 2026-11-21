@@ -17,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -32,9 +33,11 @@ private val ActionMenuMuted = Color(0xFF8B8982)
 internal fun LauncherAppActionMenuContent(
     app: InstalledApp,
     isFavorite: Boolean,
+    isDocked: Boolean,
     isInteractive: Boolean,
     onAppInfo: () -> Unit,
     onFavorite: () -> Unit,
+    onDock: () -> Unit,
     onUninstall: () -> Unit
 ) {
     Text(
@@ -50,6 +53,12 @@ internal fun LauncherAppActionMenuContent(
         if (isFavorite) Icons.Filled.Check else Icons.Filled.Star,
         enabled = isInteractive,
         onClick = onFavorite
+    )
+    PopupAction(
+        if (isDocked) "Remove from dock" else "Add to dock",
+        if (isDocked) Icons.Filled.Check else Icons.Filled.Home,
+        enabled = isInteractive,
+        onClick = onDock
     )
     PopupAction("Uninstall", Icons.Filled.Delete, enabled = isInteractive, onClick = onUninstall)
     if (!isInteractive) {
