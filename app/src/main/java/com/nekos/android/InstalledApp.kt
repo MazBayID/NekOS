@@ -10,6 +10,25 @@ import android.provider.Settings
 import android.graphics.drawable.Drawable
 import android.widget.Toast
 import android.view.View
+import android.util.LruCache
+import androidx.compose.ui.graphics.ImageBitmap
+
+/**
+ * Keeps decoded launcher thumbnails within a predictable memory budget.
+ * ImageBitmap dimensions are used to estimate the backing ARGB_8888 allocation.
+ */
+class AppIconBitmapCache(maxSizeKb: Int = 8 * 1024) {
+    private val cache = object : LruCache<String, ImageBitmap>(maxSizeKb) {
+        override fun sizeOf(key: String, bitmap: ImageBitmap): Int =
+            (bitmap.width * bitmap.height * 4 / 1024).coerceAtLeast(1)
+    }
+
+    operator fun get(packageName: String): ImageBitmap? = cache.get(packageName)
+
+    fun put(packageName: String, bitmap: ImageBitmap) {
+        cache.put(packageName, bitmap)
+    }
+}
 
 data class InstalledApp(
     val label: String,
