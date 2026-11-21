@@ -98,6 +98,7 @@ fun NekOSRoot(refreshToken: Int) {
     var favoritePackages by remember { mutableStateOf(loadFavoritePackages(context)) }
     var tags by remember { mutableStateOf(TagStore.load(context)) }
     var tagEditorTarget by remember { mutableStateOf<NekTag?>(null) }
+    var viewingTag by remember { mutableStateOf<NekTag?>(null) }
     var showTagEditor by remember { mutableStateOf(false) }
     var actionMenuApp by remember { mutableStateOf<InstalledApp?>(null) }
     val preferences = remember(context) {
@@ -191,7 +192,7 @@ fun NekOSRoot(refreshToken: Int) {
                 }
             },
             onFavoriteMove = { from, to -> moveFavorite(from, to) },
-            onTagClick = { tag -> tagEditorTarget = tag; showTagEditor = true },
+            onTagClick = { tag -> viewingTag = tag },
             onAddTag = { tagEditorTarget = null; showTagEditor = true }
         )
 
@@ -241,6 +242,23 @@ fun NekOSRoot(refreshToken: Int) {
                         )
                     }
                 }
+            )
+        }
+
+        viewingTag?.let { tag ->
+            TagAppsDialog(
+                tag = tag,
+                apps = apps,
+                onLaunch = { app ->
+                    viewingTag = null
+                    launchApp(context, app.packageName)
+                },
+                onEdit = {
+                    tagEditorTarget = tag
+                    viewingTag = null
+                    showTagEditor = true
+                },
+                onDismiss = { viewingTag = null }
             )
         }
 
