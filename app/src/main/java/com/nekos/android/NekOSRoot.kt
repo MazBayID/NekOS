@@ -75,6 +75,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlin.math.abs
@@ -949,6 +950,7 @@ private fun TagPill(
     }
     Row(
         modifier = Modifier
+            .fillMaxWidth()
             .onGloballyPositioned {
                 pillCoordinates = it
                 onBoundsChanged(it.boundsInRoot())
@@ -962,14 +964,22 @@ private fun TagPill(
     ) {
         Row(
             modifier = Modifier
-                .weight(1f, fill = false)
+                .weight(1f)
                 .combinedClickable(onClick = onClick, onLongClick = onLongClick)
                 .padding(start = 14.dp, top = 11.dp, bottom = 11.dp, end = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             if (tagIcon != null) Image(tagIcon!!, contentDescription = null, modifier = Modifier.size(20.dp))
-            Text(tag.name, color = Ink, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+            Text(
+                tag.name,
+                color = Ink,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f)
+            )
         }
         Box(
             modifier = Modifier
