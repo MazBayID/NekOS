@@ -6,9 +6,7 @@ import androidx.compose.foundation.gestures.awaitLongPressOrCancellation
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.PointerInputScope
 import androidx.compose.ui.input.pointer.consume
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
-import androidx.compose.ui.Modifier
 
 /**
  * One pointer-input owner for launcher item tap, long-press, and long-press drag.
@@ -39,7 +37,6 @@ suspend fun PointerInputScope.detectLauncherItemGesture(
             return@awaitEachGesture
         }
 
-        var lastPosition = longPress.position
         var accumulated = Offset.Zero
         var dragging = false
         var completed = false
@@ -74,8 +71,6 @@ suspend fun PointerInputScope.detectLauncherItemGesture(
                 change.consume()
                 onDrag(rootOrigin() + change.position)
             }
-
-            lastPosition = change.position
         }
 
         if (dragging && !completed) onDragCancel()
