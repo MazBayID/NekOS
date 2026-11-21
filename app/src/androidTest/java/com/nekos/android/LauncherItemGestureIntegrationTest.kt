@@ -1,5 +1,6 @@
 package com.nekos.android
 
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
@@ -28,6 +29,30 @@ import org.junit.Test
 class LauncherItemGestureIntegrationTest {
     @get:Rule
     val composeRule = createComposeRule()
+
+    @Test
+    fun longPressOnEmptyHomeSurfaceOpensLauncherSettings() {
+        var settingsOpened = false
+
+        composeRule.setContent {
+            Box(
+                modifier = Modifier
+                    .size(240.dp)
+                    .testTag("empty-home-settings-surface")
+                    .combinedClickable(
+                        onClick = {},
+                        onLongClick = { settingsOpened = true },
+                        onLongClickLabel = "Open launcher settings"
+                    )
+            )
+        }
+
+        composeRule.onNodeWithTag("empty-home-settings-surface").performTouchInput {
+            longClick()
+        }
+
+        assertTrue(settingsOpened)
+    }
 
     @Test
     fun quickReleaseIsDeliveredAsTap() {
