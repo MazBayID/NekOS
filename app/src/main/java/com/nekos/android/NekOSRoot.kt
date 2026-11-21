@@ -246,7 +246,7 @@ fun NekOSRoot(refreshToken: Int) {
                         // During a drag, lift the drawer to expose the Home Favorite area
                         // underneath while keeping the dragged icon in the root overlay.
                         translationY = drawerOffset.value * size.height -
-                            if (favoriteDrag != null) size.height * 0.58f else 0f
+                            if (favoriteDrag?.hasMoved == true) size.height * 0.58f else 0f
                     },
                 onAppClick = { app ->
                     launchApp(context, app.packageName)
@@ -264,10 +264,15 @@ fun NekOSRoot(refreshToken: Int) {
                 onAppDrag = { position -> favoriteDrag = favoriteDrag?.copy(position = position, hasMoved = true) },
                 onAppDragEnd = {
                     val drag = favoriteDrag
-                    val target = drag?.let { state -> favoriteSlotBounds.entries.firstOrNull { it.value.contains(state.position) }?.key }
-                    if (drag?.hasMoved == true && target != null) placeFavoriteFromDrawer(drag.packageName, target)
+                    if (drag?.hasMoved == true) {
+                        val target = favoriteSlotBounds.entries.firstOrNull { it.value.contains(drag.position) }?.key
+                        if (target != null) placeFavoriteFromDrawer(drag.packageName, target)
+                    } else if (drag != null) {
+                        apps.firstOrNull { it.packageName == drag.packageName }?.let { actionMenuApp = it }
+                    }
                     favoriteDrag = null
                 },
+                onAppDragCancel = { favoriteDrag = null },
                 onCloseDrawer = {
                     scope.launch {
                         drawerOffset.animateTo(
@@ -282,7 +287,7 @@ fun NekOSRoot(refreshToken: Int) {
             )
         }
 
-        favoriteDrag?.let { drag ->
+        favoriteDrag?.takeIf { it.hasMoved }?.let { drag ->
             val draggedApp = apps.firstOrNull { it.packageName == drag.packageName }
             if (draggedApp != null) {
                 val bitmap = remember(draggedApp.packageName) { draggedApp.icon.toBitmap(96, 96).asImageBitmap() }
@@ -642,6 +647,7 @@ private fun AppDrawer(
     onAppDragStart: (InstalledApp, Offset) -> Unit,
     onAppDrag: (Offset) -> Unit,
     onAppDragEnd: () -> Unit,
+    onAppDragCancel: () -> Unit,
     onCloseDrawer: () -> Unit
 ) {
     var searchQuery by remember { mutableStateOf("") }
@@ -778,7 +784,8 @@ private fun AppDrawer(
                         onClick = { onAppClick(app) },
                         onDragStart = { position -> onAppDragStart(app, position) },
                         onDrag = onAppDrag,
-                        onDragEnd = onAppDragEnd
+                        onDragEnd = onAppDragEnd,
+                        onDragCancel = onAppDragCancel
                     )
                 }
             }
@@ -794,7 +801,8 @@ private fun AppGridItem(
     onClick: () -> Unit,
     onDragStart: (Offset) -> Unit,
     onDrag: (Offset) -> Unit,
-    onDragEnd: () -> Unit
+    onDragEnd: () -> Unit,
+    onDragCancel: () -> Unit
 ) {
     var itemOrigin by remember { mutableStateOf(Offset.Zero) }
     val currentItemOrigin by rememberUpdatedState(itemOrigin)
@@ -817,7 +825,7 @@ private fun AppGridItem(
                         onDrag(rootPosition)
                     },
                     onDragEnd = onDragEnd,
-                    onDragCancel = onDragEnd
+                    onDragCancel = onDragCancel
                 )
             }
             .clickable(onClick = onClick),
