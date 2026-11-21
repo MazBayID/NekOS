@@ -1082,7 +1082,7 @@ private fun FavoriteSlot(
                     contentAlignment = Alignment.Center
                 ) { Text("+", color = Muted.copy(alpha = 0.72f), fontSize = 17.sp) }
             }
-            AnimatedVisibility(
+            this@Column.AnimatedVisibility(
                 visible = app != null && iconBitmap != null,
                 enter = fadeIn(tween(180)) + scaleIn(
                     initialScale = 0.90f,
@@ -1496,7 +1496,7 @@ private fun AppGridItem(
             modifier = Modifier.size(56.dp),
             contentAlignment = Alignment.Center
         ) {
-            AnimatedVisibility(
+            this@Column.AnimatedVisibility(
                 visible = bitmap != null,
                 enter = fadeIn(tween(180)) + scaleIn(
                     initialScale = 0.90f,
