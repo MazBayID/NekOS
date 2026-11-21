@@ -578,7 +578,7 @@ private fun TagPill(tag: NekTag, onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(18.dp))
-            .background(Color(tag.colorArgb))
+            .background(Color(tag.colorArgb.toInt()))
             .clickable(onClick = onClick)
             .padding(horizontal = 15.dp, vertical = 9.dp)
     ) {
