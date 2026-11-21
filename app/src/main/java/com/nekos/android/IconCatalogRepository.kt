@@ -3,6 +3,7 @@ package com.nekos.android
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.util.LruCache
 import org.json.JSONObject
 
 data class CatalogIcon(
@@ -41,6 +42,10 @@ internal fun isValidCatalogIconPath(path: String): Boolean {
 class IconCatalogRepository(context: Context) {
     private val appContext = context.applicationContext
     private var cachedIcons: List<CatalogIcon>? = null
+    private val bitmapCache = object : LruCache<String, Bitmap>(4 * 1024) {
+        override fun sizeOf(key: String, bitmap: Bitmap): Int =
+            (bitmap.allocationByteCount / 1024).coerceAtLeast(1)
+    }
 
     @Synchronized
     fun loadCatalog(): List<CatalogIcon> {
@@ -78,12 +83,17 @@ class IconCatalogRepository(context: Context) {
         return icons
     }
 
+    @Synchronized
     fun loadBitmap(icon: CatalogIcon): Bitmap? {
         require(isValidCatalogIconPath(icon.file)) {
             "Invalid catalog asset path: ${icon.file}"
         }
-        return appContext.assets.open("ikon/${icon.file}").use {
+        bitmapCache.get(icon.file)?.let { return it }
+
+        val bitmap = appContext.assets.open("ikon/${icon.file}").use {
             BitmapFactory.decodeStream(it)
-        }
+        } ?: return null
+        bitmapCache.put(icon.file, bitmap)
+        return bitmap
     }
 }
