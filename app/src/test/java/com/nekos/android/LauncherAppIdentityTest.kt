@@ -11,8 +11,8 @@ class LauncherAppIdentityTest {
         val workApp = launcherAppId("com.example.notes", 42L)
 
         assertNotEquals(personalApp, workApp)
-        assertEquals("10|com.example.notes", personalApp)
-        assertEquals("42|com.example.notes", workApp)
+        assertEquals("10::com.example.notes", personalApp)
+        assertEquals("42::com.example.notes", workApp)
     }
 
     @Test
