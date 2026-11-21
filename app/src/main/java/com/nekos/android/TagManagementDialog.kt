@@ -35,6 +35,49 @@ private val TagColors = listOf(
 )
 
 @Composable
+fun TagAppsDialog(
+    tag: NekTag,
+    apps: List<InstalledApp>,
+    onLaunch: (InstalledApp) -> Unit,
+    onEdit: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    val assignedApps = remember(tag.appPackages, apps) {
+        val byPackage = apps.associateBy { it.packageName }
+        tag.appPackages.mapNotNull(byPackage::get)
+    }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(tag.name) },
+        text = {
+            if (assignedApps.isEmpty()) {
+                Text("No apps assigned yet.")
+            } else {
+                LazyColumn(Modifier.heightIn(max = 340.dp)) {
+                    items(assignedApps, key = { it.packageName }) { app ->
+                        Row(
+                            Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+                                .clickable { onLaunch(app) }.padding(10.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Image(
+                                bitmap = app.icon.toBitmap(64, 64).asImageBitmap(),
+                                contentDescription = null,
+                                modifier = Modifier.size(36.dp)
+                            )
+                            Spacer(Modifier.width(12.dp))
+                            Text(app.label)
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onEdit) { Text("Edit tag") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Close") } }
+    )
+}
+
+@Composable
 fun TagManagementDialog(
     tag: NekTag?,
     apps: List<InstalledApp>,
