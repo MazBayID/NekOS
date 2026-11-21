@@ -108,6 +108,9 @@ fun NekOSRoot(refreshToken: Int) {
     var tags by remember { mutableStateOf(TagStore.load(context)) }
     var isInitialLoadComplete by remember { mutableStateOf(false) }
 
+    val latestFavoritePackages by rememberUpdatedState(favoritePackages)
+    val latestTags by rememberUpdatedState(tags)
+
     // Discover launchable apps while the brand splash is visible instead of
     // waiting for an artificial timer before starting initialization.
     LaunchedEffect(refreshToken) {
@@ -116,9 +119,12 @@ fun NekOSRoot(refreshToken: Int) {
         }
         apps = refreshedApps
         val installedPackages = refreshedApps.mapTo(mutableSetOf<String>()) { it.packageName }
+        // Read the latest user-edited collections after the background query.
+        // Otherwise an in-flight refresh could overwrite a Favorite or Tag edit
+        // made while PackageManager was loading the app catalog.
         val cleanedReferences = cleanupLauncherReferences(
-            favorites = favoritePackages,
-            tags = tags,
+            favorites = latestFavoritePackages,
+            tags = latestTags,
             installedPackages = installedPackages
         )
         if (cleanedReferences.favorites != favoritePackages) {
