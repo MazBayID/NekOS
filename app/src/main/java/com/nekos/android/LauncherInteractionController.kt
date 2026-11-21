@@ -14,7 +14,11 @@ data class LauncherDragSession(
     val hasMoved: Boolean = false,
     val targetIndex: Int? = null,
     val cancelTarget: Boolean = false
-)
+) {
+    /** Only App Drawer drags expose the explicit cancel drop target. */
+    val supportsCancelDropTarget: Boolean
+        get() = source == LauncherDragSource.APP_DRAWER
+}
 
 /**
  * Owns the single active launcher drag session.
