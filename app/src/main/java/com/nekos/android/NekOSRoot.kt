@@ -103,7 +103,7 @@ fun NekOSRoot(refreshToken: Int) {
     }
 
     val context = LocalContext.current
-    var apps by remember { mutableStateOf(loadLaunchableApps(context)) }
+    var apps by remember { mutableStateOf(emptyList<InstalledApp>()) }
     val iconBitmapCache = remember(apps) {
         mutableMapOf<String, androidx.compose.ui.graphics.ImageBitmap>()
     }
@@ -172,7 +172,11 @@ fun NekOSRoot(refreshToken: Int) {
     }
 
     LaunchedEffect(refreshToken) {
-        val refreshedApps = loadLaunchableApps(context)
+        // PackageManager queries and icon loading can be expensive on devices
+        // with many installed apps, so keep discovery off the main thread.
+        val refreshedApps = withContext(Dispatchers.IO) {
+            loadLaunchableApps(context)
+        }
         apps = refreshedApps
         val installedPackages = refreshedApps.mapTo(mutableSetOf<String>()) { it.packageName }
         val cleanedReferences = cleanupLauncherReferences(
