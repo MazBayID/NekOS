@@ -8,7 +8,7 @@ enum class LauncherDragSource {
 }
 
 data class LauncherDragSession(
-    val packageName: String,
+    val appId: String,
     val source: LauncherDragSource,
     val position: Offset,
     val hasMoved: Boolean = false,
@@ -31,12 +31,12 @@ class LauncherInteractionController {
         private set
 
     fun startDrag(
-        packageName: String,
+        appId: String,
         source: LauncherDragSource,
         position: Offset
     ): LauncherDragSession {
         return LauncherDragSession(
-            packageName = packageName,
+            appId = appId,
             source = source,
             position = position
         ).also { activeDrag = it }
