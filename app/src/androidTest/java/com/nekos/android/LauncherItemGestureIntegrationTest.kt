@@ -152,6 +152,21 @@ class LauncherItemGestureIntegrationTest {
     }
 
     @Test
+    fun stationaryTagHandleLongPressDoesNotOpenOptionsOrStartDrag() {
+        val harness = TagHandleHarnessState()
+
+        composeRule.setContent { TagHandleGestureHarness(harness) }
+
+        composeRule.onNodeWithTag(TAG_HANDLE_TAG).performTouchInput {
+            longClick()
+        }
+
+        assertEquals(0, harness.optionsOpened)
+        assertEquals(0, harness.dragStarted)
+        assertEquals(0, harness.dragFinished)
+    }
+
+    @Test
     fun tagHandleLongPressAndMoveStartsReorderingWithoutOpeningOptions() {
         val harness = TagHandleHarnessState()
 
