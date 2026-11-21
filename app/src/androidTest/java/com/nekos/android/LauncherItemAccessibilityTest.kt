@@ -7,7 +7,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
-import androidx.compose.ui.test.fetchSemanticsNode
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.unit.dp
@@ -49,7 +48,7 @@ class LauncherItemAccessibilityTest {
         assertEquals(listOf("App actions"), customActions.map { it.label })
 
         composeRule.runOnIdle {
-            assertTrue(onClick.action())
+            assertTrue(onClick.action?.invoke() == true)
             assertEquals(1, activationCount.intValue)
             assertTrue(customActions.single().action())
             assertEquals(1, actionCount.intValue)
