@@ -2,6 +2,7 @@ package com.nekos.android
 
 import java.util.Locale
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class AppLabelSortingTest {
@@ -34,8 +35,8 @@ class AppLabelSortingTest {
     fun keepsAccentedLettersDistinctAccordingToLocale() {
         val comparator = appLabelComparator(Locale("sv", "SE"))
 
-        assertEquals(true, comparator.compare("z", "å") < 0)
-        assertEquals(true, comparator.compare("å", "ä") < 0)
-        assertEquals(true, comparator.compare("ä", "ö") < 0)
+        assertTrue(comparator.compare("z", "å") < 0)
+        assertTrue(comparator.compare("å", "ä") < 0)
+        assertTrue(comparator.compare("ä", "ö") < 0)
     }
 }
