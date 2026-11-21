@@ -36,6 +36,8 @@ import androidx.compose.foundation.gestures.awaitLongPressOrCancellation
 import androidx.compose.foundation.gestures.awaitVerticalDragOrCancellation
 import androidx.compose.foundation.gestures.awaitVerticalTouchSlopOrCancellation
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.foundation.layout.*
@@ -347,6 +349,7 @@ fun NekOSRoot(refreshToken: Int) {
             onTagClick = { tag -> viewingTag = tag },
             onTagOptionsClick = { tag -> actionMenuTag = tag },
             onTagBoundsChanged = { tagId, bounds -> tagPillBounds[tagId] = bounds },
+            onTagBoundsRemoved = { tagId -> tagPillBounds.remove(tagId) },
             draggedTagId = draggedTagId,
             tagDropTargetId = tagDropTargetId,
             onTagDragStart = { tag, _ ->
@@ -689,6 +692,7 @@ fun NekOSRoot(refreshToken: Int) {
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun HomeScreen(
     apps: List<InstalledApp>,
@@ -714,6 +718,7 @@ private fun HomeScreen(
     onTagClick: (NekTag) -> Unit,
     onTagOptionsClick: (NekTag) -> Unit,
     onTagBoundsChanged: (String, Rect) -> Unit,
+    onTagBoundsRemoved: (String) -> Unit,
     draggedTagId: String?,
     tagDropTargetId: String?,
     onTagDragStart: (NekTag, Offset) -> Unit,
@@ -790,44 +795,55 @@ private fun HomeScreen(
                 .padding(horizontal = 20.dp, vertical = 22.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
+            BoxWithConstraints(
+                modifier = Modifier.fillMaxWidth().weight(1f)
+            ) {
+                // Match the old three-column grid cell width so TagPill borders
+                // keep their existing dimensions when moved into the right rail.
+                val tagRailWidth = (maxWidth - 16.dp) / 3
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    Image(
-                        painter = painterResource(R.drawable.text_logo_sec),
-                        contentDescription = "NekOS",
-                        contentScale = ContentScale.Fit,
-                        modifier = Modifier.offset(x = (-12).dp).height(72.dp).weight(1f, fill = false)
-                    )
-                    TextButton(onClick = onOpenSettings) {
-                        Text("Settings", color = Ink, fontSize = 13.sp)
-                    }
-                }
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(3),
-                    modifier = Modifier.fillMaxWidth().heightIn(max = 144.dp),
-                    contentPadding = PaddingValues(vertical = 2.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(tags, key = { it.id }) { tag ->
-                        TagPill(
-                            tag = tag,
-                            isDragging = draggedTagId == tag.id,
-                            isDropTarget = tagDropTargetId == tag.id && draggedTagId != tag.id,
-                            onBoundsChanged = { bounds -> onTagBoundsChanged(tag.id, bounds) },
-                            onClick = { onTagClick(tag) },
-                            onHandleClick = { onTagOptionsClick(tag) },
-                            onDragStart = { position -> onTagDragStart(tag, position) },
-                            onDrag = onTagDrag,
-                            onDragEnd = onTagDragEnd,
-                            onDragCancel = onTagDragCancel
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .combinedClickable(
+                                onClick = {},
+                                onLongClick = onOpenSettings,
+                                onLongClickLabel = "Open launcher settings"
+                            )
+                    ) {
+                        Image(
+                            painter = painterResource(R.drawable.text_logo_sec),
+                            contentDescription = "NekOS",
+                            contentScale = ContentScale.Fit,
+                            modifier = Modifier.offset(x = (-12).dp).height(72.dp)
                         )
                     }
-                    item(key = "add-tag") { AddTagPill(onClick = onAddTag) }
+                    LazyColumn(
+                        modifier = Modifier.width(tagRailWidth).fillMaxHeight(),
+                        contentPadding = PaddingValues(vertical = 2.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(tags, key = { it.id }) { tag ->
+                            TagPill(
+                                tag = tag,
+                                isDragging = draggedTagId == tag.id,
+                                isDropTarget = tagDropTargetId == tag.id && draggedTagId != tag.id,
+                                onBoundsChanged = { bounds -> onTagBoundsChanged(tag.id, bounds) },
+                                onBoundsRemoved = { onTagBoundsRemoved(tag.id) },
+                                onClick = { onTagClick(tag) },
+                                onHandleClick = { onTagOptionsClick(tag) },
+                                onDragStart = { position -> onTagDragStart(tag, position) },
+                                onDrag = onTagDrag,
+                                onDragEnd = onTagDragEnd,
+                                onDragCancel = onTagDragCancel
+                            )
+                        }
+                        item(key = "add-tag") { AddTagPill(onClick = onAddTag) }
+                    }
                 }
             }
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -938,6 +954,7 @@ private fun TagPill(
     isDragging: Boolean,
     isDropTarget: Boolean,
     onBoundsChanged: (Rect) -> Unit,
+    onBoundsRemoved: (String) -> Unit,
     onClick: () -> Unit,
     onHandleClick: () -> Unit,
     onDragStart: (Offset) -> Unit,
@@ -951,6 +968,9 @@ private fun TagPill(
     }
     var handleCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
     val currentHandleCoordinates by rememberUpdatedState(handleCoordinates)
+    DisposableEffect(tag.id) {
+        onDispose { onBoundsRemoved(tag.id) }
+    }
     LaunchedEffect(tag.iconId) {
         tagIcon = withContext(Dispatchers.IO) {
             runCatching {
