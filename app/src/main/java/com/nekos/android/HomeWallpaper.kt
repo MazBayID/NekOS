@@ -15,6 +15,11 @@ private const val HOME_WALLPAPER_TEMP_FILE = "home_wallpaper.tmp"
 private const val HOME_WALLPAPER_MAX_DIMENSION = 2048
 private const val HOME_WALLPAPER_MAX_FILE_BYTES = 40L * 1024L * 1024L
 
+internal fun isValidHomeWallpaperDimensions(width: Int, height: Int): Boolean =
+    width > 0 &&
+        height > 0 &&
+        width.toLong() * height.toLong() <= 100_000_000L
+
 internal fun saveHomeWallpaper(context: Context, source: Uri): String? = runCatching {
     val target = File(context.filesDir, HOME_WALLPAPER_FILE)
     val temporary = File(context.filesDir, HOME_WALLPAPER_TEMP_FILE)
@@ -36,6 +41,13 @@ internal fun saveHomeWallpaper(context: Context, source: Uri): String? = runCatc
     } ?: error("Unable to open selected image")
 
     check(temporary.length() > 0L) { "Selected image is empty" }
+
+    val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+    BitmapFactory.decodeFile(temporary.absolutePath, bounds)
+    check(isValidHomeWallpaperDimensions(bounds.outWidth, bounds.outHeight)) {
+        "Selected file is not a supported image or its dimensions are too large"
+    }
+
     Files.move(
         temporary.toPath(),
         target.toPath(),
