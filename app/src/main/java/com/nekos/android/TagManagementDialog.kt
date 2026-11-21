@@ -329,7 +329,7 @@ fun TagManagementDialog(
                 if (filteredApps.isEmpty()) {
                     Text("No matching apps", color = Color(0xFF8B8982), modifier = Modifier.padding(vertical = 12.dp))
                 } else {
-                    LazyColumn(Modifier.heightIn(max = 260.dp)) {
+                    LazyColumn(Modifier.heightIn(max = 160.dp)) {
                         items(filteredApps, key = { it.id }) { app ->
                             Row(
                                 Modifier.fillMaxWidth().clickable {
