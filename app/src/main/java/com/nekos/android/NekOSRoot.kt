@@ -11,7 +11,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.scaleIn
-import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -40,6 +40,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -285,22 +286,32 @@ fun NekOSRoot(refreshToken: Int) {
         val homeSwipeThresholdPx = with(androidx.compose.ui.platform.LocalDensity.current) { 64.dp.toPx() }
         val drawerCloseThresholdPx = with(androidx.compose.ui.platform.LocalDensity.current) { 72.dp.toPx() }
         val backgroundBlurRadiusPx = with(androidx.compose.ui.platform.LocalDensity.current) { 16.dp.toPx() }
-        val drawerOffset = remember { Animatable(1f) }
+        var drawerProgress by remember { mutableFloatStateOf(1f) }
+        var drawerTargetProgress by remember { mutableFloatStateOf(1f) }
+        var isDrawerDragging by remember { mutableStateOf(false) }
         val scope = rememberCoroutineScope()
 
-        BackHandler(enabled = showSettings || actionMenuApp != null || drawerOffset.value < 1f) {
+        // Pointer movement updates one shared progress value directly. A spring
+        // is used only to settle after release, never once per pointer event.
+        LaunchedEffect(drawerTargetProgress, isDrawerDragging) {
+            if (!isDrawerDragging) {
+                animate(
+                    initialValue = drawerProgress,
+                    targetValue = drawerTargetProgress,
+                    animationSpec = spring(dampingRatio = 0.82f, stiffness = 420f)
+                ) { value, _ -> drawerProgress = value }
+            }
+        }
+        fun closeDrawer() {
+            isDrawerDragging = false
+            drawerTargetProgress = 1f
+        }
+
+        BackHandler(enabled = showSettings || actionMenuApp != null || drawerProgress < 1f) {
             when {
                 showSettings -> showSettings = false
                 actionMenuApp != null -> actionMenuApp = null
-                else -> scope.launch {
-                    drawerOffset.animateTo(
-                        1f,
-                        animationSpec = spring(
-                            dampingRatio = 0.86f,
-                            stiffness = 420f
-                        )
-                    )
-                }
+                else -> closeDrawer()
             }
         }
 
@@ -317,25 +328,17 @@ fun NekOSRoot(refreshToken: Int) {
             backgroundBlurRadiusPx = if (favoriteDrag?.hasMoved == true) {
                 0f
             } else {
-                backgroundBlurRadiusPx * (1f - drawerOffset.value)
+                backgroundBlurRadiusPx * (1f - drawerProgress)
             },
             onDrawerDrag = { totalDrag ->
-                scope.launch {
-                    drawerOffset.snapTo(
-                        (1f + totalDrag / drawerHeightPx).coerceIn(0f, 1f)
-                    )
-                }
+                isDrawerDragging = true
+                drawerProgress = (1f + totalDrag / drawerHeightPx).coerceIn(0f, 1f)
             },
-            onDrawerDragEnd = { totalDrag, cancelled ->
-                scope.launch {
-                    drawerOffset.animateTo(
-                        if (shouldOpenDrawerAfterDrag(totalDrag, homeSwipeThresholdPx, cancelled)) 0f else 1f,
-                        animationSpec = spring(
-                            dampingRatio = 0.82f,
-                            stiffness = 420f
-                        )
-                    )
-                }
+            onDrawerDragEnd = { totalDrag, velocityY, cancelled ->
+                isDrawerDragging = false
+                drawerTargetProgress = if (
+                    shouldOpenDrawerAfterDrag(totalDrag, homeSwipeThresholdPx, cancelled, velocityY)
+                ) 0f else 1f
             },
             onFavoriteClick = { app, bounds ->
                 launchApp(context, app, launchSourceView, bounds.left.roundToInt(), bounds.top.roundToInt(), bounds.width.roundToInt(), bounds.height.roundToInt())
@@ -449,7 +452,7 @@ fun NekOSRoot(refreshToken: Int) {
             }
         }
 
-        if (drawerOffset.value < 1f) {
+        if (drawerProgress < 1f) {
             // A subtle warm translucent veil keeps the blurred home screen legible
             // and provides a graceful dimmed fallback on Android versions below 12.
             Box(
@@ -457,27 +460,19 @@ fun NekOSRoot(refreshToken: Int) {
                     .fillMaxSize()
                     .background(
                         WarmBackground.copy(
-                            alpha = 0.28f * (1f - drawerOffset.value)
+                            alpha = 0.28f * (1f - drawerProgress)
                         )
                     )
             )
 
-            if (drawerOffset.value <= 0.02f) {
+            if (drawerProgress <= 0.02f) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .fillMaxHeight(0.40f)
                         .align(Alignment.TopCenter)
                         .clickable {
-                            scope.launch {
-                                drawerOffset.animateTo(
-                                    1f,
-                                    animationSpec = spring(
-                                        dampingRatio = 0.86f,
-                                        stiffness = 420f
-                                    )
-                                )
-                            }
+                            closeDrawer()
                         }
                 )
             }
@@ -493,23 +488,15 @@ fun NekOSRoot(refreshToken: Int) {
                     .graphicsLayer {
                         // Hide the entire drawer during a drag so no grid rows remain
                         // visible over the Home Favorite area.
-                        translationY = if (favoriteDrag?.hasMoved == true) {
-                            -size.height
-                        } else {
-                            drawerOffset.value * size.height
-                        }
+                        val isDraggingApp = favoriteDrag?.hasMoved == true
+                        translationY = if (isDraggingApp) size.height * 0.12f else drawerProgress * size.height
+                        alpha = if (isDraggingApp) 0.34f else 1f
+                        scaleX = if (isDraggingApp) 0.985f else 1f
+                        scaleY = if (isDraggingApp) 0.985f else 1f
                     },
                 onAppClick = { app, bounds ->
                     launchApp(context, app, launchSourceView, bounds.left.roundToInt(), bounds.top.roundToInt(), bounds.width.roundToInt(), bounds.height.roundToInt())
-                    scope.launch {
-                        drawerOffset.animateTo(
-                            1f,
-                            animationSpec = spring(
-                                dampingRatio = 0.86f,
-                                stiffness = 420f
-                            )
-                        )
-                    }
+                    closeDrawer()
                 },
                 onAppLongPress = { app, position ->
                     actionMenuPreviewApp = app
@@ -546,16 +533,8 @@ fun NekOSRoot(refreshToken: Int) {
                     favoriteDrag = null
                     cancelDropBounds = null
                 },
-                onCloseDrawer = {
-                    scope.launch {
-                        drawerOffset.animateTo(
-                            1f,
-                            animationSpec = spring(
-                                dampingRatio = 0.86f,
-                                stiffness = 420f
-                            )
-                        )
-                    }
+                onCloseDrawer = { totalDrag, velocityY ->
+                    if (totalDrag > drawerCloseThresholdPx || velocityY > 900f) closeDrawer()
                 }
             )
         }
@@ -790,7 +769,7 @@ private fun HomeScreen(
     homeSwipeThresholdPx: Float,
     backgroundBlurRadiusPx: Float,
     onDrawerDrag: (Float) -> Unit,
-    onDrawerDragEnd: (totalDrag: Float, cancelled: Boolean) -> Unit,
+    onDrawerDragEnd: (totalDrag: Float, velocityY: Float, cancelled: Boolean) -> Unit,
     onFavoriteClick: (InstalledApp, Rect) -> Unit,
     onFavoriteLongPress: (Int, Offset) -> Unit,
     onFavoriteLongPressEnd: () -> Unit,
@@ -860,23 +839,34 @@ private fun HomeScreen(
                 .pointerInput(homeSwipeThresholdPx) {
                     var totalDrag = 0f
                     var drawerDragStarted = false
+                    val velocityTracker = VelocityTracker()
                     detectVerticalDragGestures(
-                        onVerticalDrag = { _, dragAmount ->
+                        onDragStart = {
+                            totalDrag = 0f
+                            drawerDragStarted = false
+                            velocityTracker.resetTracking()
+                        },
+                        onVerticalDrag = { change, dragAmount ->
+                            velocityTracker.addPosition(change.uptimeMillis, change.position)
                             totalDrag += dragAmount
                             if (totalDrag < 0f) {
                                 drawerDragStarted = true
                                 currentOnDrawerDrag(totalDrag)
+                                change.consume()
                             }
                         },
                         onDragEnd = {
-                            if (drawerDragStarted) currentOnDrawerDragEnd(totalDrag, false)
+                            if (drawerDragStarted) {
+                                currentOnDrawerDragEnd(totalDrag, velocityTracker.calculateVelocity().y, false)
+                            }
                             totalDrag = 0f
                             drawerDragStarted = false
                         },
                         onDragCancel = {
-                            if (drawerDragStarted) currentOnDrawerDragEnd(totalDrag, true)
+                            if (drawerDragStarted) currentOnDrawerDragEnd(totalDrag, 0f, true)
                             totalDrag = 0f
                             drawerDragStarted = false
+                            velocityTracker.resetTracking()
                         }
                     )
                 }
@@ -893,22 +883,27 @@ private fun HomeScreen(
                     modifier = Modifier.fillMaxSize(),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    Column(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight()
-                            .combinedClickable(
-                                onClick = {},
-                                onLongClick = onOpenSettings,
-                                onLongClickLabel = "Open launcher settings"
+                    Column(modifier = Modifier.weight(1f).fillMaxHeight()) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(end = 2.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Image(
+                                painter = painterResource(R.drawable.text_logo_sec),
+                                contentDescription = "NekOS",
+                                contentScale = ContentScale.Fit,
+                                modifier = Modifier.offset(x = (-12).dp).height(72.dp).weight(1f)
                             )
-                    ) {
-                        Image(
-                            painter = painterResource(R.drawable.text_logo_sec),
-                            contentDescription = "NekOS",
-                            contentScale = ContentScale.Fit,
-                            modifier = Modifier.offset(x = (-12).dp).height(72.dp)
-                        )
+                            Box(
+                                modifier = Modifier.size(40.dp)
+                                    .clip(RoundedCornerShape(14.dp))
+                                    .background(TagSurface.copy(alpha = 0.72f))
+                                    .clickable(onClick = onOpenSettings)
+                                    .semantics { contentDescription = "Open launcher settings" },
+                                contentAlignment = Alignment.Center
+                            ) { Text("⚙", color = Ink, fontSize = 19.sp) }
+                        }
                     }
                     LazyColumn(
                         modifier = Modifier.width(tagRailWidth).fillMaxHeight(),
@@ -1059,6 +1054,13 @@ private fun FavoriteSlot(
             modifier = Modifier.size(56.dp),
             contentAlignment = Alignment.Center
         ) {
+            if (app == null) {
+                Box(
+                    Modifier.size(26.dp).clip(CircleShape)
+                        .background(TagSurface.copy(alpha = 0.58f)),
+                    contentAlignment = Alignment.Center
+                ) { Text("+", color = Muted.copy(alpha = 0.72f), fontSize = 17.sp) }
+            }
             AnimatedVisibility(
                 visible = app != null && iconBitmap != null,
                 enter = fadeIn(tween(180)) + scaleIn(
@@ -1253,7 +1255,7 @@ private fun AppDrawer(
     onAppDrag: (Offset) -> Unit,
     onAppDragEnd: () -> Unit,
     onAppDragCancel: () -> Unit,
-    onCloseDrawer: () -> Unit
+    onCloseDrawer: (totalDrag: Float, velocityY: Float) -> Unit
 ) {
     var searchQuery by remember { mutableStateOf("") }
     val currentOnCloseDrawer by rememberUpdatedState(onCloseDrawer)
@@ -1284,13 +1286,25 @@ private fun AppDrawer(
                 .clickable(onClick = currentOnCloseDrawer)
                 .pointerInput(closeThresholdPx) {
                     var totalDrag = 0f
+                    val velocityTracker = VelocityTracker()
                     detectVerticalDragGestures(
-                        onVerticalDrag = { _, dragAmount -> totalDrag += dragAmount },
+                        onDragStart = {
+                            totalDrag = 0f
+                            velocityTracker.resetTracking()
+                        },
+                        onVerticalDrag = { change, dragAmount ->
+                            velocityTracker.addPosition(change.uptimeMillis, change.position)
+                            totalDrag += dragAmount
+                            change.consume()
+                        },
                         onDragEnd = {
-                            if (totalDrag > closeThresholdPx) currentOnCloseDrawer()
+                            currentOnCloseDrawer(totalDrag, velocityTracker.calculateVelocity().y)
                             totalDrag = 0f
                         },
-                        onDragCancel = { totalDrag = 0f }
+                        onDragCancel = {
+                            totalDrag = 0f
+                            velocityTracker.resetTracking()
+                        }
                     )
                 },
             contentAlignment = Alignment.Center
