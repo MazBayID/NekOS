@@ -383,6 +383,26 @@ fun NekOSRoot(refreshToken: Int) {
                     )
             )
 
+            if (drawerOffset.value <= 0.02f) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight(0.40f)
+                        .align(Alignment.TopCenter)
+                        .clickable {
+                            scope.launch {
+                                drawerOffset.animateTo(
+                                    1f,
+                                    animationSpec = spring(
+                                        dampingRatio = 0.86f,
+                                        stiffness = 420f
+                                    )
+                                )
+                            }
+                        }
+                )
+            }
+
             AppDrawer(
                 apps = apps,
                 iconBitmapCache = iconBitmapCache,
@@ -606,17 +626,8 @@ fun NekOSRoot(refreshToken: Int) {
         }
 
         actionMenuTag?.let { tag ->
-            val tagIndex = tags.indexOfFirst { it.id == tag.id }
             TagActionsDialog(
                 tag = tag,
-                canMoveUp = tagIndex > 0,
-                canMoveDown = tagIndex >= 0 && tagIndex < tags.lastIndex,
-                onMoveUp = {
-                    saveTags(moveTag(tags, tag.id, -1))
-                },
-                onMoveDown = {
-                    saveTags(moveTag(tags, tag.id, 1))
-                },
                 onEdit = {
                     actionMenuTag = null
                     tagEditorTarget = tag
@@ -948,6 +959,7 @@ private fun TagPill(
     }
     Row(
         modifier = Modifier
+            .fillMaxWidth()
             .onGloballyPositioned { onBoundsChanged(it.boundsInRoot()) }
             .graphicsLayer { alpha = if (isDragging) 0.55f else 1f }
             .clip(RoundedCornerShape(18.dp))
@@ -958,6 +970,7 @@ private fun TagPill(
     ) {
         Row(
             modifier = Modifier
+                .weight(1f)
                 .combinedClickable(onClick = onClick, onLongClick = onLongClick)
                 .padding(start = 14.dp, top = 11.dp, bottom = 11.dp, end = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
