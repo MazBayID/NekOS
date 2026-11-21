@@ -35,6 +35,12 @@ class AppIconBitmapCache(maxSizeKb: Int = 8 * 1024) {
     }
 }
 
+data class LauncherAppScanResult(
+    val apps: List<InstalledApp>,
+    /** Profiles temporarily stopped or locked; keep their saved launcher references intact. */
+    val unavailableProfileSerialNumbers: Set<Long>
+)
+
 /** A launchable package scoped to the Android profile where it is installed. */
 data class InstalledApp(
     val label: String,
@@ -52,15 +58,20 @@ data class InstalledApp(
 internal fun launcherAppId(packageName: String, profileSerialNumber: Long): String =
     "$profileSerialNumber|$packageName"
 
-fun loadLaunchableApps(context: Context): List<InstalledApp> {
+fun loadLaunchableApps(context: Context): LauncherAppScanResult {
     val launcherApps = context.getSystemService(LauncherApps::class.java)
     val userManager = context.getSystemService(UserManager::class.java)
     val densityDpi = context.resources.displayMetrics.densityDpi
 
-    return launcherApps.profiles
+    val unavailableProfileSerialNumbers = mutableSetOf<Long>()
+    val apps = launcherApps.profiles
         .flatMap { profile ->
             val profileSerial = userManager.getSerialNumberForUser(profile)
             if (profileSerial < 0L) return@flatMap emptyList()
+            if (!userManager.isUserRunning(profile) || !userManager.isUserUnlocked(profile)) {
+                unavailableProfileSerialNumbers += profileSerial
+                return@flatMap emptyList()
+            }
 
             launcherApps.getActivityList(null, profile)
                 .distinctBy { it.applicationInfo.packageName }
@@ -80,6 +91,11 @@ fun loadLaunchableApps(context: Context): List<InstalledApp> {
         }
         .distinctBy { it.id }
         .sortedWith(compareBy(appLabelComparator()) { it.label })
+
+    return LauncherAppScanResult(
+        apps = apps,
+        unavailableProfileSerialNumbers = unavailableProfileSerialNumbers
+    )
 }
 
 fun launchApp(
