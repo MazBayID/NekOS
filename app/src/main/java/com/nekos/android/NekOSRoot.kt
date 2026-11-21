@@ -6,6 +6,9 @@ import android.widget.Toast
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.spring
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.BlurEffect
 import androidx.compose.ui.graphics.TileMode
@@ -134,6 +137,35 @@ fun NekOSRoot(refreshToken: Int) {
         mutableStateOf(preferences.getString("background_preset", "warm") ?: "warm")
     }
     var showDock by remember { mutableStateOf(preferences.getBoolean("show_dock", true)) }
+    var wallpaperPath by remember {
+        mutableStateOf(preferences.getString("home_wallpaper_path", null))
+    }
+    val wallpaperBitmap by produceState<androidx.compose.ui.graphics.ImageBitmap?>(
+        initialValue = null,
+        wallpaperPath
+    ) {
+        value = wallpaperPath?.let { path ->
+            withContext(Dispatchers.IO) { loadHomeWallpaper(context, path) }
+        }
+    }
+    val wallpaperPickerScope = rememberCoroutineScope()
+    val wallpaperPicker = rememberLauncherForActivityResult(
+        ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        if (uri != null) {
+            wallpaperPickerScope.launch {
+                val savedPath = withContext(Dispatchers.IO) {
+                    saveHomeWallpaper(context, uri)
+                }
+                if (savedPath != null) {
+                    wallpaperPath = savedPath
+                    preferences.edit().putString("home_wallpaper_path", savedPath).apply()
+                } else {
+                    Toast.makeText(context, "Unable to use this image", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
     val homeBackground = nekosBackgroundColor(backgroundPreset)
 
     fun clearActionMenuPreview() {
@@ -269,6 +301,7 @@ fun NekOSRoot(refreshToken: Int) {
         HomeScreen(
             apps = apps,
             backgroundColor = homeBackground,
+            wallpaper = wallpaperBitmap,
             showDock = showDock,
             onOpenSettings = { showSettings = true },
             favoritePackages = favoritePackages,
@@ -536,6 +569,7 @@ fun NekOSRoot(refreshToken: Int) {
             NekOSSettingsDialog(
                 backgroundPreset = backgroundPreset,
                 showDock = showDock,
+                hasWallpaper = wallpaperPath != null,
                 onBackgroundPresetChange = { preset ->
                     backgroundPreset = preset
                     preferences.edit().putString("background_preset", preset).apply()
@@ -543,6 +577,16 @@ fun NekOSRoot(refreshToken: Int) {
                 onShowDockChange = { visible ->
                     showDock = visible
                     preferences.edit().putBoolean("show_dock", visible).apply()
+                },
+                onChooseWallpaper = {
+                    wallpaperPicker.launch(
+                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                    )
+                },
+                onClearWallpaper = {
+                    clearHomeWallpaper(context)
+                    wallpaperPath = null
+                    preferences.edit().remove("home_wallpaper_path").apply()
                 },
                 onDismiss = { showSettings = false }
             )
@@ -629,6 +673,7 @@ fun NekOSRoot(refreshToken: Int) {
 private fun HomeScreen(
     apps: List<InstalledApp>,
     backgroundColor: Color,
+    wallpaper: androidx.compose.ui.graphics.ImageBitmap?,
     showDock: Boolean,
     onOpenSettings: () -> Unit,
     favoritePackages: List<String?>,
@@ -655,6 +700,27 @@ private fun HomeScreen(
 ) {
     val appByPackage = remember(apps) { apps.associateBy { it.packageName } }
     Box(Modifier.fillMaxSize().background(backgroundColor)) {
+        wallpaper?.let { image ->
+            Image(
+                bitmap = image,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize().graphicsLayer {
+                    renderEffect = if (
+                        Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+                        backgroundBlurRadiusPx > 0.5f
+                    ) {
+                        BlurEffect(
+                            backgroundBlurRadiusPx,
+                            backgroundBlurRadiusPx,
+                            TileMode.Decal
+                        )
+                    } else {
+                        null
+                    }
+                }
+            )
+        }
         Column(
             modifier = Modifier
                 .fillMaxSize()
