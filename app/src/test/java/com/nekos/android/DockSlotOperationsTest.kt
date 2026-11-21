@@ -46,7 +46,7 @@ class DockSlotOperationsTest {
     @Test
     fun normalizationRemovesDuplicatesAndInvalidEntries() {
         assertEquals(
-            listOf("com.example.first", null, "com.example.second", null, null),
+            listOf("com.example.first", null, null, "com.example.second", null),
             normalizeDockPackages(listOf("com.example.first", "com.example.first", " ", "com.example.second"))
         )
         assertTrue(normalizeDockPackages((1..8).map { "com.example.app$it" }).size == 5)
