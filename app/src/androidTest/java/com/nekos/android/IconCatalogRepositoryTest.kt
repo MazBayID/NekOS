@@ -46,6 +46,18 @@ class IconCatalogRepositoryTest {
     }
 
     @Test
+    fun repeatedBitmapLoadsReuseCachedBitmap() {
+        val repository = IconCatalogRepository(context)
+        val icon = repository.loadCatalog().first()
+
+        val first = repository.loadBitmap(icon)
+        val second = repository.loadBitmap(icon)
+
+        assertNotNull(first)
+        assertSame(first, second)
+    }
+
+    @Test
     fun bitmapLoaderRejectsPathTraversal() {
         val repository = IconCatalogRepository(context)
         val unsafeIcon = CatalogIcon(

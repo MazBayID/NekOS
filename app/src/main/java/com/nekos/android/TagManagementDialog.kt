@@ -28,7 +28,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
 import kotlinx.coroutines.Dispatchers
@@ -38,6 +37,32 @@ private val TagColors = listOf(
     Color(0xFFE7E1D6), Color(0xFFD8E6D7), Color(0xFFDCE4F3),
     Color(0xFFF2DCD6), Color(0xFFE9DDF1), Color(0xFFF1E7C9)
 )
+
+@Composable
+private fun TagAppIcon(app: InstalledApp) {
+    var bitmap by remember(app.packageName, app.icon) {
+        mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null)
+    }
+
+    LaunchedEffect(app.packageName, app.icon) {
+        bitmap = withContext(Dispatchers.Default) {
+            app.icon.toBitmap(72, 72).asImageBitmap()
+        }
+    }
+
+    if (bitmap != null) {
+        Image(
+            bitmap = bitmap!!,
+            contentDescription = null,
+            modifier = Modifier.size(40.dp).clip(RoundedCornerShape(11.dp))
+        )
+    } else {
+        Box(
+            modifier = Modifier.size(40.dp).clip(RoundedCornerShape(11.dp))
+                .background(Color(0xFFE7E1D6))
+        )
+    }
+}
 
 @Composable
 fun TagAppsDialog(
@@ -124,12 +149,7 @@ fun TagAppsDialog(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
-                                Image(
-                                    bitmap = app.icon.toBitmap(72, 72).asImageBitmap(),
-                                    contentDescription = null,
-                                    modifier = Modifier.size(40.dp)
-                                        .clip(RoundedCornerShape(11.dp))
-                                )
+                                TagAppIcon(app = app)
                                 Text(
                                     text = app.label,
                                     modifier = Modifier.weight(1f),
@@ -180,13 +200,13 @@ fun TagActionsDialog(
 fun TagManagementDialog(
     tag: NekTag?,
     apps: List<InstalledApp>,
+    iconCatalogRepository: IconCatalogRepository,
     onSave: (NekTag) -> Unit,
     onDelete: (NekTag) -> Unit,
     onDismiss: () -> Unit
 ) {
-    val context = LocalContext.current
-    val catalog = remember(context) {
-        runCatching { IconCatalogRepository(context).loadCatalog() }.getOrDefault(emptyList())
+    val catalog = remember(iconCatalogRepository) {
+        runCatching { iconCatalogRepository.loadCatalog() }.getOrDefault(emptyList())
     }
     var name by remember(tag?.id) { mutableStateOf(tag?.name.orEmpty()) }
     var selectedIcon by remember(tag?.id) { mutableStateOf(tag?.iconId) }
@@ -329,7 +349,7 @@ fun TagManagementDialog(
                         }
                         LaunchedEffect(icon.id) {
                             bitmap = withContext(Dispatchers.IO) {
-                                runCatching { IconCatalogRepository(context).loadBitmap(icon)?.asImageBitmap() }
+                                runCatching { iconCatalogRepository.loadBitmap(icon)?.asImageBitmap() }
                                     .getOrNull()
                             }
                         }
