@@ -144,8 +144,13 @@ fun NekOSRoot(refreshToken: Int) {
         initialValue = null,
         wallpaperPath
     ) {
-        value = wallpaperPath?.let { path ->
-            withContext(Dispatchers.IO) { loadHomeWallpaper(context, path) }
+        if (wallpaperPath == null) {
+            value = null
+        } else {
+            val loadedWallpaper = withContext(Dispatchers.IO) {
+                loadHomeWallpaper(context, wallpaperPath!!)
+            }
+            value = loadedWallpaper
         }
     }
     val wallpaperPickerScope = rememberCoroutineScope()
