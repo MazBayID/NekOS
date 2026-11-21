@@ -20,7 +20,7 @@ class LauncherInteractionControllerTest {
         assertTrue(drawerDrag.supportsCancelDropTarget)
 
         val favoriteDrag = controller.startDrag(
-            packageName = "com.example.favorite",
+            appId = "com.example.favorite",
             source = LauncherDragSource.FAVORITE,
             position = Offset.Zero
         )
@@ -33,7 +33,7 @@ class LauncherInteractionControllerTest {
         val position = Offset(12f, 24f)
 
         val session = controller.startDrag(
-            packageName = "com.example.app",
+            appId = "com.example.app",
             source = LauncherDragSource.APP_DRAWER,
             position = position
         )
@@ -51,7 +51,7 @@ class LauncherInteractionControllerTest {
     fun updateDragTracksPositionAndDropTarget() {
         val controller = LauncherInteractionController()
         controller.startDrag(
-            packageName = "com.example.app",
+            appId = "com.example.app",
             source = LauncherDragSource.APP_DRAWER,
             position = Offset.Zero
         )
@@ -73,7 +73,7 @@ class LauncherInteractionControllerTest {
     fun finishDragReturnsFinalSessionAndClearsController() {
         val controller = LauncherInteractionController()
         controller.startDrag(
-            packageName = "com.example.app",
+            appId = "com.example.app",
             source = LauncherDragSource.APP_DRAWER,
             position = Offset.Zero
         )
@@ -91,7 +91,7 @@ class LauncherInteractionControllerTest {
     fun cancelDragClearsSessionWithoutReturningDropTarget() {
         val controller = LauncherInteractionController()
         controller.startDrag(
-            packageName = "com.example.app",
+            appId = "com.example.app",
             source = LauncherDragSource.FAVORITE,
             position = Offset.Zero
         )
@@ -133,7 +133,7 @@ class LauncherInteractionControllerTest {
     fun favoriteDragCannotActivateCancelDropTarget() {
         val controller = LauncherInteractionController()
         controller.startDrag(
-            packageName = "com.example.favorite",
+            appId = "com.example.favorite",
             source = LauncherDragSource.FAVORITE,
             position = Offset.Zero
         )
