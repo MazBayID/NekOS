@@ -471,7 +471,23 @@ private fun FavoriteSlot(
                         val down = awaitFirstDown(requireUnconsumed = false)
                         val longPress = awaitLongPressOrCancellation(down.id)
 
-                        if (longPress != null) {
+                        if (longPress == null) {
+                            // Handle taps here to avoid a clickable firing after a long press.
+                            var tapCandidate = true
+                            var released = false
+                            while (!released) {
+                                val event = awaitPointerEvent()
+                                val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                                if (!change.pressed) {
+                                    released = true
+                                    if (tapCandidate) onClick()
+                                } else {
+                                    if ((change.position - down.position).getDistance() > touchSlop) {
+                                        tapCandidate = false
+                                    }
+                                }
+                            }
+                        } else {
                             longPress.consume()
                             var dragDistance = Offset.Zero
                             var hasMoved = false
@@ -523,7 +539,6 @@ private fun FavoriteSlot(
                     }
                 }
             }
-            .clickable(enabled = app != null, onClick = onClick)
             .padding(5.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
