@@ -31,10 +31,13 @@ suspend fun PointerInputScope.detectLauncherItemGesture(
         val longPress = awaitLongPressOrCancellation(down.id)
 
         if (longPress == null) {
-            val pointerStillPressed = currentEvent.changes.any { change ->
-                change.id == down.id && change.pressed
-            }
-            if (!pointerStillPressed) onTap()
+            val downChange = currentEvent.changes.firstOrNull { it.id == down.id }
+            val pointerStillPressed = downChange?.pressed == true
+            val gestureWasCancelled = downChange == null ||
+                downChange.isConsumed ||
+                currentEvent.changes.any { it.id != down.id && it.pressed }
+
+            if (!pointerStillPressed && !gestureWasCancelled) onTap()
             return@awaitEachGesture
         }
 
