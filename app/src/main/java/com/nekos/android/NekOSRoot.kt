@@ -227,7 +227,18 @@ fun NekOSRoot(refreshToken: Int) {
                 }
             },
             onFavoriteSlotBounds = { index, bounds -> favoriteSlotBounds[index] = bounds },
-            favoriteDropTarget = favoriteDrag?.takeIf { it.hasMoved }?.targetIndex, 
+            favoriteDropTarget = favoriteDrag?.takeIf { it.hasMoved }?.targetIndex,
+            onFavoriteDragStart = { app, position -> favoriteDrag = FavoriteDrag(app.packageName, position) },
+            onFavoriteDrag = { position ->
+                val target = favoriteSlotBounds.entries.firstOrNull { it.value.contains(position) }?.key
+                favoriteDrag = favoriteDrag?.copy(position = position, hasMoved = true, targetIndex = target)
+            },
+            onFavoriteDragEnd = {
+                val drag = favoriteDrag
+                if (drag?.hasMoved == true) drag.targetIndex?.let { placeFavoriteFromDrawer(drag.packageName, it) }
+                favoriteDrag = null
+            },
+            onFavoriteDragCancel = { favoriteDrag = null },
             onTagClick = { tag -> viewingTag = tag },
             onTagLongPress = { tag -> actionMenuTag = tag },
             onAddTag = { tagEditorTarget = null; showTagEditor = true }
@@ -270,6 +281,7 @@ fun NekOSRoot(refreshToken: Int) {
                         )
                     }
                 },
+                onAppLongPress = { actionMenuApp = it },
                 onAppDragStart = { app, position -> favoriteDrag = FavoriteDrag(app.packageName, position) },
                 onAppDrag = { position ->
                     val target = favoriteSlotBounds.entries.firstOrNull { it.value.contains(position) }?.key
@@ -280,8 +292,6 @@ fun NekOSRoot(refreshToken: Int) {
                     if (drag?.hasMoved == true) {
                         val target = drag.targetIndex
                         if (target != null) placeFavoriteFromDrawer(drag.packageName, target)
-                    } else if (drag != null) {
-                        apps.firstOrNull { it.packageName == drag.packageName }?.let { actionMenuApp = it }
                     }
                     favoriteDrag = null
                 },
@@ -431,6 +441,10 @@ private fun HomeScreen(
     onFavoriteLongPress: (Int) -> Unit,
     onFavoriteSlotBounds: (Int, Rect) -> Unit,
     favoriteDropTarget: Int?,
+    onFavoriteDragStart: (InstalledApp, Offset) -> Unit,
+    onFavoriteDrag: (Offset) -> Unit,
+    onFavoriteDragEnd: () -> Unit,
+    onFavoriteDragCancel: () -> Unit,
     onTagClick: (NekTag) -> Unit,
     onTagLongPress: (NekTag) -> Unit,
     onAddTag: () -> Unit
@@ -487,7 +501,7 @@ private fun HomeScreen(
                     painter = painterResource(R.drawable.text_logo_sec),
                     contentDescription = "NekOS",
                     contentScale = ContentScale.Fit,
-                    modifier = Modifier.offset(x = (-28).dp).width(170.dp).height(60.dp)
+                    modifier = Modifier.offset(x = (-4).dp).width(205.dp).height(72.dp)
                 )
                 Row(
                     modifier = Modifier.horizontalScroll(rememberScrollState()),
@@ -509,6 +523,10 @@ private fun HomeScreen(
                                 isDropTarget = favoriteDropTarget == index,
                                 onClick = { app?.let { onFavoriteClick(it.packageName) } },
                                 onLongPress = { onFavoriteLongPress(index) },
+                                onDragStart = { position -> app?.let { onFavoriteDragStart(it, position) } },
+                                onDrag = onFavoriteDrag,
+                                onDragEnd = onFavoriteDragEnd,
+                                onDragCancel = onFavoriteDragCancel,
                                 modifier = Modifier.weight(1f)
                             )
                         }
@@ -527,23 +545,64 @@ private fun FavoriteSlot(
     isDropTarget: Boolean,
     onClick: () -> Unit,
     onLongPress: () -> Unit,
+    onDragStart: (Offset) -> Unit,
+    onDrag: (Offset) -> Unit,
+    onDragEnd: () -> Unit,
+    onDragCancel: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val bitmap = if (app == null) null else remember(app.packageName) {
         app.icon.toBitmap(96, 96).asImageBitmap()
     }
+    var slotOrigin by remember { mutableStateOf(Offset.Zero) }
+    val currentSlotOrigin by rememberUpdatedState(slotOrigin)
     Column(
         modifier = modifier
             .aspectRatio(1f)
             .clip(RoundedCornerShape(18.dp))
             .background(if (isDropTarget) Color(0xFFDCD3C4) else Color.Transparent)
-            .onGloballyPositioned { onBoundsChanged(it.boundsInRoot()) }
+            .onGloballyPositioned {
+                slotOrigin = it.positionInRoot()
+                onBoundsChanged(it.boundsInRoot())
+            }
+            .clickable(enabled = app != null, onClick = onClick)
             .pointerInput(app?.packageName) {
                 if (app != null) {
-                    detectTapGestures(
-                        onTap = { onClick() },
-                        onLongPress = { onLongPress() }
-                    )
+                    awaitEachGesture {
+                        val down = awaitFirstDown(requireUnconsumed = false)
+                        val longPress = awaitLongPressOrCancellation(down.id)
+                        if (longPress != null) {
+                            var lastPosition = longPress.position
+                            var accumulated = Offset.Zero
+                            var rootPosition = currentSlotOrigin + lastPosition
+                            var dragging = false
+                            var completed = false
+                            while (true) {
+                                val event = awaitPointerEvent()
+                                val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                                if (!change.pressed) {
+                                    if (dragging) onDragEnd() else onLongPress()
+                                    completed = true
+                                    break
+                                }
+                                val delta = change.position - lastPosition
+                                accumulated += delta
+                                if (!dragging && accumulated.getDistance() > viewConfiguration.touchSlop) {
+                                    dragging = true
+                                    rootPosition = currentSlotOrigin + change.position
+                                    onDragStart(rootPosition)
+                                    change.consume()
+                                    onDrag(rootPosition)
+                                } else if (dragging) {
+                                    rootPosition += delta
+                                    change.consume()
+                                    onDrag(rootPosition)
+                                }
+                                lastPosition = change.position
+                            }
+                            if (dragging && !completed) onDragCancel()
+                        }
+                    }
                 }
             }
             .padding(5.dp),
@@ -634,12 +693,12 @@ private fun TagPill(tag: NekTag, onClick: () -> Unit, onLongClick: () -> Unit) {
             .clip(RoundedCornerShape(18.dp))
             .background(Color(tag.colorArgb.toInt()))
             .combinedClickable(onClick = onClick, onLongClick = onLongClick)
-            .padding(horizontal = 12.dp, vertical = 8.dp),
+            .padding(horizontal = 16.dp, vertical = 11.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        if (tagIcon != null) Image(tagIcon!!, contentDescription = null, modifier = Modifier.size(18.dp))
-        Text(tag.name, color = Ink, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+        if (tagIcon != null) Image(tagIcon!!, contentDescription = null, modifier = Modifier.size(22.dp))
+        Text(tag.name, color = Ink, fontSize = 15.sp, fontWeight = FontWeight.Medium)
     }
 }
 
@@ -649,9 +708,9 @@ private fun AddTagPill(onClick: () -> Unit) {
         Modifier.clip(RoundedCornerShape(18.dp))
             .background(TagSurface.copy(alpha = 0.72f))
             .clickable(onClick = onClick)
-            .padding(horizontal = 13.dp, vertical = 9.dp)
+            .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
-        Text("+", color = Ink, fontSize = 15.sp, fontWeight = FontWeight.Medium)
+        Text("+", color = Ink, fontSize = 18.sp, fontWeight = FontWeight.Medium)
     }
 }
 
@@ -662,6 +721,7 @@ private fun AppDrawer(
     closeThresholdPx: Float,
     modifier: Modifier = Modifier,
     onAppClick: (InstalledApp) -> Unit,
+    onAppLongPress: (InstalledApp) -> Unit,
     onAppDragStart: (InstalledApp, Offset) -> Unit,
     onAppDrag: (Offset) -> Unit,
     onAppDragEnd: () -> Unit,
@@ -800,6 +860,7 @@ private fun AppDrawer(
                         app = app,
                         bitmap = bitmap,
                         onClick = { onAppClick(app) },
+                        onLongPress = { onAppLongPress(app) },
                         onDragStart = { position -> onAppDragStart(app, position) },
                         onDrag = onAppDrag,
                         onDragEnd = onAppDragEnd,
@@ -817,6 +878,7 @@ private fun AppGridItem(
     app: InstalledApp,
     bitmap: androidx.compose.ui.graphics.ImageBitmap?,
     onClick: () -> Unit,
+    onLongPress: () -> Unit,
     onDragStart: (Offset) -> Unit,
     onDrag: (Offset) -> Unit,
     onDragEnd: () -> Unit,
@@ -830,23 +892,44 @@ private fun AppGridItem(
             .clip(RoundedCornerShape(14.dp))
             .padding(vertical = 5.dp)
             .onGloballyPositioned { itemOrigin = it.positionInRoot() }
+            .clickable(onClick = onClick)
             .pointerInput(app.packageName) {
-                var rootPosition = Offset.Zero
-                detectDragGesturesAfterLongPress(
-                    onDragStart = { local ->
-                        rootPosition = currentItemOrigin + local
-                        onDragStart(rootPosition)
-                    },
-                    onDrag = { change, amount ->
-                        change.consume()
-                        rootPosition += amount
-                        onDrag(rootPosition)
-                    },
-                    onDragEnd = onDragEnd,
-                    onDragCancel = onDragCancel
-                )
-            }
-            .clickable(onClick = onClick),
+                awaitEachGesture {
+                    val down = awaitFirstDown(requireUnconsumed = false)
+                    val longPress = awaitLongPressOrCancellation(down.id)
+                    if (longPress != null) {
+                        var lastPosition = longPress.position
+                        var accumulated = Offset.Zero
+                        var rootPosition = currentItemOrigin + lastPosition
+                        var dragging = false
+                        var completed = false
+                        while (true) {
+                            val event = awaitPointerEvent()
+                            val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                            if (!change.pressed) {
+                                if (dragging) onDragEnd() else onLongPress()
+                                completed = true
+                                break
+                            }
+                            val delta = change.position - lastPosition
+                            accumulated += delta
+                            if (!dragging && accumulated.getDistance() > viewConfiguration.touchSlop) {
+                                dragging = true
+                                rootPosition = currentItemOrigin + change.position
+                                onDragStart(rootPosition)
+                                change.consume()
+                                onDrag(rootPosition)
+                            } else if (dragging) {
+                                rootPosition += delta
+                                change.consume()
+                                onDrag(rootPosition)
+                            }
+                            lastPosition = change.position
+                        }
+                        if (dragging && !completed) onDragCancel()
+                    }
+                }
+            },
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         if (bitmap != null) {
