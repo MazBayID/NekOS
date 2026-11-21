@@ -397,6 +397,7 @@ fun NekOSRoot(refreshToken: Int) {
                 val previewHeight = with(LocalDensity.current) { bounds.height.toDp() }
                 TagPill(
                     tag = tag,
+                    iconCatalogRepository = iconCatalogRepository,
                     isDragging = true,
                     isDropTarget = false,
                     isDragPreview = true,
