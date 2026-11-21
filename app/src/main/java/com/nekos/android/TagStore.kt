@@ -17,15 +17,18 @@ data class NekTag(
 ) {
     fun normalized(): NekTag = copy(
         name = name.trim().take(24),
-        appPackages = appPackages.distinct()
+        appPackages = appPackages.filter(String::isNotBlank).distinct()
     )
 }
 
 /** Small local persistence boundary for user-created tag collections. */
 object TagStore {
     fun load(context: Context): List<NekTag> {
-        val raw = context.getSharedPreferences(TAGS_PREFS, Context.MODE_PRIVATE)
-            .getString(TAGS_KEY, null) ?: return emptyList()
+        val raw = runCatching {
+            context.getSharedPreferences(TAGS_PREFS, Context.MODE_PRIVATE)
+                .getString(TAGS_KEY, null)
+        }.getOrNull() ?: return emptyList()
+
         return runCatching {
             val array = JSONArray(raw)
             buildList {
