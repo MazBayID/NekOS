@@ -23,10 +23,20 @@ fun loadLaunchableApps(context: Context): List<InstalledApp> {
     return pm.queryIntentActivities(intent, PackageManager.MATCH_ALL)
         .mapNotNull { info ->
             val packageName = info.activityInfo.packageName
+            val label = try {
+                info.loadLabel(pm).toString()
+            } catch (_: PackageManager.NameNotFoundException) {
+                return@mapNotNull null
+            }
+            val icon = try {
+                info.loadIcon(pm)
+            } catch (_: PackageManager.NameNotFoundException) {
+                pm.defaultActivityIcon
+            }
             InstalledApp(
-                label = info.loadLabel(pm).toString(),
+                label = label,
                 packageName = packageName,
-                icon = info.loadIcon(pm)
+                icon = icon
             )
         }
         .distinctBy { it.packageName }
