@@ -563,22 +563,10 @@ fun NekOSRoot(refreshToken: Int) {
                 canMoveUp = tagIndex > 0,
                 canMoveDown = tagIndex >= 0 && tagIndex < tags.lastIndex,
                 onMoveUp = {
-                    if (tagIndex > 0) {
-                        val reordered = tags.toMutableList()
-                        val previous = reordered[tagIndex - 1]
-                        reordered[tagIndex - 1] = reordered[tagIndex]
-                        reordered[tagIndex] = previous
-                        saveTags(reordered)
-                    }
+                    saveTags(moveTag(tags, tag.id, -1))
                 },
                 onMoveDown = {
-                    if (tagIndex >= 0 && tagIndex < tags.lastIndex) {
-                        val reordered = tags.toMutableList()
-                        val next = reordered[tagIndex + 1]
-                        reordered[tagIndex + 1] = reordered[tagIndex]
-                        reordered[tagIndex] = next
-                        saveTags(reordered)
-                    }
+                    saveTags(moveTag(tags, tag.id, 1))
                 },
                 onEdit = {
                     actionMenuTag = null
