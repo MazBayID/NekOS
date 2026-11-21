@@ -50,6 +50,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.positionInRoot
@@ -567,21 +568,21 @@ private fun FavoriteSlot(
     val bitmap = if (app == null) null else remember(app.packageName) {
         app.icon.toBitmap(96, 96).asImageBitmap()
     }
-    var slotOrigin by remember { mutableStateOf(Offset.Zero) }
-    val currentSlotOrigin by rememberUpdatedState(slotOrigin)
+    var slotCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
+    val currentSlotCoordinates by rememberUpdatedState(slotCoordinates)
     Column(
         modifier = modifier
             .aspectRatio(1f)
             .clip(RoundedCornerShape(18.dp))
             .background(if (isDropTarget) Color(0xFFDCD3C4) else Color.Transparent)
             .onGloballyPositioned {
-                slotOrigin = it.positionInRoot()
+                slotCoordinates = it
                 onBoundsChanged(it.boundsInRoot())
             }
             .pointerInput(app?.packageName) {
                 if (app != null) {
                     detectLauncherItemGesture(
-                        rootOrigin = { currentSlotOrigin },
+                        toRootPosition = { local -> currentSlotCoordinates?.localToRoot(local) ?: local },
                         onTap = onClick,
                         onLongPress = onLongPress,
                         onDragStart = onDragStart,
@@ -822,17 +823,17 @@ private fun AppGridItem(
     onDragEnd: () -> Unit,
     onDragCancel: () -> Unit
 ) {
-    var itemOrigin by remember { mutableStateOf(Offset.Zero) }
-    val currentItemOrigin by rememberUpdatedState(itemOrigin)
+    var itemCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
+    val currentItemCoordinates by rememberUpdatedState(itemCoordinates)
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
             .padding(vertical = 5.dp)
-            .onGloballyPositioned { itemOrigin = it.positionInRoot() }
+            .onGloballyPositioned { itemCoordinates = it }
             .pointerInput(app.packageName) {
                 detectLauncherItemGesture(
-                    rootOrigin = { currentItemOrigin },
+                    toRootPosition = { local -> currentItemCoordinates?.localToRoot(local) ?: local },
                     onTap = onClick,
                     onLongPress = onLongPress,
                     onDragStart = onDragStart,
