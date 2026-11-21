@@ -38,7 +38,7 @@ class LauncherItemGestureIntegrationTest {
         }
 
         composeRule.onNodeWithTag(GESTURE_ITEM_TAG).performTouchInput {
-            down()
+            down(center)
             up()
         }
 
@@ -122,10 +122,10 @@ class LauncherItemGestureIntegrationTest {
         }
 
         composeRule.onNodeWithTag(GESTURE_ITEM_TAG).performTouchInput {
-            down(pointerId = 0, position = center)
+            down(0, center)
             advanceEventTime(600)
             moveBy(Offset(90f, 0f))
-            down(pointerId = 1, position = Offset(180f, 60f))
+            down(1, Offset(180f, 60f))
             up(pointerId = 1)
             up(pointerId = 0)
         }
