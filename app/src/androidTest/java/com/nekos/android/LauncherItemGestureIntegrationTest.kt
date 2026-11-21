@@ -136,8 +136,42 @@ class LauncherItemGestureIntegrationTest {
         assertFalse(harness.events.contains("drag-end"))
     }
 
+    @Test
+    fun tagHandleTapOpensOptions() {
+        val harness = TagHandleHarnessState()
+
+        composeRule.setContent { TagHandleGestureHarness(harness) }
+
+        composeRule.onNodeWithTag(TAG_HANDLE_TAG).performTouchInput {
+            down(center)
+            up()
+        }
+
+        assertEquals(1, harness.optionsOpened)
+        assertEquals(0, harness.dragStarted)
+    }
+
+    @Test
+    fun tagHandleLongPressAndMoveStartsReorderingWithoutOpeningOptions() {
+        val harness = TagHandleHarnessState()
+
+        composeRule.setContent { TagHandleGestureHarness(harness) }
+
+        composeRule.onNodeWithTag(TAG_HANDLE_TAG).performTouchInput {
+            down(center)
+            advanceEventTime(600)
+            moveBy(Offset(90f, 0f))
+            up()
+        }
+
+        assertEquals(0, harness.optionsOpened)
+        assertEquals(1, harness.dragStarted)
+        assertEquals(1, harness.dragFinished)
+    }
+
     private companion object {
         const val GESTURE_ITEM_TAG = "launcher-gesture-test-item"
+        const val TAG_HANDLE_TAG = "tag-handle-gesture-test-item"
     }
 }
 
@@ -187,6 +221,34 @@ private fun GestureHarness(
                         state.events += "drag-cancel"
                         state.controller.cancelDrag()
                     }
+                )
+            }
+    )
+}
+
+private class TagHandleHarnessState {
+    var optionsOpened = 0
+    var dragStarted = 0
+    var dragFinished = 0
+}
+
+@Composable
+private fun TagHandleGestureHarness(state: TagHandleHarnessState) {
+    Box(
+        modifier = Modifier
+            .size(120.dp)
+            .testTag("tag-handle-gesture-test-item")
+            .pointerInput(Unit) {
+                detectLauncherItemGesture(
+                    toRootPosition = { it },
+                    onTap = { state.optionsOpened++ },
+                    onLongPress = {},
+                    onLongPressEnd = {},
+                    onLongPressCancel = {},
+                    onDragStart = { state.dragStarted++ },
+                    onDrag = {},
+                    onDragEnd = { state.dragFinished++ },
+                    onDragCancel = {}
                 )
             }
     )
