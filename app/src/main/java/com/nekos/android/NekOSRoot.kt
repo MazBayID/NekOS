@@ -619,10 +619,9 @@ fun NekOSRoot(refreshToken: Int) {
             if (draggedApp != null) {
                 val cachedBitmap = iconBitmapCache[draggedApp.packageName]
                 var bitmap by remember(draggedApp.packageName) { mutableStateOf(cachedBitmap) }
-                LaunchedEffect(draggedApp.packageName, cachedBitmap) {
-                    if (cachedBitmap != null) {
-                        bitmap = cachedBitmap
-                    } else {
+                LaunchedEffect(draggedApp, cachedBitmap) {
+                    bitmap = cachedBitmap
+                    if (cachedBitmap == null) {
                         val loadedBitmap = withContext(Dispatchers.Default) {
                             draggedApp.icon.toBitmap(96, 96).asImageBitmap()
                         }
@@ -972,11 +971,10 @@ private fun FavoriteSlot(
 ) {
     val cachedBitmap = app?.let { iconBitmapCache[it.packageName] }
     var bitmap by remember(app?.packageName) { mutableStateOf(cachedBitmap) }
-    LaunchedEffect(app?.packageName, cachedBitmap) {
+    LaunchedEffect(app, cachedBitmap) {
+        bitmap = cachedBitmap
         val currentApp = app ?: return@LaunchedEffect
-        if (cachedBitmap != null) {
-            bitmap = cachedBitmap
-        } else {
+        if (cachedBitmap == null) {
             val loadedBitmap = withContext(Dispatchers.Default) {
                 currentApp.icon.toBitmap(96, 96).asImageBitmap()
             }
@@ -1332,10 +1330,9 @@ private fun AppDrawer(
                     var bitmap by remember(app.packageName) {
                         mutableStateOf(cachedBitmap)
                     }
-                    LaunchedEffect(app.packageName, cachedBitmap) {
-                        if (cachedBitmap != null) {
-                            bitmap = cachedBitmap
-                        } else {
+                    LaunchedEffect(app, cachedBitmap) {
+                        bitmap = cachedBitmap
+                        if (cachedBitmap == null) {
                             val loadedBitmap = withContext(Dispatchers.Default) {
                                 app.icon.toBitmap(96, 96).asImageBitmap()
                             }
