@@ -75,7 +75,7 @@ class FavoriteSlotOperationsTest {
         val result = placePackageInFavoriteSlot(current, "com.example.new", 3)
 
         val expected = current.toMutableList().apply {
-            this[0] = "com.example.displaced"
+            this[1] = "com.example.displaced"
             this[3] = "com.example.new"
         }
         assertEquals(FavoriteSlotOperation.Updated(expected), result)
