@@ -28,7 +28,6 @@ import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.awaitLongPressOrCancellation
 import androidx.compose.foundation.gestures.awaitVerticalDragOrCancellation
-import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.gestures.awaitVerticalTouchSlopOrCancellation
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.ui.input.pointer.PointerEventPass
@@ -492,8 +491,11 @@ private fun FavoriteSlot(
                         val longPress = awaitLongPressOrCancellation(down.id)
 
                         if (longPress == null) {
-                            // Only a completed, uncancelled tap launches the app.
-                            if (waitForUpOrCancellation() != null) onClick()
+                            // awaitLongPressOrCancellation returns null for both a tap
+                            // release and a cancelled gesture. Only launch on actual release.
+                            val released = currentEvent.changes
+                                .firstOrNull { it.id == down.id }?.pressed == false
+                            if (released) onClick()
                         } else {
                             longPress.consume()
                             var dragDistance = Offset.Zero
