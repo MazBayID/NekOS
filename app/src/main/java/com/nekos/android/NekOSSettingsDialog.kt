@@ -13,7 +13,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -40,9 +39,12 @@ internal fun nekosBackgroundColor(preset: String): Color = when (preset) {
 internal fun NekOSSettingsDialog(
     backgroundPreset: String,
     hasWallpaper: Boolean,
+    appVersion: String,
     onBackgroundPresetChange: (String) -> Unit,
     onChooseWallpaper: () -> Unit,
     onClearWallpaper: () -> Unit,
+    onShowDrawerHint: () -> Unit,
+    onOpenRepository: () -> Unit,
     onDismiss: () -> Unit
 ) {
     AlertDialog(
@@ -145,6 +147,51 @@ internal fun NekOSSettingsDialog(
                 }
 
                 HorizontalDivider(color = SettingsInk.copy(alpha = 0.12f))
+
+                Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                    SettingsSectionTitle("HOME BEHAVIOR")
+                    Text(
+                        "Gesture hints",
+                        color = SettingsInk,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 14.sp
+                    )
+                    Text(
+                        "Review the gesture that opens the App Drawer.",
+                        color = SettingsMuted,
+                        fontSize = 12.sp,
+                        lineHeight = 17.sp
+                    )
+                    TextButton(onClick = onShowDrawerHint) {
+                        Text("Show App Drawer hint", color = SettingsAccent, fontWeight = FontWeight.SemiBold)
+                    }
+                }
+
+                HorizontalDivider(color = SettingsInk.copy(alpha = 0.12f))
+
+                Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                    SettingsSectionTitle("ABOUT")
+                    Text(
+                        "NekOS",
+                        color = SettingsInk,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 14.sp
+                    )
+                    Text("Version $appVersion", color = SettingsMuted, fontSize = 12.sp)
+                    Text(
+                        "Licensed under the MIT License.",
+                        color = SettingsMuted,
+                        fontSize = 12.sp
+                    )
+                    Text(
+                        "Copyright © 2026 MazBayID (Bayu Dirgantara)",
+                        color = SettingsMuted,
+                        fontSize = 12.sp
+                    )
+                    TextButton(onClick = onOpenRepository) {
+                        Text("GitHub repository", color = SettingsAccent, fontWeight = FontWeight.SemiBold)
+                    }
+                }
             }
         },
         confirmButton = {
