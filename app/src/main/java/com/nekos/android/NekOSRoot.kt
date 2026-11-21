@@ -464,7 +464,7 @@ private fun HomeScreen(
     onAddTag: () -> Unit
 ) {
     val appByPackage = remember(apps) { apps.associateBy { it.packageName } }
-    BoxWithConstraints(Modifier.fillMaxSize()) {
+    Box(Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -666,7 +666,7 @@ private fun TagPill(tag: NekTag, onClick: () -> Unit, onLongClick: () -> Unit) {
     val tagIcon by produceState<androidx.compose.ui.graphics.ImageBitmap?>(
         initialValue = null, key1 = tag.iconId
     ) {
-        value = withContext(Dispatchers.IO) {
+        val loadedIcon = withContext(Dispatchers.IO) {
             runCatching {
                 tag.iconId?.let { id ->
                     val repository = IconCatalogRepository(context)
@@ -674,6 +674,7 @@ private fun TagPill(tag: NekTag, onClick: () -> Unit, onLongClick: () -> Unit) {
                 }
             }.getOrNull()
         }
+        value = loadedIcon
     }
     Row(
         modifier = Modifier
@@ -787,7 +788,8 @@ private fun AppDrawer(
                         initialValue = cachedBitmap,
                         key1 = app.packageName
                     ) {
-                        if (value == null) {
+                        value = cachedBitmap
+                        if (cachedBitmap == null) {
                             val loadedBitmap = withContext(Dispatchers.Default) {
                                 app.icon.toBitmap(96, 96).asImageBitmap()
                             }
