@@ -31,10 +31,22 @@ suspend fun PointerInputScope.detectLauncherItemGesture(
         val longPress = awaitLongPressOrCancellation(down.id)
 
         if (longPress == null) {
-            val pointerStillPressed = currentEvent.changes.any { change ->
-                change.id == down.id && change.pressed
-            }
-            if (!pointerStillPressed) onTap()
+            val downChange = currentEvent.changes.firstOrNull { it.id == down.id }
+            val pointerStillPressed = downChange?.pressed == true
+            val gestureWasCancelled = downChange == null ||
+                downChange.isConsumed ||
+                currentEvent.changes.any { it.id != down.id && it.pressed }
+
+            if (!pointerStillPressed && !gestureWasCancelled) onTap()
+            return@awaitEachGesture
+        }
+
+        // This detector deliberately treats multi-touch as cancellation. In
+        // particular, do not transfer a long-press to a second finger.
+        val hasAdditionalPointer = currentEvent.changes.any {
+            it.id != down.id && it.pressed
+        }
+        if (longPress.id != down.id || hasAdditionalPointer) {
             return@awaitEachGesture
         }
 
@@ -44,44 +56,56 @@ suspend fun PointerInputScope.detectLauncherItemGesture(
         var dragging = false
         var completed = false
 
-        while (true) {
-            val event = awaitPointerEvent()
-            val change = event.changes.firstOrNull { it.id == down.id }
-            if (change == null) {
+        try {
+            while (true) {
+                val event = awaitPointerEvent()
+                val change = event.changes.firstOrNull { it.id == down.id }
+
+                if (change == null) {
+                    if (dragging) onDragCancel() else onLongPressCancel()
+                    completed = true
+                    break
+                }
+
+                if (event.changes.any { it.id != down.id && it.pressed }) {
+                    if (dragging) onDragCancel() else onLongPressCancel()
+                    completed = true
+                    break
+                }
+
+                if (!change.pressed) {
+                    // Compose marks synthetic pointer-cancel changes as consumed.
+                    // Do not mistake system cancellation for a normal finger release.
+                    if (change.isConsumed) {
+                        if (dragging) onDragCancel() else onLongPressCancel()
+                    } else {
+                        if (dragging) onDragEnd() else onLongPressEnd()
+                    }
+                    completed = true
+                    break
+                }
+
+                val delta = change.positionChange()
+                accumulated += delta
+
+                if (!dragging && accumulated.getDistance() > viewConfiguration.touchSlop) {
+                    dragging = true
+                    onLongPressCancel()
+                    val rootPosition = toRootPosition(change.position)
+                    onDragStart(rootPosition)
+                    change.consume()
+                    onDrag(rootPosition)
+                } else if (dragging) {
+                    change.consume()
+                    onDrag(toRootPosition(change.position))
+                }
+            }
+        } finally {
+            // Clear transient preview/drag state if this pointer-input coroutine
+            // is cancelled because its node leaves composition or its key changes.
+            if (!completed) {
                 if (dragging) onDragCancel() else onLongPressCancel()
-                completed = true
-                break
-            }
-
-            if (event.changes.any { it.id != down.id && it.pressed }) {
-                if (dragging) onDragCancel() else onLongPressCancel()
-                completed = true
-                break
-            }
-
-            if (!change.pressed) {
-                if (dragging) onDragEnd() else onLongPressEnd()
-                completed = true
-                break
-            }
-
-            val delta = change.positionChange()
-            accumulated += delta
-
-            if (!dragging && accumulated.getDistance() > viewConfiguration.touchSlop) {
-                dragging = true
-                onLongPressCancel()
-                val rootPosition = toRootPosition(change.position)
-                onDragStart(rootPosition)
-                change.consume()
-                onDrag(rootPosition)
-            } else if (dragging) {
-                change.consume()
-                onDrag(toRootPosition(change.position))
             }
         }
-
-        if (dragging && !completed) onDragCancel()
-        else if (!dragging && !completed) onLongPressCancel()
     }
 }

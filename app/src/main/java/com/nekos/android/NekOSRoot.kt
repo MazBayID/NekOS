@@ -22,6 +22,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -50,8 +51,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.zIndex
@@ -116,6 +119,7 @@ fun NekOSRoot(refreshToken: Int) {
     var actionMenuApp by remember { mutableStateOf<InstalledApp?>(null) }
     var actionMenuPreviewApp by remember { mutableStateOf<InstalledApp?>(null) }
     var actionMenuPreviewPosition by remember { mutableStateOf(Offset.Zero) }
+    var actionMenuPopupSize by remember { mutableStateOf(IntSize.Zero) }
     val preferences = remember(context) {
         context.getSharedPreferences("nekos_preferences", Context.MODE_PRIVATE)
     }
@@ -363,14 +367,18 @@ fun NekOSRoot(refreshToken: Int) {
             val isInteractive = actionMenuApp != null
             Column(
                 modifier = Modifier
+                    .onSizeChanged { actionMenuPopupSize = it }
                     .offset {
-                        IntOffset(
-                            (actionMenuPreviewPosition.x + 12f).roundToInt(),
-                            (actionMenuPreviewPosition.y + 12f).roundToInt()
+                        calculateLauncherPopupOffset(
+                            anchorPosition = actionMenuPreviewPosition,
+                            popupSize = actionMenuPopupSize,
+                            containerSize = IntSize(constraints.maxWidth, constraints.maxHeight)
                         )
                     }
                     .zIndex(20f)
-                    .widthIn(max = 210.dp)
+                    .widthIn(max = minOf(210.dp, maxWidth))
+                    .heightIn(max = maxHeight)
+                    .verticalScroll(rememberScrollState())
                     .clip(RoundedCornerShape(16.dp))
                     .background(Color(0xFFFEFCF8))
                     .padding(horizontal = 10.dp, vertical = 10.dp),
