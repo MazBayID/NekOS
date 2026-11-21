@@ -356,7 +356,7 @@ fun NekOSRoot(refreshToken: Int) {
                 closeThresholdPx = drawerCloseThresholdPx,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .fillMaxHeight(0.85f)
+                    .fillMaxHeight(0.60f)
                     .align(Alignment.BottomCenter)
                     .graphicsLayer {
                         // Hide the entire drawer during a drag so no grid rows remain
@@ -793,7 +793,7 @@ private fun FavoriteSlot(
         modifier = modifier
             .aspectRatio(1f)
             .clip(RoundedCornerShape(18.dp))
-            .background(if (isDropTarget) Color(0xFFDCD3C4) else Color.White.copy(alpha = 0.24f))
+            .background(if (isDropTarget) Color(0xFFDCD3C4) else Color.Transparent)
             .onGloballyPositioned {
                 slotCoordinates = it
                 onBoundsChanged(it.boundsInRoot())
@@ -901,14 +901,12 @@ private fun AppDrawer(
         modifier = modifier
             .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
             .background(WarmBackground.copy(alpha = 0.98f))
-            .statusBarsPadding()
             .navigationBarsPadding()
-            .padding(top = 4.dp)
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(52.dp)
+                .height(40.dp)
                 .clickable(onClick = currentOnCloseDrawer)
                 .pointerInput(closeThresholdPx) {
                     var totalDrag = 0f
