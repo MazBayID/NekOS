@@ -17,7 +17,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -86,13 +85,38 @@ private val TagSurface = Color(0xFFE7E1D6)
 
 @Composable
 fun NekOSRoot(refreshToken: Int) {
-    var showBrandSplash by remember { mutableStateOf(true) }
-    LaunchedEffect(Unit) {
-        delay(900L)
-        showBrandSplash = false
+    val context = LocalContext.current
+    val launchSourceView = LocalView.current
+    var apps by remember { mutableStateOf(emptyList<InstalledApp>()) }
+    var favoritePackages by remember { mutableStateOf(loadFavoritePackages(context)) }
+    var tags by remember { mutableStateOf(TagStore.load(context)) }
+    var isInitialLoadComplete by remember { mutableStateOf(false) }
+
+    // Discover launchable apps while the brand splash is visible instead of
+    // waiting for an artificial timer before starting initialization.
+    LaunchedEffect(refreshToken) {
+        val refreshedApps = withContext(Dispatchers.IO) {
+            loadLaunchableApps(context)
+        }
+        apps = refreshedApps
+        val installedPackages = refreshedApps.mapTo(mutableSetOf<String>()) { it.packageName }
+        val cleanedReferences = cleanupLauncherReferences(
+            favorites = favoritePackages,
+            tags = tags,
+            installedPackages = installedPackages
+        )
+        if (cleanedReferences.favorites != favoritePackages) {
+            favoritePackages = cleanedReferences.favorites
+            saveFavoritePackages(context, cleanedReferences.favorites)
+        }
+        if (cleanedReferences.tags != tags) {
+            tags = cleanedReferences.tags
+            TagStore.save(context, cleanedReferences.tags)
+        }
+        isInitialLoadComplete = true
     }
 
-    if (showBrandSplash) {
+    if (!isInitialLoadComplete) {
         Box(
             modifier = Modifier.fillMaxSize().background(WarmBackground),
             contentAlignment = Alignment.Center
@@ -107,18 +131,13 @@ fun NekOSRoot(refreshToken: Int) {
         return
     }
 
-    val context = LocalContext.current
-    val launchSourceView = LocalView.current
-    var apps by remember { mutableStateOf(emptyList<InstalledApp>()) }
     val iconBitmapCache = remember(apps) {
         mutableMapOf<String, androidx.compose.ui.graphics.ImageBitmap>()
     }
-    var favoritePackages by remember { mutableStateOf(loadFavoritePackages(context)) }
     val interactionController = remember { LauncherInteractionController() }
     var favoriteDrag by remember { mutableStateOf<LauncherDragSession?>(null) }
     val favoriteSlotBounds = remember { mutableStateMapOf<Int, Rect>() }
     var cancelDropBounds by remember { mutableStateOf<Rect?>(null) }
-    var tags by remember { mutableStateOf(TagStore.load(context)) }
     var tagEditorTarget by remember { mutableStateOf<NekTag?>(null) }
     var viewingTag by remember { mutableStateOf<NekTag?>(null) }
     var actionMenuTag by remember { mutableStateOf<NekTag?>(null) }
@@ -211,26 +230,6 @@ fun NekOSRoot(refreshToken: Int) {
                 Toast.LENGTH_SHORT
             ).show()
         }
-    }
-
-    LaunchedEffect(refreshToken) {
-        // PackageManager queries and icon loading can be expensive on devices
-        // with many installed apps, so keep discovery off the main thread.
-        val refreshedApps = withContext(Dispatchers.IO) {
-            loadLaunchableApps(context)
-        }
-        apps = refreshedApps
-        val installedPackages = refreshedApps.mapTo(mutableSetOf<String>()) { it.packageName }
-        val cleanedReferences = cleanupLauncherReferences(
-            favorites = favoritePackages,
-            tags = tags,
-            installedPackages = installedPackages
-        )
-        if (cleanedReferences.favorites != favoritePackages) {
-            favoritePackages = cleanedReferences.favorites
-            saveFavoritePackages(context, cleanedReferences.favorites)
-        }
-        if (cleanedReferences.tags != tags) saveTags(cleanedReferences.tags)
     }
 
     BoxWithConstraints(Modifier.fillMaxSize().background(WarmBackground)) {
