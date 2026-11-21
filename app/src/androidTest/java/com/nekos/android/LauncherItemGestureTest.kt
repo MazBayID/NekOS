@@ -64,7 +64,7 @@ class LauncherItemGestureTest {
         setGestureContent()
 
         composeRule.onNodeWithTag(GESTURE_TARGET).performTouchInput {
-            down()
+            down(center)
             cancel()
         }
 
@@ -79,7 +79,7 @@ class LauncherItemGestureTest {
         val target = composeRule.onNodeWithTag(GESTURE_TARGET)
 
         target.performTouchInput {
-            down()
+            down(center)
             advanceEventTime(viewConfiguration.longPressTimeoutMillis + 50)
             move()
         }
@@ -100,7 +100,7 @@ class LauncherItemGestureTest {
         setGestureContent()
 
         composeRule.onNodeWithTag(GESTURE_TARGET).performTouchInput {
-            down()
+            down(center)
             advanceEventTime(viewConfiguration.longPressTimeoutMillis + 50)
             move()
             moveBy(Offset(100f, 0f))
@@ -120,7 +120,7 @@ class LauncherItemGestureTest {
         setGestureContent()
 
         composeRule.onNodeWithTag(GESTURE_TARGET).performTouchInput {
-            down()
+            down(center)
             advanceEventTime(viewConfiguration.longPressTimeoutMillis + 50)
             move()
             cancel()
@@ -154,7 +154,7 @@ class LauncherItemGestureTest {
         setGestureContent()
 
         composeRule.onNodeWithTag(GESTURE_TARGET).performTouchInput {
-            down(pointerId = 0)
+            down(pointerId = 0, position = Offset(40f, 40f))
             advanceEventTime(viewConfiguration.longPressTimeoutMillis + 50)
             move()
             down(pointerId = 1, position = Offset(80f, 80f))
@@ -172,7 +172,7 @@ class LauncherItemGestureTest {
         setGestureContent()
 
         composeRule.onNodeWithTag(GESTURE_TARGET).performTouchInput {
-            down()
+            down(center)
             advanceEventTime(viewConfiguration.longPressTimeoutMillis + 50)
             move()
             moveBy(Offset(100f, 0f))
