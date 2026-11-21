@@ -32,10 +32,31 @@ fun loadLaunchableApps(context: Context): List<InstalledApp> {
 }
 
 fun launchApp(context: Context, packageName: String) {
-    val intent = context.packageManager.getLaunchIntentForPackage(packageName)
-        ?: return
-    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-    context.startActivity(intent)
+    try {
+        val intent = context.packageManager.getLaunchIntentForPackage(packageName)
+        if (intent == null) {
+            Toast.makeText(
+                context,
+                "This app is no longer available to launch",
+                Toast.LENGTH_SHORT
+            ).show()
+            return
+        }
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        context.startActivity(intent)
+    } catch (error: ActivityNotFoundException) {
+        Toast.makeText(
+            context,
+            "Android could not open this app",
+            Toast.LENGTH_SHORT
+        ).show()
+    } catch (error: SecurityException) {
+        Toast.makeText(
+            context,
+            "NekOS is not allowed to open this app",
+            Toast.LENGTH_SHORT
+        ).show()
+    }
 }
 
 fun openAppInfo(context: Context, packageName: String) {
@@ -43,7 +64,22 @@ fun openAppInfo(context: Context, packageName: String) {
         data = Uri.fromParts("package", packageName, null)
         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     }
-    context.startActivity(intent)
+
+    try {
+        context.startActivity(intent)
+    } catch (error: ActivityNotFoundException) {
+        Toast.makeText(
+            context,
+            "Android could not open this app's settings",
+            Toast.LENGTH_SHORT
+        ).show()
+    } catch (error: SecurityException) {
+        Toast.makeText(
+            context,
+            "NekOS is not allowed to open this app's settings",
+            Toast.LENGTH_SHORT
+        ).show()
+    }
 }
 
 fun requestAppUninstall(context: Context, packageName: String) {
