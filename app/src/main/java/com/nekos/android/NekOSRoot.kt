@@ -347,8 +347,20 @@ fun NekOSRoot(refreshToken: Int) {
             )
         }
 
-        actionMenuPreviewApp?.let { app ->
+        val popupApp = actionMenuPreviewApp ?: actionMenuApp
+        if (actionMenuApp != null) {
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .zIndex(19f)
+                    .pointerInput(actionMenuApp) {
+                        detectTapGestures { actionMenuApp = null }
+                    }
+            )
+        }
+        popupApp?.let { app ->
             val isFavorite = app.packageName in favoritePackages.filterNotNull()
+            val isInteractive = actionMenuApp != null
             Column(
                 modifier = Modifier
                     .offset {
@@ -358,17 +370,46 @@ fun NekOSRoot(refreshToken: Int) {
                         )
                     }
                     .zIndex(20f)
-                    .widthIn(max = 190.dp)
+                    .widthIn(max = 210.dp)
                     .clip(RoundedCornerShape(16.dp))
                     .background(Color(0xFFFEFCF8))
-                    .padding(horizontal = 14.dp, vertical = 12.dp),
-                verticalArrangement = Arrangement.spacedBy(7.dp)
+                    .padding(horizontal = 10.dp, vertical = 10.dp),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
-                Text(app.label, color = Ink, fontWeight = FontWeight.SemiBold, maxLines = 1)
-                Text("App info", color = Ink, fontSize = 13.sp)
-                Text(if (isFavorite) "Remove from favorite" else "Add to favorite", color = Ink, fontSize = 13.sp)
-                Text("Uninstall", color = Ink, fontSize = 13.sp)
-                Text("Release to choose", color = Muted, fontSize = 11.sp)
+                Text(
+                    app.label,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
+                    color = Ink,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1
+                )
+                PopupAction("App info", enabled = isInteractive) {
+                    actionMenuApp = null
+                    openAppInfo(context, app.packageName)
+                }
+                PopupAction(
+                    if (isFavorite) "Remove from favorite" else "Add to favorite",
+                    enabled = isInteractive
+                ) {
+                    if (isFavorite) {
+                        updateFavorites(favoritePackages.map { if (it == app.packageName) null else it })
+                    } else {
+                        addFavorite(app.packageName)
+                    }
+                    actionMenuApp = null
+                }
+                PopupAction("Uninstall", enabled = isInteractive) {
+                    actionMenuApp = null
+                    requestAppUninstall(context, app.packageName)
+                }
+                if (!isInteractive) {
+                    Text(
+                        "Release to choose",
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
+                        color = Muted,
+                        fontSize = 11.sp
+                    )
+                }
             }
         }
 
@@ -441,31 +482,6 @@ fun NekOSRoot(refreshToken: Int) {
                     tagEditorTarget = null
                 },
                 onDismiss = { showTagEditor = false; tagEditorTarget = null }
-            )
-        }
-
-        actionMenuApp?.let { app ->
-            val isFavorite = app.packageName in favoritePackages.filterNotNull()
-            AppActionsDialog(
-                app = app,
-                isFavorite = isFavorite,
-                onInfo = {
-                    actionMenuApp = null
-                    openAppInfo(context, app.packageName)
-                },
-                onFavorite = {
-                    if (isFavorite) {
-                        updateFavorites(favoritePackages.map { if (it == app.packageName) null else it })
-                    } else {
-                        addFavorite(app.packageName)
-                    }
-                    actionMenuApp = null
-                },
-                onUninstall = {
-                    actionMenuApp = null
-                    requestAppUninstall(context, app.packageName)
-                },
-                onDismiss = { actionMenuApp = null }
             )
         }
 
@@ -663,56 +679,22 @@ private fun FavoriteSlot(
 }
 
 @Composable
-private fun AppActionsDialog(
-    app: InstalledApp,
-    isFavorite: Boolean,
-    onInfo: () -> Unit,
-    onFavorite: () -> Unit,
-    onUninstall: () -> Unit,
-    onDismiss: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(app.label, color = Ink, fontWeight = FontWeight.SemiBold) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                AppActionRow(R.drawable.nekos_ui_info, "App info", onInfo)
-                AppActionRow(
-                    R.drawable.nekos_ui_favorite,
-                    if (isFavorite) "Remove from favorite" else "Add to favorite",
-                    onFavorite
-                )
-                AppActionRow(R.drawable.nekos_ui_trash, "Uninstall", onUninstall)
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) { Text("Close") }
-        }
-    )
-}
-
-@Composable
-private fun AppActionRow(
-    iconRes: Int,
+private fun PopupAction(
     label: String,
+    enabled: Boolean,
     onClick: () -> Unit
 ) {
-    Row(
+    Text(
+        label,
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
-            .clickable(onClick = onClick)
-            .padding(horizontal = 10.dp, vertical = 9.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Image(
-            painter = painterResource(iconRes),
-            contentDescription = null,
-            modifier = Modifier.size(30.dp)
-        )
-        Spacer(Modifier.width(12.dp))
-        Text(label, color = Ink, fontSize = 15.sp, fontWeight = FontWeight.Medium)
-    }
+            .clip(RoundedCornerShape(10.dp))
+            .then(if (enabled) Modifier.clickable(onClick = onClick) else Modifier)
+            .padding(horizontal = 8.dp, vertical = 9.dp),
+        color = if (enabled) Ink else Muted,
+        fontSize = 13.sp,
+        fontWeight = FontWeight.Medium
+    )
 }
 
 @OptIn(ExperimentalFoundationApi::class)
