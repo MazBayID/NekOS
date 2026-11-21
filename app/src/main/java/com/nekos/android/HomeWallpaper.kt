@@ -7,6 +7,8 @@ import android.net.Uri
 import android.os.Build
 import androidx.compose.ui.graphics.asImageBitmap
 import java.io.File
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 
 private const val HOME_WALLPAPER_FILE = "home_wallpaper"
 private const val HOME_WALLPAPER_TEMP_FILE = "home_wallpaper.tmp"
@@ -34,11 +36,12 @@ internal fun saveHomeWallpaper(context: Context, source: Uri): String? = runCatc
     } ?: error("Unable to open selected image")
 
     check(temporary.length() > 0L) { "Selected image is empty" }
-    if (target.exists()) check(target.delete()) { "Unable to replace previous wallpaper" }
-    if (!temporary.renameTo(target)) {
-        temporary.copyTo(target, overwrite = true)
-        temporary.delete()
-    }
+    Files.move(
+        temporary.toPath(),
+        target.toPath(),
+        StandardCopyOption.REPLACE_EXISTING,
+        StandardCopyOption.ATOMIC_MOVE
+    )
     target.absolutePath
 }.getOrElse {
     File(context.filesDir, HOME_WALLPAPER_TEMP_FILE).delete()
