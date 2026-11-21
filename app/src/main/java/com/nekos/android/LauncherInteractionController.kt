@@ -12,7 +12,8 @@ data class LauncherDragSession(
     val source: LauncherDragSource,
     val position: Offset,
     val hasMoved: Boolean = false,
-    val targetIndex: Int? = null
+    val targetIndex: Int? = null,
+    val cancelTarget: Boolean = false
 )
 
 /**
@@ -39,13 +40,15 @@ class LauncherInteractionController {
 
     fun updateDrag(
         position: Offset,
-        targetIndex: Int?
+        targetIndex: Int?,
+        cancelTarget: Boolean = false
     ): LauncherDragSession? {
         val current = activeDrag ?: return null
         return current.copy(
             position = position,
             hasMoved = true,
-            targetIndex = targetIndex
+            targetIndex = targetIndex,
+            cancelTarget = cancelTarget
         ).also { activeDrag = it }
     }
 
