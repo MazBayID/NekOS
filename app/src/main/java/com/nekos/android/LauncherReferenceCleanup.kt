@@ -14,7 +14,7 @@ fun cleanupLauncherReferences(
 ): LauncherReferenceCleanupResult {
     fun isInstalledOrTemporarilyUnavailable(appId: String): Boolean {
         if (appId in installedAppIds) return true
-        val separator = appId.indexOf('|')
+        val separator = appId.indexOf(LAUNCHER_APP_ID_SEPARATOR)
         if (separator <= 0) return false
         val profileSerial = appId.substring(0, separator).toLongOrNull() ?: return false
         return profileSerial in unavailableProfileSerialNumbers
@@ -40,7 +40,7 @@ internal fun migrateLegacyLauncherReferences(
     currentProfileAppIds: Map<String, String>
 ): LauncherReferenceCleanupResult {
     fun migrate(appReference: String): String =
-        if ('|' in appReference) appReference else currentProfileAppIds[appReference] ?: appReference
+        if (LAUNCHER_APP_ID_SEPARATOR in appReference) appReference else currentProfileAppIds[appReference] ?: appReference
 
     return LauncherReferenceCleanupResult(
         favorites = favorites.map { it?.let(::migrate) },
