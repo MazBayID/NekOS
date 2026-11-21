@@ -761,7 +761,6 @@ private fun HomeScreen(
                         }
                     }
                 }
-                }
             }
         }
     }
