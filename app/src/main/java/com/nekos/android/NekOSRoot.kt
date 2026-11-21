@@ -68,6 +68,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.LocalDensity
@@ -341,7 +344,7 @@ fun NekOSRoot(refreshToken: Int) {
                 cancelDropBounds = null
             },
             onTagClick = { tag -> viewingTag = tag },
-            onTagLongPress = { tag -> actionMenuTag = tag },
+            onTagOptionsClick = { tag -> actionMenuTag = tag },
             onTagBoundsChanged = { tagId, bounds -> tagPillBounds[tagId] = bounds },
             draggedTagId = draggedTagId,
             tagDropTargetId = tagDropTargetId,
@@ -708,7 +711,7 @@ private fun HomeScreen(
     onFavoriteDragEnd: () -> Unit,
     onFavoriteDragCancel: () -> Unit,
     onTagClick: (NekTag) -> Unit,
-    onTagLongPress: (NekTag) -> Unit,
+    onTagOptionsClick: (NekTag) -> Unit,
     onTagBoundsChanged: (String, Rect) -> Unit,
     draggedTagId: String?,
     tagDropTargetId: String?,
@@ -816,7 +819,7 @@ private fun HomeScreen(
                             isDropTarget = tagDropTargetId == tag.id && draggedTagId != tag.id,
                             onBoundsChanged = { bounds -> onTagBoundsChanged(tag.id, bounds) },
                             onClick = { onTagClick(tag) },
-                            onLongClick = { onTagLongPress(tag) },
+                            onHandleClick = { onTagOptionsClick(tag) },
                             onDragStart = { position -> onTagDragStart(tag, position) },
                             onDrag = onTagDrag,
                             onDragEnd = onTagDragEnd,
@@ -935,7 +938,7 @@ private fun TagPill(
     isDropTarget: Boolean,
     onBoundsChanged: (Rect) -> Unit,
     onClick: () -> Unit,
-    onLongClick: () -> Unit,
+    onHandleClick: () -> Unit,
     onDragStart: (Offset) -> Unit,
     onDrag: (Offset) -> Unit,
     onDragEnd: () -> Unit,
@@ -971,7 +974,7 @@ private fun TagPill(
         Row(
             modifier = Modifier
                 .weight(1f)
-                .combinedClickable(onClick = onClick, onLongClick = onLongClick)
+                .clickable(onClick = onClick)
                 .padding(start = 14.dp, top = 11.dp, bottom = 11.dp, end = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -992,17 +995,27 @@ private fun TagPill(
                 .sizeIn(minWidth = 40.dp, minHeight = 44.dp)
                 .onGloballyPositioned { handleCoordinates = it }
                 .pointerInput(tag.id) {
-                    detectDragGesturesAfterLongPress(
-                        onDragStart = { localPosition ->
-                            currentHandleCoordinates?.localToRoot(localPosition)?.let(onDragStart)
+                    detectLauncherItemGesture(
+                        toRootPosition = { local ->
+                            currentHandleCoordinates?.localToRoot(local) ?: local
                         },
-                        onDrag = { change, _ ->
-                            change.consume()
-                            currentHandleCoordinates?.localToRoot(change.position)?.let(onDrag)
-                        },
+                        onTap = onHandleClick,
+                        onLongPress = {},
+                        onLongPressEnd = {},
+                        onLongPressCancel = {},
+                        onDragStart = onDragStart,
+                        onDrag = onDrag,
                         onDragEnd = onDragEnd,
                         onDragCancel = onDragCancel
                     )
+                }
+                .semantics {
+                    contentDescription = "Options for ${tag.name}; hold and drag to reorder"
+                    role = Role.Button
+                    onClick(label = "Open ${tag.name} options") {
+                        onHandleClick()
+                        true
+                    }
                 },
             contentAlignment = Alignment.Center
         ) {
