@@ -248,8 +248,8 @@ fun NekOSRoot(refreshToken: Int) {
         saveFavoritePackages(context, updated)
     }
 
-    fun addFavorite(packageName: String) {
-        when (val result = addFavoriteToSlots(favoritePackages, packageName)) {
+    fun addFavorite(appId: String) {
+        when (val result = addFavoriteToSlots(favoritePackages, appId)) {
             is FavoriteSlotOperation.Updated -> {
                 updateFavorites(result.packages)
             }
@@ -262,8 +262,8 @@ fun NekOSRoot(refreshToken: Int) {
         }
     }
 
-    fun placeFavoriteFromDrawer(packageName: String, targetIndex: Int) {
-        when (val result = placePackageInFavoriteSlot(favoritePackages, packageName, targetIndex)) {
+    fun placeFavoriteFromDrawer(appId: String, targetIndex: Int) {
+        when (val result = placePackageInFavoriteSlot(favoritePackages, appId, targetIndex)) {
             is FavoriteSlotOperation.Updated -> {
                 updateFavorites(result.packages)
             }
