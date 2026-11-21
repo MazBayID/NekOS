@@ -20,6 +20,8 @@ import androidx.compose.ui.Modifier
 
 class MainActivity : ComponentActivity() {
     private var appRefreshToken by mutableIntStateOf(0)
+    private val mainHandler = Handler(Looper.getMainLooper())
+    private val refreshInstalledAppsRunnable = Runnable { appRefreshToken++ }
     private val launcherApps by lazy { getSystemService(LauncherApps::class.java) }
     private val packageCallback = object : LauncherApps.Callback() {
         override fun onPackageAdded(packageName: String, user: UserHandle) {
@@ -61,7 +63,10 @@ class MainActivity : ComponentActivity() {
     private var isPackageCallbackRegistered = false
 
     private fun refreshInstalledApps() {
-        appRefreshToken++
+        // Package updates can emit several callbacks in quick succession.
+        // Coalesce them into one app-catalog refresh.
+        mainHandler.removeCallbacks(refreshInstalledAppsRunnable)
+        mainHandler.postDelayed(refreshInstalledAppsRunnable, 250L)
     }
 
     override fun onStart() {
@@ -73,6 +78,7 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onStop() {
+        mainHandler.removeCallbacks(refreshInstalledAppsRunnable)
         if (isPackageCallbackRegistered) {
             launcherApps.unregisterCallback(packageCallback)
             isPackageCallbackRegistered = false
@@ -82,6 +88,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
+        mainHandler.removeCallbacks(refreshInstalledAppsRunnable)
         appRefreshToken++
     }
 
