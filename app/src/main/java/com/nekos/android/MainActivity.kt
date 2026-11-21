@@ -92,6 +92,7 @@ class MainActivity : ComponentActivity() {
                 addAction(Intent.ACTION_MANAGED_PROFILE_REMOVED)
                 addAction(Intent.ACTION_MANAGED_PROFILE_AVAILABLE)
                 addAction(Intent.ACTION_MANAGED_PROFILE_UNAVAILABLE)
+                addAction(Intent.ACTION_MANAGED_PROFILE_UNLOCKED)
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                     addAction(Intent.ACTION_PROFILE_ACCESSIBLE)
                     addAction(Intent.ACTION_PROFILE_INACCESSIBLE)
