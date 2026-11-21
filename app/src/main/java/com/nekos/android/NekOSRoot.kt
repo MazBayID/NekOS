@@ -16,6 +16,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.BlurEffect
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.res.painterResource
@@ -796,6 +797,19 @@ private fun HomeScreen(
                     }
                 }
             )
+            // A restrained warm scrim keeps dark launcher labels readable over
+            // bright or highly detailed wallpapers without hiding the image.
+            Box(
+                Modifier.fillMaxSize().background(
+                    Brush.verticalGradient(
+                        listOf(
+                            backgroundColor.copy(alpha = 0.24f),
+                            backgroundColor.copy(alpha = 0.06f),
+                            backgroundColor.copy(alpha = 0.22f)
+                        )
+                    )
+                )
+            )
         }
         Column(
             modifier = Modifier
@@ -845,9 +859,9 @@ private fun HomeScreen(
             BoxWithConstraints(
                 modifier = Modifier.fillMaxWidth().weight(1f)
             ) {
-                // Match the old three-column grid cell width so TagPill borders
-                // keep their existing dimensions when moved into the right rail.
-                val tagRailWidth = (maxWidth - 16.dp) / 3
+                // Give the tag rail enough room for readable labels while keeping
+                // the logo area useful on compact phone screens.
+                val tagRailWidth = (maxWidth - 16.dp) * 0.45f
                 Row(
                     modifier = Modifier.fillMaxSize(),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -1091,7 +1105,7 @@ private fun TagPill(
             modifier = Modifier
                 .weight(1f)
                 .clickable(onClick = onClick)
-                .padding(start = 14.dp, top = 11.dp, bottom = 11.dp, end = 8.dp),
+                .padding(start = 10.dp, top = 11.dp, bottom = 11.dp, end = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
@@ -1103,7 +1117,7 @@ private fun TagPill(
                 fontWeight = FontWeight.Medium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.widthIn(max = 88.dp)
+                modifier = Modifier.widthIn(max = 104.dp)
             )
         }
         Box(
@@ -1148,7 +1162,13 @@ private fun AddTagPill(onClick: () -> Unit) {
             .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
-        Text("+", color = Ink, fontSize = 18.sp, fontWeight = FontWeight.Medium)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Text("+", color = Ink, fontSize = 18.sp, fontWeight = FontWeight.Medium)
+            Text("Add tag", color = Ink, fontSize = 12.sp, fontWeight = FontWeight.Medium)
+        }
     }
 }
 
@@ -1214,13 +1234,24 @@ private fun AppDrawer(
                     .background(Color(0xFFD5CFC4))
             )
         }
-        Text(
-            "Applications",
-            color = Ink,
-            fontSize = 24.sp,
-            fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.padding(horizontal = 22.dp, vertical = 8.dp)
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 22.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                "Applications",
+                color = Ink,
+                fontSize = 24.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                "${apps.size} installed",
+                color = Muted,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Medium
+            )
+        }
         TextField(
             value = searchQuery,
             onValueChange = { searchQuery = it },
@@ -1254,10 +1285,12 @@ private fun AppDrawer(
         } else {
             LazyVerticalGrid(
                 state = gridState,
-                columns = GridCells.Fixed(5),
-                contentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 28.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp),
+                // Adaptive sizing avoids cramped labels on narrow phones and
+                // uses the available width more naturally on larger displays.
+                columns = GridCells.Adaptive(minSize = 68.dp),
+                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 10.dp, bottom = 28.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier.weight(1f).fillMaxWidth()
             ) {
                 items(filteredApps, key = { it.packageName }) { app ->
