@@ -1,10 +1,14 @@
 package com.nekos.android
 
+import android.content.BroadcastReceiver
+import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.LauncherApps
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.UserHandle
+import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -61,6 +65,12 @@ class MainActivity : ComponentActivity() {
         }
     }
     private var isPackageCallbackRegistered = false
+    private var isProfileReceiverRegistered = false
+    private val profileReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: android.content.Context?, intent: Intent?) {
+            refreshInstalledApps()
+        }
+    }
 
     private fun refreshInstalledApps() {
         // Package updates can emit several callbacks in quick succession.
@@ -75,6 +85,21 @@ class MainActivity : ComponentActivity() {
             launcherApps.registerCallback(packageCallback, Handler(Looper.getMainLooper()))
             isPackageCallbackRegistered = true
         }
+        if (!isProfileReceiverRegistered) {
+            val profileFilter = IntentFilter().apply {
+                addAction(Intent.ACTION_MANAGED_PROFILE_ADDED)
+                addAction(Intent.ACTION_MANAGED_PROFILE_REMOVED)
+                addAction(Intent.ACTION_MANAGED_PROFILE_AVAILABLE)
+                addAction(Intent.ACTION_MANAGED_PROFILE_UNAVAILABLE)
+            }
+            ContextCompat.registerReceiver(
+                this,
+                profileReceiver,
+                profileFilter,
+                ContextCompat.RECEIVER_NOT_EXPORTED
+            )
+            isProfileReceiverRegistered = true
+        }
     }
 
     override fun onStop() {
@@ -82,6 +107,10 @@ class MainActivity : ComponentActivity() {
         if (isPackageCallbackRegistered) {
             launcherApps.unregisterCallback(packageCallback)
             isPackageCallbackRegistered = false
+        }
+        if (isProfileReceiverRegistered) {
+            unregisterReceiver(profileReceiver)
+            isProfileReceiverRegistered = false
         }
         super.onStop()
     }
