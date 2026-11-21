@@ -175,7 +175,7 @@ class LauncherItemGestureTest {
             down()
             advanceEventTime(viewConfiguration.longPressTimeoutMillis + 50)
             move()
-            moveBy(Offset(40f, 0f))
+            moveBy(Offset(100f, 0f))
             cancel()
         }
 
