@@ -295,10 +295,10 @@ fun TagManagementDialog(
         AlertDialog(
             onDismissRequest = { showIconPicker = false },
             shape = RoundedCornerShape(28.dp),
-        containerColor = Color(0xFFFEFCF8),
-        titleContentColor = Color(0xFF34332F),
-        textContentColor = Color(0xFF34332F),
-        title = { Text("Choose tag icon") },
+            containerColor = Color(0xFFFEFCF8),
+            titleContentColor = Color(0xFF34332F),
+            textContentColor = Color(0xFF34332F),
+            title = { Text("Choose tag icon") },
             text = {
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(5),
@@ -316,7 +316,7 @@ fun TagManagementDialog(
                             }
                         }
                         Box(
-                            Modifier.aspectRatio(1f).padding(4.dp)
+                            Modifier.aspectRatio(1f).padding(2.dp)
                                 .clip(RoundedCornerShape(10.dp))
                                 .background(Color(0xFFF0EEE8))
                                 .clickable {
