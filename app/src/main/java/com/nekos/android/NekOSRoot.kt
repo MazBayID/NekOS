@@ -353,7 +353,7 @@ fun NekOSRoot(refreshToken: Int) {
             onTagDrag = { position ->
                 tagDropTargetId = tagPillBounds.entries
                     .firstOrNull { (_, bounds) -> bounds.contains(position) }
-                    ?.key ?: tagDropTargetId
+                    ?.key
             },
             onTagDragEnd = {
                 val sourceId = draggedTagId
@@ -935,7 +935,6 @@ private fun TagPill(
     var tagIcon by remember(tag.iconId) {
         mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null)
     }
-    var pillCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
     var handleCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
     val currentHandleCoordinates by rememberUpdatedState(handleCoordinates)
     LaunchedEffect(tag.iconId) {
@@ -950,11 +949,7 @@ private fun TagPill(
     }
     Row(
         modifier = Modifier
-            .fillMaxWidth()
-            .onGloballyPositioned {
-                pillCoordinates = it
-                onBoundsChanged(it.boundsInRoot())
-            }
+            .onGloballyPositioned { onBoundsChanged(it.boundsInRoot()) }
             .graphicsLayer { alpha = if (isDragging) 0.55f else 1f }
             .clip(RoundedCornerShape(18.dp))
             .background(
@@ -964,7 +959,6 @@ private fun TagPill(
     ) {
         Row(
             modifier = Modifier
-                .weight(1f)
                 .combinedClickable(onClick = onClick, onLongClick = onLongClick)
                 .padding(start = 14.dp, top = 11.dp, bottom = 11.dp, end = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -978,7 +972,7 @@ private fun TagPill(
                 fontWeight = FontWeight.Medium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.widthIn(max = 88.dp)
             )
         }
         Box(
