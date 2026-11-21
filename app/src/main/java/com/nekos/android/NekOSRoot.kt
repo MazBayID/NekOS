@@ -111,6 +111,7 @@ fun NekOSRoot(refreshToken: Int) {
     val interactionController = remember { LauncherInteractionController() }
     var favoriteDrag by remember { mutableStateOf<LauncherDragSession?>(null) }
     val favoriteSlotBounds = remember { mutableStateMapOf<Int, Rect>() }
+    var cancelDropBounds by remember { mutableStateOf<Rect?>(null) }
     var tags by remember { mutableStateOf(TagStore.load(context)) }
     var tagEditorTarget by remember { mutableStateOf<NekTag?>(null) }
     var viewingTag by remember { mutableStateOf<NekTag?>(null) }
@@ -249,6 +250,7 @@ fun NekOSRoot(refreshToken: Int) {
             favoriteDropTarget = favoriteDrag?.takeIf { it.hasMoved }?.targetIndex,
             onFavoriteDragStart = { app, position ->
                 clearActionMenuPreview()
+                cancelDropBounds = null
                 favoriteDrag = interactionController.startDrag(
                     app.packageName,
                     LauncherDragSource.FAVORITE,
@@ -257,18 +259,23 @@ fun NekOSRoot(refreshToken: Int) {
             },
             onFavoriteDrag = { position ->
                 val target = favoriteSlotBounds.entries.firstOrNull { it.value.contains(position) }?.key
-                favoriteDrag = interactionController.updateDrag(position, target)
+                favoriteDrag = interactionController.updateDrag(
+                    position, target,
+                    cancelTarget = cancelDropBounds?.contains(position) == true
+                )
             },
             onFavoriteDragEnd = {
                 val drag = interactionController.finishDrag()
-                if (drag?.hasMoved == true) {
+                if (drag?.hasMoved == true && !drag.cancelTarget) {
                     drag.targetIndex?.let { placeFavoriteFromDrawer(drag.packageName, it) }
                 }
                 favoriteDrag = null
+                cancelDropBounds = null
             },
             onFavoriteDragCancel = {
                 interactionController.cancelDrag()
                 favoriteDrag = null
+                cancelDropBounds = null
             },
             onTagClick = { tag -> viewingTag = tag },
             onTagLongPress = { tag -> actionMenuTag = tag },
@@ -295,10 +302,13 @@ fun NekOSRoot(refreshToken: Int) {
                 modifier = Modifier
                     .fillMaxSize()
                     .graphicsLayer {
-                        // During a drag, lift the drawer to expose the Home Favorite area
-                        // underneath while keeping the dragged icon in the root overlay.
-                        translationY = drawerOffset.value * size.height -
-                            if (favoriteDrag?.hasMoved == true) size.height * 0.58f else 0f
+                        // Hide the entire drawer during a drag so no grid rows remain
+                        // visible over the Home Favorite area.
+                        translationY = if (favoriteDrag?.hasMoved == true) {
+                            -size.height
+                        } else {
+                            drawerOffset.value * size.height
+                        }
                     },
                 onAppClick = { app ->
                     launchApp(context, app.packageName)
@@ -320,6 +330,7 @@ fun NekOSRoot(refreshToken: Int) {
                 onAppLongPressCancel = ::clearActionMenuPreview,
                 onAppDragStart = { app, position ->
                     clearActionMenuPreview()
+                    cancelDropBounds = null
                     favoriteDrag = interactionController.startDrag(
                         app.packageName,
                         LauncherDragSource.APP_DRAWER,
@@ -328,18 +339,23 @@ fun NekOSRoot(refreshToken: Int) {
                 },
                 onAppDrag = { position ->
                     val target = favoriteSlotBounds.entries.firstOrNull { it.value.contains(position) }?.key
-                    favoriteDrag = interactionController.updateDrag(position, target)
+                    favoriteDrag = interactionController.updateDrag(
+                        position, target,
+                        cancelTarget = cancelDropBounds?.contains(position) == true
+                    )
                 },
                 onAppDragEnd = {
                     val drag = interactionController.finishDrag()
-                    if (drag?.hasMoved == true) {
+                    if (drag?.hasMoved == true && !drag.cancelTarget) {
                         drag.targetIndex?.let { placeFavoriteFromDrawer(drag.packageName, it) }
                     }
                     favoriteDrag = null
+                    cancelDropBounds = null
                 },
                 onAppDragCancel = {
                     interactionController.cancelDrag()
                     favoriteDrag = null
+                    cancelDropBounds = null
                 },
                 onCloseDrawer = {
                     scope.launch {
@@ -422,6 +438,23 @@ fun NekOSRoot(refreshToken: Int) {
                         fontSize = 11.sp
                     )
                 }
+            }
+        }
+
+        favoriteDrag?.takeIf { it.hasMoved }?.let { drag ->
+            Column(
+                modifier = Modifier.align(Alignment.Center)
+                    .onGloballyPositioned { cancelDropBounds = it.boundsInRoot() }
+                    .zIndex(12f),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                Box(Modifier.size(58.dp).clip(RoundedCornerShape(50))
+                    .background(if (drag.cancelTarget) Color(0xFFB3261E) else Color(0xFF6D625C)),
+                    contentAlignment = Alignment.Center) {
+                    Text("×", color = Color.White, fontSize = 36.sp, lineHeight = 36.sp)
+                }
+                Text("Cancel", color = Ink, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
             }
         }
 
