@@ -291,8 +291,6 @@ fun NekOSRoot(refreshToken: Int) {
         var drawerProgress by remember { mutableFloatStateOf(1f) }
         var drawerTargetProgress by remember { mutableFloatStateOf(1f) }
         var isDrawerDragging by remember { mutableStateOf(false) }
-        val scope = rememberCoroutineScope()
-
         // Pointer movement updates one shared progress value directly. A spring
         // is used only to settle after release, never once per pointer event.
         LaunchedEffect(drawerTargetProgress, isDrawerDragging) {
@@ -536,7 +534,7 @@ fun NekOSRoot(refreshToken: Int) {
                     cancelDropBounds = null
                 },
                 onCloseDrawer = { totalDrag, velocityY ->
-                    if (totalDrag > drawerCloseThresholdPx || velocityY > 900f) closeDrawer()
+                    if ((totalDrag == 0f && velocityY == 0f) || totalDrag > drawerCloseThresholdPx || velocityY > 900f) closeDrawer()
                 }
             )
         }
