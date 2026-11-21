@@ -286,6 +286,7 @@ fun NekOSRoot(refreshToken: Int) {
             favoritePackages = favoritePackages,
             tags = tags,
             iconCatalogRepository = iconCatalogRepository,
+            iconBitmapCache = iconBitmapCache,
             homeSwipeThresholdPx = homeSwipeThresholdPx,
             backgroundBlurRadiusPx = if (favoriteDrag?.hasMoved == true) {
                 0f
@@ -610,16 +611,28 @@ fun NekOSRoot(refreshToken: Int) {
         favoriteDrag?.takeIf { it.hasMoved }?.let { drag ->
             val draggedApp = apps.firstOrNull { it.packageName == drag.packageName }
             if (draggedApp != null) {
-                val bitmap = remember(draggedApp.packageName) { draggedApp.icon.toBitmap(96, 96).asImageBitmap() }
+                val cachedBitmap = iconBitmapCache[draggedApp.packageName]
+                var bitmap by remember(draggedApp.packageName) { mutableStateOf(cachedBitmap) }
+                LaunchedEffect(draggedApp.packageName, cachedBitmap) {
+                    if (cachedBitmap != null) {
+                        bitmap = cachedBitmap
+                    } else {
+                        val loadedBitmap = withContext(Dispatchers.Default) {
+                            draggedApp.icon.toBitmap(96, 96).asImageBitmap()
+                        }
+                        iconBitmapCache.put(draggedApp.packageName, loadedBitmap)
+                        bitmap = loadedBitmap
+                    }
+                }
                 val iconOffset = with(LocalDensity.current) { 28.dp.toPx() }
-                Image(
-                    bitmap = bitmap,
+                bitmap?.let { loadedBitmap -> Image(
+                    bitmap = loadedBitmap,
                     contentDescription = draggedApp.label,
                     modifier = Modifier
                         .offset { IntOffset((drag.position.x - iconOffset).roundToInt(), (drag.position.y - iconOffset).roundToInt()) }
                         .size(56.dp)
                         .zIndex(10f)
-                )
+                ) }
             }
         }
 
@@ -748,6 +761,7 @@ private fun HomeScreen(
     favoritePackages: List<String?>,
     tags: List<NekTag>,
     iconCatalogRepository: IconCatalogRepository,
+    iconBitmapCache: AppIconBitmapCache,
     homeSwipeThresholdPx: Float,
     backgroundBlurRadiusPx: Float,
     onDrawerDrag: (Float) -> Unit,
@@ -912,6 +926,7 @@ private fun HomeScreen(
                             val app = favoritePackages.getOrNull(index)?.let { appByPackage[it] }
                             FavoriteSlot(
                                 app = app,
+                                iconBitmapCache = iconBitmapCache,
                                 onBoundsChanged = { bounds -> onFavoriteSlotBounds(index, bounds) },
                                 isDropTarget = favoriteDropTarget == index,
                                 onClick = { bounds -> app?.let { onFavoriteClick(it.packageName, bounds) } },
@@ -936,6 +951,7 @@ private fun HomeScreen(
 @Composable
 private fun FavoriteSlot(
     app: InstalledApp?,
+    iconBitmapCache: AppIconBitmapCache,
     onBoundsChanged: (Rect) -> Unit,
     isDropTarget: Boolean,
     onClick: (Rect) -> Unit,
@@ -948,8 +964,19 @@ private fun FavoriteSlot(
     onDragCancel: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val bitmap = if (app == null) null else remember(app.packageName) {
-        app.icon.toBitmap(96, 96).asImageBitmap()
+    val cachedBitmap = app?.let { iconBitmapCache[it.packageName] }
+    var bitmap by remember(app?.packageName) { mutableStateOf(cachedBitmap) }
+    LaunchedEffect(app?.packageName, cachedBitmap) {
+        val currentApp = app ?: return@LaunchedEffect
+        if (cachedBitmap != null) {
+            bitmap = cachedBitmap
+        } else {
+            val loadedBitmap = withContext(Dispatchers.Default) {
+                currentApp.icon.toBitmap(96, 96).asImageBitmap()
+            }
+            iconBitmapCache.put(currentApp.packageName, loadedBitmap)
+            bitmap = loadedBitmap
+        }
     }
     var slotCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
     val currentSlotCoordinates by rememberUpdatedState(slotCoordinates)
