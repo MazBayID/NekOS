@@ -60,7 +60,13 @@ suspend fun PointerInputScope.detectLauncherItemGesture(
             }
 
             if (!change.pressed) {
-                if (dragging) onDragEnd() else onLongPressEnd()
+                // Compose marks synthetic pointer-cancel changes as consumed. Do not
+                // mistake system cancellation for a real finger release.
+                if (change.isConsumed) {
+                    if (dragging) onDragCancel() else onLongPressCancel()
+                } else {
+                    if (dragging) onDragEnd() else onLongPressEnd()
+                }
                 completed = true
                 break
             }
