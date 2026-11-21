@@ -760,7 +760,7 @@ private fun HomeScreen(
                         }
                     )
                 }
-                .padding(horizontal = 24.dp, vertical = 26.dp),
+                .padding(horizontal = 20.dp, vertical = 22.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
@@ -773,7 +773,7 @@ private fun HomeScreen(
                         painter = painterResource(R.drawable.text_logo_sec),
                         contentDescription = "NekOS",
                         contentScale = ContentScale.Fit,
-                        modifier = Modifier.offset(x = (-12).dp).height(85.dp).weight(1f, fill = false)
+                        modifier = Modifier.offset(x = (-12).dp).height(72.dp).weight(1f, fill = false)
                     )
                     TextButton(onClick = onOpenSettings) {
                         Text("Settings", color = Ink, fontSize = 13.sp)
@@ -886,7 +886,7 @@ private fun FavoriteSlot(
         modifier = modifier
             .aspectRatio(1f)
             .clip(RoundedCornerShape(18.dp))
-            .background(if (isDropTarget) Color(0xFFDCD3C4) else Color.Transparent)
+            .background(if (isDropTarget) Color(0xFFDCD3C4) else Color.White.copy(alpha = 0.24f))
             .onGloballyPositioned {
                 slotCoordinates = it
                 onBoundsChanged(it.boundsInRoot())
@@ -914,7 +914,7 @@ private fun FavoriteSlot(
             Image(
                 bitmap = bitmap,
                 contentDescription = app.label,
-                modifier = Modifier.size(54.dp)
+                modifier = Modifier.size(48.dp)
             )
         }
     }
@@ -946,8 +946,8 @@ private fun TagPill(tag: NekTag, onClick: () -> Unit, onLongClick: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        if (tagIcon != null) Image(tagIcon!!, contentDescription = null, modifier = Modifier.size(22.dp))
-        Text(tag.name, color = Ink, fontSize = 15.sp, fontWeight = FontWeight.Medium)
+        if (tagIcon != null) Image(tagIcon!!, contentDescription = null, modifier = Modifier.size(20.dp))
+        Text(tag.name, color = Ink, fontSize = 14.sp, fontWeight = FontWeight.Medium)
     }
 }
 
@@ -1001,6 +1001,7 @@ private fun AppDrawer(
 
     Column(
         modifier = modifier
+            .background(WarmBackground.copy(alpha = 0.98f))
             .statusBarsPadding()
             .navigationBarsPadding()
             .padding(top = 4.dp)
@@ -1031,7 +1032,7 @@ private fun AppDrawer(
         Text(
             "Applications",
             color = Ink,
-            fontSize = 23.sp,
+            fontSize = 24.sp,
             fontWeight = FontWeight.SemiBold,
             modifier = Modifier.padding(horizontal = 22.dp, vertical = 12.dp)
         )
@@ -1040,7 +1041,8 @@ private fun AppDrawer(
             onValueChange = { searchQuery = it },
             placeholder = { Text("Search apps") },
             singleLine = true,
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)
+            shape = RoundedCornerShape(18.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)
         )
         if (tags.isNotEmpty()) {
             Row(
@@ -1155,7 +1157,7 @@ private fun AppGridItem(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
-            .padding(vertical = 5.dp)
+            .padding(vertical = 7.dp)
             .onGloballyPositioned { itemCoordinates = it }
             .pointerInput(app.packageName) {
                 detectLauncherItemGesture(
@@ -1176,7 +1178,7 @@ private fun AppGridItem(
             Image(
                 bitmap = bitmap,
                 contentDescription = app.label,
-                modifier = Modifier.size(56.dp)
+                modifier = Modifier.size(52.dp)
             )
         } else {
             Spacer(Modifier.size(56.dp))
@@ -1185,11 +1187,11 @@ private fun AppGridItem(
         Text(
             app.label,
             color = Ink,
-            fontSize = 10.sp,
+            fontSize = 12.sp,
             maxLines = 2,
             textAlign = TextAlign.Center,
-            lineHeight = 12.sp,
-            modifier = Modifier.heightIn(min = 24.dp)
+            lineHeight = 14.sp,
+            modifier = Modifier.heightIn(min = 28.dp)
         )
     }
 }
