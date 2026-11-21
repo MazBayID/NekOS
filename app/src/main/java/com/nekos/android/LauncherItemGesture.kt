@@ -44,8 +44,9 @@ suspend fun PointerInputScope.detectLauncherItemGesture(
         var dragging = false
         var completed = false
 
-        while (true) {
-            val event = awaitPointerEvent()
+        try {
+            while (true) {
+                val event = awaitPointerEvent()
             val change = event.changes.firstOrNull { it.id == down.id }
             if (change == null) {
                 if (dragging) onDragCancel() else onLongPressCancel()
@@ -85,9 +86,13 @@ suspend fun PointerInputScope.detectLauncherItemGesture(
                 change.consume()
                 onDrag(toRootPosition(change.position))
             }
+            }
+        } finally {
+            // Also clear transient UI/drag state if this pointerInput coroutine is
+            // cancelled because its node leaves composition or its key changes.
+            if (!completed) {
+                if (dragging) onDragCancel() else onLongPressCancel()
+            }
         }
-
-        if (dragging && !completed) onDragCancel()
-        else if (!dragging && !completed) onLongPressCancel()
     }
 }
