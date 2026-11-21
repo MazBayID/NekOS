@@ -699,6 +699,7 @@ fun NekOSRoot(refreshToken: Int) {
             TagManagementDialog(
                 tag = tagEditorTarget,
                 apps = apps,
+                iconCatalogRepository = iconCatalogRepository,
                 onSave = { saved ->
                     val duplicateName = tags.any { it.id != saved.id && it.name.equals(saved.name, ignoreCase = true) }
                     if (duplicateName) {
