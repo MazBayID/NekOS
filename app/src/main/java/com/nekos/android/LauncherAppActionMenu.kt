@@ -52,7 +52,12 @@ internal fun LauncherAppActionMenuContent(
         enabled = isInteractive,
         onClick = onFavorite
     )
-    PopupAction("Uninstall", Icons.Filled.Delete, enabled = isInteractive, onClick = onUninstall)
+    PopupAction(
+        if (app.isInCurrentProfile) "Uninstall" else "Manage app",
+        Icons.Filled.Delete,
+        enabled = isInteractive,
+        onClick = onUninstall
+    )
     if (!isInteractive) {
         Text(
             "Release to choose",

@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
+import android.os.Process
+import android.os.UserManager
 import android.widget.Toast
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
@@ -114,24 +116,38 @@ fun NekOSRoot(refreshToken: Int) {
     // Discover launchable apps while the brand splash is visible instead of
     // waiting for an artificial timer before starting initialization.
     LaunchedEffect(refreshToken) {
-        val refreshedApps = withContext(Dispatchers.IO) {
+        val refreshedCatalog = withContext(Dispatchers.IO) {
             loadLaunchableApps(context)
         }
+        val refreshedApps = refreshedCatalog.apps
         apps = refreshedApps
-        val installedPackages = refreshedApps.mapTo(mutableSetOf<String>()) { it.packageName }
-        // Read the latest user-edited collections after the background query.
-        // Otherwise an in-flight refresh could overwrite a Favorite or Tag edit
-        // made while PackageManager was loading the app catalog.
-        val cleanedReferences = cleanupLauncherReferences(
+        val currentProfileSerialNumber = context
+            .getSystemService(UserManager::class.java)
+            .getSerialNumberForUser(Process.myUserHandle())
+        // Legacy data stored only package names because earlier versions queried
+        // the current profile only. Upgrade those references before profile-aware cleanup.
+        val currentProfileAppIds = refreshedApps
+            .filter { it.profileSerialNumber == currentProfileSerialNumber }
+            .associate { it.packageName to it.id }
+        val migratedReferences = migrateLegacyLauncherReferences(
             favorites = latestFavoritePackages,
             tags = latestTags,
-            installedPackages = installedPackages
+            currentProfileAppIds = currentProfileAppIds
         )
-        if (cleanedReferences.favorites != favoritePackages) {
+        val installedAppIds = refreshedApps.mapTo(mutableSetOf<String>()) { it.id }
+        // Read the latest user-edited collections after the background query so
+        // an in-flight refresh cannot overwrite a Favorite or Tag edit.
+        val cleanedReferences = cleanupLauncherReferences(
+            favorites = migratedReferences.favorites,
+            tags = migratedReferences.tags,
+            installedAppIds = installedAppIds,
+            unavailableProfileSerialNumbers = refreshedCatalog.unavailableProfileSerialNumbers
+        )
+        if (cleanedReferences.favorites != latestFavoritePackages) {
             favoritePackages = cleanedReferences.favorites
             saveFavoritePackages(context, cleanedReferences.favorites)
         }
-        if (cleanedReferences.tags != tags) {
+        if (cleanedReferences.tags != latestTags) {
             tags = cleanedReferences.tags
             TagStore.save(context, cleanedReferences.tags)
         }
@@ -232,8 +248,8 @@ fun NekOSRoot(refreshToken: Int) {
         saveFavoritePackages(context, updated)
     }
 
-    fun addFavorite(packageName: String) {
-        when (val result = addFavoriteToSlots(favoritePackages, packageName)) {
+    fun addFavorite(appId: String) {
+        when (val result = addFavoriteToSlots(favoritePackages, appId)) {
             is FavoriteSlotOperation.Updated -> {
                 updateFavorites(result.packages)
             }
@@ -246,8 +262,8 @@ fun NekOSRoot(refreshToken: Int) {
         }
     }
 
-    fun placeFavoriteFromDrawer(packageName: String, targetIndex: Int) {
-        when (val result = placePackageInFavoriteSlot(favoritePackages, packageName, targetIndex)) {
+    fun placeFavoriteFromDrawer(appId: String, targetIndex: Int) {
+        when (val result = placePackageInFavoriteSlot(favoritePackages, appId, targetIndex)) {
             is FavoriteSlotOperation.Updated -> {
                 updateFavorites(result.packages)
             }
@@ -317,12 +333,12 @@ fun NekOSRoot(refreshToken: Int) {
                     )
                 }
             },
-            onFavoriteClick = { packageName, bounds ->
-                launchApp(context, packageName, launchSourceView, bounds.left.roundToInt(), bounds.top.roundToInt(), bounds.width.roundToInt(), bounds.height.roundToInt())
+            onFavoriteClick = { app, bounds ->
+                launchApp(context, app, launchSourceView, bounds.left.roundToInt(), bounds.top.roundToInt(), bounds.width.roundToInt(), bounds.height.roundToInt())
             },
             onFavoriteLongPress = { index, position ->
                 favoritePackages.getOrNull(index)?.let { packageName ->
-                    apps.firstOrNull { it.packageName == packageName }?.let { app ->
+                    apps.firstOrNull { it.id == packageName }?.let { app ->
                         actionMenuPreviewApp = app
                         actionMenuPreviewPosition = position
                     }
@@ -336,7 +352,7 @@ fun NekOSRoot(refreshToken: Int) {
                 clearActionMenuPreview()
                 cancelDropBounds = null
                 favoriteDrag = interactionController.startDrag(
-                    app.packageName,
+                    app.id,
                     LauncherDragSource.FAVORITE,
                     position
                 )
@@ -351,7 +367,7 @@ fun NekOSRoot(refreshToken: Int) {
             onFavoriteDragEnd = {
                 val drag = interactionController.finishDrag()
                 if (drag?.hasMoved == true && !drag.cancelTarget) {
-                    drag.targetIndex?.let { placeFavoriteFromDrawer(drag.packageName, it) }
+                    drag.targetIndex?.let { placeFavoriteFromDrawer(drag.appId, it) }
                 }
                 favoriteDrag = null
                 cancelDropBounds = null
@@ -480,7 +496,7 @@ fun NekOSRoot(refreshToken: Int) {
                         }
                     },
                 onAppClick = { app, bounds ->
-                    launchApp(context, app.packageName, launchSourceView, bounds.left.roundToInt(), bounds.top.roundToInt(), bounds.width.roundToInt(), bounds.height.roundToInt())
+                    launchApp(context, app, launchSourceView, bounds.left.roundToInt(), bounds.top.roundToInt(), bounds.width.roundToInt(), bounds.height.roundToInt())
                     scope.launch {
                         drawerOffset.animateTo(
                             1f,
@@ -501,7 +517,7 @@ fun NekOSRoot(refreshToken: Int) {
                     clearActionMenuPreview()
                     cancelDropBounds = null
                     favoriteDrag = interactionController.startDrag(
-                        app.packageName,
+                        app.id,
                         LauncherDragSource.APP_DRAWER,
                         position
                     )
@@ -516,7 +532,7 @@ fun NekOSRoot(refreshToken: Int) {
                 onAppDragEnd = {
                     val drag = interactionController.finishDrag()
                     if (drag?.hasMoved == true && !drag.cancelTarget) {
-                        drag.targetIndex?.let { placeFavoriteFromDrawer(drag.packageName, it) }
+                        drag.targetIndex?.let { placeFavoriteFromDrawer(drag.appId, it) }
                     }
                     favoriteDrag = null
                     cancelDropBounds = null
@@ -552,7 +568,7 @@ fun NekOSRoot(refreshToken: Int) {
             )
         }
         popupApp?.let { app ->
-            val isFavorite = app.packageName in favoritePackages.filterNotNull()
+            val isFavorite = app.id in favoritePackages.filterNotNull()
             val isInteractive = actionMenuApp != null
             Column(
                 modifier = Modifier
@@ -579,19 +595,19 @@ fun NekOSRoot(refreshToken: Int) {
                     isInteractive = isInteractive,
                     onAppInfo = {
                         actionMenuApp = null
-                        openAppInfo(context, app.packageName)
+                        openAppInfo(context, app)
                     },
                     onFavorite = {
                         if (isFavorite) {
-                            updateFavorites(favoritePackages.map { if (it == app.packageName) null else it })
+                            updateFavorites(favoritePackages.map { if (it == app.id) null else it })
                         } else {
-                            addFavorite(app.packageName)
+                            addFavorite(app.id)
                         }
                         actionMenuApp = null
                     },
                     onUninstall = {
                         actionMenuApp = null
-                        requestAppUninstall(context, app.packageName)
+                        requestAppUninstall(context, app)
                     }
                 )
             }
@@ -615,17 +631,17 @@ fun NekOSRoot(refreshToken: Int) {
         }
 
         favoriteDrag?.takeIf { it.hasMoved }?.let { drag ->
-            val draggedApp = apps.firstOrNull { it.packageName == drag.packageName }
+            val draggedApp = apps.firstOrNull { it.id == drag.appId }
             if (draggedApp != null) {
-                val cachedBitmap = iconBitmapCache[draggedApp.packageName]
-                var bitmap by remember(draggedApp.packageName) { mutableStateOf(cachedBitmap) }
+                val cachedBitmap = iconBitmapCache[draggedApp.id]
+                var bitmap by remember(draggedApp.id) { mutableStateOf(cachedBitmap) }
                 LaunchedEffect(draggedApp, cachedBitmap) {
                     bitmap = cachedBitmap
                     if (cachedBitmap == null) {
                         val loadedBitmap = withContext(Dispatchers.Default) {
                             draggedApp.icon.toBitmap(96, 96).asImageBitmap()
                         }
-                        iconBitmapCache.put(draggedApp.packageName, loadedBitmap)
+                        iconBitmapCache.put(draggedApp.id, loadedBitmap)
                         bitmap = loadedBitmap
                     }
                 }
@@ -684,7 +700,7 @@ fun NekOSRoot(refreshToken: Int) {
                 apps = apps,
                 onLaunch = { app ->
                     viewingTag = null
-                    launchApp(context, app.packageName, launchSourceView)
+                    launchApp(context, app, launchSourceView)
                 },
                 onEdit = {
                     tagEditorTarget = tag
@@ -771,7 +787,7 @@ private fun HomeScreen(
     backgroundBlurRadiusPx: Float,
     onDrawerDrag: (Float) -> Unit,
     onDrawerDragEnd: (totalDrag: Float, cancelled: Boolean) -> Unit,
-    onFavoriteClick: (String, Rect) -> Unit,
+    onFavoriteClick: (InstalledApp, Rect) -> Unit,
     onFavoriteLongPress: (Int, Offset) -> Unit,
     onFavoriteLongPressEnd: () -> Unit,
     onFavoriteLongPressCancel: () -> Unit,
@@ -793,7 +809,7 @@ private fun HomeScreen(
     onTagDragCancel: () -> Unit,
     onAddTag: () -> Unit
 ) {
-    val appByPackage = remember(apps) { apps.associateBy { it.packageName } }
+    val appById = remember(apps) { apps.associateBy { it.id } }
     val currentOnDrawerDrag by rememberUpdatedState(onDrawerDrag)
     val currentOnDrawerDragEnd by rememberUpdatedState(onDrawerDragEnd)
     Box(Modifier.fillMaxSize().background(backgroundColor)) {
@@ -928,13 +944,13 @@ private fun HomeScreen(
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         repeat(5) { column ->
                             val index = row * 5 + column
-                            val app = favoritePackages.getOrNull(index)?.let { appByPackage[it] }
+                            val app = favoritePackages.getOrNull(index)?.let { appById[it] }
                             FavoriteSlot(
                                 app = app,
                                 iconBitmapCache = iconBitmapCache,
                                 onBoundsChanged = { bounds -> onFavoriteSlotBounds(index, bounds) },
                                 isDropTarget = favoriteDropTarget == index,
-                                onClick = { bounds -> app?.let { onFavoriteClick(it.packageName, bounds) } },
+                                onClick = { bounds -> app?.let { onFavoriteClick(it, bounds) } },
                                 onLongPress = { position -> onFavoriteLongPress(index, position) },
                                 onLongPressEnd = onFavoriteLongPressEnd,
                                 onLongPressCancel = onFavoriteLongPressCancel,
@@ -969,8 +985,8 @@ private fun FavoriteSlot(
     onDragCancel: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val cachedBitmap = app?.let { iconBitmapCache[it.packageName] }
-    var bitmap by remember(app?.packageName) { mutableStateOf(cachedBitmap) }
+    val cachedBitmap = app?.let { iconBitmapCache[it.id] }
+    var bitmap by remember(app?.id) { mutableStateOf(cachedBitmap) }
     LaunchedEffect(app, cachedBitmap) {
         bitmap = cachedBitmap
         val currentApp = app ?: return@LaunchedEffect
@@ -978,7 +994,7 @@ private fun FavoriteSlot(
             val loadedBitmap = withContext(Dispatchers.Default) {
                 currentApp.icon.toBitmap(96, 96).asImageBitmap()
             }
-            iconBitmapCache.put(currentApp.packageName, loadedBitmap)
+            iconBitmapCache.put(currentApp.id, loadedBitmap)
             bitmap = loadedBitmap
         }
     }
@@ -1001,7 +1017,7 @@ private fun FavoriteSlot(
                 slotCoordinates = it
                 onBoundsChanged(it.boundsInRoot())
             }
-            .pointerInput(app?.packageName) {
+            .pointerInput(app?.id) {
                 if (app != null) {
                     detectLauncherItemGesture(
                         toRootPosition = { local -> currentSlotCoordinates?.localToRoot(local) ?: local },
@@ -1325,9 +1341,9 @@ private fun AppDrawer(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier.weight(1f).fillMaxWidth()
             ) {
-                items(filteredApps, key = { it.packageName }) { app ->
-                    val cachedBitmap = iconBitmapCache[app.packageName]
-                    var bitmap by remember(app.packageName) {
+                items(filteredApps, key = { it.id }) { app ->
+                    val cachedBitmap = iconBitmapCache[app.id]
+                    var bitmap by remember(app.id) {
                         mutableStateOf(cachedBitmap)
                     }
                     LaunchedEffect(app, cachedBitmap) {
@@ -1336,7 +1352,7 @@ private fun AppDrawer(
                             val loadedBitmap = withContext(Dispatchers.Default) {
                                 app.icon.toBitmap(96, 96).asImageBitmap()
                             }
-                            iconBitmapCache.put(app.packageName, loadedBitmap)
+                            iconBitmapCache.put(app.id, loadedBitmap)
                             bitmap = loadedBitmap
                         }
                     }
@@ -1388,7 +1404,7 @@ private fun AppGridItem(
             .clip(RoundedCornerShape(14.dp))
             .padding(vertical = 7.dp)
             .onGloballyPositioned { itemCoordinates = it }
-            .pointerInput(app.packageName) {
+            .pointerInput(app.id) {
                 detectLauncherItemGesture(
                     toRootPosition = { local -> currentItemCoordinates?.localToRoot(local) ?: local },
                     onTap = { currentOnClick(currentItemCoordinates?.boundsInRoot() ?: Rect.Zero) },

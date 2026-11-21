@@ -36,6 +36,58 @@ class LauncherReferenceCleanupTest {
     }
 
     @Test
+    fun preservesReferencesForTemporarilyUnavailableProfiles() {
+        val favorites = listOf("42::com.example.work", "10::com.example.removed")
+        val tags = listOf(
+            NekTag(
+                id = "work",
+                name = "Work",
+                appPackages = listOf("42::com.example.work", "10::com.example.removed")
+            )
+        )
+
+        val result = cleanupLauncherReferences(
+            favorites = favorites,
+            tags = tags,
+            installedAppIds = emptySet(),
+            unavailableProfileSerialNumbers = setOf(42L)
+        )
+
+        assertEquals(listOf("42::com.example.work", null), result.favorites)
+        assertEquals(listOf("42::com.example.work"), result.tags.single().appPackages)
+    }
+
+    @Test
+    fun migratesLegacyFavoritesAndTagsToCurrentProfileIds() {
+        val favorites = listOf("com.example.alpha", null, "42::com.example.work")
+        val tags = listOf(
+            NekTag(
+                id = "tools",
+                name = "Tools",
+                appPackages = listOf("com.example.alpha", "com.example.beta")
+            )
+        )
+
+        val migrated = migrateLegacyLauncherReferences(
+            favorites = favorites,
+            tags = tags,
+            currentProfileAppIds = mapOf(
+                "com.example.alpha" to "10::com.example.alpha",
+                "com.example.beta" to "10::com.example.beta"
+            )
+        )
+
+        assertEquals(
+            listOf("10::com.example.alpha", null, "42::com.example.work"),
+            migrated.favorites
+        )
+        assertEquals(
+            listOf("10::com.example.alpha", "10::com.example.beta"),
+            migrated.tags.single().appPackages
+        )
+    }
+
+    @Test
     fun returnsUnchangedDataWhenAllAppsAreInstalled() {
         val favorites = listOf("a", null, "b")
         val tags = listOf(NekTag(id = "t", name = "T", appPackages = listOf("a", "b")))
