@@ -211,7 +211,11 @@ fun NekOSRoot(refreshToken: Int) {
             favoritePackages = favoritePackages,
             tags = tags,
             homeSwipeThresholdPx = homeSwipeThresholdPx,
-            backgroundBlurRadiusPx = backgroundBlurRadiusPx * (1f - drawerOffset.value),
+            backgroundBlurRadiusPx = if (favoriteDrag?.hasMoved == true) {
+                0f
+            } else {
+                backgroundBlurRadiusPx * (1f - drawerOffset.value)
+            },
             onDrawerDrag = { totalDrag ->
                 scope.launch {
                     drawerOffset.snapTo(
