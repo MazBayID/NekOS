@@ -36,6 +36,28 @@ class LauncherReferenceCleanupTest {
     }
 
     @Test
+    fun preservesReferencesForTemporarilyUnavailableProfiles() {
+        val favorites = listOf("42|com.example.work", "10|com.example.removed")
+        val tags = listOf(
+            NekTag(
+                id = "work",
+                name = "Work",
+                appPackages = listOf("42|com.example.work", "10|com.example.removed")
+            )
+        )
+
+        val result = cleanupLauncherReferences(
+            favorites = favorites,
+            tags = tags,
+            installedAppIds = emptySet(),
+            unavailableProfileSerialNumbers = setOf(42L)
+        )
+
+        assertEquals(listOf("42|com.example.work", null), result.favorites)
+        assertEquals(listOf("42|com.example.work"), result.tags.single().appPackages)
+    }
+
+    @Test
     fun migratesLegacyFavoritesAndTagsToCurrentProfileIds() {
         val favorites = listOf("com.example.alpha", null, "42|com.example.work")
         val tags = listOf(
