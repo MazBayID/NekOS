@@ -49,31 +49,42 @@ fun TagAppsDialog(
     }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(tag.name) },
+        title = {
+            Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                Text(tag.name)
+                Text("${assignedApps.size} apps", style = MaterialTheme.typography.labelSmall, color = Color(0xFF8B8982))
+            }
+        },
         text = {
             if (assignedApps.isEmpty()) {
                 Text("No apps assigned yet.")
             } else {
-                LazyColumn(Modifier.heightIn(max = 340.dp)) {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(3),
+                    modifier = Modifier.heightIn(max = 330.dp),
+                    contentPadding = PaddingValues(vertical = 6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
                     items(assignedApps, key = { it.packageName }) { app ->
-                        Row(
+                        Column(
                             Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
-                                .clickable { onLaunch(app) }.padding(10.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                                .clickable { onLaunch(app) }.padding(vertical = 8.dp, horizontal = 4.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Image(
-                                bitmap = app.icon.toBitmap(64, 64).asImageBitmap(),
-                                contentDescription = null,
-                                modifier = Modifier.size(36.dp)
+                                bitmap = app.icon.toBitmap(96, 96).asImageBitmap(),
+                                contentDescription = app.label,
+                                modifier = Modifier.size(48.dp)
                             )
-                            Spacer(Modifier.width(12.dp))
-                            Text(app.label)
+                            Spacer(Modifier.height(5.dp))
+                            Text(app.label, style = MaterialTheme.typography.labelSmall, maxLines = 2)
                         }
                     }
                 }
             }
         },
-        confirmButton = { TextButton(onClick = onEdit) { Text("Edit tag") } },
+        confirmButton = { TextButton(onClick = onEdit) { Text("Edit") } },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Close") } }
     )
 }
