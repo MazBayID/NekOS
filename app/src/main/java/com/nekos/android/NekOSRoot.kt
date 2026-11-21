@@ -15,7 +15,6 @@ import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.produceState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
@@ -140,11 +139,9 @@ fun NekOSRoot(refreshToken: Int) {
     var wallpaperPath by remember {
         mutableStateOf(preferences.getString("home_wallpaper_path", null))
     }
-    val wallpaperBitmap by produceState<androidx.compose.ui.graphics.ImageBitmap?>(
-        initialValue = null,
-        wallpaperPath
-    ) {
-        value = withContext(Dispatchers.IO) {
+    var wallpaperBitmap by remember { mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null) }
+    LaunchedEffect(wallpaperPath) {
+        wallpaperBitmap = withContext(Dispatchers.IO) {
             wallpaperPath?.let { path -> loadHomeWallpaper(context, path) }
         }
     }
