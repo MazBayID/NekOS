@@ -16,7 +16,7 @@ import androidx.compose.ui.input.pointer.positionChange
  * clickable and pointerInput recognizers on the same item.
  */
 suspend fun PointerInputScope.detectLauncherItemGesture(
-    rootOrigin: () -> Offset,
+    toRootPosition: (Offset) -> Offset,
     onTap: () -> Unit,
     onLongPress: () -> Unit,
     onDragStart: (Offset) -> Unit,
@@ -62,7 +62,7 @@ suspend fun PointerInputScope.detectLauncherItemGesture(
 
             if (!dragging && accumulated.getDistance() > viewConfiguration.touchSlop) {
                 dragging = true
-                val rootPosition = rootOrigin() + change.position
+                val rootPosition = toRootPosition(change.position)
                 onDragStart(rootPosition)
                 change.consume()
                 onDrag(rootPosition)
