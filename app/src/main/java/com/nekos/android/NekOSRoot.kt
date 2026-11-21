@@ -147,9 +147,7 @@ fun NekOSRoot(refreshToken: Int) {
         return
     }
 
-    val iconBitmapCache = remember(apps) {
-        mutableMapOf<String, androidx.compose.ui.graphics.ImageBitmap>()
-    }
+    val iconBitmapCache = remember(apps) { AppIconBitmapCache() }
     val interactionController = remember { LauncherInteractionController() }
     var favoriteDrag by remember { mutableStateOf<LauncherDragSession?>(null) }
     val favoriteSlotBounds = remember { mutableStateMapOf<Int, Rect>() }
@@ -1178,7 +1176,7 @@ private fun AddTagPill(onClick: () -> Unit) {
 @Composable
 private fun AppDrawer(
     apps: List<InstalledApp>,
-    iconBitmapCache: MutableMap<String, androidx.compose.ui.graphics.ImageBitmap>,
+    iconBitmapCache: AppIconBitmapCache,
     closeThresholdPx: Float,
     modifier: Modifier = Modifier,
     onAppClick: (InstalledApp, Rect) -> Unit,
@@ -1308,7 +1306,7 @@ private fun AppDrawer(
                             val loadedBitmap = withContext(Dispatchers.Default) {
                                 app.icon.toBitmap(96, 96).asImageBitmap()
                             }
-                            iconBitmapCache[app.packageName] = loadedBitmap
+                            iconBitmapCache.put(app.packageName, loadedBitmap)
                             bitmap = loadedBitmap
                         }
                     }
