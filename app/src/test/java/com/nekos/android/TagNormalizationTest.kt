@@ -11,7 +11,7 @@ class TagNormalizationTest {
 
         val normalized = tag.normalized()
 
-        assertEquals("A very long collection", normalized.name)
+        assertEquals("A very long collection n", normalized.name)
         assertEquals(24, normalized.name.length)
     }
 
