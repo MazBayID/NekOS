@@ -129,6 +129,12 @@ fun NekOSRoot(refreshToken: Int) {
     var showFirstLaunchTip by remember {
         mutableStateOf(!preferences.getBoolean("has_seen_drawer_tip", false))
     }
+    var showSettings by remember { mutableStateOf(false) }
+    var backgroundPreset by remember {
+        mutableStateOf(preferences.getString("background_preset", "warm") ?: "warm")
+    }
+    var showDock by remember { mutableStateOf(preferences.getBoolean("show_dock", true)) }
+    val homeBackground = nekosBackgroundColor(backgroundPreset)
 
     fun clearActionMenuPreview() {
         actionMenuPreviewApp = null
@@ -244,11 +250,11 @@ fun NekOSRoot(refreshToken: Int) {
         val drawerOffset = remember { Animatable(1f) }
         val scope = rememberCoroutineScope()
 
-        BackHandler(enabled = actionMenuApp != null || drawerOffset.value < 1f) {
-            if (actionMenuApp != null) {
-                actionMenuApp = null
-            } else {
-                scope.launch {
+        BackHandler(enabled = showSettings || actionMenuApp != null || drawerOffset.value < 1f) {
+            when {
+                showSettings -> showSettings = false
+                actionMenuApp != null -> actionMenuApp = null
+                else -> scope.launch {
                     drawerOffset.animateTo(
                         1f,
                         animationSpec = spring(
@@ -262,6 +268,9 @@ fun NekOSRoot(refreshToken: Int) {
 
         HomeScreen(
             apps = apps,
+            backgroundColor = homeBackground,
+            showDock = showDock,
+            onOpenSettings = { showSettings = true },
             favoritePackages = favoritePackages,
             dockPackages = dockPackages,
             tags = tags,
@@ -523,6 +532,22 @@ fun NekOSRoot(refreshToken: Int) {
             }
         }
 
+        if (showSettings) {
+            NekOSSettingsDialog(
+                backgroundPreset = backgroundPreset,
+                showDock = showDock,
+                onBackgroundPresetChange = { preset ->
+                    backgroundPreset = preset
+                    preferences.edit().putString("background_preset", preset).apply()
+                },
+                onShowDockChange = { visible ->
+                    showDock = visible
+                    preferences.edit().putBoolean("show_dock", visible).apply()
+                },
+                onDismiss = { showSettings = false }
+            )
+        }
+
         viewingTag?.let { tag ->
             TagAppsDialog(
                 tag = tag,
@@ -603,6 +628,9 @@ fun NekOSRoot(refreshToken: Int) {
 @Composable
 private fun HomeScreen(
     apps: List<InstalledApp>,
+    backgroundColor: Color,
+    showDock: Boolean,
+    onOpenSettings: () -> Unit,
     favoritePackages: List<String?>,
     dockPackages: List<String?>,
     tags: List<NekTag>,
@@ -626,7 +654,7 @@ private fun HomeScreen(
     onAddTag: () -> Unit
 ) {
     val appByPackage = remember(apps) { apps.associateBy { it.packageName } }
-    Box(Modifier.fillMaxSize()) {
+    Box(Modifier.fillMaxSize().background(backgroundColor)) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -673,12 +701,21 @@ private fun HomeScreen(
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
-                Image(
-                    painter = painterResource(R.drawable.text_logo_sec),
-                    contentDescription = "NekOS",
-                    contentScale = ContentScale.Fit,
-                    modifier = Modifier.offset(x = (-12).dp).height(85.dp)
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Image(
+                        painter = painterResource(R.drawable.text_logo_sec),
+                        contentDescription = "NekOS",
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier.offset(x = (-12).dp).height(85.dp).weight(1f, fill = false)
+                    )
+                    TextButton(onClick = onOpenSettings) {
+                        Text("Settings", color = Ink, fontSize = 13.sp)
+                    }
+                }
                 Row(
                     modifier = Modifier.horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -710,7 +747,7 @@ private fun HomeScreen(
                         }
                     }
                 }
-                if (dockPackages.any { it != null }) {
+                if (showDock && dockPackages.any { it != null }) {
                     DockBar(
                         dockPackages = dockPackages,
                         appByPackage = appByPackage,
