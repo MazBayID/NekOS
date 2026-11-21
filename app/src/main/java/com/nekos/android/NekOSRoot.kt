@@ -236,7 +236,7 @@ fun NekOSRoot(refreshToken: Int) {
     BoxWithConstraints(Modifier.fillMaxSize().background(WarmBackground)) {
         val drawerHeightPx = constraints.maxHeight.toFloat().coerceAtLeast(1f)
         val homeSwipeThresholdPx = with(androidx.compose.ui.platform.LocalDensity.current) { 64.dp.toPx() }
-        val drawerCloseThresholdPx = with(androidx.compose.ui.platform.LocalDensity.current) { 96.dp.toPx() }
+        val drawerCloseThresholdPx = with(androidx.compose.ui.platform.LocalDensity.current) { 72.dp.toPx() }
         val backgroundBlurRadiusPx = with(androidx.compose.ui.platform.LocalDensity.current) { 16.dp.toPx() }
         val drawerOffset = remember { Animatable(1f) }
         val scope = rememberCoroutineScope()
@@ -355,7 +355,9 @@ fun NekOSRoot(refreshToken: Int) {
                 iconBitmapCache = iconBitmapCache,
                 closeThresholdPx = drawerCloseThresholdPx,
                 modifier = Modifier
-                    .fillMaxSize()
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.85f)
+                    .align(Alignment.BottomCenter)
                     .graphicsLayer {
                         // Hide the entire drawer during a drag so no grid rows remain
                         // visible over the Home Favorite area.
@@ -897,6 +899,7 @@ private fun AppDrawer(
 
     Column(
         modifier = modifier
+            .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
             .background(WarmBackground.copy(alpha = 0.98f))
             .statusBarsPadding()
             .navigationBarsPadding()
@@ -906,6 +909,7 @@ private fun AppDrawer(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(52.dp)
+                .clickable(onClick = currentOnCloseDrawer)
                 .pointerInput(closeThresholdPx) {
                     var totalDrag = 0f
                     detectVerticalDragGestures(
