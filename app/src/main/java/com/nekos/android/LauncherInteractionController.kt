@@ -77,5 +77,7 @@ class LauncherInteractionController {
 internal fun shouldOpenDrawerAfterDrag(
     totalDrag: Float,
     threshold: Float,
-    cancelled: Boolean = false
-): Boolean = !cancelled && totalDrag <= -threshold
+    cancelled: Boolean = false,
+    velocityY: Float = 0f,
+    velocityThreshold: Float = 900f
+): Boolean = !cancelled && (totalDrag <= -threshold || velocityY <= -velocityThreshold)
