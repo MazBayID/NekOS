@@ -7,19 +7,32 @@ private const val FAVORITES_KEY = "favorite_packages"
 private const val FAVORITE_SLOT_COUNT = 15
 
 fun loadFavoritePackages(context: Context): List<String?> {
-    val saved = context.getSharedPreferences(FAVORITES_PREFS, Context.MODE_PRIVATE)
-        .getString(FAVORITES_KEY, null)
-        ?: return List(FAVORITE_SLOT_COUNT) { null }
+    val preferences = context.getSharedPreferences(FAVORITES_PREFS, Context.MODE_PRIVATE)
+    val saved = try {
+        preferences.getString(FAVORITES_KEY, null)
+    } catch (_: ClassCastException) {
+        null
+    } ?: return emptyFavoriteSlots()
 
-    val packages = saved.split("|").map { it.ifBlank { null } }.take(FAVORITE_SLOT_COUNT)
-    return packages + List(FAVORITE_SLOT_COUNT - packages.size) { null }
+    val packages = saved.split("|").map { it.ifBlank { null } }
+    return normalizeFavoritePackages(packages)
 }
 
 fun saveFavoritePackages(context: Context, packages: List<String?>) {
-    val normalized = packages.take(FAVORITE_SLOT_COUNT).map { it.orEmpty() }
-    val complete = normalized + List(FAVORITE_SLOT_COUNT - normalized.size) { "" }
+    val normalized = normalizeFavoritePackages(packages)
     context.getSharedPreferences(FAVORITES_PREFS, Context.MODE_PRIVATE)
         .edit()
-        .putString(FAVORITES_KEY, complete.joinToString("|"))
+        .putString(FAVORITES_KEY, normalized.joinToString("|") { it.orEmpty() })
         .apply()
 }
+
+private fun normalizeFavoritePackages(packages: List<String?>): List<String?> {
+    val seen = mutableSetOf<String>()
+    val normalized = packages.take(FAVORITE_SLOT_COUNT).map { packageName ->
+        packageName?.takeIf { it.isNotBlank() && seen.add(it) }
+    }
+    return normalized + List(FAVORITE_SLOT_COUNT - normalized.size) { null }
+}
+
+private fun emptyFavoriteSlots(): List<String?> =
+    List(FAVORITE_SLOT_COUNT) { null }
