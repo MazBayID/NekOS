@@ -41,6 +41,13 @@ suspend fun PointerInputScope.detectLauncherItemGesture(
             return@awaitEachGesture
         }
 
+        val hasAdditionalPointer = currentEvent.changes.any {
+            it.id != down.id && it.pressed
+        }
+        if (longPress.id != down.id || hasAdditionalPointer) {
+            return@awaitEachGesture
+        }
+
         onLongPress(toRootPosition(longPress.position))
 
         var accumulated = Offset.Zero
