@@ -19,6 +19,8 @@ NekOS uses a single Activity with Jetpack Compose. Keep the Activity responsible
 - Remove stale package references after an app is uninstalled.
 - Preserve the 15-slot favorite layout and its empty slots when moving or removing apps.
 - Do not make a UI action appear successful until the underlying state change has completed.
+- Tags are stored as versioned JSON in private SharedPreferences. Each tag has a stable UUID, trimmed name (max 24 characters), optional catalog icon ID, ARGB color, and a deduplicated list of assigned package names.
+- Tag persistence tolerates malformed stored JSON by returning an empty collection; invalid/blank tags and duplicate IDs are filtered during load/save.
 
 ## Interaction rules
 
