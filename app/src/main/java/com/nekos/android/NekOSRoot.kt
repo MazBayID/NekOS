@@ -236,7 +236,7 @@ fun NekOSRoot(refreshToken: Int) {
     BoxWithConstraints(Modifier.fillMaxSize().background(WarmBackground)) {
         val drawerHeightPx = constraints.maxHeight.toFloat().coerceAtLeast(1f)
         val homeSwipeThresholdPx = with(androidx.compose.ui.platform.LocalDensity.current) { 64.dp.toPx() }
-        val drawerCloseThresholdPx = with(androidx.compose.ui.platform.LocalDensity.current) { 72.dp.toPx() }
+        val drawerCloseThresholdPx = with(androidx.compose.ui.platform.LocalDensity.current) { 96.dp.toPx() }
         val backgroundBlurRadiusPx = with(androidx.compose.ui.platform.LocalDensity.current) { 16.dp.toPx() }
         val drawerOffset = remember { Animatable(1f) }
         val scope = rememberCoroutineScope()
