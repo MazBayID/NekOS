@@ -29,7 +29,7 @@ class TagOrderingTest {
     @Test
     fun movesTagToDropTargetIndex() {
         assertEquals(listOf(third, first, second), moveTagToIndex(tags, "third", 0))
-        assertEquals(listOf(first, third, second), moveTagToIndex(tags, "second", 1))
+        assertEquals(listOf(first, third, second), moveTagToIndex(tags, "second", 2))
     }
 
     @Test
