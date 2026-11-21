@@ -28,6 +28,7 @@ import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.awaitLongPressOrCancellation
 import androidx.compose.foundation.gestures.awaitVerticalDragOrCancellation
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.gestures.awaitVerticalTouchSlopOrCancellation
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.ui.input.pointer.PointerEventPass
@@ -404,7 +405,7 @@ private fun HomeScreen(
                     painter = painterResource(R.drawable.text_logo_sec),
                     contentDescription = "NekOS",
                     contentScale = ContentScale.Fit,
-                    modifier = Modifier.offset(x = (-28).dp).width(150.dp).height(60.dp)
+                    modifier = Modifier.offset(x = (-28).dp).width(170.dp).height(60.dp)
                 )
                 Row(
                     modifier = Modifier.horizontalScroll(rememberScrollState()),
@@ -474,21 +475,8 @@ private fun FavoriteSlot(
                         val longPress = awaitLongPressOrCancellation(down.id)
 
                         if (longPress == null) {
-                            // Handle taps here to avoid a clickable firing after a long press.
-                            var tapCandidate = true
-                            var released = false
-                            while (!released) {
-                                val event = awaitPointerEvent()
-                                val change = event.changes.firstOrNull { it.id == down.id } ?: break
-                                if (!change.pressed) {
-                                    released = true
-                                    if (tapCandidate) onClick()
-                                } else {
-                                    if ((change.position - down.position).getDistance() > touchSlop) {
-                                        tapCandidate = false
-                                    }
-                                }
-                            }
+                            // Only a completed, uncancelled tap launches the app.
+                            if (waitForUpOrCancellation() != null) onClick()
                         } else {
                             longPress.consume()
                             var dragDistance = Offset.Zero
