@@ -43,6 +43,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -62,6 +63,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -411,12 +418,13 @@ fun NekOSRoot(refreshToken: Int) {
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 1
                 )
-                PopupAction("App info", enabled = isInteractive) {
+                PopupAction("App info", Icons.Filled.Info, enabled = isInteractive) {
                     actionMenuApp = null
                     openAppInfo(context, app.packageName)
                 }
                 PopupAction(
                     if (isFavorite) "Remove from favorite" else "Add to favorite",
+                    if (isFavorite) Icons.Filled.StarBorder else Icons.Filled.Star,
                     enabled = isInteractive
                 ) {
                     if (isFavorite) {
@@ -426,7 +434,7 @@ fun NekOSRoot(refreshToken: Int) {
                     }
                     actionMenuApp = null
                 }
-                PopupAction("Uninstall", enabled = isInteractive) {
+                PopupAction("Uninstall", Icons.Filled.Delete, enabled = isInteractive) {
                     actionMenuApp = null
                     requestAppUninstall(context, app.packageName)
                 }
@@ -726,20 +734,32 @@ private fun FavoriteSlot(
 @Composable
 private fun PopupAction(
     label: String,
+    icon: ImageVector,
     enabled: Boolean,
     onClick: () -> Unit
 ) {
-    Text(
-        label,
+    Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(10.dp))
             .then(if (enabled) Modifier.clickable(onClick = onClick) else Modifier)
             .padding(horizontal = 8.dp, vertical = 9.dp),
-        color = if (enabled) Ink else Muted,
-        fontSize = 13.sp,
-        fontWeight = FontWeight.Medium
-    )
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = if (enabled) Ink else Muted,
+            modifier = Modifier.size(18.dp)
+        )
+        Text(
+            label,
+            color = if (enabled) Ink else Muted,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Medium
+        )
+    }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
