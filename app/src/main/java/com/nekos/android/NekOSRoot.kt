@@ -845,20 +845,28 @@ private fun HomeScreen(
                 .pointerInput(homeSwipeThresholdPx) {
                     var totalDrag = 0f
                     var drawerDragStarted = false
+                    var gestureEligible = false
                     val velocityTracker = VelocityTracker()
                     detectVerticalDragGestures(
-                        onDragStart = {
+                        onDragStart = { position ->
                             totalDrag = 0f
                             drawerDragStarted = false
+                            // Keep the Tag rail and Favorite grid free to scroll
+                            // and interact; the launcher swipe starts in the main
+                            // Home canvas instead.
+                            gestureEligible = position.x < size.width * 0.62f &&
+                                position.y < size.height * 0.70f
                             velocityTracker.resetTracking()
                         },
                         onVerticalDrag = { change, dragAmount ->
                             velocityTracker.addPosition(change.uptimeMillis, change.position)
-                            totalDrag += dragAmount
-                            if (totalDrag < 0f) {
-                                drawerDragStarted = true
-                                currentOnDrawerDrag(totalDrag)
-                                change.consume()
+                            if (gestureEligible) {
+                                totalDrag += dragAmount
+                                if (totalDrag < 0f) {
+                                    drawerDragStarted = true
+                                    currentOnDrawerDrag(totalDrag)
+                                    change.consume()
+                                }
                             }
                         },
                         onDragEnd = {
@@ -867,12 +875,14 @@ private fun HomeScreen(
                             }
                             totalDrag = 0f
                             drawerDragStarted = false
+                            gestureEligible = false
                         },
                         onDragCancel = {
                             if (drawerDragStarted) currentOnDrawerDragEnd(totalDrag, 0f, true)
                             totalDrag = 0f
                             drawerDragStarted = false
                             velocityTracker.resetTracking()
+                            gestureEligible = false
                         }
                     )
                 }
