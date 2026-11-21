@@ -29,6 +29,7 @@ This inventory records what exists today, what is only partially implemented, an
 - App list is alphabetically sorted.
 - Prefix search/filter is implemented.
 - Tap launches an app; long-press exposes App info, Add/Remove favorite, and Uninstall actions.
+- A transparent close target covers the upper 40% of the screen while the App Drawer is fully open; the existing drawer handle icon remains visually unchanged.
 - A cancelled swipe is distinguished from a completed drag so a cancelled gesture does not open the drawer.
 
 ### Tags and collections
@@ -41,6 +42,7 @@ This inventory records what exists today, what is only partially implemented, an
 - Long-press a tag to access edit/delete actions.
 - Tag data is stored as versioned JSON in private SharedPreferences, with basic malformed-data and duplicate filtering.
 - Uninstalled app references are cleaned from tags.
+- Tags can be persistently reordered by dragging a dedicated handle; the handle is anchored at the right edge of each Tag pill.
 
 ### Settings and appearance
 - Settings can be opened from the home screen's empty-area interaction.
@@ -64,7 +66,7 @@ This inventory records what exists today, what is only partially implemented, an
 ## 2. Partially implemented / needs product follow-through
 
 - **Settings:** the agreed MVP scope is implemented: Appearance (background presets and custom wallpaper), Home behavior (show the App Drawer hint again), and About (version, MIT license information, and repository link). A broader settings system is intentionally out of scope.
-- **Tag customization:** create/edit/color/icon/app assignment and persistent ordering are implemented. Tags can be reordered by dragging the dedicated handle or by using Move up / Move down actions.
+- **Tag customization:** create/edit/color/icon/app assignment and persistent drag ordering are implemented. Tag ordering uses the dedicated drag handle; Move up / Move down actions are no longer part of the Tag action dialog.
 - **Onboarding:** a dismissible first-use App Drawer hint exists, with a Settings action to show it again; a broader first-run walkthrough is not implemented.
 - **Persistence:** favorites and tags persist locally, but the project does not yet provide user-facing export/import or a documented migration/backup workflow.
 - **Visual customization:** home background and wallpaper are supported; a broader theme engine, typography controls, and configurable accent system are not implemented.
@@ -73,7 +75,7 @@ This inventory records what exists today, what is only partially implemented, an
 
 These items should be prioritized only after confirming they still fit the intended NekOS experience:
 
-1. Stabilize the completed MVP with focused physical-device checks for Tag drag ordering, favorite gestures, App Drawer behavior, Settings actions, and persistence across restart.
+1. Stabilize the completed MVP with focused physical-device checks for Tag drag ordering and handle alignment, the expanded App Drawer close target, favorite gestures, App Drawer behavior, Settings actions, and persistence across restart.
 2. Review accessibility and gesture discoverability without adding persistent visual clutter.
 3. Review persistence and recovery expectations before adding more user-owned customization; keep export/import and backup decisions explicit rather than adding them implicitly.
 
@@ -106,7 +108,7 @@ Test-file presence indicates existing automated coverage, not complete verificat
 
 ## 6. Recommended development order
 
-1. Keep the agreed MVP scope explicit; Tag reordering and the minimal Settings scope are now implemented.
+1. Keep the agreed MVP scope explicit; Tag drag reordering and the minimal Settings scope are now implemented.
 2. Implement one cohesive feature group at a time and avoid adding deferred systems implicitly.
 3. At each checkpoint: run CI, review regressions in existing behavior, and perform a focused device test where UI/Android integration is involved.
 4. Run a dedicated stabilization pass across persistence, accessibility, performance, and Android lifecycle behavior.
