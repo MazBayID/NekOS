@@ -855,7 +855,7 @@ private fun HomeScreen(
                             // and interact; the launcher swipe starts in the main
                             // Home canvas instead.
                             gestureEligible = position.x < size.width * 0.62f &&
-                                position.y < size.height * 0.70f
+                                position.y < size.height - 210.dp.toPx()
                             velocityTracker.resetTracking()
                         },
                         onVerticalDrag = { change, dragAmount ->
