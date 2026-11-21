@@ -20,7 +20,7 @@ fun addFavoriteToSlots(
     return FavoriteSlotOperation.Updated(updated)
 }
 
-fun placeFavoriteFromDrawer(
+fun placePackageInFavoriteSlot(
     current: List<String?>,
     packageName: String,
     targetIndex: Int
