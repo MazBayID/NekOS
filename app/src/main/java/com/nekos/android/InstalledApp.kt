@@ -56,8 +56,10 @@ data class InstalledApp(
         get() = user == Process.myUserHandle()
 }
 
+internal const val LAUNCHER_APP_ID_SEPARATOR = "::"
+
 internal fun launcherAppId(packageName: String, profileSerialNumber: Long): String =
-    "$profileSerialNumber|$packageName"
+    "$profileSerialNumber$LAUNCHER_APP_ID_SEPARATOR$packageName"
 
 fun loadLaunchableApps(context: Context): LauncherAppScanResult {
     val launcherApps = context.getSystemService(LauncherApps::class.java)
