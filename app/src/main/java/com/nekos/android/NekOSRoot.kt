@@ -663,10 +663,11 @@ private fun AppActionRow(
 @Composable
 private fun TagPill(tag: NekTag, onClick: () -> Unit, onLongClick: () -> Unit) {
     val context = LocalContext.current
-    val tagIcon by produceState<androidx.compose.ui.graphics.ImageBitmap?>(
-        initialValue = null, key1 = tag.iconId
-    ) {
-        val loadedIcon = withContext(Dispatchers.IO) {
+    var tagIcon by remember(tag.iconId) {
+        mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null)
+    }
+    LaunchedEffect(tag.iconId) {
+        tagIcon = withContext(Dispatchers.IO) {
             runCatching {
                 tag.iconId?.let { id ->
                     val repository = IconCatalogRepository(context)
@@ -674,7 +675,6 @@ private fun TagPill(tag: NekTag, onClick: () -> Unit, onLongClick: () -> Unit) {
                 }
             }.getOrNull()
         }
-        value = loadedIcon
     }
     Row(
         modifier = Modifier
@@ -784,17 +784,18 @@ private fun AppDrawer(
             ) {
                 items(filteredApps, key = { it.packageName }) { app ->
                     val cachedBitmap = iconBitmapCache[app.packageName]
-                    val bitmap by produceState(
-                        initialValue = cachedBitmap,
-                        key1 = app.packageName
-                    ) {
-                        value = cachedBitmap
-                        if (cachedBitmap == null) {
+                    var bitmap by remember(app.packageName) {
+                        mutableStateOf(cachedBitmap)
+                    }
+                    LaunchedEffect(app.packageName, cachedBitmap) {
+                        if (cachedBitmap != null) {
+                            bitmap = cachedBitmap
+                        } else {
                             val loadedBitmap = withContext(Dispatchers.Default) {
                                 app.icon.toBitmap(96, 96).asImageBitmap()
                             }
                             iconBitmapCache[app.packageName] = loadedBitmap
-                            value = loadedBitmap
+                            bitmap = loadedBitmap
                         }
                     }
                     AppGridItem(
