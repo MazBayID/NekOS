@@ -242,7 +242,10 @@ fun NekOSRoot(refreshToken: Int) {
                 modifier = Modifier
                     .fillMaxSize()
                     .graphicsLayer {
-                        translationY = drawerOffset.value * size.height
+                        // During a drag, lift the drawer to expose the Home Favorite area
+                        // underneath while keeping the dragged icon in the root overlay.
+                        translationY = drawerOffset.value * size.height -
+                            if (favoriteDrag != null) size.height * 0.58f else 0f
                     },
                 onAppClick = { app ->
                     launchApp(context, app.packageName)
