@@ -119,6 +119,39 @@ class LauncherInteractionControllerTest {
     }
 
     @Test
+    fun quickUpwardFlingOpensDrawerBeforeDistanceThreshold() {
+        assertTrue(
+            shouldOpenDrawerAfterDrag(
+                totalDrag = -24f,
+                threshold = 64f,
+                velocityY = -1100f
+            )
+        )
+    }
+
+    @Test
+    fun quickDownwardFlingDoesNotOpenDrawer() {
+        assertFalse(
+            shouldOpenDrawerAfterDrag(
+                totalDrag = -24f,
+                threshold = 64f,
+                velocityY = 1100f
+            )
+        )
+    }
+
+    @Test
+    fun slowShortSwipeDoesNotOpenDrawer() {
+        assertFalse(
+            shouldOpenDrawerAfterDrag(
+                totalDrag = -24f,
+                threshold = 64f,
+                velocityY = -300f
+            )
+        )
+    }
+
+    @Test
     fun cancelledDrawerSwipeNeverOpensDrawer() {
         assertFalse(
             shouldOpenDrawerAfterDrag(
