@@ -78,7 +78,8 @@ private val TagSurface = Color(0xFFE7E1D6)
 private data class FavoriteDrag(
     val packageName: String,
     val position: Offset,
-    val hasMoved: Boolean = false
+    val hasMoved: Boolean = false,
+    val targetIndex: Int? = null
 )
 
 @Composable
@@ -226,6 +227,7 @@ fun NekOSRoot(refreshToken: Int) {
                 }
             },
             onFavoriteSlotBounds = { index, bounds -> favoriteSlotBounds[index] = bounds },
+            favoriteDropTarget = favoriteDrag?.takeIf { it.hasMoved }?.targetIndex, 
             onTagClick = { tag -> viewingTag = tag },
             onTagLongPress = { tag -> actionMenuTag = tag },
             onAddTag = { tagEditorTarget = null; showTagEditor = true }
@@ -269,11 +271,14 @@ fun NekOSRoot(refreshToken: Int) {
                     }
                 },
                 onAppDragStart = { app, position -> favoriteDrag = FavoriteDrag(app.packageName, position) },
-                onAppDrag = { position -> favoriteDrag = favoriteDrag?.copy(position = position, hasMoved = true) },
+                onAppDrag = { position ->
+                    val target = favoriteSlotBounds.entries.firstOrNull { it.value.contains(position) }?.key
+                    favoriteDrag = favoriteDrag?.copy(position = position, hasMoved = true, targetIndex = target)
+                },
                 onAppDragEnd = {
                     val drag = favoriteDrag
                     if (drag?.hasMoved == true) {
-                        val target = favoriteSlotBounds.entries.firstOrNull { it.value.contains(drag.position) }?.key
+                        val target = drag.targetIndex
                         if (target != null) placeFavoriteFromDrawer(drag.packageName, target)
                     } else if (drag != null) {
                         apps.firstOrNull { it.packageName == drag.packageName }?.let { actionMenuApp = it }
@@ -425,6 +430,7 @@ private fun HomeScreen(
     onFavoriteClick: (String) -> Unit,
     onFavoriteLongPress: (Int) -> Unit,
     onFavoriteSlotBounds: (Int, Rect) -> Unit,
+    favoriteDropTarget: Int?,
     onTagClick: (NekTag) -> Unit,
     onTagLongPress: (NekTag) -> Unit,
     onAddTag: () -> Unit
@@ -500,6 +506,7 @@ private fun HomeScreen(
                             FavoriteSlot(
                                 app = app,
                                 onBoundsChanged = { bounds -> onFavoriteSlotBounds(index, bounds) },
+                                isDropTarget = favoriteDropTarget == index,
                                 onClick = { app?.let { onFavoriteClick(it.packageName) } },
                                 onLongPress = { onFavoriteLongPress(index) },
                                 modifier = Modifier.weight(1f)
@@ -517,6 +524,7 @@ private fun HomeScreen(
 private fun FavoriteSlot(
     app: InstalledApp?,
     onBoundsChanged: (Rect) -> Unit,
+    isDropTarget: Boolean,
     onClick: () -> Unit,
     onLongPress: () -> Unit,
     modifier: Modifier = Modifier
@@ -527,6 +535,8 @@ private fun FavoriteSlot(
     Column(
         modifier = modifier
             .aspectRatio(1f)
+            .clip(RoundedCornerShape(18.dp))
+            .background(if (isDropTarget) Color(0xFFDCD3C4) else Color.Transparent)
             .onGloballyPositioned { onBoundsChanged(it.boundsInRoot()) }
             .pointerInput(app?.packageName) {
                 if (app != null) {
