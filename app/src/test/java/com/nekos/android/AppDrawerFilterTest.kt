@@ -8,17 +8,21 @@ class AppDrawerFilterTest {
     @Test
     fun showsAllAppsWhenQueryIsBlank() {
         assertTrue(matchesAppDrawerSearch("One App", ""))
+        assertTrue(matchesAppDrawerSearch("One App", "   "))
     }
 
     @Test
-    fun searchesByLabelPrefixOnly() {
+    fun searchesAnywhereInTheAppLabel() {
         assertTrue(matchesAppDrawerSearch("One App", "one"))
-        assertFalse(matchesAppDrawerSearch("One App", "app"))
+        assertTrue(matchesAppDrawerSearch("One App", "app"))
+        assertTrue(matchesAppDrawerSearch("One App", "ne Ap"))
+        assertFalse(matchesAppDrawerSearch("One App", "missing"))
     }
 
     @Test
-    fun searchIsCaseInsensitiveAndIgnoresSurroundingWhitespace() {
+    fun searchIsCaseInsensitiveAndIgnoresSurroundingQueryWhitespace() {
+        assertTrue(matchesAppDrawerSearch("Google Play Store", " PLAY "))
         assertTrue(matchesAppDrawerSearch("  Notes", " no "))
-        assertFalse(matchesAppDrawerSearch("Notes", "tes"))
+        assertFalse(matchesAppDrawerSearch("Notes", "tesx"))
     }
 }
