@@ -101,6 +101,7 @@ private val TagSurface = Color(0xFFE7E1D6)
 fun NekOSRoot(refreshToken: Int) {
     val context = LocalContext.current
     val launchSourceView = LocalView.current
+    val iconCatalogRepository = remember(context) { IconCatalogRepository(context) }
     var apps by remember { mutableStateOf(emptyList<InstalledApp>()) }
     var favoritePackages by remember { mutableStateOf(loadFavoritePackages(context)) }
     var tags by remember { mutableStateOf(TagStore.load(context)) }
@@ -283,6 +284,7 @@ fun NekOSRoot(refreshToken: Int) {
             onOpenSettings = { showSettings = true },
             favoritePackages = favoritePackages,
             tags = tags,
+            iconCatalogRepository = iconCatalogRepository,
             homeSwipeThresholdPx = homeSwipeThresholdPx,
             backgroundBlurRadiusPx = if (favoriteDrag?.hasMoved == true) {
                 0f
@@ -706,6 +708,7 @@ private fun HomeScreen(
     onOpenSettings: () -> Unit,
     favoritePackages: List<String?>,
     tags: List<NekTag>,
+    iconCatalogRepository: IconCatalogRepository,
     homeSwipeThresholdPx: Float,
     backgroundBlurRadiusPx: Float,
     onDrawerDrag: (Float) -> Unit,
@@ -843,6 +846,7 @@ private fun HomeScreen(
                                     fadeOutSpec = null
                                 ),
                                 tag = tag,
+                                iconCatalogRepository = iconCatalogRepository,
                                 isDragging = draggedTagId == tag.id,
                                 isDropTarget = tagDropTargetId == tag.id && draggedTagId != tag.id,
                                 onBoundsChanged = { bounds -> onTagBoundsChanged(tag.id, bounds) },
@@ -964,6 +968,7 @@ private fun FavoriteSlot(
 @Composable
 private fun TagPill(
     tag: NekTag,
+    iconCatalogRepository: IconCatalogRepository,
     isDragging: Boolean,
     isDropTarget: Boolean,
     onBoundsChanged: (Rect) -> Unit,
@@ -976,7 +981,6 @@ private fun TagPill(
     onDragCancel: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
     val dragScale by animateFloatAsState(
         targetValue = if (isDragging) 1.045f else 1f,
         animationSpec = spring(
@@ -1019,8 +1023,7 @@ private fun TagPill(
         tagIcon = withContext(Dispatchers.IO) {
             runCatching {
                 tag.iconId?.let { id ->
-                    val repository = IconCatalogRepository(context)
-                    repository.loadCatalog().firstOrNull { it.id == id }?.let(repository::loadBitmap)?.asImageBitmap()
+                    iconCatalogRepository.loadCatalog().firstOrNull { it.id == id }?.let(iconCatalogRepository::loadBitmap)?.asImageBitmap()
                 }
             }.getOrNull()
         }
