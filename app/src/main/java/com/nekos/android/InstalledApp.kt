@@ -21,6 +21,7 @@ fun loadLaunchableApps(context: Context): List<InstalledApp> {
     val pm = context.packageManager
     val intent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
     return pm.queryIntentActivities(intent, PackageManager.MATCH_ALL)
+        .distinctBy { it.activityInfo.packageName }
         .mapNotNull { info ->
             val packageName = info.activityInfo.packageName
             val label = try {
@@ -39,7 +40,6 @@ fun loadLaunchableApps(context: Context): List<InstalledApp> {
                 icon = icon
             )
         }
-        .distinctBy { it.packageName }
         .sortedWith(compareBy(appLabelComparator()) { it.label })
 }
 
