@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
@@ -69,11 +70,11 @@ fun TagManagementDialog(
                         Box(
                             Modifier.size(34.dp).clip(CircleShape)
                                 .background(color)
-                                .clickable { selectedColor = color.value.toLong() }
+                                .clickable { selectedColor = color.toArgb().toLong() }
                                 .padding(3.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            if (selectedColor == color.value.toLong()) {
+                            if (selectedColor == color.toArgb().toLong()) {
                                 Text("✓", color = Color(0xFF34332F))
                             }
                         }
