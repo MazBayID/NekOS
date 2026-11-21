@@ -575,13 +575,29 @@ private fun AppActionRow(
 
 @Composable
 private fun TagPill(tag: NekTag, onClick: () -> Unit) {
-    Box(
+    val context = LocalContext.current
+    val tagIcon by produceState<androidx.compose.ui.graphics.ImageBitmap?>(
+        initialValue = null, key1 = tag.iconId
+    ) {
+        value = withContext(Dispatchers.IO) {
+            runCatching {
+                tag.iconId?.let { id ->
+                    val repository = IconCatalogRepository(context)
+                    repository.loadCatalog().firstOrNull { it.id == id }?.let(repository::loadBitmap)?.asImageBitmap()
+                }
+            }.getOrNull()
+        }
+    }
+    Row(
         modifier = Modifier
             .clip(RoundedCornerShape(18.dp))
             .background(Color(tag.colorArgb.toInt()))
             .clickable(onClick = onClick)
-            .padding(horizontal = 15.dp, vertical = 9.dp)
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
+        if (tagIcon != null) Image(tagIcon!!, contentDescription = null, modifier = Modifier.size(18.dp))
         Text(tag.name, color = Ink, fontSize = 13.sp, fontWeight = FontWeight.Medium)
     }
 }
