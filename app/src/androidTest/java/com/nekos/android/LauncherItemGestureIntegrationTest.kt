@@ -107,7 +107,7 @@ class LauncherItemGestureIntegrationTest {
         }
 
         val finished = harness.finishedDrag
-        assertEquals("com.example.gesture", finished?.packageName)
+        assertEquals("com.example.gesture", finished?.appId)
         assertEquals(LauncherDragSource.APP_DRAWER, finished?.source)
         assertTrue(finished?.hasMoved == true)
         assertEquals(4, finished?.targetIndex)
@@ -243,7 +243,7 @@ private fun GestureHarness(
                     onDragStart = { position ->
                         state.events += "drag-start"
                         state.controller.startDrag(
-                            packageName = "com.example.gesture",
+                            appId = "com.example.gesture",
                             source = source,
                             position = position
                         )
