@@ -408,7 +408,7 @@ private fun HomeScreen(
                     modifier = Modifier.horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    tags.forEach { tag -> TagPill(tag, onClick = { onTagClick(tag) }) }
+                    tags.forEach { tag -> TagPill(tag, apps, onClick = { onTagClick(tag) }) }
                     AddTagPill(onClick = onAddTag)
                 }
             }
@@ -607,31 +607,37 @@ private fun AppActionRow(
 }
 
 @Composable
-private fun TagPill(tag: NekTag, onClick: () -> Unit) {
-    val context = LocalContext.current
-    val tagIcon by produceState<androidx.compose.ui.graphics.ImageBitmap?>(
-        initialValue = null, key1 = tag.iconId
-    ) {
-        value = withContext(Dispatchers.IO) {
-            runCatching {
-                tag.iconId?.let { id ->
-                    val repository = IconCatalogRepository(context)
-                    repository.loadCatalog().firstOrNull { it.id == id }?.let(repository::loadBitmap)?.asImageBitmap()
-                }
-            }.getOrNull()
-        }
+private fun TagPill(tag: NekTag, apps: List<InstalledApp>, onClick: () -> Unit) {
+    val assigned = remember(tag.appPackages, apps) {
+        val appByPackage = apps.associateBy { it.packageName }
+        tag.appPackages.mapNotNull(appByPackage::get).take(3)
     }
     Row(
         modifier = Modifier
             .clip(RoundedCornerShape(18.dp))
             .background(Color(tag.colorArgb.toInt()))
             .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 8.dp),
+            .padding(horizontal = 10.dp, vertical = 7.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
+        horizontalArrangement = Arrangement.spacedBy(7.dp)
     ) {
-        if (tagIcon != null) Image(tagIcon!!, contentDescription = null, modifier = Modifier.size(18.dp))
+        if (assigned.isNotEmpty()) {
+            Row(horizontalArrangement = Arrangement.spacedBy((-5).dp)) {
+                assigned.forEach { app ->
+                    Image(
+                        bitmap = app.icon.toBitmap(48, 48).asImageBitmap(),
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp).clip(RoundedCornerShape(6.dp))
+                    )
+                }
+            }
+        } else {
+            Text("＋", color = Ink, fontSize = 12.sp)
+        }
         Text(tag.name, color = Ink, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+        if (tag.appPackages.size > 3) {
+            Text("+" + (tag.appPackages.size - 3), color = Muted, fontSize = 10.sp)
+        }
     }
 }
 
