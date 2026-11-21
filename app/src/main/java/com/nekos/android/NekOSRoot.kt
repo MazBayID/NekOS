@@ -10,6 +10,7 @@ import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.Spring
@@ -551,7 +552,12 @@ fun NekOSRoot(refreshToken: Int) {
                     }
             )
         }
-        popupApp?.let { app ->
+        AnimatedVisibility(
+            visible = popupApp != null,
+            enter = fadeIn(tween(140)) + scaleIn(initialScale = 0.96f, animationSpec = tween(140)),
+            exit = fadeOut(tween(100))
+        ) {
+            popupApp?.let { app ->
             val isFavorite = app.id in favoritePackages.filterNotNull()
             val isInteractive = actionMenuApp != null
             Column(
@@ -594,6 +600,7 @@ fun NekOSRoot(refreshToken: Int) {
                         requestAppUninstall(context, app)
                     }
                 )
+            }
             }
         }
 
