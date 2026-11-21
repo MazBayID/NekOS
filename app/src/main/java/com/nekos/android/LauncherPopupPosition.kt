@@ -18,8 +18,13 @@ internal fun calculateLauncherPopupOffset(
     val maxX = (containerSize.width - popupSize.width).coerceAtLeast(0)
     val maxY = (containerSize.height - popupSize.height).coerceAtLeast(0)
 
-    val desiredX = (anchorPosition.x + gapPx).roundToInt()
-    val desiredY = (anchorPosition.y + gapPx).roundToInt()
+    val rightX = (anchorPosition.x + gapPx).roundToInt()
+    val leftX = (anchorPosition.x - gapPx - popupSize.width).roundToInt()
+    val belowY = (anchorPosition.y + gapPx).roundToInt()
+    val aboveY = (anchorPosition.y - gapPx - popupSize.height).roundToInt()
+
+    val desiredX = if (rightX <= maxX) rightX else leftX
+    val desiredY = if (belowY <= maxY) belowY else aboveY
 
     return IntOffset(
         x = desiredX.coerceIn(0, maxX),
