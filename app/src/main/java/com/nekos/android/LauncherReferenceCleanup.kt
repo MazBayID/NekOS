@@ -9,13 +9,22 @@ data class LauncherReferenceCleanupResult(
 fun cleanupLauncherReferences(
     favorites: List<String?>,
     tags: List<NekTag>,
-    installedAppIds: Set<String>
+    installedAppIds: Set<String>,
+    unavailableProfileSerialNumbers: Set<Long> = emptySet()
 ): LauncherReferenceCleanupResult {
-    val cleanedFavorites = favorites.map { packageName ->
-        packageName?.takeIf(installedAppIds::contains)
+    fun isInstalledOrTemporarilyUnavailable(appId: String): Boolean {
+        if (appId in installedAppIds) return true
+        val separator = appId.indexOf('|')
+        if (separator <= 0) return false
+        val profileSerial = appId.substring(0, separator).toLongOrNull() ?: return false
+        return profileSerial in unavailableProfileSerialNumbers
+    }
+
+    val cleanedFavorites = favorites.map { appId ->
+        appId?.takeIf(::isInstalledOrTemporarilyUnavailable)
     }
     val cleanedTags = tags.map { tag ->
-        tag.copy(appPackages = tag.appPackages.filter(installedAppIds::contains))
+        tag.copy(appPackages = tag.appPackages.filter(::isInstalledOrTemporarilyUnavailable))
     }
     return LauncherReferenceCleanupResult(cleanedFavorites, cleanedTags)
 }
