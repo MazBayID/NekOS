@@ -30,7 +30,7 @@ fun loadLaunchableApps(context: Context): List<InstalledApp> {
             )
         }
         .distinctBy { it.packageName }
-        .sortedBy { it.label.lowercase() }
+        .sortedWith(compareBy(appLabelComparator()) { it.label })
 }
 
 fun launchApp(
