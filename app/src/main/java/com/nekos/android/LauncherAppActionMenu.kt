@@ -56,7 +56,7 @@ internal fun LauncherAppActionMenuContent(
         Text(
             "Release to choose",
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
-            color = Muted,
+            color = ActionMenuMuted,
             fontSize = 11.sp
         )
     }
@@ -86,7 +86,7 @@ private fun PopupAction(
         )
         Text(
             label,
-            color = if (enabled) Ink else Muted,
+            color = if (enabled) ActionMenuInk else ActionMenuMuted,
             fontSize = 13.sp,
             fontWeight = FontWeight.Medium
         )
