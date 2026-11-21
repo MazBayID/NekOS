@@ -39,6 +39,7 @@ import androidx.compose.foundation.gestures.awaitVerticalTouchSlopOrCancellation
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.positionChange
+import androidx.compose.ui.input.pointer.consume
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -143,6 +144,9 @@ fun NekOSRoot(refreshToken: Int) {
     var tagEditorTarget by remember { mutableStateOf<NekTag?>(null) }
     var viewingTag by remember { mutableStateOf<NekTag?>(null) }
     var actionMenuTag by remember { mutableStateOf<NekTag?>(null) }
+    val tagPillBounds = remember { mutableStateMapOf<String, Rect>() }
+    var draggedTagId by remember { mutableStateOf<String?>(null) }
+    var tagDropTargetId by remember { mutableStateOf<String?>(null) }
     var showTagEditor by remember { mutableStateOf(false) }
     var actionMenuApp by remember { mutableStateOf<InstalledApp?>(null) }
     var actionMenuPreviewApp by remember { mutableStateOf<InstalledApp?>(null) }
@@ -338,6 +342,31 @@ fun NekOSRoot(refreshToken: Int) {
             },
             onTagClick = { tag -> viewingTag = tag },
             onTagLongPress = { tag -> actionMenuTag = tag },
+            onTagBoundsChanged = { tagId, bounds -> tagPillBounds[tagId] = bounds },
+            draggedTagId = draggedTagId,
+            tagDropTargetId = tagDropTargetId,
+            onTagDragStart = { tag, _ ->
+                draggedTagId = tag.id
+                tagDropTargetId = tag.id
+            },
+            onTagDrag = { position ->
+                tagDropTargetId = tagPillBounds.entries
+                    .firstOrNull { (_, bounds) -> bounds.contains(position) }
+                    ?.key ?: tagDropTargetId
+            },
+            onTagDragEnd = {
+                val sourceId = draggedTagId
+                val targetIndex = tags.indexOfFirst { it.id == tagDropTargetId }
+                if (sourceId != null && targetIndex >= 0) {
+                    saveTags(moveTagToIndex(tags, sourceId, targetIndex))
+                }
+                draggedTagId = null
+                tagDropTargetId = null
+            },
+            onTagDragCancel = {
+                draggedTagId = null
+                tagDropTargetId = null
+            },
             onAddTag = { tagEditorTarget = null; showTagEditor = true }
         )
 
@@ -669,6 +698,13 @@ private fun HomeScreen(
     onFavoriteDragCancel: () -> Unit,
     onTagClick: (NekTag) -> Unit,
     onTagLongPress: (NekTag) -> Unit,
+    onTagBoundsChanged: (String, Rect) -> Unit,
+    draggedTagId: String?,
+    tagDropTargetId: String?,
+    onTagDragStart: (NekTag, Offset) -> Unit,
+    onTagDrag: (Offset) -> Unit,
+    onTagDragEnd: () -> Unit,
+    onTagDragCancel: () -> Unit,
     onAddTag: () -> Unit
 ) {
     val appByPackage = remember(apps) { apps.associateBy { it.packageName } }
@@ -763,7 +799,18 @@ private fun HomeScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(tags, key = { it.id }) { tag ->
-                        TagPill(tag, onClick = { onTagClick(tag) }, onLongClick = { onTagLongPress(tag) })
+                        TagPill(
+                            tag = tag,
+                            isDragging = draggedTagId == tag.id,
+                            isDropTarget = tagDropTargetId == tag.id && draggedTagId != tag.id,
+                            onBoundsChanged = { bounds -> onTagBoundsChanged(tag.id, bounds) },
+                            onClick = { onTagClick(tag) },
+                            onLongClick = { onTagLongPress(tag) },
+                            onDragStart = { position -> onTagDragStart(tag, position) },
+                            onDrag = onTagDrag,
+                            onDragEnd = onTagDragEnd,
+                            onDragCancel = onTagDragCancel
+                        )
                     }
                     item(key = "add-tag") { AddTagPill(onClick = onAddTag) }
                 }
@@ -871,11 +918,24 @@ private fun FavoriteSlot(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun TagPill(tag: NekTag, onClick: () -> Unit, onLongClick: () -> Unit) {
+private fun TagPill(
+    tag: NekTag,
+    isDragging: Boolean,
+    isDropTarget: Boolean,
+    onBoundsChanged: (Rect) -> Unit,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit,
+    onDragStart: (Offset) -> Unit,
+    onDrag: (Offset) -> Unit,
+    onDragEnd: () -> Unit,
+    onDragCancel: () -> Unit
+) {
     val context = LocalContext.current
     var tagIcon by remember(tag.iconId) {
         mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null)
     }
+    var pillCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
+    val currentPillCoordinates by rememberUpdatedState(pillCoordinates)
     LaunchedEffect(tag.iconId) {
         tagIcon = withContext(Dispatchers.IO) {
             runCatching {
@@ -888,15 +948,48 @@ private fun TagPill(tag: NekTag, onClick: () -> Unit, onLongClick: () -> Unit) {
     }
     Row(
         modifier = Modifier
+            .onGloballyPositioned {
+                pillCoordinates = it
+                onBoundsChanged(it.boundsInRoot())
+            }
+            .graphicsLayer { alpha = if (isDragging) 0.55f else 1f }
             .clip(RoundedCornerShape(18.dp))
-            .background(Color(tag.colorArgb.toInt()))
-            .combinedClickable(onClick = onClick, onLongClick = onLongClick)
-            .padding(horizontal = 16.dp, vertical = 11.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+            .background(
+                if (isDropTarget) Color(0xFFD5C8B5) else Color(tag.colorArgb.toInt())
+            ),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        if (tagIcon != null) Image(tagIcon!!, contentDescription = null, modifier = Modifier.size(20.dp))
-        Text(tag.name, color = Ink, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+        Row(
+            modifier = Modifier
+                .weight(1f, fill = false)
+                .combinedClickable(onClick = onClick, onLongClick = onLongClick)
+                .padding(start = 14.dp, top = 11.dp, bottom = 11.dp, end = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            if (tagIcon != null) Image(tagIcon!!, contentDescription = null, modifier = Modifier.size(20.dp))
+            Text(tag.name, color = Ink, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+        }
+        Box(
+            modifier = Modifier
+                .sizeIn(minWidth = 40.dp, minHeight = 44.dp)
+                .pointerInput(tag.id) {
+                    detectDragGesturesAfterLongPress(
+                        onDragStart = { localPosition ->
+                            currentPillCoordinates?.localToRoot(localPosition)?.let(onDragStart)
+                        },
+                        onDrag = { change, _ ->
+                            change.consume()
+                            currentPillCoordinates?.localToRoot(change.position)?.let(onDrag)
+                        },
+                        onDragEnd = onDragEnd,
+                        onDragCancel = onDragCancel
+                    )
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            Text("⠿", color = Ink.copy(alpha = 0.72f), fontSize = 18.sp)
+        }
     }
 }
 
