@@ -40,11 +40,11 @@ private val TagColors = listOf(
 
 @Composable
 private fun TagAppIcon(app: InstalledApp) {
-    var bitmap by remember(app.packageName, app.icon) {
+    var bitmap by remember(app.id, app.icon) {
         mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null)
     }
 
-    LaunchedEffect(app.packageName, app.icon) {
+    LaunchedEffect(app.id, app.icon) {
         bitmap = withContext(Dispatchers.Default) {
             app.icon.toBitmap(72, 72).asImageBitmap()
         }
@@ -73,7 +73,7 @@ fun TagAppsDialog(
     onDismiss: () -> Unit
 ) {
     val assignedApps = remember(tag.appPackages, apps) {
-        val byPackage = apps.associateBy { it.packageName }
+        val byPackage = apps.associateBy { it.id }
         tag.appPackages.mapNotNull(byPackage::get)
     }
     val tagColor = Color(tag.colorArgb.toInt())
@@ -139,7 +139,7 @@ fun TagAppsDialog(
                         modifier = Modifier.heightIn(max = 360.dp),
                         verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        items(assignedApps, key = { it.packageName }) { app ->
+                        items(assignedApps, key = { it.id }) { app ->
                             Row(
                                 modifier = Modifier.fillMaxWidth()
                                     .clip(RoundedCornerShape(14.dp))
@@ -279,12 +279,12 @@ fun TagManagementDialog(
                 }
                 Text("Apps (${selectedPackages.size})", style = MaterialTheme.typography.labelMedium)
                 LazyColumn(Modifier.heightIn(max = 260.dp)) {
-                    items(apps, key = { it.packageName }) { app ->
+                    items(apps, key = { it.id }) { app ->
                         Row(
                             Modifier.fillMaxWidth().clickable {
-                                selectedPackages = if (app.packageName in selectedPackages) {
-                                    selectedPackages - app.packageName
-                                } else selectedPackages + app.packageName
+                                selectedPackages = if (app.id in selectedPackages) {
+                                    selectedPackages - app.id
+                                } else selectedPackages + app.id
                             }.padding(vertical = 3.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
