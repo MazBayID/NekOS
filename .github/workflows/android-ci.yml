@@ -46,10 +46,7 @@ jobs:
         run: sed -i '/^android\.aapt2FromMavenOverride=/d' gradle.properties
 
       - name: Build debug APK and run checks
-        run: |
-          gradle --no-daemon assembleDebug testDebugUnitTest lintDebug \\
-            -Pandroid.aapt2FromMavenOverride="$ANDROID_HOME/build-tools/35.0.0/aapt2" \\
-            --stacktrace
+        run: gradle --no-daemon assembleDebug testDebugUnitTest lintDebug -Pandroid.aapt2FromMavenOverride="$ANDROID_HOME/build-tools/35.0.0/aapt2" --stacktrace
 
       - name: Upload debug APK
         if: success()
