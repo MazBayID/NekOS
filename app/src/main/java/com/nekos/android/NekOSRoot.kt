@@ -114,11 +114,22 @@ fun NekOSRoot(refreshToken: Int) {
     var actionMenuTag by remember { mutableStateOf<NekTag?>(null) }
     var showTagEditor by remember { mutableStateOf(false) }
     var actionMenuApp by remember { mutableStateOf<InstalledApp?>(null) }
+    var actionMenuPreviewApp by remember { mutableStateOf<InstalledApp?>(null) }
+    var actionMenuPreviewPosition by remember { mutableStateOf(Offset.Zero) }
     val preferences = remember(context) {
         context.getSharedPreferences("nekos_preferences", Context.MODE_PRIVATE)
     }
     var showFirstLaunchTip by remember {
         mutableStateOf(!preferences.getBoolean("has_seen_drawer_tip", false))
+    }
+
+    fun clearActionMenuPreview() {
+        actionMenuPreviewApp = null
+    }
+
+    fun openActionMenuAfterRelease() {
+        actionMenuPreviewApp?.let { actionMenuApp = it }
+        actionMenuPreviewApp = null
     }
 
     fun saveTags(updated: List<NekTag>) {
@@ -216,14 +227,20 @@ fun NekOSRoot(refreshToken: Int) {
                 }
             },
             onFavoriteClick = { launchApp(context, it) },
-            onFavoriteLongPress = { index ->
+            onFavoriteLongPress = { index, position ->
                 favoritePackages.getOrNull(index)?.let { packageName ->
-                    apps.firstOrNull { it.packageName == packageName }?.let { actionMenuApp = it }
+                    apps.firstOrNull { it.packageName == packageName }?.let { app ->
+                        actionMenuPreviewApp = app
+                        actionMenuPreviewPosition = position
+                    }
                 }
             },
+            onFavoriteLongPressEnd = ::openActionMenuAfterRelease,
+            onFavoriteLongPressCancel = ::clearActionMenuPreview,
             onFavoriteSlotBounds = { index, bounds -> favoriteSlotBounds[index] = bounds },
             favoriteDropTarget = favoriteDrag?.takeIf { it.hasMoved }?.targetIndex,
             onFavoriteDragStart = { app, position ->
+                clearActionMenuPreview()
                 favoriteDrag = interactionController.startDrag(
                     app.packageName,
                     LauncherDragSource.FAVORITE,
@@ -287,8 +304,14 @@ fun NekOSRoot(refreshToken: Int) {
                         )
                     }
                 },
-                onAppLongPress = { actionMenuApp = it },
+                onAppLongPress = { app, position ->
+                    actionMenuPreviewApp = app
+                    actionMenuPreviewPosition = position
+                },
+                onAppLongPressEnd = ::openActionMenuAfterRelease,
+                onAppLongPressCancel = ::clearActionMenuPreview,
                 onAppDragStart = { app, position ->
+                    clearActionMenuPreview()
                     favoriteDrag = interactionController.startDrag(
                         app.packageName,
                         LauncherDragSource.APP_DRAWER,
@@ -322,6 +345,72 @@ fun NekOSRoot(refreshToken: Int) {
                     }
                 }
             )
+        }
+
+        val popupApp = actionMenuPreviewApp ?: actionMenuApp
+        if (actionMenuApp != null) {
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .zIndex(19f)
+                    .pointerInput(actionMenuApp) {
+                        detectTapGestures { actionMenuApp = null }
+                    }
+            )
+        }
+        popupApp?.let { app ->
+            val isFavorite = app.packageName in favoritePackages.filterNotNull()
+            val isInteractive = actionMenuApp != null
+            Column(
+                modifier = Modifier
+                    .offset {
+                        IntOffset(
+                            (actionMenuPreviewPosition.x + 12f).roundToInt(),
+                            (actionMenuPreviewPosition.y + 12f).roundToInt()
+                        )
+                    }
+                    .zIndex(20f)
+                    .widthIn(max = 210.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Color(0xFFFEFCF8))
+                    .padding(horizontal = 10.dp, vertical = 10.dp),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                Text(
+                    app.label,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
+                    color = Ink,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1
+                )
+                PopupAction("App info", enabled = isInteractive) {
+                    actionMenuApp = null
+                    openAppInfo(context, app.packageName)
+                }
+                PopupAction(
+                    if (isFavorite) "Remove from favorite" else "Add to favorite",
+                    enabled = isInteractive
+                ) {
+                    if (isFavorite) {
+                        updateFavorites(favoritePackages.map { if (it == app.packageName) null else it })
+                    } else {
+                        addFavorite(app.packageName)
+                    }
+                    actionMenuApp = null
+                }
+                PopupAction("Uninstall", enabled = isInteractive) {
+                    actionMenuApp = null
+                    requestAppUninstall(context, app.packageName)
+                }
+                if (!isInteractive) {
+                    Text(
+                        "Release to choose",
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
+                        color = Muted,
+                        fontSize = 11.sp
+                    )
+                }
+            }
         }
 
         favoriteDrag?.takeIf { it.hasMoved }?.let { drag ->
@@ -396,31 +485,6 @@ fun NekOSRoot(refreshToken: Int) {
             )
         }
 
-        actionMenuApp?.let { app ->
-            val isFavorite = app.packageName in favoritePackages.filterNotNull()
-            AppActionsDialog(
-                app = app,
-                isFavorite = isFavorite,
-                onInfo = {
-                    actionMenuApp = null
-                    openAppInfo(context, app.packageName)
-                },
-                onFavorite = {
-                    if (isFavorite) {
-                        updateFavorites(favoritePackages.map { if (it == app.packageName) null else it })
-                    } else {
-                        addFavorite(app.packageName)
-                    }
-                    actionMenuApp = null
-                },
-                onUninstall = {
-                    actionMenuApp = null
-                    requestAppUninstall(context, app.packageName)
-                },
-                onDismiss = { actionMenuApp = null }
-            )
-        }
-
         if (showFirstLaunchTip) {
             AlertDialog(
                 onDismissRequest = {
@@ -452,7 +516,9 @@ private fun HomeScreen(
     onDrawerDrag: (Float) -> Unit,
     onDrawerDragEnd: (Float) -> Unit,
     onFavoriteClick: (String) -> Unit,
-    onFavoriteLongPress: (Int) -> Unit,
+    onFavoriteLongPress: (Int, Offset) -> Unit,
+    onFavoriteLongPressEnd: () -> Unit,
+    onFavoriteLongPressCancel: () -> Unit,
     onFavoriteSlotBounds: (Int, Rect) -> Unit,
     favoriteDropTarget: Int?,
     onFavoriteDragStart: (InstalledApp, Offset) -> Unit,
@@ -536,7 +602,9 @@ private fun HomeScreen(
                                 onBoundsChanged = { bounds -> onFavoriteSlotBounds(index, bounds) },
                                 isDropTarget = favoriteDropTarget == index,
                                 onClick = { app?.let { onFavoriteClick(it.packageName) } },
-                                onLongPress = { onFavoriteLongPress(index) },
+                                onLongPress = { position -> onFavoriteLongPress(index, position) },
+                                onLongPressEnd = onFavoriteLongPressEnd,
+                                onLongPressCancel = onFavoriteLongPressCancel,
                                 onDragStart = { position -> app?.let { onFavoriteDragStart(it, position) } },
                                 onDrag = onFavoriteDrag,
                                 onDragEnd = onFavoriteDragEnd,
@@ -558,7 +626,9 @@ private fun FavoriteSlot(
     onBoundsChanged: (Rect) -> Unit,
     isDropTarget: Boolean,
     onClick: () -> Unit,
-    onLongPress: () -> Unit,
+    onLongPress: (Offset) -> Unit,
+    onLongPressEnd: () -> Unit,
+    onLongPressCancel: () -> Unit,
     onDragStart: (Offset) -> Unit,
     onDrag: (Offset) -> Unit,
     onDragEnd: () -> Unit,
@@ -585,6 +655,8 @@ private fun FavoriteSlot(
                         toRootPosition = { local -> currentSlotCoordinates?.localToRoot(local) ?: local },
                         onTap = onClick,
                         onLongPress = onLongPress,
+                        onLongPressEnd = onLongPressEnd,
+                        onLongPressCancel = onLongPressCancel,
                         onDragStart = onDragStart,
                         onDrag = onDrag,
                         onDragEnd = onDragEnd,
@@ -607,56 +679,22 @@ private fun FavoriteSlot(
 }
 
 @Composable
-private fun AppActionsDialog(
-    app: InstalledApp,
-    isFavorite: Boolean,
-    onInfo: () -> Unit,
-    onFavorite: () -> Unit,
-    onUninstall: () -> Unit,
-    onDismiss: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(app.label, color = Ink, fontWeight = FontWeight.SemiBold) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                AppActionRow(R.drawable.nekos_ui_info, "App info", onInfo)
-                AppActionRow(
-                    R.drawable.nekos_ui_favorite,
-                    if (isFavorite) "Remove from favorite" else "Add to favorite",
-                    onFavorite
-                )
-                AppActionRow(R.drawable.nekos_ui_trash, "Uninstall", onUninstall)
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) { Text("Close") }
-        }
-    )
-}
-
-@Composable
-private fun AppActionRow(
-    iconRes: Int,
+private fun PopupAction(
     label: String,
+    enabled: Boolean,
     onClick: () -> Unit
 ) {
-    Row(
+    Text(
+        label,
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
-            .clickable(onClick = onClick)
-            .padding(horizontal = 10.dp, vertical = 9.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Image(
-            painter = painterResource(iconRes),
-            contentDescription = null,
-            modifier = Modifier.size(30.dp)
-        )
-        Spacer(Modifier.width(12.dp))
-        Text(label, color = Ink, fontSize = 15.sp, fontWeight = FontWeight.Medium)
-    }
+            .clip(RoundedCornerShape(10.dp))
+            .then(if (enabled) Modifier.clickable(onClick = onClick) else Modifier)
+            .padding(horizontal = 8.dp, vertical = 9.dp),
+        color = if (enabled) Ink else Muted,
+        fontSize = 13.sp,
+        fontWeight = FontWeight.Medium
+    )
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -709,7 +747,9 @@ private fun AppDrawer(
     closeThresholdPx: Float,
     modifier: Modifier = Modifier,
     onAppClick: (InstalledApp) -> Unit,
-    onAppLongPress: (InstalledApp) -> Unit,
+    onAppLongPress: (InstalledApp, Offset) -> Unit,
+    onAppLongPressEnd: () -> Unit,
+    onAppLongPressCancel: () -> Unit,
     onAppDragStart: (InstalledApp, Offset) -> Unit,
     onAppDrag: (Offset) -> Unit,
     onAppDragEnd: () -> Unit,
@@ -802,7 +842,9 @@ private fun AppDrawer(
                         app = app,
                         bitmap = bitmap,
                         onClick = { onAppClick(app) },
-                        onLongPress = { onAppLongPress(app) },
+                        onLongPress = { position -> onAppLongPress(app, position) },
+                        onLongPressEnd = onAppLongPressEnd,
+                        onLongPressCancel = onAppLongPressCancel,
                         onDragStart = { position -> onAppDragStart(app, position) },
                         onDrag = onAppDrag,
                         onDragEnd = onAppDragEnd,
@@ -820,7 +862,9 @@ private fun AppGridItem(
     app: InstalledApp,
     bitmap: androidx.compose.ui.graphics.ImageBitmap?,
     onClick: () -> Unit,
-    onLongPress: () -> Unit,
+    onLongPress: (Offset) -> Unit,
+    onLongPressEnd: () -> Unit,
+    onLongPressCancel: () -> Unit,
     onDragStart: (Offset) -> Unit,
     onDrag: (Offset) -> Unit,
     onDragEnd: () -> Unit,
@@ -839,6 +883,8 @@ private fun AppGridItem(
                     toRootPosition = { local -> currentItemCoordinates?.localToRoot(local) ?: local },
                     onTap = onClick,
                     onLongPress = onLongPress,
+                    onLongPressEnd = onLongPressEnd,
+                    onLongPressCancel = onLongPressCancel,
                     onDragStart = onDragStart,
                     onDrag = onDrag,
                     onDragEnd = onDragEnd,
