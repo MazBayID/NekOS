@@ -167,7 +167,7 @@ fun NekOSRoot(refreshToken: Int) {
     }
 
     fun placeFavoriteFromDrawer(packageName: String, targetIndex: Int) {
-        when (val result = placeFavoriteFromDrawer(favoritePackages, packageName, targetIndex)) {
+        when (val result = placePackageInFavoriteSlot(favoritePackages, packageName, targetIndex)) {
             is FavoriteSlotOperation.Updated -> updateFavorites(result.packages)
             FavoriteSlotOperation.Unchanged -> Unit
             FavoriteSlotOperation.Full -> Toast.makeText(
