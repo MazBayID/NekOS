@@ -47,7 +47,7 @@ class FavoriteStoreNormalizationTest {
     @Test
     fun preservesPackageOrderWhileRemovingDuplicates() {
         assertEquals(
-            listOf("third", "first", "second") + List(12) { null },
+            listOf("third", "first", null, "second") + List(11) { null },
             normalizeFavoritePackages(listOf("third", "first", "third", "second"))
         )
     }
