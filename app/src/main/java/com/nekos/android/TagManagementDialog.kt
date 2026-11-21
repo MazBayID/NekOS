@@ -143,10 +143,6 @@ fun TagAppsDialog(
 @Composable
 fun TagActionsDialog(
     tag: NekTag,
-    canMoveUp: Boolean,
-    canMoveDown: Boolean,
-    onMoveUp: () -> Unit,
-    onMoveDown: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     onDismiss: () -> Unit
@@ -156,20 +152,6 @@ fun TagActionsDialog(
         title = { Text(tag.name) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                TextButton(
-                    onClick = onMoveUp,
-                    enabled = canMoveUp,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Move up")
-                }
-                TextButton(
-                    onClick = onMoveDown,
-                    enabled = canMoveDown,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Move down")
-                }
                 TextButton(onClick = onEdit, modifier = Modifier.fillMaxWidth()) {
                     Text("Edit tag")
                 }
