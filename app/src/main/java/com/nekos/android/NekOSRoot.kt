@@ -772,61 +772,13 @@ private fun AppDrawer(
             }
         } else {
             val gridState = rememberLazyGridState()
-            val touchSlop = LocalViewConfiguration.current.touchSlop
-            val edgeCloseGesture = Modifier.pointerInput(gridState, closeThresholdPx, touchSlop) {
-                awaitEachGesture {
-                    val down = awaitFirstDown(
-                        requireUnconsumed = false,
-                        pass = PointerEventPass.Initial
-                    )
-
-                    // Lock eligibility at ACTION_DOWN-equivalent time. A gesture that
-                    // starts while the grid is scrolled cannot close the drawer later,
-                    // even if that same gesture scrolls the grid back to its top.
-                    val startedAtTop = !gridState.canScrollBackward
-                    var totalMovement = androidx.compose.ui.geometry.Offset.Zero
-                    var directionDecided = false
-                    var isDownwardCloseGesture = false
-                    var closeTriggered = false
-
-                    while (true) {
-                        val event = awaitPointerEvent(PointerEventPass.Initial)
-                        val change = event.changes.firstOrNull { it.id == down.id } ?: break
-                        if (!change.pressed) break
-
-                        totalMovement += change.positionChange()
-
-                        if (!directionDecided &&
-                            (abs(totalMovement.x) > touchSlop || abs(totalMovement.y) > touchSlop)
-                        ) {
-                            directionDecided = true
-                            isDownwardCloseGesture =
-                                startedAtTop &&
-                                totalMovement.y > 0f &&
-                                abs(totalMovement.y) > abs(totalMovement.x)
-                        }
-
-                        if (isDownwardCloseGesture) {
-                            // Consume in the Initial pass so the grid cannot interpret
-                            // this edge pull as a list scroll or overscroll gesture.
-                            change.consume()
-
-                            if (!closeTriggered && totalMovement.y >= closeThresholdPx) {
-                                closeTriggered = true
-                                currentOnCloseDrawer()
-                            }
-                        }
-                    }
-                }
-            }
-
             LazyVerticalGrid(
                 state = gridState,
                 columns = GridCells.Fixed(5),
                 contentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 28.dp),
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp),
-                modifier = Modifier.weight(1f).fillMaxWidth().then(edgeCloseGesture)
+                modifier = Modifier.weight(1f).fillMaxWidth()
             ) {
                 items(filteredApps, key = { it.packageName }) { app ->
                     val cachedBitmap = iconBitmapCache[app.packageName]
