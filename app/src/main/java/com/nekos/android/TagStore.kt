@@ -90,3 +90,14 @@ internal fun moveTag(tags: List<NekTag>, tagId: String, direction: Int): List<Ne
         reordered[toIndex] = moved
     }
 }
+
+
+/** Moves a tag directly to a target index while preserving all other tag data. */
+internal fun moveTagToIndex(tags: List<NekTag>, tagId: String, targetIndex: Int): List<NekTag> {
+    val sourceIndex = tags.indexOfFirst { it.id == tagId }
+    if (sourceIndex < 0 || targetIndex !in tags.indices || sourceIndex == targetIndex) return tags
+    return tags.toMutableList().also { reordered ->
+        val moved = reordered.removeAt(sourceIndex)
+        reordered.add(targetIndex, moved)
+    }
+}
