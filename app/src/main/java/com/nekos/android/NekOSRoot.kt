@@ -280,7 +280,7 @@ fun NekOSRoot(refreshToken: Int) {
             onDrawerDragEnd = { totalDrag ->
                 scope.launch {
                     drawerOffset.animateTo(
-                        if (totalDrag <= -homeSwipeThresholdPx) 0f else 1f,
+                        if (shouldOpenDrawerAfterDrag(totalDrag, homeSwipeThresholdPx)) 0f else 1f,
                         animationSpec = spring(
                             dampingRatio = 0.82f,
                             stiffness = 420f
@@ -702,7 +702,8 @@ private fun HomeScreen(
                             drawerDragStarted = false
                         },
                         onDragCancel = {
-                            if (drawerDragStarted) onDrawerDragEnd(totalDrag)
+                            // Cancellation is not a completed swipe. Restore the closed drawer.
+                            if (drawerDragStarted) onDrawerDragEnd(0f)
                             totalDrag = 0f
                             drawerDragStarted = false
                         }
