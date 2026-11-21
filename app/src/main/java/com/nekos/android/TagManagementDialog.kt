@@ -49,43 +49,56 @@ fun TagAppsDialog(
     }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = {
-            Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                Text(tag.name)
-                Text("${assignedApps.size} apps", style = MaterialTheme.typography.labelSmall, color = Color(0xFF8B8982))
-            }
-        },
+        title = { Text(tag.name) },
         text = {
             if (assignedApps.isEmpty()) {
                 Text("No apps assigned yet.")
             } else {
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(3),
-                    modifier = Modifier.heightIn(max = 330.dp),
-                    contentPadding = PaddingValues(vertical = 6.dp),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
+                LazyColumn(Modifier.heightIn(max = 340.dp)) {
                     items(assignedApps, key = { it.packageName }) { app ->
-                        Column(
+                        Row(
                             Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
-                                .clickable { onLaunch(app) }.padding(vertical = 8.dp, horizontal = 4.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
+                                .clickable { onLaunch(app) }.padding(10.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             Image(
-                                bitmap = app.icon.toBitmap(96, 96).asImageBitmap(),
-                                contentDescription = app.label,
-                                modifier = Modifier.size(48.dp)
+                                bitmap = app.icon.toBitmap(64, 64).asImageBitmap(),
+                                contentDescription = null,
+                                modifier = Modifier.size(36.dp)
                             )
-                            Spacer(Modifier.height(5.dp))
-                            Text(app.label, style = MaterialTheme.typography.labelSmall, maxLines = 2)
+                            Spacer(Modifier.width(12.dp))
+                            Text(app.label)
                         }
                     }
                 }
             }
         },
-        confirmButton = { TextButton(onClick = onEdit) { Text("Edit") } },
+        confirmButton = { TextButton(onClick = onEdit) { Text("Edit tag") } },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Close") } }
+    )
+}
+
+@Composable
+fun TagActionsDialog(
+    tag: NekTag,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(tag.name) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                TextButton(onClick = onEdit, modifier = Modifier.fillMaxWidth()) {
+                    Text("Edit tag")
+                }
+                TextButton(onClick = onDelete, modifier = Modifier.fillMaxWidth()) {
+                    Text("Delete tag", color = Color(0xFFB3261E))
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text("Close") } }
     )
 }
 
