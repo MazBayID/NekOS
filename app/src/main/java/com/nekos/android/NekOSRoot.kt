@@ -743,7 +743,7 @@ fun NekOSRoot(refreshToken: Int) {
                 },
                 title = { Text("Welcome to NekOS") },
                 text = {
-                    Text("Swipe up from the home screen to open your apps. At the top of the app list, swipe down again to return home.")
+                    Text("Swipe up from Home to open your apps. Swipe down from the drawer handle to return home.")
                 },
                 confirmButton = {
                     TextButton(onClick = {
@@ -879,7 +879,7 @@ private fun HomeScreen(
             ) {
                 // Give the tag rail enough room for readable labels while keeping
                 // the logo area useful on compact phone screens.
-                val tagRailWidth = (maxWidth - 16.dp) * 0.45f
+                val tagRailWidth = (maxWidth - 16.dp) * 0.38f
                 Row(
                     modifier = Modifier.fillMaxSize(),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -1284,7 +1284,7 @@ private fun AppDrawer(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(60.dp)
-                .clickable(onClick = currentOnCloseDrawer)
+                .clickable { currentOnCloseDrawer(0f, 0f) }
                 .pointerInput(closeThresholdPx) {
                     var totalDrag = 0f
                     val velocityTracker = VelocityTracker()
@@ -1328,7 +1328,7 @@ private fun AppDrawer(
                 fontWeight = FontWeight.SemiBold
             )
             Text(
-                "${apps.size} installed",
+                if (searchQuery.isBlank()) "${apps.size} installed" else "${filteredApps.size} results",
                 color = Muted,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Medium
