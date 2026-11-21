@@ -37,7 +37,7 @@ class LauncherReferenceCleanupTest {
 
     @Test
     fun preservesReferencesForTemporarilyUnavailableProfiles() {
-        val favorites = listOf("42|com.example.work", "10|com.example.removed")
+        val favorites = listOf("42::com.example.work", "10::com.example.removed")
         val tags = listOf(
             NekTag(
                 id = "work",
@@ -72,8 +72,8 @@ class LauncherReferenceCleanupTest {
             favorites = favorites,
             tags = tags,
             currentProfileAppIds = mapOf(
-                "com.example.alpha" to "10|com.example.alpha",
-                "com.example.beta" to "10|com.example.beta"
+                "com.example.alpha" to "10::com.example.alpha",
+                "com.example.beta" to "10::com.example.beta"
             )
         )
 
