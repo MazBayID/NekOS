@@ -177,7 +177,12 @@ fun NekOSRoot(refreshToken: Int) {
 
     fun addFavorite(packageName: String) {
         when (val result = addFavoriteToSlots(favoritePackages, packageName)) {
-            is FavoriteSlotOperation.Updated -> updateFavorites(result.packages)
+            is FavoriteSlotOperation.Updated -> {
+                updateFavorites(result.packages)
+                if (packageName in dockPackages.filterNotNull()) {
+                    updateDock(removeDockPackage(dockPackages, packageName))
+                }
+            }
             FavoriteSlotOperation.Unchanged -> Unit
             FavoriteSlotOperation.Full -> Toast.makeText(
                 context,
@@ -189,7 +194,12 @@ fun NekOSRoot(refreshToken: Int) {
 
     fun placeFavoriteFromDrawer(packageName: String, targetIndex: Int) {
         when (val result = placePackageInFavoriteSlot(favoritePackages, packageName, targetIndex)) {
-            is FavoriteSlotOperation.Updated -> updateFavorites(result.packages)
+            is FavoriteSlotOperation.Updated -> {
+                updateFavorites(result.packages)
+                if (packageName in dockPackages.filterNotNull()) {
+                    updateDock(removeDockPackage(dockPackages, packageName))
+                }
+            }
             FavoriteSlotOperation.Unchanged -> Unit
             FavoriteSlotOperation.Full -> Toast.makeText(
                 context,
@@ -217,6 +227,13 @@ fun NekOSRoot(refreshToken: Int) {
             saveFavoritePackages(context, cleanedReferences.favorites)
         }
         if (cleanedReferences.tags != tags) saveTags(cleanedReferences.tags)
+        val cleanedDock = normalizeDockPackages(
+            dockPackages.map { packageName -> packageName?.takeIf { it in installedPackages } }
+        )
+        if (cleanedDock != dockPackages) {
+            dockPackages = cleanedDock
+            saveDockPackages(context, cleanedDock)
+        }
     }
 
     BoxWithConstraints(Modifier.fillMaxSize().background(WarmBackground)) {
