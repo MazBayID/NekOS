@@ -41,6 +41,7 @@ class LauncherPopupPositionTest {
             )
         )
     }
+
     @Test
     fun popupFlipsHorizontallyWhenThereIsNoRoomOnTheRight() {
         assertEquals(
@@ -76,5 +77,4 @@ class LauncherPopupPositionTest {
             )
         )
     }
-
 }
