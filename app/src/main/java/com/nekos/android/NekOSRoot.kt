@@ -77,7 +77,8 @@ private val TagSurface = Color(0xFFE7E1D6)
 
 private data class FavoriteDrag(
     val packageName: String,
-    val position: Offset
+    val position: Offset,
+    val hasMoved: Boolean = false
 )
 
 @Composable
@@ -260,11 +261,11 @@ fun NekOSRoot(refreshToken: Int) {
                     }
                 },
                 onAppDragStart = { app, position -> favoriteDrag = FavoriteDrag(app.packageName, position) },
-                onAppDrag = { position -> favoriteDrag = favoriteDrag?.copy(position = position) },
+                onAppDrag = { position -> favoriteDrag = favoriteDrag?.copy(position = position, hasMoved = true) },
                 onAppDragEnd = {
                     val drag = favoriteDrag
                     val target = drag?.let { state -> favoriteSlotBounds.entries.firstOrNull { it.value.contains(state.position) }?.key }
-                    if (drag != null && target != null) placeFavoriteFromDrawer(drag.packageName, target)
+                    if (drag?.hasMoved == true && target != null) placeFavoriteFromDrawer(drag.packageName, target)
                     favoriteDrag = null
                 },
                 onCloseDrawer = {
@@ -417,10 +418,6 @@ private fun HomeScreen(
 ) {
     val appByPackage = remember(apps) { apps.associateBy { it.packageName } }
     BoxWithConstraints(Modifier.fillMaxSize()) {
-        val density = LocalDensity.current
-        val favoriteCellSizePx = with(density) { ((maxWidth - 48.dp - 40.dp) / 5).toPx() }
-        val favoriteCellGapPx = with(density) { 10.dp.toPx() }
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -489,11 +486,9 @@ private fun HomeScreen(
                             val app = favoritePackages.getOrNull(index)?.let { appByPackage[it] }
                             FavoriteSlot(
                                 app = app,
-                                slotIndex = index,
                                 onBoundsChanged = { bounds -> onFavoriteSlotBounds(index, bounds) },
                                 onClick = { app?.let { onFavoriteClick(it.packageName) } },
                                 onLongPress = { onFavoriteLongPress(index) },
-                                onMove = onFavoriteMove,
                                 modifier = Modifier.weight(1f)
                             )
                         }
@@ -508,11 +503,9 @@ private fun HomeScreen(
 @Composable
 private fun FavoriteSlot(
     app: InstalledApp?,
-    slotIndex: Int,
     onBoundsChanged: (Rect) -> Unit,
     onClick: () -> Unit,
     onLongPress: () -> Unit,
-    onMove: (Int, Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val bitmap = if (app == null) null else remember(app.packageName) {
