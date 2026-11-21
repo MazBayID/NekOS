@@ -73,3 +73,20 @@ object TagStore {
             .apply()
     }
 }
+
+/**
+ * Moves a tag by one position while preserving every other tag and its data.
+ * Returns the original list when the tag is missing or already at the boundary.
+ */
+internal fun moveTag(tags: List<NekTag>, tagId: String, direction: Int): List<NekTag> {
+    if (direction != -1 && direction != 1) return tags
+    val fromIndex = tags.indexOfFirst { it.id == tagId }
+    val toIndex = fromIndex + direction
+    if (fromIndex < 0 || toIndex !in tags.indices) return tags
+
+    return tags.toMutableList().also { reordered ->
+        val moved = reordered[fromIndex]
+        reordered[fromIndex] = reordered[toIndex]
+        reordered[toIndex] = moved
+    }
+}
