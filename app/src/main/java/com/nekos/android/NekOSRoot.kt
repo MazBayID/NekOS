@@ -302,10 +302,13 @@ fun NekOSRoot(refreshToken: Int) {
                 modifier = Modifier
                     .fillMaxSize()
                     .graphicsLayer {
-                        // During a drag, lift the drawer to expose the Home Favorite area
-                        // underneath while keeping the dragged icon in the root overlay.
-                        translationY = drawerOffset.value * size.height -
-                            if (favoriteDrag?.hasMoved == true) size.height * 0.58f else 0f
+                        // Hide the entire drawer during a drag so no grid rows remain
+                        // visible over the Home Favorite area.
+                        translationY = if (favoriteDrag?.hasMoved == true) {
+                            -size.height
+                        } else {
+                            drawerOffset.value * size.height
+                        }
                     },
                 onAppClick = { app ->
                     launchApp(context, app.packageName)
@@ -440,9 +443,7 @@ fun NekOSRoot(refreshToken: Int) {
 
         favoriteDrag?.takeIf { it.hasMoved }?.let { drag ->
             Column(
-                modifier = Modifier.align(Alignment.BottomCenter)
-                    .navigationBarsPadding()
-                    .padding(bottom = 16.dp)
+                modifier = Modifier.align(Alignment.Center)
                     .onGloballyPositioned { cancelDropBounds = it.boundsInRoot() }
                     .zIndex(12f),
                 horizontalAlignment = Alignment.CenterHorizontally,
