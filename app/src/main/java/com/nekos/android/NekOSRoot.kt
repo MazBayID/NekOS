@@ -68,6 +68,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.text.font.FontWeight
@@ -106,8 +107,7 @@ fun NekOSRoot(refreshToken: Int) {
         return
     }
 
-    val context = LocalContext.current
-    var apps by remember { mutableStateOf(emptyList<InstalledApp>()) }
+undefined    var apps by remember { mutableStateOf(emptyList<InstalledApp>()) }
     val iconBitmapCache = remember(apps) {
         mutableMapOf<String, androidx.compose.ui.graphics.ImageBitmap>()
     }
@@ -329,8 +329,12 @@ fun NekOSRoot(refreshToken: Int) {
                     )
                 }
             },
-            onFavoriteClick = { launchApp(context, it) },
-            onDockClick = { launchApp(context, it) },
+            onFavoriteClick = { packageName, bounds ->
+                launchApp(context, packageName, launchSourceView, bounds.left.roundToInt(), bounds.top.roundToInt(), bounds.width.roundToInt(), bounds.height.roundToInt())
+            },
+            onDockClick = { packageName, bounds ->
+                launchApp(context, packageName, launchSourceView, bounds.left.roundToInt(), bounds.top.roundToInt(), bounds.width.roundToInt(), bounds.height.roundToInt())
+            },
             onFavoriteLongPress = { index, position ->
                 favoritePackages.getOrNull(index)?.let { packageName ->
                     apps.firstOrNull { it.packageName == packageName }?.let { app ->
@@ -406,8 +410,8 @@ fun NekOSRoot(refreshToken: Int) {
                             drawerOffset.value * size.height
                         }
                     },
-                onAppClick = { app ->
-                    launchApp(context, app.packageName)
+                onAppClick = { app, bounds ->
+                    launchApp(context, app.packageName, launchSourceView, bounds.left.roundToInt(), bounds.top.roundToInt(), bounds.width.roundToInt(), bounds.height.roundToInt())
                     scope.launch {
                         drawerOffset.animateTo(
                             1f,
@@ -596,7 +600,7 @@ fun NekOSRoot(refreshToken: Int) {
                 apps = apps,
                 onLaunch = { app ->
                     viewingTag = null
-                    launchApp(context, app.packageName)
+                    launchApp(context, app.packageName, launchSourceView)
                 },
                 onEdit = {
                     tagEditorTarget = tag
@@ -681,8 +685,8 @@ private fun HomeScreen(
     backgroundBlurRadiusPx: Float,
     onDrawerDrag: (Float) -> Unit,
     onDrawerDragEnd: (Float) -> Unit,
-    onFavoriteClick: (String) -> Unit,
-    onDockClick: (String) -> Unit,
+    onFavoriteClick: (String, Rect) -> Unit,
+    onDockClick: (String, Rect) -> Unit,
     onFavoriteLongPress: (Int, Offset) -> Unit,
     onFavoriteLongPressEnd: () -> Unit,
     onFavoriteLongPressCancel: () -> Unit,
@@ -798,7 +802,7 @@ private fun HomeScreen(
                                 app = app,
                                 onBoundsChanged = { bounds -> onFavoriteSlotBounds(index, bounds) },
                                 isDropTarget = favoriteDropTarget == index,
-                                onClick = { app?.let { onFavoriteClick(it.packageName) } },
+                                onClick = { bounds -> app?.let { onFavoriteClick(it.packageName, bounds) } },
                                 onLongPress = { position -> onFavoriteLongPress(index, position) },
                                 onLongPressEnd = onFavoriteLongPressEnd,
                                 onLongPressCancel = onFavoriteLongPressCancel,
@@ -827,7 +831,7 @@ private fun HomeScreen(
 private fun DockBar(
     dockPackages: List<String?>,
     appByPackage: Map<String, InstalledApp>,
-    onAppClick: (String) -> Unit
+    onAppClick: (String, Rect) -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -840,13 +844,18 @@ private fun DockBar(
     ) {
         repeat(5) { index ->
             val app = dockPackages.getOrNull(index)?.let { appByPackage[it] }
+            var slotCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
+            val currentSlotCoordinates by rememberUpdatedState(slotCoordinates)
             Box(
                 modifier = Modifier
                     .weight(1f)
                     .aspectRatio(1f)
                     .clip(RoundedCornerShape(16.dp))
+                    .onGloballyPositioned { slotCoordinates = it }
                     .clickable(enabled = app != null) {
-                        app?.let { onAppClick(it.packageName) }
+                        app?.let {
+                            onAppClick(it.packageName, currentSlotCoordinates?.boundsInRoot() ?: Rect.Zero)
+                        }
                     },
                 contentAlignment = Alignment.Center
             ) {
@@ -873,7 +882,7 @@ private fun FavoriteSlot(
     app: InstalledApp?,
     onBoundsChanged: (Rect) -> Unit,
     isDropTarget: Boolean,
-    onClick: () -> Unit,
+    onClick: (Rect) -> Unit,
     onLongPress: (Offset) -> Unit,
     onLongPressEnd: () -> Unit,
     onLongPressCancel: () -> Unit,
@@ -901,7 +910,7 @@ private fun FavoriteSlot(
                 if (app != null) {
                     detectLauncherItemGesture(
                         toRootPosition = { local -> currentSlotCoordinates?.localToRoot(local) ?: local },
-                        onTap = onClick,
+                        onTap = { onClick(currentSlotCoordinates?.boundsInRoot() ?: Rect.Zero) },
                         onLongPress = onLongPress,
                         onLongPressEnd = onLongPressEnd,
                         onLongPressCancel = onLongPressCancel,
@@ -929,8 +938,7 @@ private fun FavoriteSlot(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun TagPill(tag: NekTag, onClick: () -> Unit, onLongClick: () -> Unit) {
-    val context = LocalContext.current
-    var tagIcon by remember(tag.iconId) {
+undefined    var tagIcon by remember(tag.iconId) {
         mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null)
     }
     LaunchedEffect(tag.iconId) {
@@ -976,7 +984,7 @@ private fun AppDrawer(
     iconBitmapCache: MutableMap<String, androidx.compose.ui.graphics.ImageBitmap>,
     closeThresholdPx: Float,
     modifier: Modifier = Modifier,
-    onAppClick: (InstalledApp) -> Unit,
+    onAppClick: (InstalledApp, Rect) -> Unit,
     onAppLongPress: (InstalledApp, Offset) -> Unit,
     onAppLongPressEnd: () -> Unit,
     onAppLongPressCancel: () -> Unit,
@@ -1117,7 +1125,7 @@ private fun AppDrawer(
                     AppGridItem(
                         app = app,
                         bitmap = bitmap,
-                        onClick = { onAppClick(app) },
+                        onClick = { bounds -> onAppClick(app, bounds) },
                         onLongPress = { position -> onAppLongPress(app, position) },
                         onLongPressEnd = onAppLongPressEnd,
                         onLongPressCancel = onAppLongPressCancel,
@@ -1159,7 +1167,7 @@ private fun DrawerTagFilterChip(
 private fun AppGridItem(
     app: InstalledApp,
     bitmap: androidx.compose.ui.graphics.ImageBitmap?,
-    onClick: () -> Unit,
+    onClick: (Rect) -> Unit,
     onLongPress: (Offset) -> Unit,
     onLongPressEnd: () -> Unit,
     onLongPressCancel: () -> Unit,
@@ -1179,7 +1187,7 @@ private fun AppGridItem(
             .pointerInput(app.packageName) {
                 detectLauncherItemGesture(
                     toRootPosition = { local -> currentItemCoordinates?.localToRoot(local) ?: local },
-                    onTap = onClick,
+                    onTap = { onClick(currentItemCoordinates?.boundsInRoot() ?: Rect.Zero) },
                     onLongPress = onLongPress,
                     onLongPressEnd = onLongPressEnd,
                     onLongPressCancel = onLongPressCancel,
