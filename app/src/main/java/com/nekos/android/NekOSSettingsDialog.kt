@@ -39,10 +39,8 @@ internal fun nekosBackgroundColor(preset: String): Color = when (preset) {
 @Composable
 internal fun NekOSSettingsDialog(
     backgroundPreset: String,
-    showDock: Boolean,
     hasWallpaper: Boolean,
     onBackgroundPresetChange: (String) -> Unit,
-    onShowDockChange: (Boolean) -> Unit,
     onChooseWallpaper: () -> Unit,
     onClearWallpaper: () -> Unit,
     onDismiss: () -> Unit
@@ -147,33 +145,6 @@ internal fun NekOSSettingsDialog(
                 }
 
                 HorizontalDivider(color = SettingsInk.copy(alpha = 0.12f))
-
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    SettingsSectionTitle("HOME LAYOUT")
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .defaultMinSize(minHeight = 56.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                "Show Home Dock",
-                                color = SettingsInk,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 14.sp
-                            )
-                            Text(
-                                "Hide the Dock without removing its apps.",
-                                color = SettingsMuted,
-                                fontSize = 12.sp,
-                                lineHeight = 17.sp
-                            )
-                        }
-                        Checkbox(checked = showDock, onCheckedChange = onShowDockChange)
-                    }
-                }
             }
         },
         confirmButton = {

@@ -114,7 +114,6 @@ fun NekOSRoot(refreshToken: Int) {
         mutableMapOf<String, androidx.compose.ui.graphics.ImageBitmap>()
     }
     var favoritePackages by remember { mutableStateOf(loadFavoritePackages(context)) }
-    var dockPackages by remember { mutableStateOf(loadDockPackages(context)) }
     val interactionController = remember { LauncherInteractionController() }
     var favoriteDrag by remember { mutableStateOf<LauncherDragSession?>(null) }
     val favoriteSlotBounds = remember { mutableStateMapOf<Int, Rect>() }
@@ -138,7 +137,6 @@ fun NekOSRoot(refreshToken: Int) {
     var backgroundPreset by remember {
         mutableStateOf(preferences.getString("background_preset", "warm") ?: "warm")
     }
-    var showDock by remember { mutableStateOf(preferences.getBoolean("show_dock", true)) }
     var wallpaperPath by remember {
         mutableStateOf(preferences.getString("home_wallpaper_path", null))
     }
@@ -187,39 +185,10 @@ fun NekOSRoot(refreshToken: Int) {
         saveFavoritePackages(context, updated)
     }
 
-    fun updateDock(updated: List<String?>) {
-        dockPackages = updated
-        saveDockPackages(context, updated)
-    }
-
-    fun toggleDock(packageName: String) {
-        if (packageName in dockPackages.filterNotNull()) {
-            updateDock(removeDockPackage(dockPackages, packageName))
-            return
-        }
-        when (val result = addDockPackage(dockPackages, packageName)) {
-            is DockSlotOperation.Updated -> {
-                updateDock(result.packages)
-                if (packageName in favoritePackages.filterNotNull()) {
-                    updateFavorites(favoritePackages.map { if (it == packageName) null else it })
-                }
-            }
-            DockSlotOperation.Unchanged -> Unit
-            DockSlotOperation.Full -> Toast.makeText(
-                context,
-                "Dock is full",
-                Toast.LENGTH_SHORT
-            ).show()
-        }
-    }
-
     fun addFavorite(packageName: String) {
         when (val result = addFavoriteToSlots(favoritePackages, packageName)) {
             is FavoriteSlotOperation.Updated -> {
                 updateFavorites(result.packages)
-                if (packageName in dockPackages.filterNotNull()) {
-                    updateDock(removeDockPackage(dockPackages, packageName))
-                }
             }
             FavoriteSlotOperation.Unchanged -> Unit
             FavoriteSlotOperation.Full -> Toast.makeText(
@@ -234,9 +203,6 @@ fun NekOSRoot(refreshToken: Int) {
         when (val result = placePackageInFavoriteSlot(favoritePackages, packageName, targetIndex)) {
             is FavoriteSlotOperation.Updated -> {
                 updateFavorites(result.packages)
-                if (packageName in dockPackages.filterNotNull()) {
-                    updateDock(removeDockPackage(dockPackages, packageName))
-                }
             }
             FavoriteSlotOperation.Unchanged -> Unit
             FavoriteSlotOperation.Full -> Toast.makeText(
@@ -265,19 +231,12 @@ fun NekOSRoot(refreshToken: Int) {
             saveFavoritePackages(context, cleanedReferences.favorites)
         }
         if (cleanedReferences.tags != tags) saveTags(cleanedReferences.tags)
-        val cleanedDock = normalizeDockPackages(
-            dockPackages.map { packageName -> packageName?.takeIf { it in installedPackages } }
-        )
-        if (cleanedDock != dockPackages) {
-            dockPackages = cleanedDock
-            saveDockPackages(context, cleanedDock)
-        }
     }
 
     BoxWithConstraints(Modifier.fillMaxSize().background(WarmBackground)) {
         val drawerHeightPx = constraints.maxHeight.toFloat().coerceAtLeast(1f)
         val homeSwipeThresholdPx = with(androidx.compose.ui.platform.LocalDensity.current) { 64.dp.toPx() }
-        val drawerCloseThresholdPx = drawerHeightPx * 0.18f
+        val drawerCloseThresholdPx = with(androidx.compose.ui.platform.LocalDensity.current) { 96.dp.toPx() }
         val backgroundBlurRadiusPx = with(androidx.compose.ui.platform.LocalDensity.current) { 16.dp.toPx() }
         val drawerOffset = remember { Animatable(1f) }
         val scope = rememberCoroutineScope()
@@ -302,10 +261,8 @@ fun NekOSRoot(refreshToken: Int) {
             apps = apps,
             backgroundColor = homeBackground,
             wallpaper = wallpaperBitmap,
-            showDock = showDock,
             onOpenSettings = { showSettings = true },
             favoritePackages = favoritePackages,
-            dockPackages = dockPackages,
             tags = tags,
             homeSwipeThresholdPx = homeSwipeThresholdPx,
             backgroundBlurRadiusPx = if (favoriteDrag?.hasMoved == true) {
@@ -332,9 +289,6 @@ fun NekOSRoot(refreshToken: Int) {
                 }
             },
             onFavoriteClick = { packageName, bounds ->
-                launchApp(context, packageName, launchSourceView, bounds.left.roundToInt(), bounds.top.roundToInt(), bounds.width.roundToInt(), bounds.height.roundToInt())
-            },
-            onDockClick = { packageName, bounds ->
                 launchApp(context, packageName, launchSourceView, bounds.left.roundToInt(), bounds.top.roundToInt(), bounds.width.roundToInt(), bounds.height.roundToInt())
             },
             onFavoriteLongPress = { index, position ->
@@ -398,7 +352,6 @@ fun NekOSRoot(refreshToken: Int) {
 
             AppDrawer(
                 apps = apps,
-                tags = tags,
                 iconBitmapCache = iconBitmapCache,
                 closeThresholdPx = drawerCloseThresholdPx,
                 modifier = Modifier
@@ -486,7 +439,6 @@ fun NekOSRoot(refreshToken: Int) {
         }
         popupApp?.let { app ->
             val isFavorite = app.packageName in favoritePackages.filterNotNull()
-            val isDocked = app.packageName in dockPackages.filterNotNull()
             val isInteractive = actionMenuApp != null
             Column(
                 modifier = Modifier
@@ -510,7 +462,6 @@ fun NekOSRoot(refreshToken: Int) {
                 LauncherAppActionMenuContent(
                     app = app,
                     isFavorite = isFavorite,
-                    isDocked = isDocked,
                     isInteractive = isInteractive,
                     onAppInfo = {
                         actionMenuApp = null
@@ -522,10 +473,6 @@ fun NekOSRoot(refreshToken: Int) {
                         } else {
                             addFavorite(app.packageName)
                         }
-                        actionMenuApp = null
-                    },
-                    onDock = {
-                        toggleDock(app.packageName)
                         actionMenuApp = null
                     },
                     onUninstall = {
@@ -572,15 +519,10 @@ fun NekOSRoot(refreshToken: Int) {
         if (showSettings) {
             NekOSSettingsDialog(
                 backgroundPreset = backgroundPreset,
-                showDock = showDock,
-                hasWallpaper = wallpaperPath != null,
+                    hasWallpaper = wallpaperPath != null,
                 onBackgroundPresetChange = { preset ->
                     backgroundPreset = preset
                     preferences.edit().putString("background_preset", preset).apply()
-                },
-                onShowDockChange = { visible ->
-                    showDock = visible
-                    preferences.edit().putBoolean("show_dock", visible).apply()
                 },
                 onChooseWallpaper = {
                     wallpaperPicker.launch(
@@ -678,17 +620,14 @@ private fun HomeScreen(
     apps: List<InstalledApp>,
     backgroundColor: Color,
     wallpaper: androidx.compose.ui.graphics.ImageBitmap?,
-    showDock: Boolean,
     onOpenSettings: () -> Unit,
     favoritePackages: List<String?>,
-    dockPackages: List<String?>,
     tags: List<NekTag>,
     homeSwipeThresholdPx: Float,
     backgroundBlurRadiusPx: Float,
     onDrawerDrag: (Float) -> Unit,
     onDrawerDragEnd: (Float) -> Unit,
     onFavoriteClick: (String, Rect) -> Unit,
-    onDockClick: (String, Rect) -> Unit,
     onFavoriteLongPress: (Int, Offset) -> Unit,
     onFavoriteLongPressEnd: () -> Unit,
     onFavoriteLongPressCancel: () -> Unit,
@@ -786,12 +725,17 @@ private fun HomeScreen(
                         Text("Settings", color = Ink, fontSize = 13.sp)
                     }
                 }
-                Row(
-                    modifier = Modifier.horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(3),
+                    modifier = Modifier.fillMaxWidth().heightIn(max = 144.dp),
+                    contentPadding = PaddingValues(vertical = 2.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    tags.forEach { tag -> TagPill(tag, onClick = { onTagClick(tag) }, onLongClick = { onTagLongPress(tag) }) }
-                    AddTagPill(onClick = onAddTag)
+                    items(tags, key = { it.id }) { tag ->
+                        TagPill(tag, onClick = { onTagClick(tag) }, onLongClick = { onTagLongPress(tag) })
+                    }
+                    item(key = "add-tag") { AddTagPill(onClick = onAddTag) }
                 }
             }
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -816,62 +760,6 @@ private fun HomeScreen(
                             )
                         }
                     }
-                }
-                if (showDock && dockPackages.any { it != null }) {
-                    DockBar(
-                        dockPackages = dockPackages,
-                        appByPackage = appByPackage,
-                        onAppClick = onDockClick
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun DockBar(
-    dockPackages: List<String?>,
-    appByPackage: Map<String, InstalledApp>,
-    onAppClick: (String, Rect) -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
-            .background(TagSurface.copy(alpha = 0.86f))
-            .padding(horizontal = 8.dp, vertical = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        repeat(5) { index ->
-            val app = dockPackages.getOrNull(index)?.let { appByPackage[it] }
-            var slotCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
-            val currentSlotCoordinates by rememberUpdatedState(slotCoordinates)
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .aspectRatio(1f)
-                    .clip(RoundedCornerShape(16.dp))
-                    .onGloballyPositioned { slotCoordinates = it }
-                    .clickable(enabled = app != null) {
-                        app?.let {
-                            onAppClick(it.packageName, currentSlotCoordinates?.boundsInRoot() ?: Rect.Zero)
-                        }
-                    },
-                contentAlignment = Alignment.Center
-            ) {
-                if (app != null) {
-                    val bitmap = remember(app.packageName) {
-                        app.icon.toBitmap(96, 96).asImageBitmap()
-                    }
-                    Image(
-                        bitmap = bitmap,
-                        contentDescription = app.label,
-                        modifier = Modifier
-                            .size(50.dp)
-                            .clip(RoundedCornerShape(13.dp))
-                    )
                 }
             }
         }
@@ -983,7 +871,6 @@ private fun AddTagPill(onClick: () -> Unit) {
 @Composable
 private fun AppDrawer(
     apps: List<InstalledApp>,
-    tags: List<NekTag>,
     iconBitmapCache: MutableMap<String, androidx.compose.ui.graphics.ImageBitmap>,
     closeThresholdPx: Float,
     modifier: Modifier = Modifier,
@@ -998,20 +885,12 @@ private fun AppDrawer(
     onCloseDrawer: () -> Unit
 ) {
     var searchQuery by remember { mutableStateOf("") }
-    var selectedTagId by remember { mutableStateOf<String?>(null) }
     val currentOnCloseDrawer by rememberUpdatedState(onCloseDrawer)
-    val selectedTag = tags.firstOrNull { it.id == selectedTagId }
-    LaunchedEffect(tags, selectedTagId) {
-        if (selectedTagId != null && selectedTag == null) selectedTagId = null
-    }
-    val filteredApps = remember(apps, searchQuery, selectedTag?.appPackages) {
-        val tagPackages = selectedTag?.appPackages?.toSet()
+    val filteredApps = remember(apps, searchQuery) {
         apps.filter { app ->
-            matchesAppDrawerFilter(
-                packageName = app.packageName,
+            matchesAppDrawerSearch(
                 label = app.label,
-                query = searchQuery,
-                tagPackages = tagPackages
+                query = searchQuery
             )
         }.sortedBy { it.label.lowercase() }
     }
@@ -1026,7 +905,7 @@ private fun AppDrawer(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(38.dp)
+                .height(52.dp)
                 .pointerInput(closeThresholdPx) {
                     var totalDrag = 0f
                     detectVerticalDragGestures(
@@ -1051,7 +930,7 @@ private fun AppDrawer(
             color = Ink,
             fontSize = 24.sp,
             fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.padding(horizontal = 22.dp, vertical = 12.dp)
+            modifier = Modifier.padding(horizontal = 22.dp, vertical = 8.dp)
         )
         TextField(
             value = searchQuery,
@@ -1072,29 +951,6 @@ private fun AppDrawer(
             ),
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)
         )
-        if (tags.isNotEmpty()) {
-            Row(
-                modifier = Modifier.fillMaxWidth()
-                    .horizontalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp, vertical = 6.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                DrawerTagFilterChip(
-                    label = "All",
-                    color = TagSurface,
-                    selected = selectedTagId == null,
-                    onClick = { selectedTagId = null }
-                )
-                tags.forEach { tag ->
-                    DrawerTagFilterChip(
-                        label = tag.name,
-                        color = Color(tag.colorArgb),
-                        selected = selectedTagId == tag.id,
-                        onClick = { selectedTagId = tag.id }
-                    )
-                }
-            }
-        }
         if (filteredApps.isEmpty()) {
             Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
                 Text("No apps found", color = Muted)
@@ -1140,28 +996,6 @@ private fun AppDrawer(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun DrawerTagFilterChip(
-    label: String,
-    color: Color,
-    selected: Boolean,
-    onClick: () -> Unit
-) {
-    Box(
-        Modifier.clip(RoundedCornerShape(18.dp))
-            .background(if (selected) Ink else color)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 14.dp, vertical = 8.dp)
-    ) {
-        Text(
-            text = label,
-            color = if (selected) Color.White else Ink,
-            fontSize = 12.sp,
-            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium
-        )
     }
 }
 
