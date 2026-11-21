@@ -2,6 +2,8 @@ package com.nekos.android
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -51,6 +53,10 @@ fun TagAppsDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        shape = RoundedCornerShape(28.dp),
+        containerColor = Color(0xFFFEFCF8),
+        titleContentColor = Color(0xFF34332F),
+        textContentColor = Color(0xFF34332F),
         title = {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -149,6 +155,10 @@ fun TagActionsDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
+        shape = RoundedCornerShape(28.dp),
+        containerColor = Color(0xFFFEFCF8),
+        titleContentColor = Color(0xFF34332F),
+        textContentColor = Color(0xFF34332F),
         title = { Text(tag.name) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -184,6 +194,10 @@ fun TagManagementDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        shape = RoundedCornerShape(28.dp),
+        containerColor = Color(0xFFFEFCF8),
+        titleContentColor = Color(0xFF34332F),
+        textContentColor = Color(0xFF34332F),
         title = { Text(if (tag == null) "Create tag" else "Edit tag") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -195,17 +209,32 @@ fun TagManagementDialog(
                     modifier = Modifier.fillMaxWidth()
                 )
                 Text("Color", style = MaterialTheme.typography.labelMedium)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     TagColors.forEach { color ->
+                        val colorValue = color.toArgb().toLong() and 0xFFFFFFFFL
+                        val selected = selectedColor == colorValue
                         Box(
-                            Modifier.size(34.dp).clip(CircleShape)
-                                .background(color)
-                                .clickable { selectedColor = color.toArgb().toLong() and 0xFFFFFFFFL }
-                                .padding(3.dp),
+                            Modifier.size(48.dp)
+                                .clip(CircleShape)
+                                .clickable { selectedColor = colorValue },
                             contentAlignment = Alignment.Center
                         ) {
-                            if (selectedColor == (color.toArgb().toLong() and 0xFFFFFFFFL)) {
-                                Text("✓", color = Color(0xFF34332F))
+                            Box(
+                                Modifier.size(32.dp)
+                                    .clip(CircleShape)
+                                    .background(color)
+                                    .border(
+                                        width = if (selected) 2.dp else 1.dp,
+                                        color = if (selected) Color(0xFF746657) else Color(0xFF34332F).copy(alpha = 0.16f),
+                                        shape = CircleShape
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (selected) Text("✓", color = Color(0xFF34332F))
                             }
                         }
                     }
@@ -265,7 +294,11 @@ fun TagManagementDialog(
     if (showIconPicker) {
         AlertDialog(
             onDismissRequest = { showIconPicker = false },
-            title = { Text("Choose tag icon") },
+            shape = RoundedCornerShape(28.dp),
+        containerColor = Color(0xFFFEFCF8),
+        titleContentColor = Color(0xFF34332F),
+        textContentColor = Color(0xFF34332F),
+        title = { Text("Choose tag icon") },
             text = {
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(5),
