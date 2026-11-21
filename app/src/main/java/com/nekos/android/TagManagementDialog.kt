@@ -289,10 +289,10 @@ fun TagManagementDialog(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Checkbox(
-                                checked = app.packageName in selectedPackages,
+                                checked = app.id in selectedPackages,
                                 onCheckedChange = { checked ->
-                                    selectedPackages = if (checked) selectedPackages + app.packageName
-                                    else selectedPackages - app.packageName
+                                    selectedPackages = if (checked) selectedPackages + app.id
+                                    else selectedPackages - app.id
                                 },
                                 colors = CheckboxDefaults.colors(
                                     checkedColor = Color(0xFF746657),
