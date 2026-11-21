@@ -52,7 +52,7 @@ class LauncherInteractionControllerTest {
         val controller = LauncherInteractionController()
         controller.startDrag(
             packageName = "com.example.app",
-            source = LauncherDragSource.FAVORITE,
+            source = LauncherDragSource.APP_DRAWER,
             position = Offset.Zero
         )
 
@@ -127,6 +127,25 @@ class LauncherInteractionControllerTest {
                 cancelled = true
             )
         )
+    }
+
+    @Test
+    fun favoriteDragCannotActivateCancelDropTarget() {
+        val controller = LauncherInteractionController()
+        controller.startDrag(
+            packageName = "com.example.favorite",
+            source = LauncherDragSource.FAVORITE,
+            position = Offset.Zero
+        )
+
+        val updated = controller.updateDrag(
+            position = Offset(20f, 30f),
+            targetIndex = null,
+            cancelTarget = true
+        )
+
+        assertFalse(updated!!.supportsCancelDropTarget)
+        assertFalse(updated.cancelTarget)
     }
 
 }

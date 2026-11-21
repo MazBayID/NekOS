@@ -52,7 +52,7 @@ class LauncherInteractionController {
             position = position,
             hasMoved = true,
             targetIndex = targetIndex,
-            cancelTarget = cancelTarget
+            cancelTarget = current.supportsCancelDropTarget && cancelTarget
         ).also { activeDrag = it }
     }
 
