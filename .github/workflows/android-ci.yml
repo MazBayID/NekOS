@@ -30,7 +30,7 @@ jobs:
           java-version: '17'
 
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
 
       - name: Install Android SDK packages
         run: sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
@@ -46,7 +46,10 @@ jobs:
         run: sed -i '/^android\.aapt2FromMavenOverride=/d' gradle.properties
 
       - name: Build debug APK and run checks
-        run: gradle --no-daemon assembleDebug testDebugUnitTest lintDebug --stacktrace
+        run: |
+          gradle --no-daemon assembleDebug testDebugUnitTest lintDebug \\
+            -Pandroid.aapt2FromMavenOverride="$ANDROID_HOME/build-tools/35.0.0/aapt2" \\
+            --stacktrace
 
       - name: Upload debug APK
         if: success()
