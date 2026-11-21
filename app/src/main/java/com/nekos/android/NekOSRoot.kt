@@ -601,7 +601,7 @@ private fun HomeScreen(
                     painter = painterResource(R.drawable.text_logo_sec),
                     contentDescription = "NekOS",
                     contentScale = ContentScale.Fit,
-                    modifier = Modifier.offset(x = 5.dp).height(60.dp)
+                    modifier = Modifier.offset(x = (-12).dp).height(85.dp)
                 )
                 Row(
                     modifier = Modifier.horizontalScroll(rememberScrollState()),
