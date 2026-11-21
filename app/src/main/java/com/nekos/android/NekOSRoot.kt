@@ -116,9 +116,10 @@ fun NekOSRoot(refreshToken: Int) {
     // Discover launchable apps while the brand splash is visible instead of
     // waiting for an artificial timer before starting initialization.
     LaunchedEffect(refreshToken) {
-        val refreshedApps = withContext(Dispatchers.IO) {
+        val refreshedCatalog = withContext(Dispatchers.IO) {
             loadLaunchableApps(context)
         }
+        val refreshedApps = refreshedCatalog.apps
         apps = refreshedApps
         val currentProfileSerialNumber = context
             .getSystemService(UserManager::class.java)
@@ -139,7 +140,8 @@ fun NekOSRoot(refreshToken: Int) {
         val cleanedReferences = cleanupLauncherReferences(
             favorites = migratedReferences.favorites,
             tags = migratedReferences.tags,
-            installedAppIds = installedAppIds
+            installedAppIds = installedAppIds,
+            unavailableProfileSerialNumbers = refreshedCatalog.unavailableProfileSerialNumbers
         )
         if (cleanedReferences.favorites != latestFavoritePackages) {
             favoritePackages = cleanedReferences.favorites
