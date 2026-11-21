@@ -813,7 +813,21 @@ private fun FavoriteSlot(
                     )
                 }
             }
-            .padding(5.dp),
+            .padding(5.dp)
+            .then(
+                if (app != null) {
+                    Modifier.launcherItemSemantics(
+                        appLabel = app.label,
+                        onActivate = {
+                            onClick(currentSlotCoordinates?.boundsInRoot() ?: Rect.Zero)
+                        },
+                        onShowActions = {
+                            onLongPress(currentSlotCoordinates?.boundsInRoot()?.center ?: Offset.Zero)
+                            onLongPressEnd()
+                        }
+                    )
+                } else Modifier
+            ),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -1035,7 +1049,17 @@ private fun AppGridItem(
                     onDragEnd = onDragEnd,
                     onDragCancel = onDragCancel
                 )
-            },
+            }
+            .launcherItemSemantics(
+                appLabel = app.label,
+                onActivate = {
+                    onClick(currentItemCoordinates?.boundsInRoot() ?: Rect.Zero)
+                },
+                onShowActions = {
+                    onLongPress(currentItemCoordinates?.boundsInRoot()?.center ?: Offset.Zero)
+                    onLongPressEnd()
+                }
+            ),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         if (bitmap != null) {
