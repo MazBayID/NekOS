@@ -6,5 +6,5 @@ internal fun matchesAppDrawerSearch(
 ): Boolean {
     val normalizedQuery = query.trim()
     return normalizedQuery.isBlank() ||
-        label.trimStart().startsWith(normalizedQuery, ignoreCase = true)
+        label.contains(normalizedQuery, ignoreCase = true)
 }
