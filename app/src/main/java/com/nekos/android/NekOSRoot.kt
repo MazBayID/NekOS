@@ -365,7 +365,7 @@ fun NekOSRoot(refreshToken: Int) {
             onFavoriteDragEnd = {
                 val drag = interactionController.finishDrag()
                 if (drag?.hasMoved == true && !drag.cancelTarget) {
-                    drag.targetIndex?.let { placeFavoriteFromDrawer(drag.packageName, it) }
+                    drag.targetIndex?.let { placeFavoriteFromDrawer(drag.appId, it) }
                 }
                 favoriteDrag = null
                 cancelDropBounds = null
