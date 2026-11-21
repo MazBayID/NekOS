@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="main_assets/nekos_3.jpg" alt="NekOS logo" width="500" />
-</p>
-
 # NekOS
 
 A calm, customizable Android launcher.
@@ -14,6 +10,7 @@ A calm, customizable Android launcher.
 - App drawer uses a five-column grid, native Android application icons, alphabetical order, and prefix search.
 - Long-press an app in the drawer to open App info, Add to favorite, and Uninstall actions.
 - Uninstall requests are handed to Android's system confirmation UI.
+- Tag collection persistence foundation is in place: names, stable IDs, optional icon IDs, colors, and assigned package names are stored locally.
 
 ## Branding assets
 
@@ -31,4 +28,4 @@ A calm, customizable Android launcher.
 
 Open this repository in Android Studio, sync Gradle, and run the `app` module on an Android device or emulator.
 
-The first vertical slice includes local favorite persistence and the bundled 100-icon tag catalog. Tag management, the catalog-backed icon picker UI, and settings are the next implementation steps.
+The current vertical slice includes local favorite persistence, the bundled 100-icon tag catalog, and the tag-storage model. The catalog-backed icon picker, tag management UI, app assignment flow, and settings remain under development.
