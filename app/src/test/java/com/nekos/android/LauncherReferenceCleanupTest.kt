@@ -42,7 +42,7 @@ class LauncherReferenceCleanupTest {
             NekTag(
                 id = "work",
                 name = "Work",
-                appPackages = listOf("42|com.example.work", "10|com.example.removed")
+                appPackages = listOf("42::com.example.work", "10::com.example.removed")
             )
         )
 
@@ -53,13 +53,13 @@ class LauncherReferenceCleanupTest {
             unavailableProfileSerialNumbers = setOf(42L)
         )
 
-        assertEquals(listOf("42|com.example.work", null), result.favorites)
-        assertEquals(listOf("42|com.example.work"), result.tags.single().appPackages)
+        assertEquals(listOf("42::com.example.work", null), result.favorites)
+        assertEquals(listOf("42::com.example.work"), result.tags.single().appPackages)
     }
 
     @Test
     fun migratesLegacyFavoritesAndTagsToCurrentProfileIds() {
-        val favorites = listOf("com.example.alpha", null, "42|com.example.work")
+        val favorites = listOf("com.example.alpha", null, "42::com.example.work")
         val tags = listOf(
             NekTag(
                 id = "tools",
@@ -78,11 +78,11 @@ class LauncherReferenceCleanupTest {
         )
 
         assertEquals(
-            listOf("10|com.example.alpha", null, "42|com.example.work"),
+            listOf("10::com.example.alpha", null, "42::com.example.work"),
             migrated.favorites
         )
         assertEquals(
-            listOf("10|com.example.alpha", "10|com.example.beta"),
+            listOf("10::com.example.alpha", "10::com.example.beta"),
             migrated.tags.single().appPackages
         )
     }
