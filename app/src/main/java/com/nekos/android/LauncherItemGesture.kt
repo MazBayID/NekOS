@@ -10,15 +10,17 @@ import androidx.compose.ui.input.pointer.positionChange
 /**
  * One pointer-input owner for launcher item tap, long-press, and long-press drag.
  *
- * A quick release is a tap. A stationary long-press release opens the item menu.
- * Movement after long-press crosses touch slop before a drag starts. The same
- * detector is shared by Favorite cells and App Drawer cells to avoid competing
- * clickable and pointerInput recognizers on the same item.
+ * A quick release is a tap. A stationary long-press immediately previews the item
+ * menu while the pointer remains down; release makes the menu actionable.
+ * Movement beyond touch slop dismisses the preview and starts the existing drag.
+ * The same detector is shared by Favorite and App Drawer cells.
  */
 suspend fun PointerInputScope.detectLauncherItemGesture(
     toRootPosition: (Offset) -> Offset,
     onTap: () -> Unit,
-    onLongPress: () -> Unit,
+    onLongPress: (Offset) -> Unit,
+    onLongPressEnd: () -> Unit,
+    onLongPressCancel: () -> Unit,
     onDragStart: (Offset) -> Unit,
     onDrag: (Offset) -> Unit,
     onDragEnd: () -> Unit,
@@ -36,6 +38,8 @@ suspend fun PointerInputScope.detectLauncherItemGesture(
             return@awaitEachGesture
         }
 
+        onLongPress(toRootPosition(longPress.position))
+
         var accumulated = Offset.Zero
         var dragging = false
         var completed = false
@@ -43,16 +47,20 @@ suspend fun PointerInputScope.detectLauncherItemGesture(
         while (true) {
             val event = awaitPointerEvent()
             val change = event.changes.firstOrNull { it.id == down.id }
-            if (change == null) break
+            if (change == null) {
+                if (dragging) onDragCancel() else onLongPressCancel()
+                completed = true
+                break
+            }
 
             if (event.changes.any { it.id != down.id && it.pressed }) {
-                if (dragging) onDragCancel()
+                if (dragging) onDragCancel() else onLongPressCancel()
                 completed = true
                 break
             }
 
             if (!change.pressed) {
-                if (dragging) onDragEnd() else onLongPress()
+                if (dragging) onDragEnd() else onLongPressEnd()
                 completed = true
                 break
             }
@@ -62,6 +70,7 @@ suspend fun PointerInputScope.detectLauncherItemGesture(
 
             if (!dragging && accumulated.getDistance() > viewConfiguration.touchSlop) {
                 dragging = true
+                onLongPressCancel()
                 val rootPosition = toRootPosition(change.position)
                 onDragStart(rootPosition)
                 change.consume()
@@ -73,5 +82,6 @@ suspend fun PointerInputScope.detectLauncherItemGesture(
         }
 
         if (dragging && !completed) onDragCancel()
+        else if (!dragging && !completed) onLongPressCancel()
     }
 }
