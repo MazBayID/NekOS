@@ -132,6 +132,24 @@ class LauncherItemGestureTest {
     }
 
     @Test
+    fun multiplePointersBeforeLongPressDoNotShowPreviewOrTap() {
+        setGestureContent()
+
+        composeRule.onNodeWithTag(GESTURE_TARGET).performTouchInput {
+            down(pointerId = 0, position = Offset(40f, 40f))
+            down(pointerId = 1, position = Offset(80f, 80f))
+            advanceEventTime(viewConfiguration.longPressTimeoutMillis + 50)
+            move()
+            up(pointerId = 1)
+            up(pointerId = 0)
+        }
+
+        composeRule.runOnIdle {
+            assertEquals(emptyList<String>(), events)
+        }
+    }
+
+    @Test
     fun secondPointerCancelsThePendingMenuPreview() {
         setGestureContent()
 
