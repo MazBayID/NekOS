@@ -182,15 +182,16 @@ fun NekOSRoot(refreshToken: Int) {
         val refreshedApps = loadLaunchableApps(context)
         apps = refreshedApps
         val installedPackages = refreshedApps.mapTo(mutableSetOf<String>()) { it.packageName }
-        val cleanedFavorites = favoritePackages.map { packageName ->
-            packageName?.takeIf { it in installedPackages }
+        val cleanedReferences = cleanupLauncherReferences(
+            favorites = favoritePackages,
+            tags = tags,
+            installedPackages = installedPackages
+        )
+        if (cleanedReferences.favorites != favoritePackages) {
+            favoritePackages = cleanedReferences.favorites
+            saveFavoritePackages(context, cleanedReferences.favorites)
         }
-        if (cleanedFavorites != favoritePackages) {
-            favoritePackages = cleanedFavorites
-            saveFavoritePackages(context, cleanedFavorites)
-        }
-        val cleanedTags = tags.map { tag -> tag.copy(appPackages = tag.appPackages.filter { it in installedPackages }) }
-        if (cleanedTags != tags) saveTags(cleanedTags)
+        if (cleanedReferences.tags != tags) saveTags(cleanedReferences.tags)
     }
 
     BoxWithConstraints(Modifier.fillMaxSize().background(WarmBackground)) {
