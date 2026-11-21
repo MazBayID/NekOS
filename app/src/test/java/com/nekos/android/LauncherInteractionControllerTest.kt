@@ -24,6 +24,7 @@ class LauncherInteractionControllerTest {
         assertEquals(position, session.position)
         assertFalse(session.hasMoved)
         assertNull(session.targetIndex)
+        assertFalse(session.cancelTarget)
         assertEquals(session, controller.activeDrag)
     }
 
@@ -38,12 +39,14 @@ class LauncherInteractionControllerTest {
 
         val updated = controller.updateDrag(
             position = Offset(80f, 120f),
-            targetIndex = 7
+            targetIndex = 7,
+            cancelTarget = true
         )
 
         assertTrue(updated!!.hasMoved)
         assertEquals(Offset(80f, 120f), updated.position)
         assertEquals(7, updated.targetIndex)
+        assertTrue(updated.cancelTarget)
         assertEquals(updated, controller.activeDrag)
     }
 
@@ -55,11 +58,12 @@ class LauncherInteractionControllerTest {
             source = LauncherDragSource.APP_DRAWER,
             position = Offset.Zero
         )
-        controller.updateDrag(Offset(10f, 10f), 3)
+        controller.updateDrag(Offset(10f, 10f), 3, cancelTarget = true)
 
         val finished = controller.finishDrag()
 
         assertEquals(3, finished!!.targetIndex)
+        assertTrue(finished.cancelTarget)
         assertNull(controller.activeDrag)
         assertNull(controller.finishDrag())
     }
