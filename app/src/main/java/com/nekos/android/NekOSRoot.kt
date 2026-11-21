@@ -831,16 +831,22 @@ private fun DockBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(22.dp))
-            .background(TagSurface.copy(alpha = 0.82f))
-            .padding(horizontal = 6.dp, vertical = 7.dp),
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
+            .clip(RoundedCornerShape(24.dp))
+            .background(TagSurface.copy(alpha = 0.86f))
+            .padding(horizontal = 8.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         repeat(5) { index ->
             val app = dockPackages.getOrNull(index)?.let { appByPackage[it] }
             Box(
-                modifier = Modifier.weight(1f).aspectRatio(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .aspectRatio(1f)
+                    .clip(RoundedCornerShape(16.dp))
+                    .clickable(enabled = app != null) {
+                        app?.let { onAppClick(it.packageName) }
+                    },
                 contentAlignment = Alignment.Center
             ) {
                 if (app != null) {
@@ -851,9 +857,8 @@ private fun DockBar(
                         bitmap = bitmap,
                         contentDescription = app.label,
                         modifier = Modifier
-                            .size(48.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .clickable { onAppClick(app.packageName) }
+                            .size(50.dp)
+                            .clip(RoundedCornerShape(13.dp))
                     )
                 }
             }
@@ -914,7 +919,7 @@ private fun FavoriteSlot(
             Image(
                 bitmap = bitmap,
                 contentDescription = app.label,
-                modifier = Modifier.size(48.dp)
+                modifier = Modifier.size(50.dp)
             )
         }
     }
