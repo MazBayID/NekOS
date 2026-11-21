@@ -193,6 +193,7 @@ fun NekOSRoot(refreshToken: Int) {
             },
             onFavoriteMove = { from, to -> moveFavorite(from, to) },
             onTagClick = { tag -> viewingTag = tag },
+            onTagLongPress = { tag -> tagEditorTarget = tag; showTagEditor = true },
             onAddTag = { tagEditorTarget = null; showTagEditor = true }
         )
 
@@ -344,6 +345,7 @@ private fun HomeScreen(
     onFavoriteLongPress: (Int) -> Unit,
     onFavoriteMove: (Int, Int) -> Unit,
     onTagClick: (NekTag) -> Unit,
+    onTagLongPress: (NekTag) -> Unit,
     onAddTag: () -> Unit
 ) {
     val appByPackage = remember(apps) { apps.associateBy { it.packageName } }
@@ -408,7 +410,7 @@ private fun HomeScreen(
                     modifier = Modifier.horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    tags.forEach { tag -> TagPill(tag, apps, onClick = { onTagClick(tag) }) }
+                    tags.forEach { tag -> TagPill(tag, apps, onClick = { onTagClick(tag) }, onLongClick = { onTagLongPress(tag) }) }
                     AddTagPill(onClick = onAddTag)
                 }
             }
@@ -607,7 +609,7 @@ private fun AppActionRow(
 }
 
 @Composable
-private fun TagPill(tag: NekTag, apps: List<InstalledApp>, onClick: () -> Unit) {
+private fun TagPill(tag: NekTag, apps: List<InstalledApp>, onClick: () -> Unit, onLongClick: () -> Unit) {
     val assigned = remember(tag.appPackages, apps) {
         val appByPackage = apps.associateBy { it.packageName }
         tag.appPackages.mapNotNull(appByPackage::get).take(3)
@@ -616,7 +618,7 @@ private fun TagPill(tag: NekTag, apps: List<InstalledApp>, onClick: () -> Unit) 
         modifier = Modifier
             .clip(RoundedCornerShape(18.dp))
             .background(Color(tag.colorArgb.toInt()))
-            .clickable(onClick = onClick)
+            .combinedClickable(onClick = onClick, onLongClick = onLongClick)
             .padding(horizontal = 10.dp, vertical = 7.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(7.dp)
