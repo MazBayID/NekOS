@@ -109,6 +109,7 @@ fun NekOSRoot(refreshToken: Int) {
         mutableMapOf<String, androidx.compose.ui.graphics.ImageBitmap>()
     }
     var favoritePackages by remember { mutableStateOf(loadFavoritePackages(context)) }
+    var dockPackages by remember { mutableStateOf(loadDockPackages(context)) }
     val interactionController = remember { LauncherInteractionController() }
     var favoriteDrag by remember { mutableStateOf<LauncherDragSession?>(null) }
     val favoriteSlotBounds = remember { mutableStateMapOf<Int, Rect>() }
@@ -148,9 +149,40 @@ fun NekOSRoot(refreshToken: Int) {
         saveFavoritePackages(context, updated)
     }
 
+    fun updateDock(updated: List<String?>) {
+        dockPackages = updated
+        saveDockPackages(context, updated)
+    }
+
+    fun toggleDock(packageName: String) {
+        if (packageName in dockPackages.filterNotNull()) {
+            updateDock(removeDockPackage(dockPackages, packageName))
+            return
+        }
+        when (val result = addDockPackage(dockPackages, packageName)) {
+            is DockSlotOperation.Updated -> {
+                updateDock(result.packages)
+                if (packageName in favoritePackages.filterNotNull()) {
+                    updateFavorites(favoritePackages.map { if (it == packageName) null else it })
+                }
+            }
+            DockSlotOperation.Unchanged -> Unit
+            DockSlotOperation.Full -> Toast.makeText(
+                context,
+                "Dock is full",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
     fun addFavorite(packageName: String) {
         when (val result = addFavoriteToSlots(favoritePackages, packageName)) {
-            is FavoriteSlotOperation.Updated -> updateFavorites(result.packages)
+            is FavoriteSlotOperation.Updated -> {
+                updateFavorites(result.packages)
+                if (packageName in dockPackages.filterNotNull()) {
+                    updateDock(removeDockPackage(dockPackages, packageName))
+                }
+            }
             FavoriteSlotOperation.Unchanged -> Unit
             FavoriteSlotOperation.Full -> Toast.makeText(
                 context,
@@ -162,7 +194,12 @@ fun NekOSRoot(refreshToken: Int) {
 
     fun placeFavoriteFromDrawer(packageName: String, targetIndex: Int) {
         when (val result = placePackageInFavoriteSlot(favoritePackages, packageName, targetIndex)) {
-            is FavoriteSlotOperation.Updated -> updateFavorites(result.packages)
+            is FavoriteSlotOperation.Updated -> {
+                updateFavorites(result.packages)
+                if (packageName in dockPackages.filterNotNull()) {
+                    updateDock(removeDockPackage(dockPackages, packageName))
+                }
+            }
             FavoriteSlotOperation.Unchanged -> Unit
             FavoriteSlotOperation.Full -> Toast.makeText(
                 context,
@@ -190,6 +227,13 @@ fun NekOSRoot(refreshToken: Int) {
             saveFavoritePackages(context, cleanedReferences.favorites)
         }
         if (cleanedReferences.tags != tags) saveTags(cleanedReferences.tags)
+        val cleanedDock = normalizeDockPackages(
+            dockPackages.map { packageName -> packageName?.takeIf { it in installedPackages } }
+        )
+        if (cleanedDock != dockPackages) {
+            dockPackages = cleanedDock
+            saveDockPackages(context, cleanedDock)
+        }
     }
 
     BoxWithConstraints(Modifier.fillMaxSize().background(WarmBackground)) {
@@ -219,6 +263,7 @@ fun NekOSRoot(refreshToken: Int) {
         HomeScreen(
             apps = apps,
             favoritePackages = favoritePackages,
+            dockPackages = dockPackages,
             tags = tags,
             homeSwipeThresholdPx = homeSwipeThresholdPx,
             backgroundBlurRadiusPx = if (favoriteDrag?.hasMoved == true) {
@@ -245,6 +290,7 @@ fun NekOSRoot(refreshToken: Int) {
                 }
             },
             onFavoriteClick = { launchApp(context, it) },
+            onDockClick = { launchApp(context, it) },
             onFavoriteLongPress = { index, position ->
                 favoritePackages.getOrNull(index)?.let { packageName ->
                     apps.firstOrNull { it.packageName == packageName }?.let { app ->
@@ -393,6 +439,7 @@ fun NekOSRoot(refreshToken: Int) {
         }
         popupApp?.let { app ->
             val isFavorite = app.packageName in favoritePackages.filterNotNull()
+            val isDocked = app.packageName in dockPackages.filterNotNull()
             val isInteractive = actionMenuApp != null
             Column(
                 modifier = Modifier
@@ -416,6 +463,7 @@ fun NekOSRoot(refreshToken: Int) {
                 LauncherAppActionMenuContent(
                     app = app,
                     isFavorite = isFavorite,
+                    isDocked = isDocked,
                     isInteractive = isInteractive,
                     onAppInfo = {
                         actionMenuApp = null
@@ -427,6 +475,10 @@ fun NekOSRoot(refreshToken: Int) {
                         } else {
                             addFavorite(app.packageName)
                         }
+                        actionMenuApp = null
+                    },
+                    onDock = {
+                        toggleDock(app.packageName)
                         actionMenuApp = null
                     },
                     onUninstall = {
@@ -551,12 +603,14 @@ fun NekOSRoot(refreshToken: Int) {
 private fun HomeScreen(
     apps: List<InstalledApp>,
     favoritePackages: List<String?>,
+    dockPackages: List<String?>,
     tags: List<NekTag>,
     homeSwipeThresholdPx: Float,
     backgroundBlurRadiusPx: Float,
     onDrawerDrag: (Float) -> Unit,
     onDrawerDragEnd: (Float) -> Unit,
     onFavoriteClick: (String) -> Unit,
+    onDockClick: (String) -> Unit,
     onFavoriteLongPress: (Int, Offset) -> Unit,
     onFavoriteLongPressEnd: () -> Unit,
     onFavoriteLongPressCancel: () -> Unit,
@@ -654,6 +708,52 @@ private fun HomeScreen(
                             )
                         }
                     }
+                }
+                if (dockPackages.any { it != null }) {
+                    DockBar(
+                        dockPackages = dockPackages,
+                        appByPackage = appByPackage,
+                        onAppClick = onDockClick
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DockBar(
+    dockPackages: List<String?>,
+    appByPackage: Map<String, InstalledApp>,
+    onAppClick: (String) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(22.dp))
+            .background(TagSurface.copy(alpha = 0.82f))
+            .padding(horizontal = 6.dp, vertical = 7.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        repeat(5) { index ->
+            val app = dockPackages.getOrNull(index)?.let { appByPackage[it] }
+            Box(
+                modifier = Modifier.weight(1f).aspectRatio(1f),
+                contentAlignment = Alignment.Center
+            ) {
+                if (app != null) {
+                    val bitmap = remember(app.packageName) {
+                        app.icon.toBitmap(96, 96).asImageBitmap()
+                    }
+                    Image(
+                        bitmap = bitmap,
+                        contentDescription = app.label,
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .clickable { onAppClick(app.packageName) }
+                    )
                 }
             }
         }
