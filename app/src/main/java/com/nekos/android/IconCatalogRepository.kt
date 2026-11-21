@@ -16,6 +16,25 @@ data class CatalogIcon(
 )
 
 /**
+ * Accepts paths contained in the icon catalog's dedicated assets/icons directory.
+ *
+ * Rejecting empty and dot path segments keeps asset lookup unambiguous and prevents
+ * traversal outside the catalog directory.
+ */
+internal fun isValidCatalogIconPath(path: String): Boolean {
+    if (!path.startsWith("icons/") || '\\' in path || '\u0000' in path) {
+        return false
+    }
+
+    val segments = path.split('/')
+    return segments.size >= 2 &&
+        segments.first() == "icons" &&
+        segments.drop(1).all { segment ->
+            segment.isNotBlank() && segment != "." && segment != ".."
+        }
+}
+
+/**
  * Reads the tag-icon catalog bundled under assets/ikon.
  * The JSON index is the source of truth; images are decoded only when requested.
  */
@@ -35,7 +54,7 @@ class IconCatalogRepository(context: Context) {
             for (index in 0 until items.length()) {
                 val item = items.getJSONObject(index)
                 val file = item.getString("file")
-                require(file.startsWith("icons/") && !file.contains("..")) {
+                require(isValidCatalogIconPath(file)) {
                     "Invalid catalog asset path: $file"
                 }
                 add(
@@ -60,7 +79,7 @@ class IconCatalogRepository(context: Context) {
     }
 
     fun loadBitmap(icon: CatalogIcon): Bitmap? {
-        require(icon.file.startsWith("icons/") && !icon.file.contains("..")) {
+        require(isValidCatalogIconPath(icon.file)) {
             "Invalid catalog asset path: ${icon.file}"
         }
         return appContext.assets.open("ikon/${icon.file}").use {
