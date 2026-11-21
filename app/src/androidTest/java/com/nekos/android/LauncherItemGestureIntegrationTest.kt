@@ -1,5 +1,6 @@
 package com.nekos.android
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
@@ -30,6 +31,7 @@ class LauncherItemGestureIntegrationTest {
     @get:Rule
     val composeRule = createComposeRule()
 
+    @OptIn(ExperimentalFoundationApi::class)
     @Test
     fun longPressOnEmptyHomeSurfaceOpensLauncherSettings() {
         var settingsOpened = false
