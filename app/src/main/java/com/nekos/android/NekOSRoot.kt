@@ -268,7 +268,7 @@ fun NekOSRoot(refreshToken: Int) {
                 val target = favoriteSlotBounds.entries.firstOrNull { it.value.contains(position) }?.key
                 favoriteDrag = interactionController.updateDrag(
                     position, target,
-                    cancelTarget = cancelDropBounds?.contains(position) == true
+                    cancelTarget = favoriteDrag?.supportsCancelDropTarget == true && cancelDropBounds?.contains(position) == true
                 )
             },
             onFavoriteDragEnd = {
@@ -348,7 +348,7 @@ fun NekOSRoot(refreshToken: Int) {
                     val target = favoriteSlotBounds.entries.firstOrNull { it.value.contains(position) }?.key
                     favoriteDrag = interactionController.updateDrag(
                         position, target,
-                        cancelTarget = cancelDropBounds?.contains(position) == true
+                        cancelTarget = favoriteDrag?.supportsCancelDropTarget == true && cancelDropBounds?.contains(position) == true
                     )
                 },
                 onAppDragEnd = {
@@ -449,7 +449,7 @@ fun NekOSRoot(refreshToken: Int) {
             }
         }
 
-        favoriteDrag?.takeIf { it.hasMoved }?.let { drag ->
+        favoriteDrag?.takeIf { it.hasMoved && it.supportsCancelDropTarget }?.let { drag ->
             Column(
                 modifier = Modifier.align(Alignment.Center)
                     .onGloballyPositioned { cancelDropBounds = it.boundsInRoot() }
