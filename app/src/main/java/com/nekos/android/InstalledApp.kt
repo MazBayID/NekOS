@@ -1,5 +1,6 @@
 package com.nekos.android
 
+import android.app.ActivityOptions
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
@@ -43,7 +44,12 @@ fun launchApp(context: Context, packageName: String) {
             return
         }
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        context.startActivity(intent)
+        val launchOptions = ActivityOptions.makeCustomAnimation(
+            context,
+            R.anim.app_open_enter,
+            R.anim.app_open_exit
+        )
+        context.startActivity(intent, launchOptions.toBundle())
     } catch (error: ActivityNotFoundException) {
         Toast.makeText(
             context,
