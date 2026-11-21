@@ -22,6 +22,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -375,7 +376,9 @@ fun NekOSRoot(refreshToken: Int) {
                         )
                     }
                     .zIndex(20f)
-                    .widthIn(max = 210.dp)
+                    .widthIn(max = minOf(210.dp, maxWidth))
+                    .heightIn(max = maxHeight)
+                    .verticalScroll(rememberScrollState())
                     .clip(RoundedCornerShape(16.dp))
                     .background(Color(0xFFFEFCF8))
                     .padding(horizontal = 10.dp, vertical = 10.dp),
