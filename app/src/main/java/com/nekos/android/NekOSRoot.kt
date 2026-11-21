@@ -1050,9 +1050,10 @@ private fun FavoriteSlot(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        if (app != null && bitmap != null) {
+        val iconBitmap = bitmap
+        if (app != null && iconBitmap != null) {
             Image(
-                bitmap = bitmap,
+                bitmap = iconBitmap,
                 contentDescription = app.label,
                 modifier = Modifier.size(50.dp)
             )
