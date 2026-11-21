@@ -35,7 +35,7 @@ NekOS uses a single Activity with Jetpack Compose. Keep the Activity responsible
 - The matching Markdown files are human-readable references only.
 - Tag icon filenames in `icons_index.json` are relative to the `icons/` directory; UI icon paths in `ui_index.json` are relative to `main_assets/ikon/` and begin with `ui/`.
 - The runtime tag catalog is bundled under `app/src/main/assets/ikon/`; its copied JSON paths are normalized to begin with `icons/` so they resolve relative to the bundled index.
-- Keep source PNGs untouched. Copy only selected runtime assets into the Android app until the icon-picker/catalog pipeline is implemented.
+- Keep source PNGs untouched. The catalog index and icon files are bundled as runtime assets for the tag icon picker.
 - Keep source icon IDs and filenames intact when mapping them into app resources.
 
 ## Implementation sequence
@@ -43,5 +43,5 @@ NekOS uses a single Activity with Jetpack Compose. Keep the Activity responsible
 1. Stabilize app actions, favorite interactions, and app-list refresh.
 2. Extract favorite state and package actions from the root composable into focused domain/data components.
 3. Implement tag management UI with catalog icon selection, color palette, and app assignment.
-4. Add tag-aware app filtering / collection navigation and refine the home-screen tag interaction.
+4. Add tag collection view for launching assigned apps and refine the home-screen tag interaction.
 5. Extract remaining root state and add settings after the home/drawer/favorites/tags vertical slice is reliable.
