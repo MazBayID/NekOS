@@ -26,7 +26,7 @@ fun saveFavoritePackages(context: Context, packages: List<String?>) {
         .apply()
 }
 
-private fun normalizeFavoritePackages(packages: List<String?>): List<String?> {
+internal fun normalizeFavoritePackages(packages: List<String?>): List<String?> {
     val seen = mutableSetOf<String>()
     val normalized = packages.take(FAVORITE_SLOT_COUNT).map { packageName ->
         packageName?.takeIf { it.isNotBlank() && seen.add(it) }
