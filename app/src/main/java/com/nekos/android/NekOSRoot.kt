@@ -256,7 +256,6 @@ fun NekOSRoot(refreshToken: Int) {
                         )
                     }
                 },
-                onAppLongPress = { actionMenuApp = it },
                 onAppDragStart = { app, position -> favoriteDrag = FavoriteDrag(app.packageName, position) },
                 onAppDrag = { position -> favoriteDrag = favoriteDrag?.copy(position = position) },
                 onAppDragEnd = {
@@ -644,7 +643,6 @@ private fun AppDrawer(
     closeThresholdPx: Float,
     modifier: Modifier = Modifier,
     onAppClick: (InstalledApp) -> Unit,
-    onAppLongPress: (InstalledApp) -> Unit,
     onAppDragStart: (InstalledApp, Offset) -> Unit,
     onAppDrag: (Offset) -> Unit,
     onAppDragEnd: () -> Unit,
@@ -782,7 +780,6 @@ private fun AppDrawer(
                         app = app,
                         bitmap = bitmap,
                         onClick = { onAppClick(app) },
-                        onLongClick = { onAppLongPress(app) },
                         onDragStart = { position -> onAppDragStart(app, position) },
                         onDrag = onAppDrag,
                         onDragEnd = onAppDragEnd
@@ -799,7 +796,6 @@ private fun AppGridItem(
     app: InstalledApp,
     bitmap: androidx.compose.ui.graphics.ImageBitmap?,
     onClick: () -> Unit,
-    onLongClick: () -> Unit,
     onDragStart: (Offset) -> Unit,
     onDrag: (Offset) -> Unit,
     onDragEnd: () -> Unit
@@ -819,7 +815,7 @@ private fun AppGridItem(
                     onDragCancel = onDragEnd
                 )
             }
-            .combinedClickable(onClick = onClick, onLongClick = onLongClick),
+            .clickable(onClick = onClick),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         if (bitmap != null) {
