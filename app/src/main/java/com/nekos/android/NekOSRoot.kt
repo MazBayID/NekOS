@@ -139,7 +139,7 @@ fun NekOSRoot(refreshToken: Int) {
         val cleanedReferences = cleanupLauncherReferences(
             favorites = migratedReferences.favorites,
             tags = migratedReferences.tags,
-            installedPackages = installedAppIds
+            installedAppIds = installedAppIds
         )
         if (cleanedReferences.favorites != latestFavoritePackages) {
             favoritePackages = cleanedReferences.favorites
