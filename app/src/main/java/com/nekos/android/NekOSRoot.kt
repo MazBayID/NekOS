@@ -776,6 +776,8 @@ private fun HomeScreen(
     onAddTag: () -> Unit
 ) {
     val appByPackage = remember(apps) { apps.associateBy { it.packageName } }
+    val currentOnDrawerDrag by rememberUpdatedState(onDrawerDrag)
+    val currentOnDrawerDragEnd by rememberUpdatedState(onDrawerDragEnd)
     Box(Modifier.fillMaxSize().background(backgroundColor)) {
         wallpaper?.let { image ->
             Image(
@@ -838,16 +840,16 @@ private fun HomeScreen(
                             totalDrag += dragAmount
                             if (totalDrag < 0f) {
                                 drawerDragStarted = true
-                                onDrawerDrag(totalDrag)
+                                currentOnDrawerDrag(totalDrag)
                             }
                         },
                         onDragEnd = {
-                            if (drawerDragStarted) onDrawerDragEnd(totalDrag, false)
+                            if (drawerDragStarted) currentOnDrawerDragEnd(totalDrag, false)
                             totalDrag = 0f
                             drawerDragStarted = false
                         },
                         onDragCancel = {
-                            if (drawerDragStarted) onDrawerDragEnd(totalDrag, true)
+                            if (drawerDragStarted) currentOnDrawerDragEnd(totalDrag, true)
                             totalDrag = 0f
                             drawerDragStarted = false
                         }
@@ -965,6 +967,14 @@ private fun FavoriteSlot(
     }
     var slotCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
     val currentSlotCoordinates by rememberUpdatedState(slotCoordinates)
+    val currentOnClick by rememberUpdatedState(onClick)
+    val currentOnLongPress by rememberUpdatedState(onLongPress)
+    val currentOnLongPressEnd by rememberUpdatedState(onLongPressEnd)
+    val currentOnLongPressCancel by rememberUpdatedState(onLongPressCancel)
+    val currentOnDragStart by rememberUpdatedState(onDragStart)
+    val currentOnDrag by rememberUpdatedState(onDrag)
+    val currentOnDragEnd by rememberUpdatedState(onDragEnd)
+    val currentOnDragCancel by rememberUpdatedState(onDragCancel)
     Column(
         modifier = modifier
             .aspectRatio(1f)
@@ -978,14 +988,14 @@ private fun FavoriteSlot(
                 if (app != null) {
                     detectLauncherItemGesture(
                         toRootPosition = { local -> currentSlotCoordinates?.localToRoot(local) ?: local },
-                        onTap = { onClick(currentSlotCoordinates?.boundsInRoot() ?: Rect.Zero) },
-                        onLongPress = onLongPress,
-                        onLongPressEnd = onLongPressEnd,
-                        onLongPressCancel = onLongPressCancel,
-                        onDragStart = onDragStart,
-                        onDrag = onDrag,
-                        onDragEnd = onDragEnd,
-                        onDragCancel = onDragCancel
+                        onTap = { currentOnClick(currentSlotCoordinates?.boundsInRoot() ?: Rect.Zero) },
+                        onLongPress = currentOnLongPress,
+                        onLongPressEnd = currentOnLongPressEnd,
+                        onLongPressCancel = currentOnLongPressCancel,
+                        onDragStart = currentOnDragStart,
+                        onDrag = currentOnDrag,
+                        onDragEnd = currentOnDragEnd,
+                        onDragCancel = currentOnDragCancel
                     )
                 }
             }
@@ -1074,6 +1084,11 @@ private fun TagPill(
     }
     var handleCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
     val currentHandleCoordinates by rememberUpdatedState(handleCoordinates)
+    val currentOnHandleClick by rememberUpdatedState(onHandleClick)
+    val currentOnDragStart by rememberUpdatedState(onDragStart)
+    val currentOnDrag by rememberUpdatedState(onDrag)
+    val currentOnDragEnd by rememberUpdatedState(onDragEnd)
+    val currentOnDragCancel by rememberUpdatedState(onDragCancel)
     DisposableEffect(tag.id) {
         onDispose { onBoundsRemoved(tag.id) }
     }
@@ -1129,14 +1144,14 @@ private fun TagPill(
                         toRootPosition = { local ->
                             currentHandleCoordinates?.localToRoot(local) ?: local
                         },
-                        onTap = onHandleClick,
+                        onTap = currentOnHandleClick,
                         onLongPress = {},
                         onLongPressEnd = {},
                         onLongPressCancel = {},
-                        onDragStart = onDragStart,
-                        onDrag = onDrag,
-                        onDragEnd = onDragEnd,
-                        onDragCancel = onDragCancel
+                        onDragStart = currentOnDragStart,
+                        onDrag = currentOnDrag,
+                        onDragEnd = currentOnDragEnd,
+                        onDragCancel = currentOnDragCancel
                     )
                 }
                 .semantics {
@@ -1343,6 +1358,14 @@ private fun AppGridItem(
 ) {
     var itemCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
     val currentItemCoordinates by rememberUpdatedState(itemCoordinates)
+    val currentOnClick by rememberUpdatedState(onClick)
+    val currentOnLongPress by rememberUpdatedState(onLongPress)
+    val currentOnLongPressEnd by rememberUpdatedState(onLongPressEnd)
+    val currentOnLongPressCancel by rememberUpdatedState(onLongPressCancel)
+    val currentOnDragStart by rememberUpdatedState(onDragStart)
+    val currentOnDrag by rememberUpdatedState(onDrag)
+    val currentOnDragEnd by rememberUpdatedState(onDragEnd)
+    val currentOnDragCancel by rememberUpdatedState(onDragCancel)
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -1352,14 +1375,14 @@ private fun AppGridItem(
             .pointerInput(app.packageName) {
                 detectLauncherItemGesture(
                     toRootPosition = { local -> currentItemCoordinates?.localToRoot(local) ?: local },
-                    onTap = { onClick(currentItemCoordinates?.boundsInRoot() ?: Rect.Zero) },
-                    onLongPress = onLongPress,
-                    onLongPressEnd = onLongPressEnd,
-                    onLongPressCancel = onLongPressCancel,
-                    onDragStart = onDragStart,
-                    onDrag = onDrag,
-                    onDragEnd = onDragEnd,
-                    onDragCancel = onDragCancel
+                    onTap = { currentOnClick(currentItemCoordinates?.boundsInRoot() ?: Rect.Zero) },
+                    onLongPress = currentOnLongPress,
+                    onLongPressEnd = currentOnLongPressEnd,
+                    onLongPressCancel = currentOnLongPressCancel,
+                    onDragStart = currentOnDragStart,
+                    onDrag = currentOnDrag,
+                    onDragEnd = currentOnDragEnd,
+                    onDragCancel = currentOnDragCancel
                 )
             }
             .launcherItemSemantics(
