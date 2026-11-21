@@ -157,6 +157,8 @@ fun NekOSRoot(refreshToken: Int) {
     var actionMenuTag by remember { mutableStateOf<NekTag?>(null) }
     val tagPillBounds = remember { mutableStateMapOf<String, Rect>() }
     var draggedTagId by remember { mutableStateOf<String?>(null) }
+    var draggedTagPreview by remember { mutableStateOf<NekTag?>(null) }
+    var draggedTagPosition by remember { mutableStateOf(Offset.Zero) }
     var tagDropTargetId by remember { mutableStateOf<String?>(null) }
     var showTagEditor by remember { mutableStateOf(false) }
     var actionMenuApp by remember { mutableStateOf<InstalledApp?>(null) }
@@ -357,11 +359,14 @@ fun NekOSRoot(refreshToken: Int) {
             onTagBoundsRemoved = { tagId -> tagPillBounds.remove(tagId) },
             draggedTagId = draggedTagId,
             tagDropTargetId = tagDropTargetId,
-            onTagDragStart = { tag, _ ->
+            onTagDragStart = { tag, position ->
                 draggedTagId = tag.id
+                draggedTagPreview = tag
+                draggedTagPosition = position
                 tagDropTargetId = tag.id
             },
             onTagDrag = { position ->
+                draggedTagPosition = position
                 tagDropTargetId = tagPillBounds.entries
                     .firstOrNull { (_, bounds) -> bounds.contains(position) }
                     ?.key
@@ -373,14 +378,47 @@ fun NekOSRoot(refreshToken: Int) {
                     saveTags(moveTagToIndex(tags, sourceId, targetIndex))
                 }
                 draggedTagId = null
+                draggedTagPreview = null
                 tagDropTargetId = null
             },
             onTagDragCancel = {
                 draggedTagId = null
+                draggedTagPreview = null
                 tagDropTargetId = null
             },
             onAddTag = { tagEditorTarget = null; showTagEditor = true }
         )
+
+        draggedTagPreview?.let { tag ->
+            tagPillBounds[tag.id]?.let { bounds ->
+                val previewWidth = with(LocalDensity.current) { bounds.width.toDp() }
+                val previewHeight = with(LocalDensity.current) { bounds.height.toDp() }
+                TagPill(
+                    tag = tag,
+                    isDragging = true,
+                    isDropTarget = false,
+                    isDragPreview = true,
+                    onBoundsChanged = {},
+                    onBoundsRemoved = {},
+                    onClick = {},
+                    onHandleClick = {},
+                    onDragStart = {},
+                    onDrag = {},
+                    onDragEnd = {},
+                    onDragCancel = {},
+                    modifier = Modifier
+                        .offset {
+                            IntOffset(
+                                (draggedTagPosition.x - bounds.width / 2f).roundToInt(),
+                                (draggedTagPosition.y - bounds.height / 2f).roundToInt()
+                            )
+                        }
+                        .width(previewWidth)
+                        .height(previewHeight)
+                        .zIndex(11f)
+                )
+            }
+        }
 
         if (drawerOffset.value < 1f) {
             // A subtle warm translucent veil keeps the blurred home screen legible
@@ -974,7 +1012,8 @@ private fun TagPill(
     onDrag: (Offset) -> Unit,
     onDragEnd: () -> Unit,
     onDragCancel: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isDragPreview: Boolean = false
 ) {
     val context = LocalContext.current
     val dragScale by animateFloatAsState(
@@ -986,7 +1025,11 @@ private fun TagPill(
         label = "tag-drag-scale"
     )
     val dragAlpha by animateFloatAsState(
-        targetValue = if (isDragging) 0.94f else 1f,
+        targetValue = when {
+            isDragging && isDragPreview -> 0.94f
+            isDragging -> 0f
+            else -> 1f
+        },
         animationSpec = spring(stiffness = Spring.StiffnessMedium),
         label = "tag-drag-alpha"
     )
