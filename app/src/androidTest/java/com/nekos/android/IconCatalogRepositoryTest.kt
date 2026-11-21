@@ -38,9 +38,10 @@ class IconCatalogRepositoryTest {
         val firstIcon = repository.loadCatalog().first()
 
         val bitmap = repository.loadBitmap(firstIcon)
+            ?: error("Expected the first bundled icon to decode")
 
         assertNotNull(bitmap)
-        assertTrue(bitmap!!.width > 0)
+        assertTrue(bitmap.width > 0)
         assertTrue(bitmap.height > 0)
     }
 
