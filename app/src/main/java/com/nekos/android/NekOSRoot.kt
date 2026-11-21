@@ -1174,6 +1174,11 @@ private fun AppDrawer(
             )
         }.sortedBy { it.label.lowercase() }
     }
+    val gridState = rememberLazyGridState()
+
+    LaunchedEffect(searchQuery) {
+        gridState.scrollToItem(0)
+    }
 
     Column(
         modifier = modifier
@@ -1229,6 +1234,13 @@ private fun AppDrawer(
                 focusedPlaceholderColor = Muted,
                 unfocusedPlaceholderColor = Muted
             ),
+            trailingIcon = {
+                if (searchQuery.isNotEmpty()) {
+                    TextButton(onClick = { searchQuery = "" }) {
+                        Text("Clear", color = Muted)
+                    }
+                }
+            },
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)
         )
         if (filteredApps.isEmpty()) {
@@ -1236,7 +1248,6 @@ private fun AppDrawer(
                 Text("No apps found", color = Muted)
             }
         } else {
-            val gridState = rememberLazyGridState()
             LazyVerticalGrid(
                 state = gridState,
                 columns = GridCells.Fixed(5),
