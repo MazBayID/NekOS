@@ -155,40 +155,27 @@ fun NekOSRoot(refreshToken: Int) {
     }
 
     fun addFavorite(packageName: String) {
-        if (packageName in favoritePackages) return
-        val updated = favoritePackages.toMutableList()
-        val emptySlot = updated.indexOfFirst { it == null }
-        if (emptySlot < 0) {
-            Toast.makeText(context, "Favorite slots are full", Toast.LENGTH_SHORT).show()
-            return
+        when (val result = addFavoriteToSlots(favoritePackages, packageName)) {
+            is FavoriteSlotOperation.Updated -> updateFavorites(result.packages)
+            FavoriteSlotOperation.Unchanged -> Unit
+            FavoriteSlotOperation.Full -> Toast.makeText(
+                context,
+                "Favorite slots are full",
+                Toast.LENGTH_SHORT
+            ).show()
         }
-        updated[emptySlot] = packageName
-        updateFavorites(updated)
     }
 
     fun placeFavoriteFromDrawer(packageName: String, targetIndex: Int) {
-        val updated = favoritePackages.toMutableList()
-        while (updated.size < 15) updated.add(null)
-        val sourceIndex = updated.indexOf(packageName)
-        if (sourceIndex == targetIndex) return
-
-        val displaced = updated[targetIndex]
-        if (sourceIndex >= 0) {
-            // Reordering an existing Favorite swaps slots without losing either app.
-            updated[targetIndex] = packageName
-            updated[sourceIndex] = displaced
-        } else {
-            if (displaced != null) {
-                val emptyIndex = updated.indexOfFirst { it == null }
-                if (emptyIndex < 0) {
-                    Toast.makeText(context, "Favorite slots are full", Toast.LENGTH_SHORT).show()
-                    return
-                }
-                updated[emptyIndex] = displaced
-            }
-            updated[targetIndex] = packageName
+        when (val result = placePackageInFavoriteSlot(favoritePackages, packageName, targetIndex)) {
+            is FavoriteSlotOperation.Updated -> updateFavorites(result.packages)
+            FavoriteSlotOperation.Unchanged -> Unit
+            FavoriteSlotOperation.Full -> Toast.makeText(
+                context,
+                "Favorite slots are full",
+                Toast.LENGTH_SHORT
+            ).show()
         }
-        updateFavorites(updated)
     }
 
     LaunchedEffect(refreshToken) {
