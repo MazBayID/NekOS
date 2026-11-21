@@ -75,13 +75,6 @@ private val Ink = Color(0xFF34332F)
 private val Muted = Color(0xFF8B8982)
 private val TagSurface = Color(0xFFE7E1D6)
 
-private data class FavoriteDrag(
-    val packageName: String,
-    val position: Offset,
-    val hasMoved: Boolean = false,
-    val targetIndex: Int? = null
-)
-
 @Composable
 fun NekOSRoot(refreshToken: Int) {
     var showBrandSplash by remember { mutableStateOf(true) }
@@ -111,7 +104,8 @@ fun NekOSRoot(refreshToken: Int) {
         mutableMapOf<String, androidx.compose.ui.graphics.ImageBitmap>()
     }
     var favoritePackages by remember { mutableStateOf(loadFavoritePackages(context)) }
-    var favoriteDrag by remember { mutableStateOf<FavoriteDrag?>(null) }
+    val interactionController = remember { LauncherInteractionController() }
+    var favoriteDrag by remember { mutableStateOf<LauncherDragSession?>(null) }
     val favoriteSlotBounds = remember { mutableStateMapOf<Int, Rect>() }
     var tags by remember { mutableStateOf(TagStore.load(context)) }
     var tagEditorTarget by remember { mutableStateOf<NekTag?>(null) }
@@ -228,17 +222,28 @@ fun NekOSRoot(refreshToken: Int) {
             },
             onFavoriteSlotBounds = { index, bounds -> favoriteSlotBounds[index] = bounds },
             favoriteDropTarget = favoriteDrag?.takeIf { it.hasMoved }?.targetIndex,
-            onFavoriteDragStart = { app, position -> favoriteDrag = FavoriteDrag(app.packageName, position) },
+            onFavoriteDragStart = { app, position ->
+                favoriteDrag = interactionController.startDrag(
+                    app.packageName,
+                    LauncherDragSource.FAVORITE,
+                    position
+                )
+            },
             onFavoriteDrag = { position ->
                 val target = favoriteSlotBounds.entries.firstOrNull { it.value.contains(position) }?.key
-                favoriteDrag = favoriteDrag?.copy(position = position, hasMoved = true, targetIndex = target)
+                favoriteDrag = interactionController.updateDrag(position, target)
             },
             onFavoriteDragEnd = {
-                val drag = favoriteDrag
-                if (drag?.hasMoved == true) drag.targetIndex?.let { placeFavoriteFromDrawer(drag.packageName, it) }
+                val drag = interactionController.finishDrag()
+                if (drag?.hasMoved == true) {
+                    drag.targetIndex?.let { placeFavoriteFromDrawer(drag.packageName, it) }
+                }
                 favoriteDrag = null
             },
-            onFavoriteDragCancel = { favoriteDrag = null },
+            onFavoriteDragCancel = {
+                interactionController.cancelDrag()
+                favoriteDrag = null
+            },
             onTagClick = { tag -> viewingTag = tag },
             onTagLongPress = { tag -> actionMenuTag = tag },
             onAddTag = { tagEditorTarget = null; showTagEditor = true }
@@ -282,20 +287,28 @@ fun NekOSRoot(refreshToken: Int) {
                     }
                 },
                 onAppLongPress = { actionMenuApp = it },
-                onAppDragStart = { app, position -> favoriteDrag = FavoriteDrag(app.packageName, position) },
+                onAppDragStart = { app, position ->
+                    favoriteDrag = interactionController.startDrag(
+                        app.packageName,
+                        LauncherDragSource.APP_DRAWER,
+                        position
+                    )
+                },
                 onAppDrag = { position ->
                     val target = favoriteSlotBounds.entries.firstOrNull { it.value.contains(position) }?.key
-                    favoriteDrag = favoriteDrag?.copy(position = position, hasMoved = true, targetIndex = target)
+                    favoriteDrag = interactionController.updateDrag(position, target)
                 },
                 onAppDragEnd = {
-                    val drag = favoriteDrag
+                    val drag = interactionController.finishDrag()
                     if (drag?.hasMoved == true) {
-                        val target = drag.targetIndex
-                        if (target != null) placeFavoriteFromDrawer(drag.packageName, target)
+                        drag.targetIndex?.let { placeFavoriteFromDrawer(drag.packageName, it) }
                     }
                     favoriteDrag = null
                 },
-                onAppDragCancel = { favoriteDrag = null },
+                onAppDragCancel = {
+                    interactionController.cancelDrag()
+                    favoriteDrag = null
+                },
                 onCloseDrawer = {
                     scope.launch {
                         drawerOffset.animateTo(
