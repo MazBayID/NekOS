@@ -9,6 +9,7 @@ import android.net.Uri
 import android.provider.Settings
 import android.graphics.drawable.Drawable
 import android.widget.Toast
+import android.view.View
 
 data class InstalledApp(
     val label: String,
@@ -32,7 +33,15 @@ fun loadLaunchableApps(context: Context): List<InstalledApp> {
         .sortedBy { it.label.lowercase() }
 }
 
-fun launchApp(context: Context, packageName: String) {
+fun launchApp(
+    context: Context,
+    packageName: String,
+    sourceView: View,
+    sourceX: Int? = null,
+    sourceY: Int? = null,
+    sourceWidth: Int? = null,
+    sourceHeight: Int? = null
+) {
     try {
         val intent = context.packageManager.getLaunchIntentForPackage(packageName)
         if (intent == null) {
@@ -44,10 +53,14 @@ fun launchApp(context: Context, packageName: String) {
             return
         }
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        val launchOptions = ActivityOptions.makeCustomAnimation(
-            context,
-            R.anim.app_open_enter,
-            R.anim.app_open_exit
+        val width = (sourceWidth ?: 1).coerceAtLeast(1)
+        val height = (sourceHeight ?: 1).coerceAtLeast(1)
+        val launchOptions = ActivityOptions.makeScaleUpAnimation(
+            sourceView,
+            sourceX ?: (sourceView.width - width) / 2,
+            sourceY ?: (sourceView.height - height) / 2,
+            width,
+            height
         )
         context.startActivity(intent, launchOptions.toBundle())
     } catch (error: ActivityNotFoundException) {
