@@ -42,6 +42,6 @@ NekOS uses a single Activity with Jetpack Compose. Keep the Activity responsible
 
 1. Stabilize app actions, favorite interactions, and app-list refresh.
 2. Extract favorite state and package actions from the root composable into focused domain/data components.
-3. Introduce a catalog-backed icon loader and tag icon picker using the JSON indexes.
-4. Implement tag collections and persist their order, colors, icons, and app assignments.
-5. Add settings only after the home/drawer/favorites vertical slice is reliable.
+3. Implement tag management UI with catalog icon selection, color palette, and app assignment.
+4. Add tag-aware app filtering / collection navigation and refine the home-screen tag interaction.
+5. Extract remaining root state and add settings after the home/drawer/favorites/tags vertical slice is reliable.
