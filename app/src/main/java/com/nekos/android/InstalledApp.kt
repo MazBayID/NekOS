@@ -90,7 +90,7 @@ fun loadLaunchableApps(context: Context): LauncherAppScanResult {
                         .getOrElse { context.packageManager.defaultActivityIcon }
                     InstalledApp(
                         label = activity.label?.toString().orEmpty()
-                            .ifBlank { activity.applicationInfo.loadLabel(context.packageManager).toString() },
+                            .ifBlank { activity.applicationInfo.packageName },
                         packageName = activity.applicationInfo.packageName,
                         icon = icon,
                         user = profile,
@@ -172,6 +172,12 @@ fun openAppInfo(context: Context, app: InstalledApp) {
         Toast.makeText(
             context,
             "NekOS is not allowed to open this app's settings",
+            Toast.LENGTH_SHORT
+        ).show()
+    } catch (error: IllegalStateException) {
+        Toast.makeText(
+            context,
+            "This app's profile is currently unavailable",
             Toast.LENGTH_SHORT
         ).show()
     }
