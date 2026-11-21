@@ -5,6 +5,7 @@ import android.os.Build
 import android.widget.Toast
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.spring
+import androidx.activity.compose.BackHandler
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.BlurEffect
 import androidx.compose.ui.graphics.TileMode
@@ -198,6 +199,22 @@ fun NekOSRoot(refreshToken: Int) {
         val backgroundBlurRadiusPx = with(androidx.compose.ui.platform.LocalDensity.current) { 16.dp.toPx() }
         val drawerOffset = remember { Animatable(1f) }
         val scope = rememberCoroutineScope()
+
+        BackHandler(enabled = actionMenuApp != null || drawerOffset.value < 1f) {
+            if (actionMenuApp != null) {
+                actionMenuApp = null
+            } else {
+                scope.launch {
+                    drawerOffset.animateTo(
+                        1f,
+                        animationSpec = spring(
+                            dampingRatio = 0.86f,
+                            stiffness = 420f
+                        )
+                    )
+                }
+            }
+        }
 
         HomeScreen(
             apps = apps,
