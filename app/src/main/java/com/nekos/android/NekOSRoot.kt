@@ -935,7 +935,8 @@ private fun TagPill(
         mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null)
     }
     var pillCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
-    val currentPillCoordinates by rememberUpdatedState(pillCoordinates)
+    var handleCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
+    val currentHandleCoordinates by rememberUpdatedState(handleCoordinates)
     LaunchedEffect(tag.iconId) {
         tagIcon = withContext(Dispatchers.IO) {
             runCatching {
@@ -973,14 +974,15 @@ private fun TagPill(
         Box(
             modifier = Modifier
                 .sizeIn(minWidth = 40.dp, minHeight = 44.dp)
+                .onGloballyPositioned { handleCoordinates = it }
                 .pointerInput(tag.id) {
                     detectDragGesturesAfterLongPress(
                         onDragStart = { localPosition ->
-                            currentPillCoordinates?.localToRoot(localPosition)?.let(onDragStart)
+                            currentHandleCoordinates?.localToRoot(localPosition)?.let(onDragStart)
                         },
                         onDrag = { change, _ ->
                             change.consume()
-                            currentPillCoordinates?.localToRoot(change.position)?.let(onDrag)
+                            currentHandleCoordinates?.localToRoot(change.position)?.let(onDrag)
                         },
                         onDragEnd = onDragEnd,
                         onDragCancel = onDragCancel
