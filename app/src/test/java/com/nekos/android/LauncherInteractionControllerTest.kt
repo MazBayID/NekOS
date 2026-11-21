@@ -9,6 +9,25 @@ import org.junit.Test
 
 class LauncherInteractionControllerTest {
     @Test
+    fun onlyAppDrawerDragsSupportTheCancelDropTarget() {
+        val controller = LauncherInteractionController()
+
+        val drawerDrag = controller.startDrag(
+            packageName = "com.example.drawer",
+            source = LauncherDragSource.APP_DRAWER,
+            position = Offset.Zero
+        )
+        assertTrue(drawerDrag.supportsCancelDropTarget)
+
+        val favoriteDrag = controller.startDrag(
+            packageName = "com.example.favorite",
+            source = LauncherDragSource.FAVORITE,
+            position = Offset.Zero
+        )
+        assertFalse(favoriteDrag.supportsCancelDropTarget)
+    }
+
+    @Test
     fun startDragCreatesOneUnmovedSession() {
         val controller = LauncherInteractionController()
         val position = Offset(12f, 24f)
