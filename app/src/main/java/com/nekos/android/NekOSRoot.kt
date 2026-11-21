@@ -352,6 +352,7 @@ fun NekOSRoot(refreshToken: Int) {
 
             AppDrawer(
                 apps = apps,
+                tags = tags,
                 iconBitmapCache = iconBitmapCache,
                 closeThresholdPx = drawerCloseThresholdPx,
                 modifier = Modifier
@@ -865,6 +866,7 @@ private fun AddTagPill(onClick: () -> Unit) {
 @Composable
 private fun AppDrawer(
     apps: List<InstalledApp>,
+    tags: List<NekTag>,
     iconBitmapCache: MutableMap<String, androidx.compose.ui.graphics.ImageBitmap>,
     closeThresholdPx: Float,
     modifier: Modifier = Modifier,
@@ -879,12 +881,22 @@ private fun AppDrawer(
     onCloseDrawer: () -> Unit
 ) {
     var searchQuery by remember { mutableStateOf("") }
+    var selectedTagId by remember { mutableStateOf<String?>(null) }
     val currentOnCloseDrawer by rememberUpdatedState(onCloseDrawer)
-    val filteredApps = remember(apps, searchQuery) {
-        val query = searchQuery.trim()
-        if (query.isBlank()) apps
-        else apps.filter { it.label.trimStart().startsWith(query, ignoreCase = true) }
-            .sortedBy { it.label.lowercase() }
+    val selectedTag = tags.firstOrNull { it.id == selectedTagId }
+    LaunchedEffect(tags, selectedTagId) {
+        if (selectedTagId != null && selectedTag == null) selectedTagId = null
+    }
+    val filteredApps = remember(apps, searchQuery, selectedTag?.appPackages) {
+        val tagPackages = selectedTag?.appPackages?.toSet()
+        apps.filter { app ->
+            matchesAppDrawerFilter(
+                packageName = app.packageName,
+                label = app.label,
+                query = searchQuery,
+                tagPackages = tagPackages
+            )
+        }.sortedBy { it.label.lowercase() }
     }
 
     Column(
@@ -930,6 +942,29 @@ private fun AppDrawer(
             singleLine = true,
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)
         )
+        if (tags.isNotEmpty()) {
+            Row(
+                modifier = Modifier.fillMaxWidth()
+                    .horizontalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp, vertical = 6.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                DrawerTagFilterChip(
+                    label = "All",
+                    color = TagSurface,
+                    selected = selectedTagId == null,
+                    onClick = { selectedTagId = null }
+                )
+                tags.forEach { tag ->
+                    DrawerTagFilterChip(
+                        label = tag.name,
+                        color = Color(tag.colorArgb),
+                        selected = selectedTagId == tag.id,
+                        onClick = { selectedTagId = tag.id }
+                    )
+                }
+            }
+        }
         if (filteredApps.isEmpty()) {
             Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
                 Text("No apps found", color = Muted)
@@ -975,6 +1010,28 @@ private fun AppDrawer(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun DrawerTagFilterChip(
+    label: String,
+    color: Color,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    Box(
+        Modifier.clip(RoundedCornerShape(18.dp))
+            .background(if (selected) Ink else color)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 8.dp)
+    ) {
+        Text(
+            text = label,
+            color = if (selected) Color.White else Ink,
+            fontSize = 12.sp,
+            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium
+        )
     }
 }
 
