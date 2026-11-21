@@ -1,6 +1,8 @@
 package com.nekos.android
 
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.widget.Toast
 import androidx.compose.animation.core.Animatable
@@ -148,6 +150,9 @@ fun NekOSRoot(refreshToken: Int) {
     var actionMenuPopupSize by remember { mutableStateOf(IntSize.Zero) }
     val preferences = remember(context) {
         context.getSharedPreferences("nekos_preferences", Context.MODE_PRIVATE)
+    }
+    val appVersion = remember(context) {
+        context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "Unknown"
     }
     var showFirstLaunchTip by remember {
         mutableStateOf(!preferences.getBoolean("has_seen_drawer_tip", false))
@@ -520,7 +525,8 @@ fun NekOSRoot(refreshToken: Int) {
         if (showSettings) {
             NekOSSettingsDialog(
                 backgroundPreset = backgroundPreset,
-                    hasWallpaper = wallpaperPath != null,
+                hasWallpaper = wallpaperPath != null,
+                appVersion = appVersion,
                 onBackgroundPresetChange = { preset ->
                     backgroundPreset = preset
                     preferences.edit().putString("background_preset", preset).apply()
@@ -534,6 +540,20 @@ fun NekOSRoot(refreshToken: Int) {
                     clearHomeWallpaper(context)
                     wallpaperPath = null
                     preferences.edit().remove("home_wallpaper_path").apply()
+                },
+                onShowDrawerHint = {
+                    preferences.edit().putBoolean("has_seen_drawer_tip", false).apply()
+                    showSettings = false
+                    showFirstLaunchTip = true
+                },
+                onOpenRepository = {
+                    runCatching {
+                        context.startActivity(
+                            Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/MazBayID/NekOS"))
+                        )
+                    }.onFailure {
+                        Toast.makeText(context, "Unable to open GitHub", Toast.LENGTH_SHORT).show()
+                    }
                 },
                 onDismiss = { showSettings = false }
             )
