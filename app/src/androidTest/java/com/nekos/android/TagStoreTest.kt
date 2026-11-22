@@ -53,6 +53,42 @@ class TagStoreTest {
     }
 
     @Test
+    fun sameIconCanKeepDifferentFrameColorsForDifferentTags() {
+        val tags = listOf(
+            NekTag(
+                id = "tag-one",
+                name = "One",
+                iconId = 7,
+                colorArgb = 0xFFE7E1D6,
+                iconFrameColorArgb = 0xFF2563EB
+            ),
+            NekTag(
+                id = "tag-two",
+                name = "Two",
+                iconId = 7,
+                colorArgb = 0xFFE7E1D6,
+                iconFrameColorArgb = 0xFF7C3AED
+            )
+        )
+
+        TagStore.save(context, tags)
+
+        assertEquals(tags, TagStore.load(context))
+    }
+
+    @Test
+    fun legacyTagsDefaultIconFrameColorToOcean() {
+        tagsPreferences().edit().putString(
+            "tag_collection_v1",
+            """[{"id":"legacy","name":"Legacy","iconId":7,"colorArgb":-15724590,"apps":[]}]"""
+        ).commit()
+
+        val loaded = TagStore.load(context).single()
+
+        assertEquals(DEFAULT_TAG_ICON_FRAME_COLOR, loaded.iconFrameColorArgb)
+    }
+
+    @Test
     fun saveTrimsNamesAndRemovesBlankAndDuplicatePackages() {
         val tag = NekTag(
             id = "tag-normalized",
