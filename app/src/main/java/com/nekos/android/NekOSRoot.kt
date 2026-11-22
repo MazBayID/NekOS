@@ -41,6 +41,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -123,6 +124,7 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
     var apps by remember { mutableStateOf(emptyList<InstalledApp>()) }
     var favoritePackages by remember { mutableStateOf(loadFavoritePackages(context)) }
     var tags by remember { mutableStateOf(TagStore.load(context)) }
+    var activeTagPage by remember { mutableIntStateOf(0) }
     var isInitialLoadComplete by remember { mutableStateOf(false) }
     var lastAppliedRefreshToken by remember { mutableIntStateOf(-1) }
 
@@ -356,6 +358,8 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
             onOpenSettings = { showSettings = true },
             favoritePackages = favoritePackages,
             tags = tags,
+            activeTagPage = activeTagPage,
+            onTagPageChange = { activeTagPage = it },
             iconCatalogRepository = iconCatalogRepository,
             iconBitmapCache = iconBitmapCache,
             homeSwipeThresholdPx = homeSwipeThresholdPx,
@@ -451,7 +455,14 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
                 draggedTagPreview = null
                 tagDropTargetId = null
             },
-            onAddTag = { tagEditorTarget = null; showTagEditor = true }
+            onAddTag = {
+                if (tags.size >= 10) {
+                    Toast.makeText(context, "Maximum of 10 tags", Toast.LENGTH_SHORT).show()
+                } else {
+                    tagEditorTarget = null
+                    showTagEditor = true
+                }
+            }
         )
 
         draggedTagPreview?.let { tag ->
@@ -830,6 +841,8 @@ private fun HomeScreen(
     onOpenSettings: () -> Unit,
     favoritePackages: List<String?>,
     tags: List<NekTag>,
+    activeTagPage: Int,
+    onTagPageChange: (Int) -> Unit,
     iconCatalogRepository: IconCatalogRepository,
     iconBitmapCache: AppIconBitmapCache,
     homeSwipeThresholdPx: Float,
@@ -985,36 +998,85 @@ private fun HomeScreen(
                             ) { Text("⚙︎", color = Ink, fontSize = 19.sp) }
                         }
                     }
-                    LazyColumn(
+                    val tagPageCount = ((tags.size + 4) / 5).coerceAtLeast(1)
+                    val safeTagPage = activeTagPage.coerceIn(0, tagPageCount - 1)
+                    val visibleTags = tags.drop(safeTagPage * 5).take(5)
+                    LaunchedEffect(tagPageCount, activeTagPage) {
+                        if (activeTagPage != safeTagPage) onTagPageChange(safeTagPage)
+                    }
+                    Column(
                         modifier = Modifier.width(tagRailWidth).fillMaxHeight(),
-                        contentPadding = PaddingValues(vertical = 2.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        items(tags, key = { it.id }) { tag ->
-                            TagPill(
-                                modifier = Modifier.animateItem(
-                                    fadeInSpec = null,
-                                    placementSpec = spring(
-                                        dampingRatio = 0.82f,
-                                        stiffness = 420f
+                        LazyColumn(
+                            modifier = Modifier.weight(1f).fillMaxWidth()
+                                .pointerInput(tagPageCount, safeTagPage) {
+                                    var totalDrag = 0f
+                                    detectHorizontalDragGestures(
+                                        onHorizontalDrag = { change, dragAmount ->
+                                            totalDrag += dragAmount
+                                            change.consume()
+                                        },
+                                        onDragEnd = {
+                                            when {
+                                                totalDrag <= -48.dp.toPx() && safeTagPage < tagPageCount - 1 ->
+                                                    onTagPageChange(safeTagPage + 1)
+                                                totalDrag >= 48.dp.toPx() && safeTagPage > 0 ->
+                                                    onTagPageChange(safeTagPage - 1)
+                                            }
+                                            totalDrag = 0f
+                                        },
+                                        onDragCancel = { totalDrag = 0f }
+                                    )
+                                },
+                            reverseLayout = true,
+                            userScrollEnabled = false,
+                            contentPadding = PaddingValues(vertical = 2.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            items(visibleTags, key = { it.id }) { tag ->
+                                TagPill(
+                                    modifier = Modifier.animateItem(
+                                        fadeInSpec = null,
+                                        placementSpec = spring(
+                                            dampingRatio = 0.82f,
+                                            stiffness = 420f
+                                        ),
+                                        fadeOutSpec = null
                                     ),
-                                    fadeOutSpec = null
-                                ),
-                                tag = tag,
-                                iconCatalogRepository = iconCatalogRepository,
-                                isDragging = draggedTagId == tag.id,
-                                isDropTarget = tagDropTargetId == tag.id && draggedTagId != tag.id,
-                                onBoundsChanged = { bounds -> onTagBoundsChanged(tag.id, bounds) },
-                                onBoundsRemoved = { onTagBoundsRemoved(tag.id) },
-                                onClick = { onTagClick(tag) },
-                                onHandleClick = { onTagOptionsClick(tag) },
-                                onDragStart = { position -> onTagDragStart(tag, position) },
-                                onDrag = onTagDrag,
-                                onDragEnd = onTagDragEnd,
-                                onDragCancel = onTagDragCancel
-                            )
+                                    tag = tag,
+                                    iconCatalogRepository = iconCatalogRepository,
+                                    isDragging = draggedTagId == tag.id,
+                                    isDropTarget = tagDropTargetId == tag.id && draggedTagId != tag.id,
+                                    onBoundsChanged = { bounds -> onTagBoundsChanged(tag.id, bounds) },
+                                    onBoundsRemoved = { onTagBoundsRemoved(tag.id) },
+                                    onClick = { onTagClick(tag) },
+                                    onHandleClick = { onTagOptionsClick(tag) },
+                                    onDragStart = { position -> onTagDragStart(tag, position) },
+                                    onDrag = onTagDrag,
+                                    onDragEnd = onTagDragEnd,
+                                    onDragCancel = onTagDragCancel
+                                )
+                            }
+                            item(key = "add-tag") { AddTagPill(onClick = onAddTag) }
                         }
-                        item(key = "add-tag") { AddTagPill(onClick = onAddTag) }
+                        if (tagPageCount > 1) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(top = 5.dp, bottom = 2.dp),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                repeat(tagPageCount) { page ->
+                                    Box(
+                                        modifier = Modifier.padding(horizontal = 3.dp)
+                                            .size(if (page == safeTagPage) 7.dp else 5.dp)
+                                            .clip(CircleShape)
+                                            .background(if (page == safeTagPage) Ink else Muted.copy(alpha = 0.45f))
+                                            .clickable { onTagPageChange(page) }
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }

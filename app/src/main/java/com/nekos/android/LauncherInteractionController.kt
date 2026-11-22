@@ -106,10 +106,9 @@ internal fun shouldCloseDrawerAfterDrag(
 
 
 /**
- * The swipe up can start in the main Home canvas or anywhere in the Favorite band
- * at the bottom, where the thumb naturally rests. Only the right-side Tag rail is
- * excluded above that band, because it scrolls and has its own drag handles.
- * Favorite slots only react after a long-press, so a quick swipe passes through.
+ * The Tag rail no longer scrolls vertically, so the Drawer swipe can begin
+ * anywhere on Home. Tag-handle long-press drags are handled by the child gesture
+ * detector, which consumes the active drag sequence before it reaches this parent.
  */
 internal fun isHomeDrawerGestureEligible(
     positionX: Float,
@@ -117,5 +116,4 @@ internal fun isHomeDrawerGestureEligible(
     containerWidth: Float,
     containerHeight: Float,
     favoriteBandPx: Float
-): Boolean = positionY >= containerHeight - favoriteBandPx ||
-    positionX < containerWidth * 0.64f
+): Boolean = true
