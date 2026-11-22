@@ -1126,7 +1126,7 @@ private fun HomeScreen(
             }
             BoxWithConstraints {
                 val favoriteSlots = List(15) { favoritePackages.getOrNull(it) }
-                val favoriteCellSize = (maxWidth - 40.dp) / 5
+                val favoriteCellSize = (maxWidth - 40.dp) / 5f
                 val favoriteGridState = rememberLazyGridState()
                 val reorderableFavoriteState = rememberReorderableLazyGridState(favoriteGridState) { from, to ->
                     onFavoriteReorder(from.index, to.index)
