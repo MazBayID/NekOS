@@ -1203,7 +1203,7 @@ private fun HomeScreen(
                     }
                 }
                 Box(
-                    modifier = Modifier.fillMaxWidth().height(88.dp)
+                    modifier = Modifier.fillMaxWidth().height(122.dp)
                 ) {
                     ThemedUiArtworkImage(
                         resourceId = R.drawable.text_logo_sec,
@@ -1211,9 +1211,9 @@ private fun HomeScreen(
                         contentDescription = "NekOS",
                         contentScale = ContentScale.Fit,
                         modifier = Modifier.align(Alignment.TopStart)
-                            .offset(x = (-80).dp)
-                            .fillMaxWidth(0.72f)
-                            .height(88.dp)
+                            .offset(x = (-100).dp)
+                            .fillMaxWidth(1.02f)
+                            .height(122.dp)
                     )
                     Box(
                         modifier = Modifier.align(Alignment.CenterEnd)
