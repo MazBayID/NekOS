@@ -6,6 +6,8 @@ import android.net.Uri
 import android.os.Build
 import android.os.Process
 import android.os.UserManager
+import android.app.role.RoleManager
+import android.provider.Settings
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
@@ -120,6 +122,10 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
     val launchSourceView = LocalView.current
+    var isDefaultLauncher by remember { mutableStateOf(isNekOSDefaultHome(context)) }
+    LaunchedEffect(resumeToken) {
+        isDefaultLauncher = isNekOSDefaultHome(context)
+    }
     val iconCatalogRepository = remember(context) { IconCatalogRepository(context) }
     var apps by remember { mutableStateOf(emptyList<InstalledApp>()) }
     var favoritePackages by remember { mutableStateOf(loadFavoritePackages(context)) }
@@ -1728,4 +1734,17 @@ private fun AppGridItem(
             modifier = Modifier.heightIn(min = 28.dp)
         )
     }
+}
+
+
+private fun isNekOSDefaultHome(context: Context): Boolean {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        val roleManager = context.getSystemService(RoleManager::class.java)
+        if (roleManager.isRoleAvailable(RoleManager.ROLE_HOME)) {
+            return roleManager.isRoleHeld(RoleManager.ROLE_HOME)
+        }
+    }
+    val homeIntent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
+    val resolved = context.packageManager.resolveActivity(homeIntent, 0)
+    return resolved?.activityInfo?.packageName == context.packageName
 }

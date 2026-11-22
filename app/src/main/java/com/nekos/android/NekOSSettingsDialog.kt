@@ -41,6 +41,8 @@ internal fun NekOSSettingsDialog(
     backgroundPreset: String,
     hasWallpaper: Boolean,
     appVersion: String,
+    isDefaultLauncher: Boolean,
+    onSetAsHome: () -> Unit,
     onBackgroundPresetChange: (String) -> Unit,
     onChooseWallpaper: () -> Unit,
     onClearWallpaper: () -> Unit,
@@ -155,6 +157,29 @@ internal fun NekOSSettingsDialog(
 
                 Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
                     SettingsSectionTitle("HOME BEHAVIOR")
+                    Text(
+                        "Default launcher",
+                        color = SettingsInk,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 14.sp
+                    )
+                    Text(
+                        if (isDefaultLauncher) {
+                            "NekOS is currently your default Home app."
+                        } else {
+                            "Set NekOS as your Home app to open it when you press the Home button."
+                        },
+                        color = SettingsMuted,
+                        fontSize = 12.sp,
+                        lineHeight = 17.sp
+                    )
+                    TextButton(onClick = onSetAsHome) {
+                        Text(
+                            if (isDefaultLauncher) "Default Home app" else "Set as Home",
+                            color = SettingsAccent,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
                     Text(
                         "Gesture hints",
                         color = SettingsInk,
