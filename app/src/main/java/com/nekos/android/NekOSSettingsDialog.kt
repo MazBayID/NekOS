@@ -77,6 +77,8 @@ internal fun NekOSSettingsDialog(
     backgroundPreset: String,
     launcherThemeKey: String,
     onLauncherThemeChange: (String) -> Unit,
+    launcherUiColor: Long,
+    onLauncherUiColorChange: (Long) -> Unit,
     hasWallpaper: Boolean,
     appVersion: String,
     isDefaultLauncher: Boolean,
@@ -242,7 +244,7 @@ internal fun NekOSSettingsDialog(
 
                     SettingsPage.LAUNCHER_THEME -> {
                         Text(
-                            "Choose the color palette for App Drawer and launcher dialogs.",
+                            "Choose the launcher surface palette and the shared color for UI icons, the tag frame, and the NekOS logo.",
                             color = SettingsMuted,
                             fontSize = 12.sp,
                             lineHeight = 17.sp
@@ -278,6 +280,57 @@ internal fun NekOSSettingsDialog(
                                     }
                                 }
                                 if (pair.size == 1) Spacer(Modifier.weight(1f))
+                            }
+                        }
+
+                        SettingsSectionTitle("SHARED UI COLOR")
+                        Text(
+                            "One color is applied to every UI icon, the tag frame, and text_logo_sec. Tag icons keep their own color setting.",
+                            color = SettingsMuted,
+                            fontSize = 12.sp,
+                            lineHeight = 17.sp
+                        )
+                        LauncherUiColorOptions.chunked(3).forEach { pair ->
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                pair.forEach { option ->
+                                    val selected = launcherUiColor == option.argb
+                                    Row(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .defaultMinSize(minHeight = 48.dp)
+                                            .clip(SettingsCardShape)
+                                            .background(Color(0xFFF4F1EA))
+                                            .border(
+                                                width = if (selected) 1.5.dp else 1.dp,
+                                                color = if (selected) SettingsAccent else SettingsBorder,
+                                                shape = SettingsCardShape
+                                            )
+                                            .selectable(
+                                                selected = selected,
+                                                role = Role.RadioButton,
+                                                onClick = { onLauncherUiColorChange(option.argb) }
+                                            )
+                                            .padding(horizontal = 7.dp, vertical = 8.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                    ) {
+                                        Box(
+                                            Modifier
+                                                .size(20.dp)
+                                                .clip(RoundedCornerShape(50))
+                                                .background(Color(option.argb))
+                                                .border(1.dp, SettingsInk.copy(alpha = 0.12f), RoundedCornerShape(50))
+                                        )
+                                        Text(
+                                            option.name,
+                                            color = SettingsInk,
+                                            fontSize = 11.sp,
+                                            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+                                            maxLines = 1
+                                        )
+                                    }
+                                }
+                                if (pair.size < 3) repeat(3 - pair.size) { Spacer(Modifier.weight(1f)) }
                             }
                         }
                     }
