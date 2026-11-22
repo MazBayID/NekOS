@@ -370,6 +370,7 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
             iconBitmapCache = iconBitmapCache,
             homeSwipeThresholdPx = homeSwipeThresholdPx,
             drawerProgress = drawerProgress,
+            isDrawerVisible = drawerVisible,
             isFavoriteDragging = favoriteDrag?.hasMoved == true,
             onDrawerDrag = { totalDrag ->
                 isDrawerDragging = true
@@ -827,6 +828,7 @@ private fun HomeScreen(
     iconBitmapCache: AppIconBitmapCache,
     homeSwipeThresholdPx: Float,
     drawerProgress: State<Float>,
+    isDrawerVisible: Boolean,
     isFavoriteDragging: Boolean,
     onDrawerDrag: (Float) -> Unit,
     onDrawerDragEnd: (totalDrag: Float, velocityY: Float, cancelled: Boolean) -> Unit,
@@ -869,7 +871,7 @@ private fun HomeScreen(
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
             )
-            if (wallpaperBlurEffect != null) {
+            if (wallpaperBlurEffect != null && isDrawerVisible) {
                 Image(
                     bitmap = image,
                     contentDescription = null,
