@@ -997,28 +997,6 @@ private fun HomeScreen(
                     modifier = Modifier.fillMaxSize(),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    Column(modifier = Modifier.weight(1f).fillMaxHeight()) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(end = 2.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Image(
-                                painter = painterResource(R.drawable.text_logo_sec),
-                                contentDescription = "NekOS",
-                                contentScale = ContentScale.Fit,
-                                modifier = Modifier.offset(x = (-12).dp).height(72.dp).weight(1f)
-                            )
-                            Box(
-                                modifier = Modifier.size(40.dp)
-                                    .clip(RoundedCornerShape(14.dp))
-                                    .background(TagSurface.copy(alpha = 0.72f))
-                                    .clickable(onClick = onOpenSettings)
-                                    .semantics { contentDescription = "Open launcher settings"; role = Role.Button },
-                                contentAlignment = Alignment.Center
-                            ) { Text("⚙︎", color = Ink, fontSize = 19.sp) }
-                        }
-                    }
                     val tagPageCount = ((tags.size + 4) / 5).coerceAtLeast(1)
                     val safeTagPage = activeTagPage.coerceIn(0, tagPageCount - 1)
                     val visibleTags = tags.drop(safeTagPage * 5).take(5)
@@ -1151,7 +1129,39 @@ private fun HomeScreen(
                         }
                     }
                 }
-            }
+                Box(
+                    modifier = Modifier.fillMaxWidth().height(72.dp)
+                ) {
+                    Image(
+                        painter = painterResource(R.drawable.text_logo_sec),
+                        contentDescription = "NekOS",
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier.align(Alignment.CenterStart)
+                            .offset(x = (-20).dp)
+                            .fillMaxWidth(0.58f)
+                            .height(72.dp)
+                    )
+                    Box(
+                        modifier = Modifier.align(Alignment.CenterEnd)
+                            .offset(x = 20.dp)
+                            .size(40.dp)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(TagSurface.copy(alpha = 0.72f))
+                            .clickable(onClick = onOpenSettings)
+                            .semantics {
+                                contentDescription = "Open launcher settings"
+                                role = Role.Button
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Image(
+                            painter = painterResource(R.drawable.nekos_ui_launcher_settings),
+                            contentDescription = null,
+                            contentScale = ContentScale.Fit,
+                            modifier = Modifier.fillMaxSize().padding(6.dp)
+                        )
+                    }
+                }
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 repeat(3) { row ->
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
