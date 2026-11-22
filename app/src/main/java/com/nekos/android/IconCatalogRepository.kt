@@ -84,6 +84,11 @@ class IconCatalogRepository(context: Context) {
     }
 
     @Synchronized
+    fun clearMemoryCache() {
+        bitmapCache.evictAll()
+    }
+
+    @Synchronized
     fun loadBitmap(icon: CatalogIcon): Bitmap? {
         require(isValidCatalogIconPath(icon.file)) {
             "Invalid catalog asset path: ${icon.file}"
