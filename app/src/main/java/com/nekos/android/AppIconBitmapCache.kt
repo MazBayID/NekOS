@@ -123,6 +123,7 @@ class AppIconBitmapCache(
             }
         }
         memoryState.ifEnabled { generation++ }
+        Unit
     }
 
     /** Release rebuildable bitmap allocations while the launcher is not visible. */
@@ -145,9 +146,9 @@ class AppIconBitmapCache(
     }
 
     private fun createAppIcon(app: InstalledApp): Bitmap =
-        runCatching {
+        try {
             app.launcherActivityInfo.getBadgedIcon(app.iconDensityDpi).toBitmap(96, 96)
-        }.getOrElse {
+        } catch (_: Exception) {
             appContext.packageManager.defaultActivityIcon.toBitmap(96, 96)
         }
 
@@ -165,7 +166,7 @@ class AppIconBitmapCache(
     }
 
     private fun writeDiskBitmap(cacheKey: String, bitmap: Bitmap) {
-        if (!diskDirectory.exists() && !diskDirectory.mkdirs()) return
+        if (!diskDirectory.isDirectory && !diskDirectory.mkdirs() && !diskDirectory.isDirectory) return
 
         val target = diskFile(cacheKey)
         val temporary = File(diskDirectory, "${target.name}.${System.nanoTime()}.tmp")
