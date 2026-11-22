@@ -11,14 +11,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.items as lazyItems
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.items as gridItems
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -165,7 +164,7 @@ private fun FavoriteReorderHarness(state: FavoriteReorderState) {
             state = gridState,
             userScrollEnabled = false
         ) {
-            items(state.order.value, key = { it }) { item ->
+            gridItems(state.order.value, key = { it }) { item ->
                 ReorderableItem(
                     state = reorderState,
                     key = item,
@@ -215,7 +214,7 @@ private fun TagReorderHarness(state: TagReorderState) {
             userScrollEnabled = false,
             verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.Bottom)
         ) {
-            items(state.tags.value, key = { it.id }) { tag ->
+            lazyItems(state.tags.value, key = { it.id }) { tag ->
                 ReorderableItem(
                     state = reorderState,
                     key = tag.id,
