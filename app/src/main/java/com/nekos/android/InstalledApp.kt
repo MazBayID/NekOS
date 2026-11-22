@@ -53,6 +53,7 @@ fun loadLaunchableApps(context: Context): LauncherAppScanResult {
     val launcherApps = context.getSystemService(LauncherApps::class.java)
     val userManager = context.getSystemService(UserManager::class.java)
     val densityDpi = context.resources.displayMetrics.densityDpi
+    val currentUser = Process.myUserHandle()
 
     val unavailableProfileSerialNumbers = mutableSetOf<Long>()
     val apps = launcherApps.profiles
@@ -78,7 +79,14 @@ fun loadLaunchableApps(context: Context): LauncherAppScanResult {
                 return@flatMap emptyList()
             }
 
-            activities.distinctBy { it.applicationInfo.packageName }
+            activities
+                // Keep NekOS out of its own drawer, but do not hide a separate
+                // installation of the same package in another Android profile.
+                .filterNot { activity ->
+                    profile == currentUser &&
+                        activity.applicationInfo.packageName == context.packageName
+                }
+                .distinctBy { it.applicationInfo.packageName }
                 .map { activity ->
                     InstalledApp(
                         label = activity.label?.toString().orEmpty()
