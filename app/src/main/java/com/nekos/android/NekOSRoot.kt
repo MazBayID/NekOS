@@ -1042,9 +1042,10 @@ private fun HomeScreen(
                                     painter = painterResource(R.drawable.nekos_ui_tag_frame),
                                     contentDescription = null,
                                     contentScale = ContentScale.FillBounds,
-                                    modifier = Modifier.align(Alignment.BottomCenter)
+                                    modifier = Modifier.align(Alignment.TopCenter)
+                                        .offset(y = (-10).dp)
                                         .requiredWidth(tagRailWidth * 1.1f)
-                                        .fillMaxHeight(0.5f)
+                                        .fillMaxHeight(0.65f)
                                 )
                                 LazyColumn(
                                     modifier = Modifier.fillMaxSize()
