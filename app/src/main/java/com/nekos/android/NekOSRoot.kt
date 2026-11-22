@@ -753,6 +753,13 @@ fun NekOSRoot(
                 onBackgroundPresetChange = { preset ->
                     val normalizedPreset = normalizeNekOSBackgroundPreset(preset)
                     backgroundPreset = normalizedPreset
+                    // A color choice becomes the active Home background instead
+                    // of leaving a previously selected photo layered above it.
+                    if (wallpaperPath != null) {
+                        clearHomeWallpaper(context)
+                        wallpaperPath = null
+                        preferences.edit().remove("home_wallpaper_path").apply()
+                    }
                     preferences.edit().putString("background_preset", normalizedPreset).apply()
                 },
                 onChooseWallpaper = {
