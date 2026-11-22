@@ -4,6 +4,9 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.LruCache
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.setValue
 import org.json.JSONObject
 
 data class CatalogIcon(
@@ -46,6 +49,11 @@ class IconCatalogRepository(context: Context) {
         override fun sizeOf(key: String, bitmap: Bitmap): Int =
             (bitmap.allocationByteCount / 1024).coerceAtLeast(1)
     }
+    private val memoryState = CacheMemoryState()
+
+    /** Invalidates TagPill bitmap references after a memory trim or resume. */
+    var generation by mutableIntStateOf(0)
+        private set
 
     @Synchronized
     fun loadCatalog(): List<CatalogIcon> {
@@ -84,8 +92,17 @@ class IconCatalogRepository(context: Context) {
     }
 
     @Synchronized
-    fun clearMemoryCache() {
-        bitmapCache.evictAll()
+    fun trimMemory() {
+        memoryState.trim {
+            bitmapCache.evictAll()
+            generation++
+        }
+    }
+
+    fun resumeAfterBackground() {
+        memoryState.resume {
+            generation++
+        }
     }
 
     @Synchronized
