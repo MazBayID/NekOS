@@ -108,7 +108,8 @@ Adjust the path only if AAPT2 is installed elsewhere. See [Building NekOS](docs/
 - `docs/FEATURE_INVENTORY.md` — implementation status and known gaps.
 - `docs/PRODUCT_DIRECTION.md` — product goals and intentionally excluded features.
 - `docs/BUILDING.md` — build environment notes.
+- `THIRD_PARTY_NOTICES.md` — third-party software attributions and license details.
 
 ## License
 
-NekOS is released under the [MIT License](LICENSE).
+NekOS is released under the [MIT License](LICENSE). Third-party dependencies retain their respective licenses; see [Third-Party Notices](THIRD_PARTY_NOTICES.md).
