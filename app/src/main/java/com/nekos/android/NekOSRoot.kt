@@ -368,8 +368,6 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
             iconBitmapCache = iconBitmapCache,
             homeSwipeThresholdPx = homeSwipeThresholdPx,
             drawerProgress = drawerProgress,
-            isDrawerVisible = drawerVisible,
-            isFavoriteDragging = favoriteDrag?.hasMoved == true,
             onDrawerDrag = { totalDrag ->
                 isDrawerDragging = true
                 drawerVisible = true
@@ -826,8 +824,6 @@ private fun HomeScreen(
     iconBitmapCache: AppIconBitmapCache,
     homeSwipeThresholdPx: Float,
     drawerProgress: State<Float>,
-    isDrawerVisible: Boolean,
-    isFavoriteDragging: Boolean,
     onDrawerDrag: (Float) -> Unit,
     onDrawerDragEnd: (totalDrag: Float, velocityY: Float, cancelled: Boolean) -> Unit,
     onFavoriteClick: (InstalledApp, Rect) -> Unit,
@@ -876,7 +872,7 @@ private fun HomeScreen(
                 .fillMaxSize()
                 .statusBarsPadding()
                 .navigationBarsPadding()
-                // Keep launcher controls sharp while the wallpaper behind them blurs.
+                // Keep launcher controls sharp above the static wallpaper.
                 .pointerInput(homeSwipeThresholdPx) {
                     var totalDrag = 0f
                     var drawerDragStarted = false
