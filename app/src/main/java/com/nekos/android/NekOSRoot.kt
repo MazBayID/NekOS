@@ -1481,31 +1481,7 @@ private fun AppDrawer(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(60.dp)
-                .clickable { currentOnCloseDrawer(0f, 0f) }
-                .pointerInput(closeThresholdPx) {
-                    var totalDrag = 0f
-                    val velocityTracker = VelocityTracker()
-                    detectVerticalDragGestures(
-                        onDragStart = {
-                            totalDrag = 0f
-                            velocityTracker.resetTracking()
-                        },
-                        onVerticalDrag = { change, dragAmount ->
-                            velocityTracker.addPosition(change.uptimeMillis, change.position)
-                            totalDrag += dragAmount
-                            change.consume()
-                        },
-                        onDragEnd = {
-                            currentOnCloseDrawer(totalDrag, velocityTracker.calculateVelocity().y)
-                            totalDrag = 0f
-                        },
-                        onDragCancel = {
-                            totalDrag = 0f
-                            velocityTracker.resetTracking()
-                        }
-                    )
-                },
+                .height(16.dp),
             contentAlignment = Alignment.Center
         ) {
             Box(
