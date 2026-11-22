@@ -87,7 +87,7 @@ class AppIconBitmapCache(
         // cannot create a second mutex while another request is still waiting.
         val lockEntry = keyLocks.compute(cacheKey) { _, current ->
             (current ?: KeyLockEntry()).also { it.users++ }
-        }
+        } ?: error("Unable to acquire icon cache key lock")
 
         return try {
             lockEntry.mutex.withLock {
