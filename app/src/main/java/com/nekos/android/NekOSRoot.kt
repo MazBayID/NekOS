@@ -123,6 +123,11 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
     val focusManager = LocalFocusManager.current
     val launchSourceView = LocalView.current
     var isDefaultLauncher by remember { mutableStateOf(isNekOSDefaultHome(context)) }
+    val homeRoleRequestLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) {
+        isDefaultLauncher = isNekOSDefaultHome(context)
+    }
     LaunchedEffect(resumeToken) {
         isDefaultLauncher = isNekOSDefaultHome(context)
     }
@@ -712,16 +717,17 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
                 isDefaultLauncher = isDefaultLauncher,
                 onSetAsHome = {
                     runCatching {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        val requestIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                             val roleManager = context.getSystemService(RoleManager::class.java)
                             if (roleManager.isRoleAvailable(RoleManager.ROLE_HOME)) {
-                                context.startActivity(roleManager.createRequestRoleIntent(RoleManager.ROLE_HOME))
+                                roleManager.createRequestRoleIntent(RoleManager.ROLE_HOME)
                             } else {
-                                context.startActivity(Intent(Settings.ACTION_HOME_SETTINGS))
+                                Intent(Settings.ACTION_HOME_SETTINGS)
                             }
                         } else {
-                            context.startActivity(Intent(Settings.ACTION_HOME_SETTINGS))
+                            Intent(Settings.ACTION_HOME_SETTINGS)
                         }
+                        homeRoleRequestLauncher.launch(requestIntent)
                     }.onFailure {
                         Toast.makeText(context, "Unable to open Home settings", Toast.LENGTH_SHORT).show()
                     }

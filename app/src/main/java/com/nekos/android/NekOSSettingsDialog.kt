@@ -181,6 +181,12 @@ internal fun NekOSSettingsDialog(
                         )
                     }
                     Text(
+                        "You can also set NekOS manually in Android Settings → Default launcher.",
+                        color = SettingsMuted,
+                        fontSize = 12.sp,
+                        lineHeight = 17.sp
+                    )
+                    Text(
                         "Gesture hints",
                         color = SettingsInk,
                         fontWeight = FontWeight.SemiBold,
