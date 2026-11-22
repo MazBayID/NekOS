@@ -1039,7 +1039,7 @@ private fun HomeScreen(
                         modifier = Modifier.width(tagRailWidth).fillMaxHeight()
                     ) {
                         val tagFrameMiddleHeight by animateDpAsState(
-                            targetValue = 98.dp + 58.dp * visibleTags.size,
+                            targetValue = 58.dp + 58.dp * visibleTags.size,
                             animationSpec = spring(
                                 dampingRatio = 0.86f,
                                 stiffness = 380f
@@ -1050,7 +1050,7 @@ private fun HomeScreen(
                         val tagFrameCapsHeight = tagFrameWidth * (224f / 512f)
                         TagFrame(
                             modifier = Modifier.align(Alignment.BottomCenter)
-                                .offset(y = (-2).dp)
+                                .offset(y = 8.dp)
                                 .requiredWidth(tagFrameWidth)
                                 .height(tagFrameMiddleHeight + tagFrameCapsHeight)
                         )
