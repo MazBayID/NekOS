@@ -122,6 +122,7 @@ import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyGridState
 import sh.calvin.reorderable.rememberReorderableLazyListState
 
+internal val LAUNCHER_SURFACE = Color(0xFFFEFCF8)
 private val WarmBackground = Color(0xFFF4F1EA)
 private val Ink = Color(0xFF34332F)
 private val Muted = Color(0xFF8B8982)
@@ -637,7 +638,7 @@ fun NekOSRoot(
                         .heightIn(max = maxHeight)
                         .verticalScroll(rememberScrollState())
                         .clip(RoundedCornerShape(16.dp))
-                        .background(Color(0xFFFEFCF8))
+                        .background(LAUNCHER_SURFACE)
                         .padding(horizontal = 10.dp, vertical = 10.dp),
                     verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
@@ -845,7 +846,7 @@ fun NekOSRoot(
             AlertDialog(
                 onDismissRequest = { tagPendingDelete = null },
                 shape = RoundedCornerShape(28.dp),
-                containerColor = Color(0xFFFEFCF8),
+                containerColor = LAUNCHER_SURFACE,
                 titleContentColor = Ink,
                 textContentColor = Ink,
                 title = { Text("Delete “${tag.name}”?") },
@@ -870,6 +871,7 @@ fun NekOSRoot(
                     preferences.edit().putBoolean("has_seen_drawer_tip", true).apply()
                     showFirstLaunchTip = false
                 },
+                containerColor = LAUNCHER_SURFACE,
                 title = { Text("Welcome to NekOS") },
                 text = {
                     Text("Swipe up from Home to open your apps. Swipe down on the handle, or tap above the panel, to return Home.")
@@ -1576,7 +1578,7 @@ private fun AppDrawer(
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
-            .background(WarmBackground.copy(alpha = 0.98f))
+            .background(LAUNCHER_SURFACE)
             .navigationBarsPadding()
     ) {
         Box(
