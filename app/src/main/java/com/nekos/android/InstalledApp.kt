@@ -10,28 +10,9 @@ import android.net.Uri
 import android.os.Process
 import android.os.UserHandle
 import android.os.UserManager
-import android.graphics.drawable.Drawable
-import android.util.LruCache
+import android.content.pm.LauncherActivityInfo
 import android.view.View
 import android.widget.Toast
-import androidx.compose.ui.graphics.ImageBitmap
-
-/**
- * Keeps decoded launcher thumbnails within a predictable memory budget.
- * ImageBitmap dimensions are used to estimate the backing ARGB_8888 allocation.
- */
-class AppIconBitmapCache(maxSizeKb: Int = 8 * 1024) {
-    private val cache = object : LruCache<String, ImageBitmap>(maxSizeKb) {
-        override fun sizeOf(key: String, bitmap: ImageBitmap): Int =
-            (bitmap.width * bitmap.height * 4 / 1024).coerceAtLeast(1)
-    }
-
-    operator fun get(appId: String): ImageBitmap? = cache.get(appId)
-
-    fun put(appId: String, bitmap: ImageBitmap) {
-        cache.put(appId, bitmap)
-    }
-}
 
 data class LauncherAppScanResult(
     val apps: List<InstalledApp>,
@@ -43,7 +24,9 @@ data class LauncherAppScanResult(
 data class InstalledApp(
     val label: String,
     val packageName: String,
-    val icon: Drawable,
+    val launcherActivityInfo: LauncherActivityInfo,
+    val iconDensityDpi: Int,
+    val iconVersion: Long = 0L,
     val user: UserHandle,
     val componentName: ComponentName,
     val profileSerialNumber: Long
@@ -51,6 +34,10 @@ data class InstalledApp(
     /** Stable across process restarts and distinct for identical packages in separate profiles. */
     val id: String
         get() = launcherAppId(packageName, profileSerialNumber)
+
+    /** Changes when the installed package is updated, invalidating its previous disk icon. */
+    val iconCacheKey: String
+        get() = "$id::$iconVersion::${componentName.flattenToString()}"
 
     val isInCurrentProfile: Boolean
         get() = user == Process.myUserHandle()
@@ -92,13 +79,13 @@ fun loadLaunchableApps(context: Context): LauncherAppScanResult {
 
             activities.distinctBy { it.applicationInfo.packageName }
                 .map { activity ->
-                    val icon = runCatching { activity.getBadgedIcon(densityDpi) }
-                        .getOrElse { context.packageManager.defaultActivityIcon }
                     InstalledApp(
                         label = activity.label?.toString().orEmpty()
                             .ifBlank { activity.applicationInfo.packageName },
                         packageName = activity.applicationInfo.packageName,
-                        icon = icon,
+                        launcherActivityInfo = activity,
+                        iconDensityDpi = densityDpi,
+                        iconVersion = activity.applicationInfo.lastUpdateTime,
                         user = profile,
                         componentName = activity.componentName,
                         profileSerialNumber = profileSerial
@@ -229,5 +216,8 @@ internal fun hasSameAppCatalog(current: List<InstalledApp>, refreshed: List<Inst
     current.size == refreshed.size && current.indices.all { index ->
         val old = current[index]
         val new = refreshed[index]
-        old.id == new.id && old.label == new.label && old.componentName == new.componentName
+        old.id == new.id &&
+            old.label == new.label &&
+            old.componentName == new.componentName &&
+            old.iconVersion == new.iconVersion
     }
