@@ -1165,7 +1165,6 @@ private fun HomeScreen(
                                 onClick = { bounds -> app?.let { onFavoriteClick(it, bounds) } },
                                 onLongPress = { position -> onFavoriteLongPress(index, position) },
                                 onLongPressEnd = onFavoriteLongPressEnd,
-                                onLongPressCancel = onFavoriteLongPressCancel,
                                 reorderHandleModifier = { toRootPosition ->
                                     Modifier.draggableHandle(
                                         enabled = app != null,
@@ -1207,7 +1206,6 @@ private fun FavoriteSlot(
     onClick: (Rect) -> Unit,
     onLongPress: (Offset) -> Unit,
     onLongPressEnd: () -> Unit,
-    onLongPressCancel: () -> Unit,
     reorderHandleModifier: ((Offset) -> Offset) -> Modifier,
     modifier: Modifier = Modifier
 ) {
@@ -1231,10 +1229,8 @@ private fun FavoriteSlot(
     )
     var slotCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
     val currentSlotCoordinates by rememberUpdatedState(slotCoordinates)
-    val currentOnClick by rememberUpdatedState(onClick)
     val currentOnLongPress by rememberUpdatedState(onLongPress)
     val currentOnLongPressEnd by rememberUpdatedState(onLongPressEnd)
-    val currentOnLongPressCancel by rememberUpdatedState(onLongPressCancel)
     Column(
         modifier = modifier
             .aspectRatio(1f)
