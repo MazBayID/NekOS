@@ -48,14 +48,14 @@ class AppIconBitmapCache(
     private val loadSemaphore = Semaphore(2)
     private val keyLocks = KeyedMutex()
 
-    @Volatile
-    private var memoryLoadsEnabled = true
+    private val memoryState = CacheMemoryState()
 
     /** Read by Compose items so they can drop their own bitmap references on memory trim. */
     var generation by mutableIntStateOf(0)
         private set
 
-    operator fun get(cacheKey: String): ImageBitmap? = memoryCache.get(cacheKey)
+    operator fun get(cacheKey: String): ImageBitmap? =
+        memoryState.ifEnabled { memoryCache.get(cacheKey) }
 
     /**
      * Size the RAM cache for the current catalog, while keeping it within a
@@ -73,28 +73,31 @@ class AppIconBitmapCache(
     }
 
     suspend fun getOrLoad(app: InstalledApp): ImageBitmap? {
-        memoryCache.get(app.iconCacheKey)?.let { return it }
-        if (!memoryLoadsEnabled) return null
+        memoryState.ifEnabled { memoryCache.get(app.iconCacheKey) }?.let { return it }
 
         val cacheKey = app.iconCacheKey
         return keyLocks.withLock(cacheKey) {
-            memoryCache.get(cacheKey)?.let { return@withLock it }
-            if (!memoryLoadsEnabled) return@withLock null
+            memoryState.ifEnabled { memoryCache.get(cacheKey) }?.let {
+                return@withLock it
+            }
 
             loadSemaphore.withPermit {
-                memoryCache.get(cacheKey)?.let { return@withPermit it }
-                if (!memoryLoadsEnabled) return@withPermit null
+                memoryState.ifEnabled { memoryCache.get(cacheKey) }?.let {
+                    return@withPermit it
+                }
+                val loadEpoch = memoryState.beginLoad() ?: return@withPermit null
 
-                withContext(Dispatchers.IO) {
+                val bitmap = withContext(Dispatchers.IO) {
                     val diskBitmap = readDiskBitmap(cacheKey)
-                    val bitmap = diskBitmap ?: createAppIcon(app).also {
+                    val decodedBitmap = diskBitmap ?: createAppIcon(app).also {
                         writeDiskBitmap(cacheKey, it)
                     }
-                    bitmap.asImageBitmap()
-                }.also { bitmap ->
-                    if (memoryLoadsEnabled) {
-                        memoryCache.put(cacheKey, bitmap)
-                    }
+                    decodedBitmap.asImageBitmap()
+                }
+
+                memoryState.storeIfCurrent(loadEpoch) {
+                    memoryCache.put(cacheKey, bitmap)
+                    bitmap
                 }
             }
         }
@@ -106,12 +109,12 @@ class AppIconBitmapCache(
      * icon while the preload is still running.
      */
     suspend fun preload(apps: List<InstalledApp>) = coroutineScope {
-        if (apps.isEmpty() || !memoryLoadsEnabled) return@coroutineScope
+        if (apps.isEmpty() || !memoryState.isEnabled()) return@coroutineScope
 
         val nextIndex = AtomicInteger(0)
         repeat(2) {
             launch {
-                while (memoryLoadsEnabled) {
+                while (memoryState.isEnabled()) {
                     val index = nextIndex.getAndIncrement()
                     if (index >= apps.size) break
                     getOrLoad(apps[index])
@@ -119,14 +122,15 @@ class AppIconBitmapCache(
                 }
             }
         }
-        if (memoryLoadsEnabled) generation++
+        memoryState.ifEnabled { generation++ }
     }
 
     /** Release rebuildable bitmap allocations while the launcher is not visible. */
     fun trimMemory() {
-        memoryLoadsEnabled = false
-        memoryCache.evictAll()
-        generation++
+        memoryState.trim {
+            memoryCache.evictAll()
+            generation++
+        }
     }
 
     /**
@@ -135,8 +139,9 @@ class AppIconBitmapCache(
      * references without the cache's enabled flag reflecting that transition.
      */
     fun resumeAfterBackground() {
-        memoryLoadsEnabled = true
-        generation++
+        memoryState.resume {
+            generation++
+        }
     }
 
     private fun createAppIcon(app: InstalledApp): Bitmap =
@@ -255,6 +260,49 @@ internal class KeyedMutex {
                     current
                 }
             }
+        }
+    }
+}
+
+
+/**
+ * Coordinates cache state transitions with in-flight bitmap loads.
+ * A trim or resume invalidates earlier load epochs, preventing stale decodes
+ * from repopulating RAM after the cache has been released.
+ */
+internal class CacheMemoryState {
+    private val lock = Any()
+    private var enabled = true
+    private var epoch = 0L
+
+    fun isEnabled(): Boolean = synchronized(lock) { enabled }
+
+    fun beginLoad(): Long? = synchronized(lock) {
+        if (enabled) epoch else null
+    }
+
+    fun <T> ifEnabled(action: () -> T): T? = synchronized(lock) {
+        if (enabled) action() else null
+    }
+
+    fun <T> storeIfCurrent(loadEpoch: Long, action: () -> T): T? =
+        synchronized(lock) {
+            if (enabled && epoch == loadEpoch) action() else null
+        }
+
+    fun trim(action: () -> Unit) {
+        synchronized(lock) {
+            enabled = false
+            epoch++
+            action()
+        }
+    }
+
+    fun resume(action: () -> Unit) {
+        synchronized(lock) {
+            enabled = true
+            epoch++
+            action()
         }
     }
 }
