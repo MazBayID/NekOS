@@ -142,6 +142,8 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
     var apps by remember { mutableStateOf(emptyList<InstalledApp>()) }
     var favoritePackages by remember { mutableStateOf(loadFavoritePackages(context)) }
     var tags by remember { mutableStateOf(TagStore.load(context)) }
+    var favoriteOrderSnapshot by remember { mutableStateOf<List<String?>?>(null) }
+    var tagOrderSnapshot by remember { mutableStateOf<List<NekTag>?>(null) }
     var activeTagPage by remember { mutableIntStateOf(0) }
     var isInitialLoadComplete by remember { mutableStateOf(false) }
     var lastAppliedRefreshToken by remember { mutableIntStateOf(-1) }
@@ -412,16 +414,40 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
                     val moved = updated[fromIndex]
                     updated[fromIndex] = updated[toIndex]
                     updated[toIndex] = moved
-                    updateFavorites(updated)
+                    favoritePackages = updated
                 }
+            },
+            onFavoriteReorderStart = {
+                favoriteOrderSnapshot = favoritePackages.toList()
+            },
+            onFavoriteReorderEnd = { cancelled ->
+                val snapshot = favoriteOrderSnapshot
+                if (cancelled && snapshot != null) {
+                    favoritePackages = snapshot
+                } else {
+                    updateFavorites(favoritePackages)
+                }
+                favoriteOrderSnapshot = null
             },
             onTagClick = { tag -> viewingTag = tag },
             onTagOptionsClick = { tag -> actionMenuTag = tag },
             onTagReorder = { fromIndex, toIndex ->
                 val sourceId = tags.getOrNull(fromIndex)?.id
                 if (sourceId != null) {
-                    saveTags(moveTagToIndex(tags, sourceId, toIndex))
+                    tags = moveTagToIndex(tags, sourceId, toIndex)
                 }
+            },
+            onTagReorderStart = {
+                tagOrderSnapshot = tags.toList()
+            },
+            onTagReorderEnd = { cancelled ->
+                val snapshot = tagOrderSnapshot
+                if (cancelled && snapshot != null) {
+                    tags = snapshot
+                } else {
+                    saveTags(tags)
+                }
+                tagOrderSnapshot = null
             },
             onAddTag = {
                 if (tags.size >= 10) {
@@ -831,9 +857,13 @@ private fun HomeScreen(
     onFavoriteSlotBounds: (Int, Rect) -> Unit,
     favoriteDropTarget: Int?,
     onFavoriteReorder: (Int, Int) -> Unit,
+    onFavoriteReorderStart: () -> Unit,
+    onFavoriteReorderEnd: (cancelled: Boolean) -> Unit,
     onTagClick: (NekTag) -> Unit,
     onTagOptionsClick: (NekTag) -> Unit,
     onTagReorder: (Int, Int) -> Unit,
+    onTagReorderStart: () -> Unit,
+    onTagReorderEnd: (cancelled: Boolean) -> Unit,
     onAddTag: () -> Unit
 ) {
     val appById = remember(apps) { apps.associateBy { it.id } }
@@ -1030,6 +1060,8 @@ private fun HomeScreen(
                                                 isDragging = isDragging,
                                                 onClick = { onTagClick(tag) },
                                                 onHandleClick = { onTagOptionsClick(tag) },
+                                                onReorderStart = onTagReorderStart,
+                                                onReorderEnd = onTagReorderEnd,
                                                 reorderHandleScope = this
                                             )
                                         }
@@ -1162,6 +1194,8 @@ private fun HomeScreen(
                                 onLongPress = { position -> onFavoriteLongPress(index, position) },
                                 onLongPressEnd = onFavoriteLongPressEnd,
                                 onLongPressCancel = onFavoriteLongPressCancel,
+                                onReorderStart = onFavoriteReorderStart,
+                                onReorderEnd = onFavoriteReorderEnd,
                                 reorderHandleScope = this,
                                 modifier = Modifier.fillMaxWidth()
                             )
@@ -1184,6 +1218,8 @@ private fun FavoriteSlot(
     onLongPress: (Offset) -> Unit,
     onLongPressEnd: () -> Unit,
     onLongPressCancel: () -> Unit,
+    onReorderStart: () -> Unit,
+    onReorderEnd: (cancelled: Boolean) -> Unit,
     reorderHandleScope: sh.calvin.reorderable.ReorderableCollectionItemScope,
     modifier: Modifier = Modifier
 ) {
@@ -1211,6 +1247,8 @@ private fun FavoriteSlot(
     val currentOnLongPress by rememberUpdatedState(onLongPress)
     val currentOnLongPressEnd by rememberUpdatedState(onLongPressEnd)
     val currentOnLongPressCancel by rememberUpdatedState(onLongPressCancel)
+    val currentOnReorderStart by rememberUpdatedState(onReorderStart)
+    val currentOnReorderEnd by rememberUpdatedState(onReorderEnd)
     val reorderHandle = with(reorderHandleScope) {
         Modifier.draggableHandle(
             enabled = app != null,
@@ -1225,7 +1263,9 @@ private fun FavoriteSlot(
                 },
                 onLongPress = { position -> currentOnLongPress(position) },
                 onLongPressEnd = { currentOnLongPressEnd() },
-                onLongPressCancel = { currentOnLongPressCancel() }
+                onLongPressCancel = { currentOnLongPressCancel() },
+                onReorderStart = { currentOnReorderStart() },
+                onReorderEnd = { cancelled -> currentOnReorderEnd(cancelled) }
             )
         )
     }
@@ -1289,6 +1329,8 @@ private fun TagPill(
     isDragging: Boolean,
     onClick: () -> Unit,
     onHandleClick: () -> Unit,
+    onReorderStart: () -> Unit,
+    onReorderEnd: (cancelled: Boolean) -> Unit,
     reorderHandleScope: sh.calvin.reorderable.ReorderableCollectionItemScope,
     modifier: Modifier = Modifier
 ) {
@@ -1317,10 +1359,14 @@ private fun TagPill(
         mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null)
     }
     val currentOnHandleClick by rememberUpdatedState(onHandleClick)
+    val currentOnReorderStart by rememberUpdatedState(onReorderStart)
+    val currentOnReorderEnd by rememberUpdatedState(onReorderEnd)
     val reorderHandle = with(reorderHandleScope) {
         Modifier.draggableHandle(
             dragGestureDetector = LauncherReorderGestureDetector(
-                onTap = { currentOnHandleClick() }
+                onTap = { currentOnHandleClick() },
+                onReorderStart = { currentOnReorderStart() },
+                onReorderEnd = { cancelled -> currentOnReorderEnd(cancelled) }
             )
         )
     }
