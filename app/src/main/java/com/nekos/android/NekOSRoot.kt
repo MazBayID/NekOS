@@ -990,7 +990,7 @@ private fun HomeScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                    .statusBarsPadding()
+                .statusBarsPadding()
                 .navigationBarsPadding()
                 // Keep launcher controls sharp above the static wallpaper.
                 .pointerInput(homeSwipeThresholdPx) {
