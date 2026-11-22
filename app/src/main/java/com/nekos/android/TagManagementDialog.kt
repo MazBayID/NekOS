@@ -42,6 +42,21 @@ private val TagColors = listOf(
     Color(0xFFF2DCD6), Color(0xFFE9DDF1), Color(0xFFF1E7C9)
 )
 
+private val TagIconFrameColors = listOf(
+    "Ocean" to 0xFF114B56L,
+    "Blue" to 0xFF2563EBL,
+    "Purple" to 0xFF7C3AEDL,
+    "Rose" to 0xFFE11D48L,
+    "Red" to 0xFFDC2626L,
+    "Orange" to 0xFFEA580CL,
+    "Amber" to 0xFFD97706L,
+    "Green" to 0xFF16A34AL,
+    "Mint" to 0xFF0D9488L,
+    "Slate" to 0xFF64748BL,
+    "Silver" to 0xFFA1A1AAL,
+    "Dark" to 0xFF27272AL
+)
+
 @Composable
 private fun TagAppIcon(app: InstalledApp, iconBitmapCache: AppIconBitmapCache) {
     var bitmap by remember(app.id, iconBitmapCache.generation) {
@@ -222,18 +237,26 @@ fun TagManagementDialog(
     var name by remember(tag?.id) { mutableStateOf(tag?.name.orEmpty()) }
     var selectedIcon by remember(tag?.id) { mutableStateOf(tag?.iconId) }
     var selectedColor by remember(tag?.id) { mutableLongStateOf(tag?.colorArgb ?: 0xFFE7E1D6) }
+    var selectedIconFrameColor by remember(tag?.id) {
+        mutableLongStateOf(tag?.iconFrameColorArgb ?: DEFAULT_TAG_ICON_FRAME_COLOR)
+    }
     var selectedPackages by remember(tag?.id) { mutableStateOf(tag?.appPackages?.toSet().orEmpty()) }
     var showIconPicker by remember { mutableStateOf(false) }
+    var showIconColorPicker by remember { mutableStateOf(false) }
     var appSearch by remember(tag?.id) { mutableStateOf("") }
     val selectedIconEntry = remember(catalog, selectedIcon) {
         catalog.firstOrNull { it.id == selectedIcon }
     }
-    var selectedIconBitmap by remember(selectedIcon) {
+    var selectedIconBitmap by remember(selectedIcon, selectedIconFrameColor) {
         mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null)
     }
-    LaunchedEffect(selectedIcon, selectedIconEntry) {
+    LaunchedEffect(selectedIcon, selectedIconEntry, selectedIconFrameColor) {
         selectedIconBitmap = withContext(Dispatchers.IO) {
-            selectedIconEntry?.let { runCatching { iconCatalogRepository.loadBitmap(it)?.asImageBitmap() }.getOrNull() }
+            selectedIconEntry?.let {
+                runCatching {
+                    iconCatalogRepository.loadBitmap(it, selectedIconFrameColor)?.asImageBitmap()
+                }.getOrNull()
+            }
         }
     }
     val filteredApps = remember(apps, appSearch) {
@@ -321,6 +344,7 @@ fun TagManagementDialog(
                         Text(selectedIconEntry?.name ?: "No icon selected", color = Color(0xFF34332F), style = MaterialTheme.typography.bodyMedium)
                         Text("Tag icon", color = Color(0xFF8B8982), style = MaterialTheme.typography.labelSmall)
                     }
+                    TextButton(onClick = { showIconColorPicker = true }) { Text("Icon Color") }
                     TextButton(onClick = { selectedIcon = null }) { Text("Clear") }
                 }
                 Text("Apps (${selectedPackages.size} selected)", style = MaterialTheme.typography.labelMedium)
@@ -388,7 +412,8 @@ fun TagManagementDialog(
                             name = name.trim(),
                             iconId = selectedIcon,
                             colorArgb = selectedColor,
-                            appPackages = selectedPackages.toList()
+                            appPackages = selectedPackages.toList(),
+                            iconFrameColorArgb = selectedIconFrameColor
                         ).normalized()
                     )
                 }
@@ -417,13 +442,14 @@ fun TagManagementDialog(
                     contentPadding = PaddingValues(4.dp)
                 ) {
                     items(catalog, key = { it.id }) { icon ->
-                        var bitmap by remember(icon.id) {
+                        var bitmap by remember(icon.id, selectedIconFrameColor) {
                             mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null)
                         }
-                        LaunchedEffect(icon.id) {
+                        LaunchedEffect(icon.id, selectedIconFrameColor) {
                             bitmap = withContext(Dispatchers.IO) {
-                                runCatching { iconCatalogRepository.loadBitmap(icon)?.asImageBitmap() }
-                                    .getOrNull()
+                                runCatching {
+                                    iconCatalogRepository.loadBitmap(icon, selectedIconFrameColor)?.asImageBitmap()
+                                }.getOrNull()
                             }
                         }
                         Box(
@@ -445,4 +471,60 @@ fun TagManagementDialog(
             confirmButton = { TextButton(onClick = { showIconPicker = false }) { Text("Done") } }
         )
     }
+    if (showIconColorPicker) {
+        AlertDialog(
+            onDismissRequest = { showIconColorPicker = false },
+            shape = RoundedCornerShape(28.dp),
+            containerColor = Color(0xFFFEFCF8),
+            titleContentColor = Color(0xFF34332F),
+            textContentColor = Color(0xFF34332F),
+            title = { Text("Icon Color") },
+            text = {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(3),
+                    modifier = Modifier.heightIn(max = 300.dp),
+                    contentPadding = PaddingValues(4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(TagIconFrameColors) { (name, colorValue) ->
+                        val selected = selectedIconFrameColor == colorValue
+                        Row(
+                            Modifier.fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(Color(0xFFF4F1EA))
+                                .clickable {
+                                    selectedIconFrameColor = colorValue
+                                    showIconColorPicker = false
+                                }
+                                .padding(8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(7.dp)
+                        ) {
+                            Box(
+                                Modifier.size(22.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(colorValue.toInt()))
+                                    .border(
+                                        width = if (selected) 2.dp else 1.dp,
+                                        color = if (selected) Color(0xFF34332F) else Color(0xFF34332F).copy(alpha = 0.18f),
+                                        shape = CircleShape
+                                    )
+                            )
+                            Text(
+                                name,
+                                color = Color(0xFF34332F),
+                                style = MaterialTheme.typography.labelMedium,
+                                maxLines = 1
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showIconColorPicker = false }) { Text("Done") }
+            }
+        )
+    }
+
 }
