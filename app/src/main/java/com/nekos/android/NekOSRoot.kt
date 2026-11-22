@@ -1163,6 +1163,7 @@ private fun HomeScreen(
                         )
                     }
                 }
+            }
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 repeat(3) { row ->
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
