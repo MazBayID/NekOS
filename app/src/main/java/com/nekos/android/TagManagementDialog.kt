@@ -42,10 +42,8 @@ private fun TagAppIcon(app: InstalledApp, iconBitmapCache: AppIconBitmapCache) {
         mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null)
     }
 
-    LaunchedEffect(app.id, app.icon) {
-        bitmap = withContext(Dispatchers.Default) {
-            app.icon.toBitmap(72, 72).asImageBitmap()
-        }
+    LaunchedEffect(app.id, iconBitmapCache.generation) {
+        bitmap = iconBitmapCache.getOrLoad(app)
     }
 
     if (bitmap != null) {
