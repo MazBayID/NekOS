@@ -29,6 +29,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.BlurEffect
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -1786,7 +1787,7 @@ private fun isNekOSDefaultHome(context: Context): Boolean {
 @Composable
 private fun TagFrame(modifier: Modifier = Modifier) {
     val frameBitmap = remember {
-        androidx.compose.ui.res.imageResource(R.drawable.tag_frame_spritesheet)
+        androidx.compose.ui.graphics.ImageBitmap.imageResource(R.drawable.tag_frame_spritesheet)
     }
     Canvas(modifier = modifier) {
         val widthPx = size.width
