@@ -119,6 +119,7 @@ fun TagAppsDialog(
                     modifier = Modifier.weight(1f),
                     style = MaterialTheme.typography.titleLarge
                 )
+                }
             }
         },
         text = {

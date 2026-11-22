@@ -25,6 +25,7 @@ import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlin.math.abs
+import kotlin.math.roundToInt
 
 internal data class LauncherUiColorOption(val name: String, val argb: Long)
 
