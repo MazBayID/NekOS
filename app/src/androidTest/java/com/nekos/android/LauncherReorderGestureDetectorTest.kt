@@ -66,7 +66,7 @@ class LauncherReorderGestureDetectorTest {
 
         composeRule.runOnIdle {
             assertEquals(
-                listOf("preview", "preview-cancel", "drag-start", "drag", "drag-end"),
+                listOf("preview", "preview-cancel", "reorder-start", "drag-start", "drag", "reorder-end-false", "drag-end"),
                 state.events
             )
         }
@@ -87,7 +87,7 @@ class LauncherReorderGestureDetectorTest {
 
         composeRule.runOnIdle {
             assertEquals(
-                listOf("preview", "preview-cancel", "drag-start", "drag", "drag-cancel"),
+                listOf("preview", "preview-cancel", "reorder-start", "drag-start", "drag", "reorder-end-true", "drag-cancel"),
                 state.events
             )
         }
@@ -114,7 +114,11 @@ private fun ReorderGestureHarness(state: ReorderGestureState) {
                     onTap = { state.events += "tap" },
                     onLongPress = { state.events += "preview" },
                     onLongPressEnd = { state.events += "preview-end" },
-                    onLongPressCancel = { state.events += "preview-cancel" }
+                    onLongPressCancel = { state.events += "preview-cancel" },
+                    onReorderStart = { state.events += "reorder-start" },
+                    onReorderEnd = { cancelled ->
+                        state.events += if (cancelled) "reorder-end-true" else "reorder-end-false"
+                    }
                 ).detect(
                     onDragStart = { state.events += "drag-start" },
                     onDragEnd = { state.events += "drag-end" },
