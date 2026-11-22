@@ -258,6 +258,13 @@ fun NekOSRoot(
         mutableStateOf(normalizeLauncherTheme(preferences.getString("launcher_theme", "porcelain")))
     }
     val launcherSurface = launcherThemeColor(launcherThemeKey)
+    var launcherUiColorArgb by remember {
+        mutableLongStateOf(
+            normalizeLauncherUiColor(
+                preferences.getLong("launcher_ui_color", DEFAULT_LAUNCHER_UI_COLOR)
+            )
+        )
+    }
     var backgroundPreset by remember {
         mutableStateOf(
             normalizeNekOSBackgroundPreset(preferences.getString("background_preset", "warm"))
@@ -674,6 +681,7 @@ fun NekOSRoot(
                             }
                         } else null,
                         launcherSurface = launcherSurface,
+                        uiColorArgb = launcherUiColorArgb
                     )
                 }
             }
@@ -727,6 +735,11 @@ fun NekOSRoot(
                 onLauncherThemeChange = { key ->
                     launcherThemeKey = normalizeLauncherTheme(key)
                     preferences.edit().putString("launcher_theme", launcherThemeKey).apply()
+                },
+                launcherUiColor = launcherUiColorArgb,
+                onLauncherUiColorChange = { color ->
+                    launcherUiColorArgb = normalizeLauncherUiColor(color)
+                    preferences.edit().putLong("launcher_ui_color", launcherUiColorArgb).apply()
                 },
                 hasWallpaper = wallpaperPath != null,
                 appVersion = appVersion,
@@ -1084,6 +1097,7 @@ private fun HomeScreen(
                         val tagFrameWidth = tagRailWidth * 1.1f
                         val tagFrameCapsHeight = tagFrameWidth * (224f / 512f)
                         TagFrame(
+                            colorArgb = launcherUiColorArgb,
                             modifier = Modifier.align(Alignment.BottomCenter)
                                 .offset(y = 8.dp)
                                 .requiredWidth(tagFrameWidth)
@@ -1199,8 +1213,9 @@ private fun HomeScreen(
                                         },
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    Image(
-                                        painter = painterResource(R.drawable.nekos_ui_add_tag),
+                                    ThemedUiArtworkImage(
+                                        resourceId = R.drawable.nekos_ui_add_tag,
+                                        colorArgb = launcherUiColorArgb,
                                         contentDescription = null,
                                         contentScale = ContentScale.Fit,
                                         modifier = Modifier.fillMaxSize()
@@ -1213,8 +1228,9 @@ private fun HomeScreen(
                 Box(
                     modifier = Modifier.fillMaxWidth().height(72.dp)
                 ) {
-                    Image(
-                        painter = painterResource(R.drawable.text_logo_sec),
+                    ThemedUiArtworkImage(
+                        resourceId = R.drawable.text_logo_sec,
+                        colorArgb = launcherUiColorArgb,
                         contentDescription = "NekOS",
                         contentScale = ContentScale.Fit,
                         modifier = Modifier.align(Alignment.CenterStart)
@@ -1235,8 +1251,9 @@ private fun HomeScreen(
                             },
                         contentAlignment = Alignment.Center
                     ) {
-                        Image(
-                            painter = painterResource(R.drawable.nekos_ui_launcher_settings),
+                        ThemedUiArtworkImage(
+                            resourceId = R.drawable.nekos_ui_launcher_settings,
+                            colorArgb = launcherUiColorArgb,
                             contentDescription = null,
                             contentScale = ContentScale.Fit,
                             modifier = Modifier.fillMaxSize().padding(6.dp)
@@ -1828,10 +1845,12 @@ private fun isNekOSDefaultHome(context: Context): Boolean {
 
 
 @Composable
-private fun TagFrame(modifier: Modifier = Modifier) {
-    val frameBitmap =
-        androidx.compose.ui.graphics.ImageBitmap.imageResource(R.drawable.tag_frame_spritesheet)
-    Canvas(modifier = modifier) {
+private fun TagFrame(
+    colorArgb: Long,
+    modifier: Modifier = Modifier
+) {
+    val frameBitmap = rememberThemedUiArtwork(R.drawable.tag_frame_spritesheet, colorArgb)
+    if (frameBitmap != null) Canvas(modifier = modifier) {
         val widthPx = size.width
         val scale = widthPx / 512f
         val topHeight = 144f * scale
