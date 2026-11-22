@@ -33,8 +33,6 @@ class MainActivity : ComponentActivity() {
     private var homeSignal by mutableIntStateOf(0)
     /** Bumped when the launcher stops being visible so transient drawer UI can reset. */
     private var backgroundSignal by mutableIntStateOf(0)
-    /** Bumped only when a Home intent brings NekOS back from the background. */
-    private var homeReturnSignal by mutableIntStateOf(0)
     private var isForcedRefreshPending = false
     private var stoppedAtElapsedMillis = 0L
     private val mainHandler = Handler(Looper.getMainLooper())
@@ -171,7 +169,6 @@ class MainActivity : ComponentActivity() {
         // Pressing Home while NekOS is open returns to a clean Home screen.
         if (intent.hasCategory(Intent.CATEGORY_HOME)) {
             homeSignal++
-            if (stoppedAtElapsedMillis != 0L) homeReturnSignal++
         }
     }
 
@@ -192,7 +189,6 @@ class MainActivity : ComponentActivity() {
                         refreshToken = appRefreshToken,
                         resumeToken = resumeRefreshToken,
                         homeSignal = homeSignal,
-                        homeReturnSignal = homeReturnSignal,
                         backgroundSignal = backgroundSignal
                     )
                 }
