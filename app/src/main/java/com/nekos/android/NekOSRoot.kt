@@ -597,6 +597,7 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
                 ) {
                     LauncherAppActionMenuContent(
                         app = app,
+                        iconBitmapCache = iconBitmapCache,
                         isInteractive = isInteractive,
                         onAppInfo = {
                             actionMenuApp = null
@@ -711,6 +712,7 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
             TagAppsDialog(
                 tag = tag,
                 apps = apps,
+                iconBitmapCache = iconBitmapCache,
                 onLaunch = { app ->
                     viewingTag = null
                     launchApp(context, app, launchSourceView)
@@ -760,6 +762,7 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
             TagManagementDialog(
                 tag = tagEditorTarget,
                 apps = apps,
+                iconBitmapCache = iconBitmapCache,
                 iconCatalogRepository = iconCatalogRepository,
                 onSave = { saved ->
                     val duplicateName = tags.any { it.id != saved.id && it.name.equals(saved.name, ignoreCase = true) }
