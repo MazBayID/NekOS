@@ -132,7 +132,8 @@ fun NekOSRoot(
     refreshToken: Int,
     resumeToken: Int = 0,
     homeSignal: Int = 0,
-    homeReturnSignal: Int = 0
+    homeReturnSignal: Int = 0,
+    backgroundSignal: Int = 0
 ) {
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
@@ -393,6 +394,11 @@ fun NekOSRoot(
             drawerFullyOpen = false
             isDrawerDragging = false
             drawerTargetProgress = 1f
+        }
+
+        // Reset transient drawer state whenever NekOS is no longer visible.
+        LaunchedEffect(backgroundSignal) {
+            if (backgroundSignal > 0) closeDrawer()
         }
 
         // Pressing Home while the tag editor is open dismisses it just like Back.
