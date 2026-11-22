@@ -530,7 +530,7 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
                         // visible over the Home Favorite area.
                         val isDraggingApp = favoriteDrag?.hasMoved == true
                         translationY = if (isDraggingApp) size.height * 0.12f else drawerProgress * size.height
-                        alpha = if (isDraggingApp) 0.34f else 1f
+                        alpha = if (isDraggingApp) 0f else 1f
                         scaleX = if (isDraggingApp) 0.985f else 1f
                         scaleY = if (isDraggingApp) 0.985f else 1f
                     },
