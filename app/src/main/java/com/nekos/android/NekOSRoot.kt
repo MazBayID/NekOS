@@ -36,6 +36,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -1046,14 +1047,23 @@ private fun HomeScreen(
                             BoxWithConstraints(
                                 modifier = Modifier.weight(1f).fillMaxWidth()
                             ) {
-                                Image(
-                                    painter = painterResource(R.drawable.nekos_ui_tag_frame),
-                                    contentDescription = null,
-                                    contentScale = ContentScale.FillBounds,
-                                    modifier = Modifier.align(Alignment.TopCenter)
-                                        .offset(y = maxHeight * 0.5f - 40.dp)
+                                val tagContentHeight = (
+                                    visibleTags.size * 44 +
+                                        (visibleTags.size - 1).coerceAtLeast(0) * 8 + 4
+                                    ).dp
+                                val tagFrameHeight by animateDpAsState(
+                                    targetValue = maxOf(48.dp, tagContentHeight),
+                                    animationSpec = spring(
+                                        dampingRatio = 0.86f,
+                                        stiffness = 380f
+                                    ),
+                                    label = "tag-frame-height"
+                                )
+                                TagFrame(
+                                    modifier = Modifier.align(Alignment.BottomCenter)
+                                        .offset(y = maxHeight * 0.15f - 40.dp)
                                         .requiredWidth(tagRailWidth * 1.1f)
-                                        .fillMaxHeight(0.65f)
+                                        .height(tagFrameHeight)
                                 )
                                 LazyColumn(
                                     modifier = Modifier.fillMaxSize()
@@ -1770,4 +1780,47 @@ private fun isNekOSDefaultHome(context: Context): Boolean {
     val homeIntent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
     val resolved = context.packageManager.resolveActivity(homeIntent, 0)
     return resolved?.activityInfo?.packageName == context.packageName
+}
+
+
+@Composable
+private fun TagFrame(modifier: Modifier = Modifier) {
+    val frameBitmap = remember {
+        androidx.compose.ui.res.imageResource(R.drawable.tag_frame_spritesheet)
+    }
+    Canvas(modifier = modifier) {
+        val widthPx = size.width
+        val scale = widthPx / 512f
+        val topHeight = 144f * scale
+        val bottomHeight = 80f * scale
+        val middleHeight = (size.height - topHeight - bottomHeight).coerceAtLeast(0f)
+        val dstWidth = widthPx.toInt().coerceAtLeast(1)
+        val topDstHeight = topHeight.toInt().coerceAtLeast(1)
+        val middleDstHeight = middleHeight.toInt()
+        val bottomDstHeight = bottomHeight.toInt().coerceAtLeast(1)
+
+        drawImage(
+            image = frameBitmap,
+            srcOffset = IntOffset(0, 0),
+            srcSize = IntSize(512, 144),
+            dstOffset = IntOffset(0, 0),
+            dstSize = IntSize(dstWidth, topDstHeight)
+        )
+        if (middleDstHeight > 0) {
+            drawImage(
+                image = frameBitmap,
+                srcOffset = IntOffset(0, 144),
+                srcSize = IntSize(512, 16),
+                dstOffset = IntOffset(0, topDstHeight),
+                dstSize = IntSize(dstWidth, middleDstHeight)
+            )
+        }
+        drawImage(
+            image = frameBitmap,
+            srcOffset = IntOffset(0, 160),
+            srcSize = IntSize(512, 80),
+            dstOffset = IntOffset(0, topDstHeight + middleDstHeight),
+            dstSize = IntSize(dstWidth, bottomDstHeight)
+        )
+    }
 }
