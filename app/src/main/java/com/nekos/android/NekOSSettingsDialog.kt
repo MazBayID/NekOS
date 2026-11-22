@@ -12,10 +12,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.activity.compose.BackHandler
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -90,6 +90,10 @@ internal fun NekOSSettingsDialog(
 ) {
     var page by remember { mutableStateOf(SettingsPage.MAIN) }
     val surfaceColor = launcherThemeColor(launcherThemeKey)
+
+    BackHandler(enabled = page != SettingsPage.MAIN) {
+        page = SettingsPage.MAIN
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
