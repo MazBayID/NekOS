@@ -1025,80 +1025,115 @@ private fun HomeScreen(
                     LaunchedEffect(tagPageCount, activeTagPage) {
                         if (activeTagPage != safeTagPage) onTagPageChange(safeTagPage)
                     }
-                    Column(
-                        modifier = Modifier.width(tagRailWidth).fillMaxHeight(),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                    Box(
+                        modifier = Modifier.width(tagRailWidth).fillMaxHeight()
                     ) {
-                            if (tagPageCount > 1) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth().padding(top = 5.dp, bottom = 2.dp),
-                                horizontalArrangement = Arrangement.Center,
-                                verticalAlignment = Alignment.CenterVertically
+                        Image(
+                            painter = painterResource(R.drawable.nekos_ui_tag_frame),
+                            contentDescription = null,
+                            contentScale = ContentScale.FillBounds,
+                            modifier = Modifier.matchParentSize()
+                        )
+                        Column(
+                            modifier = Modifier.fillMaxSize().padding(
+                                horizontal = 9.dp,
+                                vertical = 12.dp
+                            ),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            LazyColumn(
+                                modifier = Modifier.weight(1f).fillMaxWidth()
+                                    .pointerInput(tagPageCount, safeTagPage, draggedTagId) {
+                                        var totalDrag = 0f
+                                        detectHorizontalDragGestures(
+                                            onHorizontalDrag = { change, dragAmount ->
+                                                if (draggedTagId == null) {
+                                                    totalDrag += dragAmount
+                                                    change.consume()
+                                                }
+                                            },
+                                            onDragEnd = {
+                                                when {
+                                                    totalDrag <= -48.dp.toPx() && safeTagPage < tagPageCount - 1 ->
+                                                        onTagPageChange(safeTagPage + 1)
+                                                    totalDrag >= 48.dp.toPx() && safeTagPage > 0 ->
+                                                        onTagPageChange(safeTagPage - 1)
+                                                }
+                                                totalDrag = 0f
+                                            },
+                                            onDragCancel = { totalDrag = 0f }
+                                        )
+                                    },
+                                reverseLayout = true,
+                                userScrollEnabled = false,
+                                contentPadding = PaddingValues(vertical = 2.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.Bottom)
                             ) {
-                                repeat(tagPageCount) { page ->
-                                    Box(
-                                        modifier = Modifier.padding(horizontal = 3.dp)
-                                            .size(if (page == safeTagPage) 7.dp else 5.dp)
-                                            .clip(CircleShape)
-                                            .background(if (page == safeTagPage) Ink else Muted.copy(alpha = 0.45f))
-                                            .clickable { onTagPageChange(page) }
+                                items(visibleTags, key = { it.id }) { tag ->
+                                    TagPill(
+                                        modifier = Modifier.animateItem(
+                                            fadeInSpec = null,
+                                            placementSpec = spring(
+                                                dampingRatio = 0.82f,
+                                                stiffness = 420f
+                                            ),
+                                            fadeOutSpec = null
+                                        ),
+                                        tag = tag,
+                                        iconCatalogRepository = iconCatalogRepository,
+                                        isDragging = draggedTagId == tag.id,
+                                        isDropTarget = tagDropTargetId == tag.id && draggedTagId != tag.id,
+                                        onBoundsChanged = { bounds -> onTagBoundsChanged(tag.id, bounds) },
+                                        onBoundsRemoved = { onTagBoundsRemoved(tag.id) },
+                                        onClick = { onTagClick(tag) },
+                                        onHandleClick = { onTagOptionsClick(tag) },
+                                        onDragStart = { position -> onTagDragStart(tag, position) },
+                                        onDrag = onTagDrag,
+                                        onDragEnd = onTagDragEnd,
+                                        onDragCancel = onTagDragCancel
                                     )
                                 }
                             }
-                        }
-                    LazyColumn(
-                            modifier = Modifier.weight(1f).fillMaxWidth()
-                                .pointerInput(tagPageCount, safeTagPage, draggedTagId) {
-                                    var totalDrag = 0f
-                                    detectHorizontalDragGestures(
-                                        onHorizontalDrag = { change, dragAmount ->
-                                            if (draggedTagId == null) {
-                                                totalDrag += dragAmount
-                                                change.consume()
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                if (tagPageCount > 1) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        repeat(tagPageCount) { page ->
+                                            Box(
+                                                modifier = Modifier.size(18.dp)
+                                                    .clickable { onTagPageChange(page) },
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Box(
+                                                    modifier = Modifier.size(if (page == safeTagPage) 7.dp else 5.dp)
+                                                        .clip(CircleShape)
+                                                        .background(
+                                                            if (page == safeTagPage) Ink
+                                                            else Muted.copy(alpha = 0.45f)
+                                                        )
+                                                )
                                             }
+                                        }
+                                    }
+                                }
+                                Box(
+                                    modifier = Modifier.padding(start = if (tagPageCount > 1) 2.dp else 0.dp)
+                                        .size(28.dp)
+                                        .clip(CircleShape)
+                                        .background(TagSurface.copy(alpha = 0.82f))
+                                        .clickable(onClick = onAddTag)
+                                        .semantics {
+                                            contentDescription = "Add tag"
+                                            role = Role.Button
                                         },
-                                        onDragEnd = {
-                                            when {
-                                                totalDrag <= -48.dp.toPx() && safeTagPage < tagPageCount - 1 ->
-                                                    onTagPageChange(safeTagPage + 1)
-                                                totalDrag >= 48.dp.toPx() && safeTagPage > 0 ->
-                                                    onTagPageChange(safeTagPage - 1)
-                                            }
-                                            totalDrag = 0f
-                                        },
-                                        onDragCancel = { totalDrag = 0f }
-                                    )
-                                },
-                            reverseLayout = true,
-                            userScrollEnabled = false,
-                            contentPadding = PaddingValues(vertical = 2.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.Bottom)
-                        ) {
-                            items(visibleTags, key = { it.id }) { tag ->
-                                TagPill(
-                                    modifier = Modifier.animateItem(
-                                        fadeInSpec = null,
-                                        placementSpec = spring(
-                                            dampingRatio = 0.82f,
-                                            stiffness = 420f
-                                        ),
-                                        fadeOutSpec = null
-                                    ),
-                                    tag = tag,
-                                    iconCatalogRepository = iconCatalogRepository,
-                                    isDragging = draggedTagId == tag.id,
-                                    isDropTarget = tagDropTargetId == tag.id && draggedTagId != tag.id,
-                                    onBoundsChanged = { bounds -> onTagBoundsChanged(tag.id, bounds) },
-                                    onBoundsRemoved = { onTagBoundsRemoved(tag.id) },
-                                    onClick = { onTagClick(tag) },
-                                    onHandleClick = { onTagOptionsClick(tag) },
-                                    onDragStart = { position -> onTagDragStart(tag, position) },
-                                    onDrag = onTagDrag,
-                                    onDragEnd = onTagDragEnd,
-                                    onDragCancel = onTagDragCancel
-                                )
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text("+", color = Ink, fontSize = 20.sp, fontWeight = FontWeight.Medium)
+                                }
                             }
-                            item(key = "add-tag") { AddTagPill(onClick = onAddTag) }
                         }
                     }
                 }
@@ -1388,24 +1423,6 @@ private fun TagPill(
             contentAlignment = Alignment.Center
         ) {
             Text("⠿", color = Ink.copy(alpha = 0.72f), fontSize = 18.sp)
-        }
-    }
-}
-
-@Composable
-private fun AddTagPill(onClick: () -> Unit) {
-    Box(
-        Modifier.clip(RoundedCornerShape(18.dp))
-            .background(TagSurface.copy(alpha = 0.72f))
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 12.dp)
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            Text("+", color = Ink, fontSize = 18.sp, fontWeight = FontWeight.Medium)
-            Text("Add tag", color = Ink, fontSize = 12.sp, fontWeight = FontWeight.Medium)
         }
     }
 }
