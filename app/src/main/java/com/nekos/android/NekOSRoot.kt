@@ -606,7 +606,15 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
                         onUninstall = {
                             actionMenuApp = null
                             requestAppUninstall(context, app)
-                        }
+                        },
+                        onRemoveFavorite = if (favoritePackages.any { it == app.id }) {
+                            {
+                                updateFavorites(favoritePackages.map { favoriteId ->
+                                    if (favoriteId == app.id) null else favoriteId
+                                })
+                                actionMenuApp = null
+                            }
+                        } else null
                     )
                 }
             }
