@@ -30,9 +30,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.dp
-import androidx.core.graphics.drawable.toBitmap
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 private val TagColors = listOf(
     Color(0xFFE7E1D6), Color(0xFFD8E6D7), Color(0xFFDCE4F3),
@@ -40,8 +37,8 @@ private val TagColors = listOf(
 )
 
 @Composable
-private fun TagAppIcon(app: InstalledApp) {
-    var bitmap by remember(app.id, app.icon) {
+private fun TagAppIcon(app: InstalledApp, iconBitmapCache: AppIconBitmapCache) {
+    var bitmap by remember(app.id, iconBitmapCache.generation) {
         mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null)
     }
 
@@ -69,6 +66,7 @@ private fun TagAppIcon(app: InstalledApp) {
 fun TagAppsDialog(
     tag: NekTag,
     apps: List<InstalledApp>,
+    iconBitmapCache: AppIconBitmapCache,
     onLaunch: (InstalledApp) -> Unit,
     onEdit: () -> Unit,
     onDismiss: () -> Unit
@@ -150,7 +148,7 @@ fun TagAppsDialog(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
-                                TagAppIcon(app = app)
+                                TagAppIcon(app = app, iconBitmapCache = iconBitmapCache)
                                 Text(
                                     text = app.label,
                                     modifier = Modifier.weight(1f),
@@ -208,6 +206,7 @@ fun TagActionsDialog(
 fun TagManagementDialog(
     tag: NekTag?,
     apps: List<InstalledApp>,
+    iconBitmapCache: AppIconBitmapCache,
     iconCatalogRepository: IconCatalogRepository,
     onSave: (NekTag) -> Unit,
     onDelete: (NekTag) -> Unit,
@@ -357,7 +356,7 @@ fun TagManagementDialog(
                                         checkmarkColor = Color.White
                                     )
                                 )
-                                TagAppIcon(app)
+                                TagAppIcon(app, iconBitmapCache)
                                 Column(Modifier.weight(1f).padding(start = 9.dp)) {
                                     Text(app.label, color = Color(0xFF34332F), maxLines = 1)
                                     Text(
