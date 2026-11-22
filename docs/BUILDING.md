@@ -35,6 +35,51 @@ To run the instrumented Compose tests, start an API 35 emulator and run:
 gradle --no-daemon connectedDebugAndroidTest
 ```
 
+## Release signing
+
+Release builds read signing credentials from environment variables; no keystore or passwords belong in the repository.
+
+For a local signed release build, set these variables in your shell:
+
+- `ANDROID_KEYSTORE_FILE`: path to your private keystore file
+- `ANDROID_KEYSTORE_PASSWORD`: keystore password
+- `ANDROID_KEY_ALIAS`: key alias
+- `ANDROID_KEY_PASSWORD`: private key password
+
+Then run:
+
+```bash
+gradle --no-daemon assembleRelease
+```
+
+If the signing variables are absent, Gradle can still configure the project, but the release APK is unsigned and must not be distributed. Verify any release APK with:
+
+```bash
+$ANDROID_HOME/build-tools/35.0.0/apksigner verify --verbose app/build/outputs/apk/release/app-release.apk
+```
+
+Keep at least two secure backups of the keystore. Losing the signing key can prevent users from installing future updates over this release.
+
+## GitHub Release
+
+The `NekOS Release` workflow runs when a version tag such as `v0.1.0` is pushed. Before pushing a release tag, configure these repository Actions secrets:
+
+- `ANDROID_KEYSTORE_BASE64`: Base64-encoded keystore file
+- `ANDROID_KEYSTORE_PASSWORD`
+- `ANDROID_KEY_ALIAS`
+- `ANDROID_KEY_PASSWORD`
+
+The workflow checks that the tag matches `versionName`, runs the build and automated tests, verifies the APK signature, and attaches the APK plus SHA-256 checksum to the GitHub Release.
+
+Create a tag only after the release APK has been tested on a physical device. Example:
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+Do not put signing credentials in source files, commits, issue comments, or chat messages.
+
 ## Termux on Android
 
 Termux may need its locally packaged AAPT2 executable because the standard Android SDK toolchain is not always available in the same form as desktop environments.
