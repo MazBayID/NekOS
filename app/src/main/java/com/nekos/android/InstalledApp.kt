@@ -38,7 +38,7 @@ data class InstalledApp(
 
     /** Changes when the installed package is updated, invalidating its previous disk icon. */
     val iconCacheKey: String
-        get() = "$id::$iconVersion::${componentName.flattenToString()}"
+        get() = "$id::$iconVersion::$iconDensityDpi::${componentName.flattenToString()}"
 
     val isInCurrentProfile: Boolean
         get() = user == Process.myUserHandle()
