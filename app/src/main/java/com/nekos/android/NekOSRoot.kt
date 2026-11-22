@@ -257,7 +257,9 @@ fun NekOSRoot(
     }
     var showSettings by remember { mutableStateOf(false) }
     var backgroundPreset by remember {
-        mutableStateOf(preferences.getString("background_preset", "warm") ?: "warm")
+        mutableStateOf(
+            normalizeNekOSBackgroundPreset(preferences.getString("background_preset", "warm"))
+        )
     }
     var wallpaperPath by remember {
         mutableStateOf(preferences.getString("home_wallpaper_path", null))
@@ -727,8 +729,9 @@ fun NekOSRoot(
                     }
                 },
                 onBackgroundPresetChange = { preset ->
-                    backgroundPreset = preset
-                    preferences.edit().putString("background_preset", preset).apply()
+                    val normalizedPreset = normalizeNekOSBackgroundPreset(preset)
+                    backgroundPreset = normalizedPreset
+                    preferences.edit().putString("background_preset", normalizedPreset).apply()
                 },
                 onChooseWallpaper = {
                     wallpaperPicker.launch(
