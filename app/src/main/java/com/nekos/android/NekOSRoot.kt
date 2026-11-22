@@ -256,9 +256,15 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
     DisposableEffect(context, iconBitmapCache, iconCatalogRepository) {
         val memoryCallbacks = object : ComponentCallbacks2 {
             override fun onTrimMemory(level: Int) {
-                if (level >= ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN) {
+                // UI_HIDDEN is a normal launcher transition: retain the bounded
+                // app-icon RAM cache so returning from another app stays fast.
+                // Release cached icons only when Android reports background
+                // memory pressure, not merely because NekOS is temporarily hidden.
+                if (level >= ComponentCallbacks2.TRIM_MEMORY_BACKGROUND) {
                     iconBitmapCache.trimMemory()
                     iconCatalogRepository.clearMemoryCache()
+                }
+                if (level >= ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN) {
                     wallpaperBitmap = null
                 }
             }
@@ -277,6 +283,12 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
     }
     LaunchedEffect(resumeToken) {
         iconBitmapCache.resumeAfterBackground()
+    }
+    LaunchedEffect(apps, resumeToken) {
+        if (apps.isNotEmpty()) {
+            iconBitmapCache.configureForAppCount(apps.size)
+            iconBitmapCache.preload(apps)
+        }
     }
     val wallpaperPickerScope = rememberCoroutineScope()
     val wallpaperPicker = rememberLauncherForActivityResult(
