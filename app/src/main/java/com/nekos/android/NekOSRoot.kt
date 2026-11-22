@@ -1043,7 +1043,7 @@ private fun HomeScreen(
                                     contentDescription = null,
                                     contentScale = ContentScale.FillBounds,
                                     modifier = Modifier.align(Alignment.TopCenter)
-                                        .offset(y = maxHeight * 0.5f - 25.dp)
+                                        .offset(y = maxHeight * 0.5f - 40.dp)
                                         .requiredWidth(tagRailWidth * 1.1f)
                                         .fillMaxHeight(0.65f)
                                 )
