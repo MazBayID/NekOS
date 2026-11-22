@@ -928,13 +928,6 @@ private fun HomeScreen(
     Box(
         Modifier
             .fillMaxSize()
-            .graphicsLayer {
-                val progress = homeReturnProgress.value
-                alpha = 0.96f + 0.04f * progress
-                scaleX = 0.985f + 0.015f * progress
-                scaleY = 0.985f + 0.015f * progress
-                translationY = homeReturnOffsetPx * (1f - progress)
-            }
             .background(backgroundColor)
     ) {
         wallpaper?.let { image ->
@@ -961,6 +954,13 @@ private fun HomeScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .graphicsLayer {
+                    val progress = homeReturnProgress.value
+                    alpha = 0.96f + 0.04f * progress
+                    scaleX = 0.985f + 0.015f * progress
+                    scaleY = 0.985f + 0.015f * progress
+                    translationY = homeReturnOffsetPx * (1f - progress)
+                }
                 .statusBarsPadding()
                 .navigationBarsPadding()
                 // Keep launcher controls sharp above the static wallpaper.
