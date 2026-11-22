@@ -202,8 +202,10 @@ private fun FavoriteReorderHarness(state: FavoriteReorderState) {
 private fun TagReorderHarness(state: TagReorderState) {
     val listState = androidx.compose.foundation.lazy.rememberLazyListState()
     val reorderState = rememberReorderableLazyListState(listState) { from, to ->
-        val sourceId = state.tags.value.getOrNull(from.index)?.id ?: return@rememberReorderableLazyListState
-        state.tags.value = moveTagToIndex(state.tags.value, sourceId, to.index)
+        val sourceId = state.tags.value.getOrNull(from.index)?.id
+        if (sourceId != null) {
+            state.tags.value = moveTagToIndex(state.tags.value, sourceId, to.index)
+        }
     }
 
     Column(Modifier.fillMaxSize()) {
