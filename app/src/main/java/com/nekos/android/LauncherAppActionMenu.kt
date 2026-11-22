@@ -18,6 +18,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.draw.clip
@@ -42,7 +43,8 @@ internal fun LauncherAppActionMenuContent(
     isInteractive: Boolean,
     onAppInfo: () -> Unit,
     onUninstall: () -> Unit,
-    onRemoveFavorite: (() -> Unit)? = null
+    onRemoveFavorite: (() -> Unit)? = null,
+    launcherSurface: Color
 ) {
     var appIcon by remember(app.id) { mutableStateOf<ImageBitmap?>(null) }
     LaunchedEffect(app.id) {
@@ -64,14 +66,16 @@ internal fun LauncherAppActionMenuContent(
             maxLines = 1
         )
     }
-    PopupAction("App info", Icons.Filled.Info, enabled = isInteractive, onClick = onAppInfo)
+    val optionSurface = lerp(launcherSurface, Color.White, 0.48f)
+    PopupAction("App info", Icons.Filled.Info, enabled = isInteractive, surface = optionSurface, onClick = onAppInfo)
     if (onRemoveFavorite != null) {
-        PopupAction("Remove from Favorites", Icons.Filled.Delete, enabled = isInteractive, onClick = onRemoveFavorite)
+        PopupAction("Remove from Favorites", Icons.Filled.Delete, enabled = isInteractive, surface = optionSurface, onClick = onRemoveFavorite)
     }
     PopupAction(
         if (app.isInCurrentProfile) "Uninstall" else "Manage app",
         Icons.Filled.Delete,
         enabled = isInteractive,
+        surface = optionSurface,
         iconTint = if (app.isInCurrentProfile) Color(0xFFB3261E) else null,
         onClick = onUninstall
     )
@@ -91,14 +95,16 @@ private fun PopupAction(
     icon: ImageVector,
     enabled: Boolean,
     iconTint: Color? = null,
+    surface: Color,
     onClick: () -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(10.dp))
+            .background(surface)
             .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
-            .padding(horizontal = 8.dp, vertical = 9.dp),
+            .padding(horizontal = 10.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
