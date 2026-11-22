@@ -1416,6 +1416,7 @@ private fun TagPill(
         )
     }
     LaunchedEffect(tag.iconId, iconCacheGeneration) {
+        tagIcon = null
         tagIcon = withContext(Dispatchers.IO) {
             runCatching {
                 tag.iconId?.let { id ->
