@@ -67,14 +67,13 @@ internal fun LauncherAppActionMenuContent(
     val optionSurface = lerp(launcherSurface, Color.White, 0.48f)
     PopupAction("App info", R.drawable.nekos_ui_info, enabled = isInteractive, surface = optionSurface, onClick = onAppInfo)
     if (onRemoveFavorite != null) {
-        PopupAction("Remove from Favorites", R.drawable.nekos_ui_trash, enabled = isInteractive, surface = optionSurface, onClick = onRemoveFavorite)
+        PopupAction("Remove from Favorites", R.drawable.nekos_ui_remove, enabled = isInteractive, surface = optionSurface, onClick = onRemoveFavorite)
     }
     PopupAction(
         if (app.isInCurrentProfile) "Uninstall" else "Manage app",
         R.drawable.nekos_ui_trash,
         enabled = isInteractive,
         surface = optionSurface,
-        iconTint = if (app.isInCurrentProfile) Color(0xFFB3261E) else null,
         onClick = onUninstall
     )
     if (!isInteractive) {
