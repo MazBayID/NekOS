@@ -395,12 +395,14 @@ fun NekOSRoot(
             drawerTargetProgress = 1f
         }
 
-        // Pressing Home while NekOS is open returns to a clean Home screen. An in-progress
-        // tag edit is left alone so the user does not lose what they typed.
+        // Pressing Home while NekOS is open returns to a clean Home screen,
+        // dismissing any open tag editor and its icon picker as well.
         LaunchedEffect(homeSignal) {
             if (homeSignal > 0) {
                 closeDrawer()
                 showSettings = false
+                showTagEditor = false
+                tagEditorTarget = null
                 actionMenuApp = null
                 actionMenuPreviewApp = null
                 viewingTag = null
