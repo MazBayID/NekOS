@@ -78,12 +78,14 @@ class AppIconBitmapCache(
         generation++
     }
 
-    /** Allow visible launcher items to repopulate RAM from the persistent disk cache. */
+    /**
+     * Re-enable icon loading and invalidate visible item references whenever NekOS
+     * returns to the foreground. This also recovers if Android cleared bitmap
+     * references without the cache's enabled flag reflecting that transition.
+     */
     fun resumeAfterBackground() {
-        if (!memoryLoadsEnabled) {
-            memoryLoadsEnabled = true
-            generation++
-        }
+        memoryLoadsEnabled = true
+        generation++
     }
 
     private fun createAppIcon(app: InstalledApp): Bitmap =
