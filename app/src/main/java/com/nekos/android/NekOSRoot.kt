@@ -1029,7 +1029,24 @@ private fun HomeScreen(
                         modifier = Modifier.width(tagRailWidth).fillMaxHeight(),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        LazyColumn(
+                            if (tagPageCount > 1) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(top = 5.dp, bottom = 2.dp),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                repeat(tagPageCount) { page ->
+                                    Box(
+                                        modifier = Modifier.padding(horizontal = 3.dp)
+                                            .size(if (page == safeTagPage) 7.dp else 5.dp)
+                                            .clip(CircleShape)
+                                            .background(if (page == safeTagPage) Ink else Muted.copy(alpha = 0.45f))
+                                            .clickable { onTagPageChange(page) }
+                                    )
+                                }
+                            }
+                        }
+                    LazyColumn(
                             modifier = Modifier.weight(1f).fillMaxWidth()
                                 .pointerInput(tagPageCount, safeTagPage, draggedTagId) {
                                     var totalDrag = 0f
@@ -1055,7 +1072,7 @@ private fun HomeScreen(
                             reverseLayout = true,
                             userScrollEnabled = false,
                             contentPadding = PaddingValues(vertical = 2.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                            verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.Bottom)
                         ) {
                             items(visibleTags, key = { it.id }) { tag ->
                                 TagPill(
@@ -1082,23 +1099,6 @@ private fun HomeScreen(
                                 )
                             }
                             item(key = "add-tag") { AddTagPill(onClick = onAddTag) }
-                        }
-                        if (tagPageCount > 1) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth().padding(top = 5.dp, bottom = 2.dp),
-                                horizontalArrangement = Arrangement.Center,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                repeat(tagPageCount) { page ->
-                                    Box(
-                                        modifier = Modifier.padding(horizontal = 3.dp)
-                                            .size(if (page == safeTagPage) 7.dp else 5.dp)
-                                            .clip(CircleShape)
-                                            .background(if (page == safeTagPage) Ink else Muted.copy(alpha = 0.45f))
-                                            .clickable { onTagPageChange(page) }
-                                    )
-                                }
-                            }
                         }
                     }
                 }
