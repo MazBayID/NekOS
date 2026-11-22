@@ -1,8 +1,12 @@
 package com.nekos.android
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Assert.assertNull
 import org.junit.Test
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 
 class CacheMemoryStateTest {
     @Test
@@ -34,8 +38,39 @@ class CacheMemoryStateTest {
             stored = true
         }
 
-        assertEquals(null, result)
+        assertNull(result)
         assertEquals(false, stored)
+    }
+
+    @Test
+    fun trimWaitsForAnInFlightStoreThenEvictsIt() {
+        val state = CacheMemoryState()
+        val cached = java.util.concurrent.atomic.AtomicBoolean(false)
+        val loadEpoch = state.beginLoad()!!
+        val storeEntered = CountDownLatch(1)
+        val releaseStore = CountDownLatch(1)
+
+        val storeThread = Thread {
+            state.storeIfCurrent(loadEpoch) {
+                storeEntered.countDown()
+                releaseStore.await()
+                cached.set(true)
+            }
+        }
+        storeThread.start()
+
+        assertTrue(storeEntered.await(2, TimeUnit.SECONDS))
+        val trimThread = Thread {
+            state.trim { cached.set(false) }
+        }
+        trimThread.start()
+        releaseStore.countDown()
+
+        storeThread.join(2_000)
+        trimThread.join(2_000)
+        assertFalse(storeThread.isAlive)
+        assertFalse(trimThread.isAlive)
+        assertFalse(cached.get())
     }
 
     @Test
