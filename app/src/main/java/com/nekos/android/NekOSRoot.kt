@@ -1131,7 +1131,7 @@ private fun HomeScreen(
                                 }
                                 Box(
                                     modifier = Modifier.align(Alignment.CenterEnd)
-                                        .offset(x = tagRailWidth * 0.05f + 3.dp)
+                                        .offset(x = tagRailWidth * 0.05f - 7.dp)
                                         .size(28.dp)
                                         .clickable(onClick = onAddTag)
                                         .semantics {
