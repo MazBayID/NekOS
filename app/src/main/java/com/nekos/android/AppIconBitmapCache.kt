@@ -11,9 +11,17 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.core.graphics.drawable.toBitmap
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.yield
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicInteger
 import java.io.File
 import java.io.FileOutputStream
 import java.nio.file.Files
@@ -39,6 +47,7 @@ class AppIconBitmapCache(
             (bitmap.width * bitmap.height * 4 / 1024).coerceAtLeast(1)
     }
     private val loadSemaphore = Semaphore(2)
+    private val keyLocks = ConcurrentHashMap<String, Mutex>()
 
     @Volatile
     private var memoryLoadsEnabled = true
@@ -49,26 +58,71 @@ class AppIconBitmapCache(
 
     operator fun get(cacheKey: String): ImageBitmap? = memoryCache.get(cacheKey)
 
+    /**
+     * Size the RAM cache for the current catalog, while keeping it within a
+     * conservative fraction of this device's application memory class.
+     * Icons are decoded at 96x96 ARGB_8888 (about 36 KiB each).
+     */
+    fun configureForAppCount(appCount: Int) {
+        val activityManager = appContext.getSystemService(android.app.ActivityManager::class.java)
+        val deviceBudgetKb = (activityManager.memoryClass * 1024 / 8)
+            .coerceIn(4 * 1024, 24 * 1024)
+        val estimatedCatalogKb = (appCount.coerceAtLeast(1) * 36L)
+            .coerceAtMost(Int.MAX_VALUE.toLong())
+            .toInt()
+        memoryCache.resize(estimatedCatalogKb.coerceIn(4 * 1024, deviceBudgetKb))
+    }
+
     suspend fun getOrLoad(app: InstalledApp): ImageBitmap? {
         memoryCache.get(app.iconCacheKey)?.let { return it }
         if (!memoryLoadsEnabled) return null
 
-        return loadSemaphore.withPermit {
-            memoryCache.get(app.iconCacheKey)?.let { return@withPermit it }
-            if (!memoryLoadsEnabled) return@withPermit null
+        // A preload worker and a visible Compose item may request the same icon.
+        // Serialize only requests for the same key, while retaining two-way
+        // concurrency for different applications.
+        return keyLocks.getOrPut(app.iconCacheKey) { Mutex() }.withLock {
+            memoryCache.get(app.iconCacheKey)?.let { return@withLock it }
+            if (!memoryLoadsEnabled) return@withLock null
 
-            withContext(Dispatchers.IO) {
-                val diskBitmap = readDiskBitmap(app.iconCacheKey)
-                val bitmap = diskBitmap ?: createAppIcon(app).also {
-                    writeDiskBitmap(app.iconCacheKey, it)
-                }
-                bitmap.asImageBitmap()
-            }.also { bitmap ->
-                if (bitmap != null && memoryLoadsEnabled) {
-                    memoryCache.put(app.iconCacheKey, bitmap)
+            loadSemaphore.withPermit {
+                memoryCache.get(app.iconCacheKey)?.let { return@withPermit it }
+                if (!memoryLoadsEnabled) return@withPermit null
+
+                withContext(Dispatchers.IO) {
+                    val diskBitmap = readDiskBitmap(app.iconCacheKey)
+                    val bitmap = diskBitmap ?: createAppIcon(app).also {
+                        writeDiskBitmap(app.iconCacheKey, it)
+                    }
+                    bitmap.asImageBitmap()
+                }.also { bitmap ->
+                    if (bitmap != null && memoryLoadsEnabled) {
+                        memoryCache.put(app.iconCacheKey, bitmap)
+                    }
                 }
             }
         }
+    }
+
+    /**
+     * Warm the complete app catalog in the background using two workers.
+     * Per-key locking prevents duplicate decoding when UI items request an
+     * icon while the preload is still running.
+     */
+    suspend fun preload(apps: List<InstalledApp>) = coroutineScope {
+        if (apps.isEmpty() || !memoryLoadsEnabled) return@coroutineScope
+
+        val nextIndex = AtomicInteger(0)
+        repeat(2) {
+            launch {
+                while (memoryLoadsEnabled) {
+                    val index = nextIndex.getAndIncrement()
+                    if (index >= apps.size) break
+                    getOrLoad(apps[index])
+                    yield()
+                }
+            }
+        }
+        if (memoryLoadsEnabled) generation++
     }
 
     /** Release rebuildable bitmap allocations while the launcher is not visible. */
