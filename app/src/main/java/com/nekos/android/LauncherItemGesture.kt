@@ -109,3 +109,101 @@ suspend fun PointerInputScope.detectLauncherItemGesture(
         }
     }
 }
+
+
+/**
+ * Routes tap and stationary long-press actions through Reorderable's drag
+ * detector, while handing actual long-press-and-move sequences to the
+ * library's reorder engine. This keeps launcher-specific actions intact
+ * without running a second competing pointer-input detector.
+ */
+internal class LauncherReorderGestureDetector(
+    private val toRootPosition: (Offset) -> Offset = { it },
+    private val onTap: () -> Unit = {},
+    private val onLongPress: (Offset) -> Unit = {},
+    private val onLongPressEnd: () -> Unit = {},
+    private val onLongPressCancel: () -> Unit = {},
+) : sh.calvin.reorderable.DragGestureDetector {
+    override suspend fun PointerInputScope.detect(
+        onDragStart: (Offset) -> Unit,
+        onDragEnd: () -> Unit,
+        onDragCancel: () -> Unit,
+        onDrag: (change: androidx.compose.ui.input.pointer.PointerInputChange, dragAmount: Offset) -> Unit
+    ) {
+        awaitEachGesture {
+            val down = awaitFirstDown(requireUnconsumed = false)
+            val longPress = awaitLongPressOrCancellation(down.id)
+
+            if (longPress == null) {
+                val downChange = currentEvent.changes.firstOrNull { it.id == down.id }
+                val pointerReleased = downChange?.pressed == false
+                val gestureCancelled = downChange == null ||
+                    downChange.isConsumed ||
+                    currentEvent.changes.any { it.id != down.id && it.pressed }
+                if (pointerReleased && !gestureCancelled) onTap()
+                return@awaitEachGesture
+            }
+
+            if (
+                longPress.id != down.id ||
+                currentEvent.changes.any { it.id != down.id && it.pressed }
+            ) {
+                return@awaitEachGesture
+            }
+
+            onLongPress(toRootPosition(longPress.position))
+
+            var accumulated = Offset.Zero
+            var dragging = false
+            var completed = false
+
+            try {
+                while (true) {
+                    val event = awaitPointerEvent()
+                    val change = event.changes.firstOrNull { it.id == down.id }
+
+                    if (change == null) {
+                        if (dragging) onDragCancel() else onLongPressCancel()
+                        completed = true
+                        break
+                    }
+
+                    if (event.changes.any { it.id != down.id && it.pressed }) {
+                        if (dragging) onDragCancel() else onLongPressCancel()
+                        completed = true
+                        break
+                    }
+
+                    if (!change.pressed) {
+                        if (change.isConsumed) {
+                            if (dragging) onDragCancel() else onLongPressCancel()
+                        } else {
+                            if (dragging) onDragEnd() else onLongPressEnd()
+                        }
+                        completed = true
+                        break
+                    }
+
+                    val delta = change.positionChange()
+                    accumulated += delta
+
+                    if (!dragging && accumulated.getDistance() > viewConfiguration.touchSlop) {
+                        dragging = true
+                        onLongPressCancel()
+                        onDragStart(change.position)
+                        change.consume()
+                        onDrag(change, accumulated)
+                        accumulated = Offset.Zero
+                    } else if (dragging) {
+                        change.consume()
+                        onDrag(change, delta)
+                    }
+                }
+            } finally {
+                if (!completed) {
+                    if (dragging) onDragCancel() else onLongPressCancel()
+                }
+            }
+        }
+    }
+}
