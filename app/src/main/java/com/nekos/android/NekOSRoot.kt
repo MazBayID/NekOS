@@ -280,7 +280,7 @@ fun NekOSRoot(
                 // memory pressure, not merely because NekOS is temporarily hidden.
                 if (level >= ComponentCallbacks2.TRIM_MEMORY_BACKGROUND) {
                     iconBitmapCache.trimMemory()
-                    iconCatalogRepository.clearMemoryCache()
+                    iconCatalogRepository.trimMemory()
                 }
                 if (level >= ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN) {
                     wallpaperBitmap = null
@@ -292,7 +292,7 @@ fun NekOSRoot(
             @Suppress("DEPRECATION")
             override fun onLowMemory() {
                 iconBitmapCache.trimMemory()
-                iconCatalogRepository.clearMemoryCache()
+                iconCatalogRepository.trimMemory()
                 wallpaperBitmap = null
             }
         }
@@ -302,6 +302,7 @@ fun NekOSRoot(
     LaunchedEffect(apps, resumeToken) {
         // Resume before preloading so the two operations cannot race each other.
         iconBitmapCache.resumeAfterBackground()
+        iconCatalogRepository.resumeAfterBackground()
         if (apps.isNotEmpty()) {
             iconBitmapCache.configureForAppCount(apps.size)
             iconBitmapCache.preload(apps)
@@ -1398,6 +1399,7 @@ private fun TagPill(
         ),
         label = "tag-drag-elevation"
     )
+    val iconCacheGeneration = iconCatalogRepository.generation
     var tagIcon by remember(tag.iconId) {
         mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null)
     }
@@ -1413,7 +1415,7 @@ private fun TagPill(
             )
         )
     }
-    LaunchedEffect(tag.iconId) {
+    LaunchedEffect(tag.iconId, iconCacheGeneration) {
         tagIcon = withContext(Dispatchers.IO) {
             runCatching {
                 tag.iconId?.let { id ->
