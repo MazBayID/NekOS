@@ -1028,14 +1028,6 @@ private fun HomeScreen(
                     Box(
                         modifier = Modifier.width(tagRailWidth).fillMaxHeight()
                     ) {
-                        Image(
-                            painter = painterResource(R.drawable.nekos_ui_tag_frame),
-                            contentDescription = null,
-                            contentScale = ContentScale.FillBounds,
-                            modifier = Modifier.align(Alignment.Center)
-                                .requiredWidth(tagRailWidth * 1.1f)
-                                .fillMaxHeight(0.5f)
-                        )
                         Column(
                             modifier = Modifier.fillMaxSize().padding(
                                 horizontal = 9.dp,
@@ -1043,57 +1035,69 @@ private fun HomeScreen(
                             ),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            LazyColumn(
+                            Box(
                                 modifier = Modifier.weight(1f).fillMaxWidth()
-                                    .pointerInput(tagPageCount, safeTagPage, draggedTagId) {
-                                        var totalDrag = 0f
-                                        detectHorizontalDragGestures(
-                                            onHorizontalDrag = { change, dragAmount ->
-                                                if (draggedTagId == null) {
-                                                    totalDrag += dragAmount
-                                                    change.consume()
-                                                }
-                                            },
-                                            onDragEnd = {
-                                                when {
-                                                    totalDrag <= -48.dp.toPx() && safeTagPage < tagPageCount - 1 ->
-                                                        onTagPageChange(safeTagPage + 1)
-                                                    totalDrag >= 48.dp.toPx() && safeTagPage > 0 ->
-                                                        onTagPageChange(safeTagPage - 1)
-                                                }
-                                                totalDrag = 0f
-                                            },
-                                            onDragCancel = { totalDrag = 0f }
-                                        )
-                                    },
-                                reverseLayout = true,
-                                userScrollEnabled = false,
-                                contentPadding = PaddingValues(vertical = 2.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.Bottom)
                             ) {
-                                items(visibleTags, key = { it.id }) { tag ->
-                                    TagPill(
-                                        modifier = Modifier.animateItem(
-                                            fadeInSpec = null,
-                                            placementSpec = spring(
-                                                dampingRatio = 0.82f,
-                                                stiffness = 420f
+                                Image(
+                                    painter = painterResource(R.drawable.nekos_ui_tag_frame),
+                                    contentDescription = null,
+                                    contentScale = ContentScale.FillBounds,
+                                    modifier = Modifier.align(Alignment.BottomCenter)
+                                        .requiredWidth(tagRailWidth * 1.1f)
+                                        .fillMaxHeight(0.5f)
+                                )
+                                LazyColumn(
+                                    modifier = Modifier.fillMaxSize()
+                                        .pointerInput(tagPageCount, safeTagPage, draggedTagId) {
+                                            var totalDrag = 0f
+                                            detectHorizontalDragGestures(
+                                                onHorizontalDrag = { change, dragAmount ->
+                                                    if (draggedTagId == null) {
+                                                        totalDrag += dragAmount
+                                                        change.consume()
+                                                    }
+                                                },
+                                                onDragEnd = {
+                                                    when {
+                                                        totalDrag <= -48.dp.toPx() && safeTagPage < tagPageCount - 1 ->
+                                                            onTagPageChange(safeTagPage + 1)
+                                                        totalDrag >= 48.dp.toPx() && safeTagPage > 0 ->
+                                                            onTagPageChange(safeTagPage - 1)
+                                                    }
+                                                    totalDrag = 0f
+                                                },
+                                                onDragCancel = { totalDrag = 0f }
+                                            )
+                                        },
+                                    reverseLayout = true,
+                                    userScrollEnabled = false,
+                                    contentPadding = PaddingValues(vertical = 2.dp),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.Bottom)
+                                ) {
+                                    items(visibleTags, key = { it.id }) { tag ->
+                                        TagPill(
+                                            modifier = Modifier.animateItem(
+                                                fadeInSpec = null,
+                                                placementSpec = spring(
+                                                    dampingRatio = 0.82f,
+                                                    stiffness = 420f
+                                                ),
+                                                fadeOutSpec = null
                                             ),
-                                            fadeOutSpec = null
-                                        ),
-                                        tag = tag,
-                                        iconCatalogRepository = iconCatalogRepository,
-                                        isDragging = draggedTagId == tag.id,
-                                        isDropTarget = tagDropTargetId == tag.id && draggedTagId != tag.id,
-                                        onBoundsChanged = { bounds -> onTagBoundsChanged(tag.id, bounds) },
-                                        onBoundsRemoved = { onTagBoundsRemoved(tag.id) },
-                                        onClick = { onTagClick(tag) },
-                                        onHandleClick = { onTagOptionsClick(tag) },
-                                        onDragStart = { position -> onTagDragStart(tag, position) },
-                                        onDrag = onTagDrag,
-                                        onDragEnd = onTagDragEnd,
-                                        onDragCancel = onTagDragCancel
-                                    )
+                                            tag = tag,
+                                            iconCatalogRepository = iconCatalogRepository,
+                                            isDragging = draggedTagId == tag.id,
+                                            isDropTarget = tagDropTargetId == tag.id && draggedTagId != tag.id,
+                                            onBoundsChanged = { bounds -> onTagBoundsChanged(tag.id, bounds) },
+                                            onBoundsRemoved = { onTagBoundsRemoved(tag.id) },
+                                            onClick = { onTagClick(tag) },
+                                            onHandleClick = { onTagOptionsClick(tag) },
+                                            onDragStart = { position -> onTagDragStart(tag, position) },
+                                            onDrag = onTagDrag,
+                                            onDragEnd = onTagDragEnd,
+                                            onDragCancel = onTagDragCancel
+                                        )
+                                    }
                                 }
                             }
                             Row(
