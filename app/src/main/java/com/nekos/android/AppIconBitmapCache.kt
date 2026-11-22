@@ -201,9 +201,15 @@ class AppIconBitmapCache(
     }
 
     private fun pruneDiskCache() {
-        val files = diskDirectory.listFiles()
-            ?.filter { it.isFile && it.name.endsWith(".png") }
+        val allFiles = diskDirectory.listFiles()
+            ?.filter { it.isFile }
             ?: return
+        val staleTemporaryCutoff = System.currentTimeMillis() - 24L * 60L * 60L * 1000L
+        allFiles
+            .filter { it.name.endsWith(".tmp") && it.lastModified() < staleTemporaryCutoff }
+            .forEach { it.delete() }
+
+        val files = allFiles.filter { it.name.endsWith(".png") }
         var totalBytes = files.sumOf { it.length() }
         if (totalBytes <= maxDiskSizeBytes) return
 
