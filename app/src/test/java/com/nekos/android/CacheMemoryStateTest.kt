@@ -7,6 +7,7 @@ import org.junit.Assert.assertNull
 import org.junit.Test
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 
 class CacheMemoryStateTest {
     @Test
@@ -22,7 +23,7 @@ class CacheMemoryStateTest {
         }
 
         assertNull(result)
-        assertEquals(false, stored)
+        assertFalse(stored)
     }
 
     @Test
@@ -45,7 +46,7 @@ class CacheMemoryStateTest {
     @Test
     fun trimWaitsForAnInFlightStoreThenEvictsIt() {
         val state = CacheMemoryState()
-        val cached = java.util.concurrent.atomic.AtomicBoolean(false)
+        val cached = AtomicBoolean(false)
         val loadEpoch = state.beginLoad()!!
         val storeEntered = CountDownLatch(1)
         val releaseStore = CountDownLatch(1)
@@ -59,17 +60,21 @@ class CacheMemoryStateTest {
         }
         storeThread.start()
 
-        assertTrue(storeEntered.await(2, TimeUnit.SECONDS))
-        val trimThread = Thread {
-            state.trim { cached.set(false) }
+        var trimThread: Thread? = null
+        try {
+            assertTrue(storeEntered.await(2, TimeUnit.SECONDS))
+            trimThread = Thread {
+                state.trim { cached.set(false) }
+            }
+            trimThread.start()
+        } finally {
+            releaseStore.countDown()
         }
-        trimThread.start()
-        releaseStore.countDown()
 
         storeThread.join(2_000)
-        trimThread.join(2_000)
+        trimThread?.join(2_000)
         assertFalse(storeThread.isAlive)
-        assertFalse(trimThread.isAlive)
+        assertFalse(trimThread?.isAlive ?: false)
         assertFalse(cached.get())
     }
 
