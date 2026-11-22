@@ -1786,9 +1786,8 @@ private fun isNekOSDefaultHome(context: Context): Boolean {
 
 @Composable
 private fun TagFrame(modifier: Modifier = Modifier) {
-    val frameBitmap = remember {
+    val frameBitmap =
         androidx.compose.ui.graphics.ImageBitmap.imageResource(R.drawable.tag_frame_spritesheet)
-    }
     Canvas(modifier = modifier) {
         val widthPx = size.width
         val scale = widthPx / 512f
