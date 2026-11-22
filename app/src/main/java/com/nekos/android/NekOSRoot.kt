@@ -997,6 +997,7 @@ private fun HomeScreen(
                     modifier = Modifier.fillMaxSize(),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
+                    Spacer(modifier = Modifier.weight(1f).fillMaxHeight())
                     val tagPageCount = ((tags.size + 4) / 5).coerceAtLeast(1)
                     val safeTagPage = activeTagPage.coerceIn(0, tagPageCount - 1)
                     val visibleTags = tags.drop(safeTagPage * 5).take(5)
