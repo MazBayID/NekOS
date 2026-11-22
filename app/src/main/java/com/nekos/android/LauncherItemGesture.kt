@@ -15,7 +15,7 @@ import androidx.compose.ui.input.pointer.positionChange
  * A quick release is a tap. A stationary long-press immediately previews the item
  * menu while the pointer remains down; release makes the menu actionable.
  * Movement beyond touch slop dismisses the preview and starts the existing drag.
- * The same detector is shared by Favorite and App Drawer cells.
+ * Non-reorder drag surfaces such as App Drawer cells use this detector.
  */
 suspend fun PointerInputScope.detectLauncherItemGesture(
     toRootPosition: (Offset) -> Offset,
