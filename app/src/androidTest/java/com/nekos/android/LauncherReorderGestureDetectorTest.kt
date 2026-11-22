@@ -109,22 +109,26 @@ private fun ReorderGestureHarness(state: ReorderGestureState) {
             .size(160.dp)
             .testTag("reorder-gesture-target")
             .pointerInput(Unit) {
-                LauncherReorderGestureDetector(
-                    toRootPosition = { it + Offset(5f, 10f) },
-                    onTap = { state.events += "tap" },
-                    onLongPress = { state.events += "preview" },
-                    onLongPressEnd = { state.events += "preview-end" },
-                    onLongPressCancel = { state.events += "preview-cancel" },
-                    onReorderStart = { state.events += "reorder-start" },
-                    onReorderEnd = { cancelled ->
-                        state.events += if (cancelled) "reorder-end-true" else "reorder-end-false"
-                    }
-                ).detect(
-                    onDragStart = { state.events += "drag-start" },
-                    onDragEnd = { state.events += "drag-end" },
-                    onDragCancel = { state.events += "drag-cancel" },
-                    onDrag = { _, _ -> state.events += "drag" }
-                )
+                with(
+                    LauncherReorderGestureDetector(
+                        toRootPosition = { it + Offset(5f, 10f) },
+                        onTap = { state.events += "tap" },
+                        onLongPress = { state.events += "preview" },
+                        onLongPressEnd = { state.events += "preview-end" },
+                        onLongPressCancel = { state.events += "preview-cancel" },
+                        onReorderStart = { state.events += "reorder-start" },
+                        onReorderEnd = { cancelled ->
+                            state.events += if (cancelled) "reorder-end-true" else "reorder-end-false"
+                        }
+                    )
+                ) {
+                    detect(
+                        onDragStart = { state.events += "drag-start" },
+                        onDragEnd = { state.events += "drag-end" },
+                        onDragCancel = { state.events += "drag-cancel" },
+                        onDrag = { _, _ -> state.events += "drag" }
+                    )
+                }
             }
     )
 }
