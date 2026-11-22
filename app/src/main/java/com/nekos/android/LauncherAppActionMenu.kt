@@ -41,7 +41,8 @@ internal fun LauncherAppActionMenuContent(
     iconBitmapCache: AppIconBitmapCache,
     isInteractive: Boolean,
     onAppInfo: () -> Unit,
-    onUninstall: () -> Unit
+    onUninstall: () -> Unit,
+    onRemoveFavorite: (() -> Unit)? = null
 ) {
     var appIcon by remember(app.id) { mutableStateOf<ImageBitmap?>(null) }
     LaunchedEffect(app.id) {
@@ -64,6 +65,9 @@ internal fun LauncherAppActionMenuContent(
         )
     }
     PopupAction("App info", Icons.Filled.Info, enabled = isInteractive, onClick = onAppInfo)
+    if (onRemoveFavorite != null) {
+        PopupAction("Remove from Favorites", Icons.Filled.Delete, enabled = isInteractive, onClick = onRemoveFavorite)
+    }
     PopupAction(
         if (app.isInCurrentProfile) "Uninstall" else "Manage app",
         Icons.Filled.Delete,
