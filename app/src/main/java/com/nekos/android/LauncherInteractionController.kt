@@ -110,6 +110,7 @@ internal fun shouldCloseDrawerAfterDrag(
  * anywhere on Home. Tag-handle long-press drags are handled by the child gesture
  * detector, which consumes the active drag sequence before it reaches this parent.
  */
+@Suppress("UNUSED_PARAMETER")
 internal fun isHomeDrawerGestureEligible(
     positionX: Float,
     positionY: Float,
