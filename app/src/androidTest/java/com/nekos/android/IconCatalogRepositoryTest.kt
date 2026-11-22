@@ -58,6 +58,22 @@ class IconCatalogRepositoryTest {
     }
 
     @Test
+    fun tagIconsAreReleasedOnTrimAndReloadedOnResume() {
+        val repository = IconCatalogRepository(context)
+        val icon = repository.loadCatalog().first()
+
+        assertNotNull(repository.loadBitmap(icon))
+        val generationBeforeTrim = repository.generation
+
+        repository.trimMemory()
+        assertTrue(repository.generation > generationBeforeTrim)
+        org.junit.Assert.assertNull(repository.loadBitmap(icon))
+
+        repository.resumeAfterBackground()
+        assertNotNull(repository.loadBitmap(icon))
+    }
+
+    @Test
     fun bitmapLoaderRejectsPathTraversal() {
         val repository = IconCatalogRepository(context)
         val unsafeIcon = CatalogIcon(
