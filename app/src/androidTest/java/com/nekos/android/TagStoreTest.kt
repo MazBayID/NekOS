@@ -1,23 +1,31 @@
 package com.nekos.android
 
 import android.content.Context
+import android.content.ContextWrapper
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
+import java.util.UUID
 
 class TagStoreTest {
-    private val context: Context
-        get() = InstrumentationRegistry.getInstrumentation().targetContext
+    private val preferenceNamespace = "TagStoreTest_${UUID.randomUUID()}"
+    private val context: Context by lazy {
+        val target = InstrumentationRegistry.getInstrumentation().targetContext
+        object : ContextWrapper(target) {
+            override fun getSharedPreferences(name: String, mode: Int) =
+                super.getSharedPreferences("$preferenceNamespace-$name", mode)
+        }
+    }
 
     @Before
-    fun clearPreferences() {
+    fun clearIsolatedPreferences() {
         tagsPreferences().edit().clear().commit()
     }
 
     @After
-    fun clearPreferencesAfterTest() {
+    fun clearIsolatedPreferencesAfterTest() {
         tagsPreferences().edit().clear().commit()
     }
 

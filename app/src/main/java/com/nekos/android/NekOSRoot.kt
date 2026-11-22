@@ -55,6 +55,7 @@ import androidx.compose.foundation.gestures.awaitVerticalDragOrCancellation
 import androidx.compose.foundation.gestures.awaitVerticalTouchSlopOrCancellation
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.positionChange
@@ -64,6 +65,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
@@ -113,6 +115,9 @@ import androidx.compose.ui.unit.sp
 import kotlin.math.abs
 import kotlin.math.roundToInt
 import androidx.core.graphics.drawable.toBitmap
+import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.rememberReorderableLazyGridState
+import sh.calvin.reorderable.rememberReorderableLazyListState
 
 private val WarmBackground = Color(0xFFF4F1EA)
 private val Ink = Color(0xFF34332F)
@@ -137,6 +142,8 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
     var apps by remember { mutableStateOf(emptyList<InstalledApp>()) }
     var favoritePackages by remember { mutableStateOf(loadFavoritePackages(context)) }
     var tags by remember { mutableStateOf(TagStore.load(context)) }
+    var favoriteOrderSnapshot by remember { mutableStateOf<List<String?>?>(null) }
+    var tagOrderSnapshot by remember { mutableStateOf<List<NekTag>?>(null) }
     var activeTagPage by remember { mutableIntStateOf(0) }
     var isInitialLoadComplete by remember { mutableStateOf(false) }
     var lastAppliedRefreshToken by remember { mutableIntStateOf(-1) }
@@ -208,18 +215,12 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
     val iconBitmapCache = remember(apps) { AppIconBitmapCache() }
     val interactionController = remember { LauncherInteractionController() }
     var favoriteDrag by remember { mutableStateOf<LauncherDragSession?>(null) }
-    var draggedFavoriteAppId by remember { mutableStateOf<String?>(null) }
     val favoriteSlotBounds = remember { mutableStateMapOf<Int, Rect>() }
     var cancelDropBounds by remember { mutableStateOf<Rect?>(null) }
     var tagEditorTarget by remember { mutableStateOf<NekTag?>(null) }
     var viewingTag by remember { mutableStateOf<NekTag?>(null) }
     var actionMenuTag by remember { mutableStateOf<NekTag?>(null) }
     var tagPendingDelete by remember { mutableStateOf<NekTag?>(null) }
-    val tagPillBounds = remember { mutableStateMapOf<String, Rect>() }
-    var draggedTagId by remember { mutableStateOf<String?>(null) }
-    var draggedTagPreview by remember { mutableStateOf<NekTag?>(null) }
-    var draggedTagPosition by remember { mutableStateOf(Offset.Zero) }
-    var tagDropTargetId by remember { mutableStateOf<String?>(null) }
     var showTagEditor by remember { mutableStateOf(false) }
     var actionMenuApp by remember { mutableStateOf<InstalledApp?>(null) }
     var actionMenuPreviewApp by remember { mutableStateOf<InstalledApp?>(null) }
@@ -371,7 +372,6 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
             wallpaper = wallpaperBitmap,
             onOpenSettings = { showSettings = true },
             favoritePackages = favoritePackages,
-            draggedFavoriteAppId = draggedFavoriteAppId.takeIf { favoriteDrag?.hasMoved == true },
             tags = tags,
             activeTagPage = activeTagPage,
             onTagPageChange = { activeTagPage = it },
@@ -408,70 +408,46 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
             onFavoriteLongPressCancel = ::clearActionMenuPreview,
             onFavoriteSlotBounds = { index, bounds -> favoriteSlotBounds[index] = bounds },
             favoriteDropTarget = favoriteDrag?.takeIf { it.hasMoved }?.targetIndex,
-            onFavoriteDragStart = { app, position ->
-                clearActionMenuPreview()
-                cancelDropBounds = null
-                draggedFavoriteAppId = app.id
-                favoriteDrag = interactionController.startDrag(
-                    app.id,
-                    LauncherDragSource.FAVORITE,
-                    position
-                )
-            },
-            onFavoriteDrag = { position ->
-                val target = favoriteSlotBounds.entries.firstOrNull { it.value.contains(position) }?.key
-                favoriteDrag = interactionController.updateDrag(
-                    position, target,
-                    cancelTarget = favoriteDrag?.supportsCancelDropTarget == true && cancelDropBounds?.contains(position) == true
-                )
-            },
-            onFavoriteDragEnd = {
-                val drag = interactionController.finishDrag()
-                if (drag?.hasMoved == true && !drag.cancelTarget) {
-                    drag.targetIndex?.let { placeFavoriteFromDrawer(drag.appId, it) }
+            onFavoriteReorder = { fromIndex, toIndex ->
+                if (fromIndex != toIndex && fromIndex in 0 until 15 && toIndex in 0 until 15) {
+                    val updated = MutableList(15) { favoritePackages.getOrNull(it) }
+                    val moved = updated[fromIndex]
+                    updated[fromIndex] = updated[toIndex]
+                    updated[toIndex] = moved
+                    favoritePackages = updated
                 }
-                favoriteDrag = null
-                draggedFavoriteAppId = null
-                cancelDropBounds = null
             },
-            onFavoriteDragCancel = {
-                interactionController.cancelDrag()
-                favoriteDrag = null
-                draggedFavoriteAppId = null
-                cancelDropBounds = null
+            onFavoriteReorderStart = {
+                favoriteOrderSnapshot = favoritePackages.toList()
+            },
+            onFavoriteReorderEnd = { cancelled ->
+                val snapshot = favoriteOrderSnapshot
+                if (cancelled) {
+                    if (snapshot != null) favoritePackages = snapshot
+                } else {
+                    updateFavorites(favoritePackages)
+                }
+                favoriteOrderSnapshot = null
             },
             onTagClick = { tag -> viewingTag = tag },
             onTagOptionsClick = { tag -> actionMenuTag = tag },
-            onTagBoundsChanged = { tagId, bounds -> tagPillBounds[tagId] = bounds },
-            onTagBoundsRemoved = { tagId -> tagPillBounds.remove(tagId) },
-            draggedTagId = draggedTagId,
-            tagDropTargetId = tagDropTargetId,
-            onTagDragStart = { tag, position ->
-                draggedTagId = tag.id
-                draggedTagPreview = tag
-                draggedTagPosition = position
-                tagDropTargetId = tag.id
-            },
-            onTagDrag = { position ->
-                draggedTagPosition = position
-                tagDropTargetId = tagPillBounds.entries
-                    .firstOrNull { (_, bounds) -> bounds.contains(position) }
-                    ?.key
-            },
-            onTagDragEnd = {
-                val sourceId = draggedTagId
-                val targetIndex = tags.indexOfFirst { it.id == tagDropTargetId }
-                if (sourceId != null && targetIndex >= 0) {
-                    saveTags(moveTagToIndex(tags, sourceId, targetIndex))
+            onTagReorder = { fromIndex, toIndex ->
+                val sourceId = tags.getOrNull(fromIndex)?.id
+                if (sourceId != null) {
+                    tags = moveTagToIndex(tags, sourceId, toIndex)
                 }
-                draggedTagId = null
-                draggedTagPreview = null
-                tagDropTargetId = null
             },
-            onTagDragCancel = {
-                draggedTagId = null
-                draggedTagPreview = null
-                tagDropTargetId = null
+            onTagReorderStart = {
+                tagOrderSnapshot = tags.toList()
+            },
+            onTagReorderEnd = { cancelled ->
+                val snapshot = tagOrderSnapshot
+                if (cancelled) {
+                    if (snapshot != null) tags = snapshot
+                } else {
+                    saveTags(tags)
+                }
+                tagOrderSnapshot = null
             },
             onAddTag = {
                 if (tags.size >= 10) {
@@ -482,38 +458,6 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
                 }
             }
         )
-
-        draggedTagPreview?.let { tag ->
-            tagPillBounds[tag.id]?.let { bounds ->
-                val previewWidth = with(LocalDensity.current) { bounds.width.toDp() }
-                val previewHeight = with(LocalDensity.current) { bounds.height.toDp() }
-                TagPill(
-                    tag = tag,
-                    iconCatalogRepository = iconCatalogRepository,
-                    isDragging = true,
-                    isDropTarget = false,
-                    isDragPreview = true,
-                    onBoundsChanged = {},
-                    onBoundsRemoved = {},
-                    onClick = {},
-                    onHandleClick = {},
-                    onDragStart = {},
-                    onDrag = {},
-                    onDragEnd = {},
-                    onDragCancel = {},
-                    modifier = Modifier
-                        .offset {
-                            IntOffset(
-                                (draggedTagPosition.x - bounds.width / 2f).roundToInt(),
-                                (draggedTagPosition.y - bounds.height / 2f).roundToInt()
-                            )
-                        }
-                        .width(previewWidth)
-                        .height(previewHeight)
-                        .zIndex(11f)
-                )
-            }
-        }
 
         if (drawerProgress < 1f) {
             // A subtle warm translucent veil keeps the blurred home screen legible
@@ -897,7 +841,6 @@ private fun HomeScreen(
     wallpaper: androidx.compose.ui.graphics.ImageBitmap?,
     onOpenSettings: () -> Unit,
     favoritePackages: List<String?>,
-    draggedFavoriteAppId: String?,
     tags: List<NekTag>,
     activeTagPage: Int,
     onTagPageChange: (Int) -> Unit,
@@ -913,20 +856,14 @@ private fun HomeScreen(
     onFavoriteLongPressCancel: () -> Unit,
     onFavoriteSlotBounds: (Int, Rect) -> Unit,
     favoriteDropTarget: Int?,
-    onFavoriteDragStart: (InstalledApp, Offset) -> Unit,
-    onFavoriteDrag: (Offset) -> Unit,
-    onFavoriteDragEnd: () -> Unit,
-    onFavoriteDragCancel: () -> Unit,
+    onFavoriteReorder: (Int, Int) -> Unit,
+    onFavoriteReorderStart: () -> Unit,
+    onFavoriteReorderEnd: (cancelled: Boolean) -> Unit,
     onTagClick: (NekTag) -> Unit,
     onTagOptionsClick: (NekTag) -> Unit,
-    onTagBoundsChanged: (String, Rect) -> Unit,
-    onTagBoundsRemoved: (String) -> Unit,
-    draggedTagId: String?,
-    tagDropTargetId: String?,
-    onTagDragStart: (NekTag, Offset) -> Unit,
-    onTagDrag: (Offset) -> Unit,
-    onTagDragEnd: () -> Unit,
-    onTagDragCancel: () -> Unit,
+    onTagReorder: (Int, Int) -> Unit,
+    onTagReorderStart: () -> Unit,
+    onTagReorderEnd: (cancelled: Boolean) -> Unit,
     onAddTag: () -> Unit
 ) {
     val appById = remember(apps) { apps.associateBy { it.id } }
@@ -1070,16 +1007,22 @@ private fun HomeScreen(
                             BoxWithConstraints(
                                 modifier = Modifier.weight(1f).fillMaxWidth()
                             ) {
+                                val tagListState = rememberLazyListState()
+                                val reorderableTagState = rememberReorderableLazyListState(tagListState) { from, to ->
+                                    onTagReorder(
+                                        safeTagPage * 5 + from.index,
+                                        safeTagPage * 5 + to.index
+                                    )
+                                }
                                 LazyColumn(
+                                    state = tagListState,
                                     modifier = Modifier.fillMaxSize()
-                                        .pointerInput(tagPageCount, safeTagPage, draggedTagId) {
+                                        .pointerInput(tagPageCount, safeTagPage) {
                                             var totalDrag = 0f
                                             detectHorizontalDragGestures(
                                                 onHorizontalDrag = { change, dragAmount ->
-                                                    if (draggedTagId == null) {
-                                                        totalDrag += dragAmount
-                                                        change.consume()
-                                                    }
+                                                    totalDrag += dragAmount
+                                                    change.consume()
                                                 },
                                                 onDragEnd = {
                                                     when {
@@ -1099,28 +1042,29 @@ private fun HomeScreen(
                                     verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.Bottom)
                                 ) {
                                     items(visibleTags, key = { it.id }) { tag ->
-                                        TagPill(
-                                            modifier = Modifier.animateItem(
+                                        ReorderableItem(
+                                            state = reorderableTagState,
+                                            key = tag.id,
+                                            animateItemModifier = Modifier.animateItem(
                                                 fadeInSpec = null,
                                                 placementSpec = spring(
                                                     dampingRatio = 0.82f,
                                                     stiffness = 420f
                                                 ),
                                                 fadeOutSpec = null
-                                            ),
-                                            tag = tag,
-                                            iconCatalogRepository = iconCatalogRepository,
-                                            isDragging = draggedTagId == tag.id,
-                                            isDropTarget = tagDropTargetId == tag.id && draggedTagId != tag.id,
-                                            onBoundsChanged = { bounds -> onTagBoundsChanged(tag.id, bounds) },
-                                            onBoundsRemoved = { onTagBoundsRemoved(tag.id) },
-                                            onClick = { onTagClick(tag) },
-                                            onHandleClick = { onTagOptionsClick(tag) },
-                                            onDragStart = { position -> onTagDragStart(tag, position) },
-                                            onDrag = onTagDrag,
-                                            onDragEnd = onTagDragEnd,
-                                            onDragCancel = onTagDragCancel
-                                        )
+                                            )
+                                        ) { isDragging ->
+                                            TagPill(
+                                                tag = tag,
+                                                iconCatalogRepository = iconCatalogRepository,
+                                                isDragging = isDragging,
+                                                onClick = { onTagClick(tag) },
+                                                onHandleClick = { onTagOptionsClick(tag) },
+                                                onReorderStart = onTagReorderStart,
+                                                onReorderEnd = onTagReorderEnd,
+                                                reorderHandleScope = this
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -1208,15 +1152,41 @@ private fun HomeScreen(
                     }
                 }
             }
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                repeat(3) { row ->
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        repeat(5) { column ->
-                            val index = row * 5 + column
-                            val app = favoritePackages.getOrNull(index)?.let { appById[it] }
+            BoxWithConstraints {
+                val favoriteSlots = List(15) { favoritePackages.getOrNull(it) }
+                val favoriteCellSize = (maxWidth - 40.dp) / 5f
+                val favoriteGridState = rememberLazyGridState()
+                val reorderableFavoriteState = rememberReorderableLazyGridState(favoriteGridState) { from, to ->
+                    onFavoriteReorder(from.index, to.index)
+                }
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(5),
+                    state = favoriteGridState,
+                    userScrollEnabled = false,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    modifier = Modifier.fillMaxWidth()
+                        .height(favoriteCellSize * 3 + 20.dp)
+                ) {
+                    itemsIndexed(
+                        items = favoriteSlots,
+                        key = { index, appId -> appId ?: "empty-$index" }
+                    ) { index, appId ->
+                        val app = appId?.let { appById[it] }
+                        ReorderableItem(
+                            state = reorderableFavoriteState,
+                            key = appId ?: "empty-$index",
+                            animateItemModifier = Modifier.animateItem(
+                                fadeInSpec = null,
+                                placementSpec = spring(
+                                    dampingRatio = 0.86f,
+                                    stiffness = 380f
+                                ),
+                                fadeOutSpec = null
+                            )
+                        ) {
                             FavoriteSlot(
                                 app = app,
-                                isBeingDragged = app?.id == draggedFavoriteAppId,
                                 iconBitmapCache = iconBitmapCache,
                                 onBoundsChanged = { bounds -> onFavoriteSlotBounds(index, bounds) },
                                 isDropTarget = favoriteDropTarget == index,
@@ -1224,11 +1194,10 @@ private fun HomeScreen(
                                 onLongPress = { position -> onFavoriteLongPress(index, position) },
                                 onLongPressEnd = onFavoriteLongPressEnd,
                                 onLongPressCancel = onFavoriteLongPressCancel,
-                                onDragStart = { position -> app?.let { onFavoriteDragStart(it, position) } },
-                                onDrag = onFavoriteDrag,
-                                onDragEnd = onFavoriteDragEnd,
-                                onDragCancel = onFavoriteDragCancel,
-                                modifier = Modifier.weight(1f)
+                                onReorderStart = onFavoriteReorderStart,
+                                onReorderEnd = onFavoriteReorderEnd,
+                                reorderHandleScope = this,
+                                modifier = Modifier.fillMaxWidth()
                             )
                         }
                     }
@@ -1242,7 +1211,6 @@ private fun HomeScreen(
 @Composable
 private fun FavoriteSlot(
     app: InstalledApp?,
-    isBeingDragged: Boolean,
     iconBitmapCache: AppIconBitmapCache,
     onBoundsChanged: (Rect) -> Unit,
     isDropTarget: Boolean,
@@ -1250,10 +1218,9 @@ private fun FavoriteSlot(
     onLongPress: (Offset) -> Unit,
     onLongPressEnd: () -> Unit,
     onLongPressCancel: () -> Unit,
-    onDragStart: (Offset) -> Unit,
-    onDrag: (Offset) -> Unit,
-    onDragEnd: () -> Unit,
-    onDragCancel: () -> Unit,
+    onReorderStart: () -> Unit,
+    onReorderEnd: (cancelled: Boolean) -> Unit,
+    reorderHandleScope: sh.calvin.reorderable.ReorderableCollectionItemScope,
     modifier: Modifier = Modifier
 ) {
     val cachedBitmap = app?.let { iconBitmapCache[it.id] }
@@ -1280,10 +1247,28 @@ private fun FavoriteSlot(
     val currentOnLongPress by rememberUpdatedState(onLongPress)
     val currentOnLongPressEnd by rememberUpdatedState(onLongPressEnd)
     val currentOnLongPressCancel by rememberUpdatedState(onLongPressCancel)
-    val currentOnDragStart by rememberUpdatedState(onDragStart)
-    val currentOnDrag by rememberUpdatedState(onDrag)
-    val currentOnDragEnd by rememberUpdatedState(onDragEnd)
-    val currentOnDragCancel by rememberUpdatedState(onDragCancel)
+    val currentOnReorderStart by rememberUpdatedState(onReorderStart)
+    val currentOnReorderEnd by rememberUpdatedState(onReorderEnd)
+    val reorderHandle = with(reorderHandleScope) {
+        Modifier.draggableHandle(
+            enabled = app != null,
+            dragGestureDetector = LauncherReorderGestureDetector(
+                toRootPosition = { local ->
+                    currentSlotCoordinates?.localToRoot(local) ?: local
+                },
+                onTap = {
+                    if (app != null) {
+                        currentOnClick(currentSlotCoordinates?.boundsInRoot() ?: Rect.Zero)
+                    }
+                },
+                onLongPress = { position -> currentOnLongPress(position) },
+                onLongPressEnd = { currentOnLongPressEnd() },
+                onLongPressCancel = { currentOnLongPressCancel() },
+                onReorderStart = { currentOnReorderStart() },
+                onReorderEnd = { cancelled -> currentOnReorderEnd(cancelled) }
+            )
+        )
+    }
     Column(
         modifier = modifier
             .aspectRatio(1f)
@@ -1293,21 +1278,7 @@ private fun FavoriteSlot(
                 slotCoordinates = it
                 onBoundsChanged(it.boundsInRoot())
             }
-            .pointerInput(app?.id) {
-                if (app != null) {
-                    detectLauncherItemGesture(
-                        toRootPosition = { local -> currentSlotCoordinates?.localToRoot(local) ?: local },
-                        onTap = { currentOnClick(currentSlotCoordinates?.boundsInRoot() ?: Rect.Zero) },
-                        onLongPress = currentOnLongPress,
-                        onLongPressEnd = currentOnLongPressEnd,
-                        onLongPressCancel = currentOnLongPressCancel,
-                        onDragStart = currentOnDragStart,
-                        onDrag = currentOnDrag,
-                        onDragEnd = currentOnDragEnd,
-                        onDragCancel = currentOnDragCancel
-                    )
-                }
-            }
+            .then(reorderHandle)
             .padding(5.dp)
             .then(
                 if (app != null) {
@@ -1332,7 +1303,7 @@ private fun FavoriteSlot(
             contentAlignment = Alignment.Center
         ) {
             this@Column.AnimatedVisibility(
-                visible = app != null && iconBitmap != null && !isBeingDragged,
+                visible = app != null && iconBitmap != null,
                 enter = fadeIn(tween(180)) + scaleIn(
                     initialScale = 0.90f,
                     animationSpec = tween(180)
@@ -1356,17 +1327,12 @@ private fun TagPill(
     tag: NekTag,
     iconCatalogRepository: IconCatalogRepository,
     isDragging: Boolean,
-    isDropTarget: Boolean,
-    onBoundsChanged: (Rect) -> Unit,
-    onBoundsRemoved: (String) -> Unit,
     onClick: () -> Unit,
     onHandleClick: () -> Unit,
-    onDragStart: (Offset) -> Unit,
-    onDrag: (Offset) -> Unit,
-    onDragEnd: () -> Unit,
-    onDragCancel: () -> Unit,
-    modifier: Modifier = Modifier,
-    isDragPreview: Boolean = false
+    onReorderStart: () -> Unit,
+    onReorderEnd: (cancelled: Boolean) -> Unit,
+    reorderHandleScope: sh.calvin.reorderable.ReorderableCollectionItemScope,
+    modifier: Modifier = Modifier
 ) {
     val dragScale by animateFloatAsState(
         targetValue = if (isDragging) 1.045f else 1f,
@@ -1377,43 +1343,32 @@ private fun TagPill(
         label = "tag-drag-scale"
     )
     val dragAlpha by animateFloatAsState(
-        targetValue = when {
-            isDragging && isDragPreview -> 0.94f
-            isDragging -> 0f
-            else -> 1f
-        },
+        targetValue = if (isDragging) 0.94f else 1f,
         animationSpec = spring(stiffness = Spring.StiffnessMedium),
         label = "tag-drag-alpha"
     )
     val dragElevation by animateDpAsState(
-        targetValue = when {
-            isDragging -> 10.dp
-            isDropTarget -> 2.dp
-            else -> 0.dp
-        },
+        targetValue = if (isDragging) 10.dp else 0.dp,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioNoBouncy,
             stiffness = Spring.StiffnessMedium
         ),
         label = "tag-drag-elevation"
     )
-    val pillColor by animateColorAsState(
-        targetValue = if (isDropTarget) Color(0xFFD5C8B5) else Color(tag.colorArgb.toInt()),
-        animationSpec = spring(stiffness = Spring.StiffnessMedium),
-        label = "tag-drop-color"
-    )
     var tagIcon by remember(tag.iconId) {
         mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null)
     }
-    var handleCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
-    val currentHandleCoordinates by rememberUpdatedState(handleCoordinates)
     val currentOnHandleClick by rememberUpdatedState(onHandleClick)
-    val currentOnDragStart by rememberUpdatedState(onDragStart)
-    val currentOnDrag by rememberUpdatedState(onDrag)
-    val currentOnDragEnd by rememberUpdatedState(onDragEnd)
-    val currentOnDragCancel by rememberUpdatedState(onDragCancel)
-    DisposableEffect(tag.id) {
-        onDispose { onBoundsRemoved(tag.id) }
+    val currentOnReorderStart by rememberUpdatedState(onReorderStart)
+    val currentOnReorderEnd by rememberUpdatedState(onReorderEnd)
+    val reorderHandle = with(reorderHandleScope) {
+        Modifier.draggableHandle(
+            dragGestureDetector = LauncherReorderGestureDetector(
+                onTap = { currentOnHandleClick() },
+                onReorderStart = { currentOnReorderStart() },
+                onReorderEnd = { cancelled -> currentOnReorderEnd(cancelled) }
+            )
+        )
     }
     LaunchedEffect(tag.iconId) {
         tagIcon = withContext(Dispatchers.IO) {
@@ -1427,7 +1382,6 @@ private fun TagPill(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .onGloballyPositioned { onBoundsChanged(it.boundsInRoot()) }
             .zIndex(if (isDragging) 1f else 0f)
             .graphicsLayer {
                 alpha = dragAlpha
@@ -1436,7 +1390,7 @@ private fun TagPill(
             }
             .shadow(dragElevation, RoundedCornerShape(18.dp))
             .clip(RoundedCornerShape(18.dp))
-            .background(pillColor),
+            .background(Color(tag.colorArgb.toInt())),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Row(
@@ -1461,22 +1415,7 @@ private fun TagPill(
         Box(
             modifier = Modifier
                 .sizeIn(minWidth = 40.dp, minHeight = 44.dp)
-                .onGloballyPositioned { handleCoordinates = it }
-                .pointerInput(tag.id) {
-                    detectLauncherItemGesture(
-                        toRootPosition = { local ->
-                            currentHandleCoordinates?.localToRoot(local) ?: local
-                        },
-                        onTap = currentOnHandleClick,
-                        onLongPress = {},
-                        onLongPressEnd = {},
-                        onLongPressCancel = {},
-                        onDragStart = currentOnDragStart,
-                        onDrag = currentOnDrag,
-                        onDragEnd = currentOnDragEnd,
-                        onDragCancel = currentOnDragCancel
-                    )
-                }
+                .then(reorderHandle)
                 .semantics {
                     contentDescription = "Options for ${tag.name}; hold and drag to reorder"
                     role = Role.Button
