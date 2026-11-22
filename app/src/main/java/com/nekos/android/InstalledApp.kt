@@ -13,6 +13,7 @@ import android.os.UserManager
 import android.content.pm.LauncherActivityInfo
 import android.view.View
 import android.widget.Toast
+import java.io.File
 
 data class LauncherAppScanResult(
     val apps: List<InstalledApp>,
@@ -85,7 +86,7 @@ fun loadLaunchableApps(context: Context): LauncherAppScanResult {
                         packageName = activity.applicationInfo.packageName,
                         launcherActivityInfo = activity,
                         iconDensityDpi = densityDpi,
-                        iconVersion = activity.applicationInfo.lastUpdateTime,
+                        iconVersion = File(activity.applicationInfo.sourceDir).lastModified(),
                         user = profile,
                         componentName = activity.componentName,
                         profileSerialNumber = profileSerial
