@@ -14,7 +14,7 @@ This document is the product intent. For what is actually implemented, see `FEAT
 - **Personal:** users arrange apps, tags, and the Home appearance.
 - **Stable:** everyday reliability comes before adding features.
 
-**Usage flow:** Home → Favorite / Tag → App Drawer → Search → Settings
+**Usage flow:** Home → Favorite / Tag → App Drawer → Search. Settings remains directly accessible from the Home header.
 
 ## 2. Main structure
 
@@ -28,7 +28,7 @@ This document is the product intent. For what is actually implemented, see `FEAT
 ## 3. Home Screen design
 
 - **Favorite Grid:** 15 slots in 5 columns × 3 rows at the bottom. Empty slots are allowed and are never filled automatically.
-- **Tag Rail:** a vertical list of tags on the right side. Tapping a tag opens its app collection in a lightweight panel.
+- **Tag Rail:** a vertical list of tags on the right side, with up to five visible per page. Horizontal swipes move between pages; a small page indicator and add control sit beneath the list. Tapping a tag opens its app collection in a lightweight panel. The current product limit is ten tags.
 - **Wallpaper:** background presets and a custom image.
 - **Gestures:** swipe up from the Home canvas or the Favorite area to open the App Drawer; long-press and drag to arrange apps and tags. Pressing Home while NekOS is open returns to a clean Home.
 - Keep the Android status bar and notification shade accessible, and never block system navigation.
@@ -44,7 +44,7 @@ This document is the product intent. For what is actually implemented, see `FEAT
 
 ## 5. Tag System
 
-- Create, rename, reorder, and delete tags.
+- Create, rename, reorder, move between Tag Rail pages, and delete tags (up to ten total).
 - Each tag has a name (max 24 characters), a color from a small palette, and an optional icon from the bundled catalog.
 - Deleting a tag always asks for confirmation.
 - Assign and unassign installed apps.

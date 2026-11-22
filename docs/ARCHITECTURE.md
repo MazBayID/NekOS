@@ -19,12 +19,14 @@ NekOS uses a single Activity with Jetpack Compose. Keep the Activity responsible
 - Remove stale package references after an app is uninstalled.
 - Preserve the 15-slot favorite layout and its empty slots when moving or removing apps.
 - Do not make a UI action appear successful until the underlying state change has completed.
-- Tags are stored as versioned JSON in private SharedPreferences. Each tag has a stable UUID, trimmed name (max 24 characters), optional catalog icon ID, ARGB color, and a deduplicated list of assigned package names.
+- Tags are stored as JSON in private SharedPreferences under `nekos_tags` / `tag_collection_v1`. Each tag has a stable UUID, trimmed name (max 24 characters), optional catalog icon ID, ARGB color, and a deduplicated list of assigned app IDs.
 - Tag persistence tolerates malformed stored JSON by returning an empty collection; invalid/blank tags and duplicate IDs are filtered during load/save.
 
 ## Interaction rules
 
-- Home layout: Favorite Grid (5 × 3) at the bottom, Tag Rail on the right, App Drawer rising to about 60% of the screen height.
+- Home layout: Favorite Grid (5 × 3) at the bottom, Tag Rail on the right, and App Drawer rising to about 60% of the screen height.
+- Tag Rail shows up to five tags per page. Horizontal swipes change pages; page indicators appear when more than one page exists. The current implementation allows up to ten tags total.
+- The add-tag control and page indicator sit below the framed tag list. Tag actions can move a tag to an adjacent page; dragging a tag handle reorders tags.
 - A normal tap launches the app.
 - A long-press followed by release without meaningful movement opens the app action menu.
 - Movement beyond touch slop after a long-press begins a drag; the final target is calculated from the full drag distance, not the initial finger position inside the icon.

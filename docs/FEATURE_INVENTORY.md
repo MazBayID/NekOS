@@ -20,7 +20,7 @@ A feature is marked **implemented** only when matching source code exists. This 
 
 ### Home Screen
 - Favorite Grid: 15 slots (5 × 3) at the bottom. Empty slots are preserved and never auto-filled.
-- Tag Rail: a vertical list of tags on the right, about 38% of the content width, ending with an "add tag" pill.
+- Tag Rail: a framed vertical list on the right, about 38% of the available content width, showing up to five tags per page. Horizontal swipes change pages; centered page dots appear when needed, with the add control at the lower-right. Up to 10 tags can be created.
 - Header (top left): small secondary wordmark and a Settings (gear) button.
 - Wallpaper behind everything: three presets or a custom image.
 - Favorites launch on tap; long-press opens app actions; drag after long-press reorders or places into a slot.
@@ -64,8 +64,8 @@ These are places where the code and `PRODUCT_DIRECTION.md` do not fully line up.
 | Area | Current state | Concept expectation | Suggested action |
 |---|---|---|---|
 | Drawer columns | Adaptive grid, not fixed | Not mandated; older docs claimed five columns | Keep adaptive, or fix to five columns if a consistent look matters more |
-| Home header | Persistent wordmark plus gear button | Simple, calm Home; earlier docs said no branding on Home | Decide whether the header stays; the gear is currently the only way to reach Settings |
-| Settings entry | Gear button only (intentional: the concept asks for few gestures) | Settings reachable from Home | None; keep the gear |
+| Home header | Small wordmark plus gear button | Product direction explicitly allows a small secondary wordmark and Settings access | No action; current implementation matches the direction |
+| Settings entry | Gear button only | Settings reachable from Home | No action; keep the direct, visible entry point |
 | Typography | System font; the Nunito Sans recommendation was removed from the docs | Warm, calm look | None |
 | Disabled or suspended single apps | Not specially handled; relies on launch error messages | "Check handling of disabled or unavailable apps" | Verify on a device and add explicit handling if needed |
 | Notification dots | No code found | Optional, only if needed | Leave out unless there is a clear need |
@@ -77,8 +77,9 @@ Follow the concept's priorities: stability over new features.
 
 1. Test on physical devices: drawer gesture, drag-and-drop for favorites and tags, the 40% close target, and persistence after restart.
 2. Check behavior after installing and uninstalling apps, and with disabled or unavailable apps.
-3. Confirm search feels comfortable with real app lists.
-4. Resolve the gaps in section 2.
+3. Verify Tag Rail paging, the 10-tag limit, and moving tags between pages on physical devices.
+4. Confirm search feels comfortable with real app lists.
+5. Resolve the remaining gaps in section 2.
 
 ## 4. Explicitly deferred
 
