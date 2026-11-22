@@ -2,8 +2,6 @@ package com.nekos.android
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -31,7 +29,6 @@ import androidx.compose.ui.unit.sp
 private val SettingsInk = Color(0xFF34332F)
 private val SettingsMuted = Color(0xFF706B63)
 private val SettingsAccent = Color(0xFF746657)
-private val SettingsOptionBarColor = Color(0xFF114B56)
 
 internal fun nekosBackgroundColor(preset: String): Color = when (preset) {
     "sage" -> Color(0xFFE8EEE5)
@@ -87,10 +84,10 @@ internal fun NekOSSettingsDialog(
                                 .fillMaxWidth()
                                 .defaultMinSize(minHeight = 48.dp)
                                 .clip(RoundedCornerShape(13.dp))
-                                .background(SettingsOptionBarColor)
+                                .background(nekosBackgroundColor(key))
                                 .border(
                                     width = if (selected) 1.5.dp else 1.dp,
-                                    color = if (selected) Color.White else Color.White.copy(alpha = 0.22f),
+                                    color = if (selected) SettingsAccent else SettingsInk.copy(alpha = 0.10f),
                                     shape = RoundedCornerShape(13.dp)
                                 )
                                 .selectable(
@@ -104,14 +101,14 @@ internal fun NekOSSettingsDialog(
                         ) {
                             Text(
                                 label,
-                                color = Color.White,
+                                color = SettingsInk,
                                 fontSize = 14.sp,
                                 fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal
                             )
                             if (selected) {
                                 Text(
                                     "✓",
-                                    color = Color.White,
+                                    color = SettingsAccent,
                                     fontSize = 17.sp,
                                     fontWeight = FontWeight.Bold
                                 )
@@ -145,17 +142,13 @@ internal fun NekOSSettingsDialog(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        SettingsOptionBar(
-                            label = "Choose image",
-                            onClick = onChooseWallpaper,
-                            modifier = Modifier.weight(1f)
-                        )
+                        TextButton(onClick = onChooseWallpaper) {
+                            Text("Choose image", color = SettingsAccent, fontWeight = FontWeight.SemiBold)
+                        }
                         if (hasWallpaper) {
-                            SettingsOptionBar(
-                                label = "Remove",
-                                onClick = onClearWallpaper,
-                                modifier = Modifier.weight(1f)
-                            )
+                            TextButton(onClick = onClearWallpaper) {
+                                Text("Remove", color = SettingsMuted)
+                            }
                         }
                     }
                 }
@@ -180,10 +173,13 @@ internal fun NekOSSettingsDialog(
                         fontSize = 12.sp,
                         lineHeight = 17.sp
                     )
-                    SettingsOptionBar(
-                        label = if (isDefaultLauncher) "Default Home app" else "Set as Home",
-                        onClick = onSetAsHome
-                    )
+                    TextButton(onClick = onSetAsHome) {
+                        Text(
+                            if (isDefaultLauncher) "Default Home app" else "Set as Home",
+                            color = SettingsAccent,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
                     Text(
                         "You can also set NekOS manually in Android Settings → Default launcher.",
                         color = SettingsMuted,
@@ -202,10 +198,9 @@ internal fun NekOSSettingsDialog(
                         fontSize = 12.sp,
                         lineHeight = 17.sp
                     )
-                    SettingsOptionBar(
-                        label = "Show App Drawer hint",
-                        onClick = onShowDrawerHint
-                    )
+                    TextButton(onClick = onShowDrawerHint) {
+                        Text("Show App Drawer hint", color = SettingsAccent, fontWeight = FontWeight.SemiBold)
+                    }
                 }
 
                 HorizontalDivider(color = SettingsInk.copy(alpha = 0.12f))
@@ -229,10 +224,9 @@ internal fun NekOSSettingsDialog(
                         color = SettingsMuted,
                         fontSize = 12.sp
                     )
-                    SettingsOptionBar(
-                        label = "GitHub repository",
-                        onClick = onOpenRepository
-                    )
+                    TextButton(onClick = onOpenRepository) {
+                        Text("GitHub repository", color = SettingsAccent, fontWeight = FontWeight.SemiBold)
+                    }
                 }
             }
         },
@@ -245,29 +239,6 @@ internal fun NekOSSettingsDialog(
         titleContentColor = SettingsInk,
         textContentColor = SettingsInk
     )
-}
-
-@Composable
-private fun SettingsOptionBar(
-    label: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier
-            .clip(RoundedCornerShape(12.dp))
-            .background(SettingsOptionBarColor)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 11.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            label,
-            color = Color.White,
-            fontSize = 13.sp,
-            fontWeight = FontWeight.SemiBold
-        )
-    }
 }
 
 @Composable
