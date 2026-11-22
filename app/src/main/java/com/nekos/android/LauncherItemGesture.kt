@@ -1,5 +1,7 @@
 package com.nekos.android
 
+import kotlinx.coroutines.yield
+
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.awaitLongPressOrCancellation
@@ -191,6 +193,7 @@ internal class LauncherReorderGestureDetector(
                         dragging = true
                         onLongPressCancel()
                         onDragStart(change.position)
+                        yield()
                         change.consume()
                         onDrag(change, accumulated)
                         accumulated = Offset.Zero
