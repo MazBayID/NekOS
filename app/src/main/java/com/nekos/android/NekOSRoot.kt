@@ -1101,13 +1101,16 @@ private fun HomeScreen(
                                     }
                                 }
                             }
-                            Row(
-                                modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
-                                horizontalArrangement = Arrangement.Center,
-                                verticalAlignment = Alignment.CenterVertically
+                            Box(
+                                modifier = Modifier.fillMaxWidth()
+                                    .padding(top = 4.dp)
+                                    .height(28.dp)
                             ) {
                                 if (tagPageCount > 1) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Row(
+                                        modifier = Modifier.align(Alignment.Center),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
                                         repeat(tagPageCount) { page ->
                                             Box(
                                                 modifier = Modifier.size(18.dp)
@@ -1127,7 +1130,8 @@ private fun HomeScreen(
                                     }
                                 }
                                 Box(
-                                    modifier = Modifier.padding(start = if (tagPageCount > 1) 2.dp else 0.dp)
+                                    modifier = Modifier.align(Alignment.CenterEnd)
+                                        .offset(x = tagRailWidth * 0.05f + 3.dp)
                                         .size(28.dp)
                                         .clickable(onClick = onAddTag)
                                         .semantics {
