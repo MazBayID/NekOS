@@ -285,7 +285,7 @@ fun NekOSRoot(refreshToken: Int) {
 
     BoxWithConstraints(Modifier.fillMaxSize().background(WarmBackground)) {
         val drawerHeightPx = constraints.maxHeight.toFloat().coerceAtLeast(1f)
-        val homeSwipeThresholdPx = with(androidx.compose.ui.platform.LocalDensity.current) { 64.dp.toPx() }
+        val homeSwipeThresholdPx = with(androidx.compose.ui.platform.LocalDensity.current) { 48.dp.toPx() }
         val drawerCloseThresholdPx = with(androidx.compose.ui.platform.LocalDensity.current) { 72.dp.toPx() }
         val backgroundBlurRadiusPx = with(androidx.compose.ui.platform.LocalDensity.current) { 16.dp.toPx() }
         var drawerProgress by remember { mutableFloatStateOf(1f) }
@@ -854,8 +854,13 @@ private fun HomeScreen(
                             // Keep the Tag rail and Favorite grid free to scroll
                             // and interact; the launcher swipe starts in the main
                             // Home canvas instead.
-                            gestureEligible = position.x < size.width * 0.62f &&
-                                position.y < size.height - 210.dp.toPx()
+                            gestureEligible = isHomeDrawerGestureEligible(
+                                positionX = position.x,
+                                positionY = position.y,
+                                containerWidth = size.width.toFloat(),
+                                containerHeight = size.height.toFloat(),
+                                excludedBottomPx = 160.dp.toPx()
+                            )
                             velocityTracker.resetTracking()
                         },
                         onVerticalDrag = { change, dragAmount ->
