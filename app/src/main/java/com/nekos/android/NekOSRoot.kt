@@ -1423,10 +1423,9 @@ private fun AppDrawer(
     }
     val gridState = rememberLazyGridState()
     val focusManager = LocalFocusManager.current
-    // Dragging the list hides the keyboard so results can be browsed. Programmatic scrolls
-    // (such as jumping back to the top when the query changes) do not reach this connection.
-    // The grid keeps normal scrolling. Only downward scroll left over after
-    // it reaches the top is intercepted as a drawer-close gesture.
+    // Capture the grid position when each touch gesture begins. Reaching the top
+    // during the same drag must not turn that drag into a drawer-close gesture.
+    val drawerGestureStartedAtTop = remember { booleanArrayOf(false) }
     val pendingDrawerCloseDrag = remember { floatArrayOf(0f) }
     val drawerScrollConnection = remember(focusManager, gridState) {
         object : NestedScrollConnection {
@@ -1442,6 +1441,7 @@ private fun AppDrawer(
                 source: NestedScrollSource
             ): Offset {
                 if (
+                    drawerGestureStartedAtTop[0] &&
                     source == NestedScrollSource.UserInput &&
                     available.y > 0f &&
                     !gridState.canScrollBackward
@@ -1458,7 +1458,9 @@ private fun AppDrawer(
             ): Velocity {
                 val dragDistance = pendingDrawerCloseDrag[0]
                 pendingDrawerCloseDrag[0] = 0f
-                if (dragDistance > 0f || available.y > 0f) {
+                val canCloseDrawer = drawerGestureStartedAtTop[0]
+                drawerGestureStartedAtTop[0] = false
+                if (canCloseDrawer && (dragDistance > 0f || available.y > 0f)) {
                     currentOnCloseDrawer(dragDistance, available.y)
                 }
                 return Velocity.Zero
@@ -1571,7 +1573,19 @@ private fun AppDrawer(
                 contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 10.dp, bottom = 28.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier.weight(1f).fillMaxWidth().nestedScroll(drawerScrollConnection)
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .pointerInput(gridState) {
+                        awaitEachGesture {
+                            awaitFirstDown(
+                                requireUnconsumed = false,
+                                pass = PointerEventPass.Initial
+                            )
+                            drawerGestureStartedAtTop[0] = !gridState.canScrollBackward
+                        }
+                    }
+                    .nestedScroll(drawerScrollConnection)
             ) {
                 items(filteredApps, key = { it.id }) { app ->
                     val cachedBitmap = iconBitmapCache[app.id]
