@@ -1030,11 +1030,7 @@ private fun HomeScreen(
                                                 isDragging = isDragging,
                                                 onClick = { onTagClick(tag) },
                                                 onHandleClick = { onTagOptionsClick(tag) },
-                                                reorderHandleModifier = Modifier.draggableHandle(
-                                                    dragGestureDetector = LauncherReorderGestureDetector(
-                                                        onTap = { onTagOptionsClick(tag) }
-                                                    )
-                                                )
+                                                reorderHandleScope = this
                                             )
                                         }
                                     }
@@ -1227,9 +1223,9 @@ private fun FavoriteSlot(
                         currentOnClick(currentSlotCoordinates?.boundsInRoot() ?: Rect.Zero)
                     }
                 },
-                onLongPress = currentOnLongPress,
-                onLongPressEnd = currentOnLongPressEnd,
-                onLongPressCancel = currentOnLongPressCancel
+                onLongPress = { position -> currentOnLongPress(position) },
+                onLongPressEnd = { currentOnLongPressEnd() },
+                onLongPressCancel = { currentOnLongPressCancel() }
             )
         )
     }
@@ -1293,7 +1289,7 @@ private fun TagPill(
     isDragging: Boolean,
     onClick: () -> Unit,
     onHandleClick: () -> Unit,
-    reorderHandleModifier: Modifier,
+    reorderHandleScope: sh.calvin.reorderable.ReorderableCollectionItemScope,
     modifier: Modifier = Modifier
 ) {
     val dragScale by animateFloatAsState(
@@ -1319,6 +1315,14 @@ private fun TagPill(
     )
     var tagIcon by remember(tag.iconId) {
         mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null)
+    }
+    val currentOnHandleClick by rememberUpdatedState(onHandleClick)
+    val reorderHandle = with(reorderHandleScope) {
+        Modifier.draggableHandle(
+            dragGestureDetector = LauncherReorderGestureDetector(
+                onTap = { currentOnHandleClick() }
+            )
+        )
     }
     LaunchedEffect(tag.iconId) {
         tagIcon = withContext(Dispatchers.IO) {
@@ -1365,7 +1369,7 @@ private fun TagPill(
         Box(
             modifier = Modifier
                 .sizeIn(minWidth = 40.dp, minHeight = 44.dp)
-                .then(reorderHandleModifier)
+                .then(reorderHandle)
                 .semantics {
                     contentDescription = "Options for ${tag.name}; hold and drag to reorder"
                     role = Role.Button
