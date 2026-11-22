@@ -46,12 +46,7 @@ class AppIconBitmapCache(
             (bitmap.width * bitmap.height * 4 / 1024).coerceAtLeast(1)
     }
     private val loadSemaphore = Semaphore(2)
-    private class KeyLockEntry {
-        val mutex = Mutex()
-        var users: Int = 0
-    }
-
-    private val keyLocks = ConcurrentHashMap<String, KeyLockEntry>()
+    private val keyLocks = KeyedMutex()
 
     @Volatile
     private var memoryLoadsEnabled = true
@@ -82,42 +77,24 @@ class AppIconBitmapCache(
         if (!memoryLoadsEnabled) return null
 
         val cacheKey = app.iconCacheKey
-        // Count both the active loader and any waiters before entering the mutex.
-        // The entry is removed only after the last caller has left, so a new caller
-        // cannot create a second mutex while another request is still waiting.
-        val lockEntry = keyLocks.compute(cacheKey) { _, current ->
-            (current ?: KeyLockEntry()).also { it.users++ }
-        } ?: error("Unable to acquire icon cache key lock")
+        return keyLocks.withLock(cacheKey) {
+            memoryCache.get(cacheKey)?.let { return@withLock it }
+            if (!memoryLoadsEnabled) return@withLock null
 
-        return try {
-            lockEntry.mutex.withLock {
-                memoryCache.get(cacheKey)?.let { return@withLock it }
-                if (!memoryLoadsEnabled) return@withLock null
+            loadSemaphore.withPermit {
+                memoryCache.get(cacheKey)?.let { return@withPermit it }
+                if (!memoryLoadsEnabled) return@withPermit null
 
-                loadSemaphore.withPermit {
-                    memoryCache.get(cacheKey)?.let { return@withPermit it }
-                    if (!memoryLoadsEnabled) return@withPermit null
-
-                    withContext(Dispatchers.IO) {
-                        val diskBitmap = readDiskBitmap(cacheKey)
-                        val bitmap = diskBitmap ?: createAppIcon(app).also {
-                            writeDiskBitmap(cacheKey, it)
-                        }
-                        bitmap.asImageBitmap()
-                    }.also { bitmap ->
-                        if (memoryLoadsEnabled) {
-                            memoryCache.put(cacheKey, bitmap)
-                        }
+                withContext(Dispatchers.IO) {
+                    val diskBitmap = readDiskBitmap(cacheKey)
+                    val bitmap = diskBitmap ?: createAppIcon(app).also {
+                        writeDiskBitmap(cacheKey, it)
                     }
-                }
-            }
-        } finally {
-            keyLocks.computeIfPresent(cacheKey) { _, current ->
-                if (current === lockEntry) {
-                    current.users--
-                    if (current.users == 0) null else current
-                } else {
-                    current
+                    bitmap.asImageBitmap()
+                }.also { bitmap ->
+                    if (memoryLoadsEnabled) {
+                        memoryCache.put(cacheKey, bitmap)
+                    }
                 }
             }
         }
@@ -238,5 +215,46 @@ class AppIconBitmapCache(
         val digest = MessageDigest.getInstance("SHA-256")
             .digest(cacheKey.toByteArray(Charsets.UTF_8))
         return digest.joinToString("") { byte -> "%02x".format(byte) }
+    }
+}
+
+
+/**
+ * Serializes work per cache key without retaining one Mutex for every app ever seen.
+ *
+ * A caller is counted before it can wait on the mutex and uncounted in finally,
+ * so cancellation and exceptions cannot strand an entry or let a second mutex
+ * be created while an earlier caller is still queued.
+ */
+internal class KeyedMutex {
+    private class Entry {
+        val mutex = Mutex()
+        val users = AtomicInteger()
+    }
+
+    private val entries = ConcurrentHashMap<String, Entry>()
+
+    internal val trackedKeyCount: Int
+        get() = entries.size
+
+    internal fun activeCallCount(key: String): Int =
+        entries[key]?.users?.get() ?: 0
+
+    suspend fun <T> withLock(key: String, action: suspend () -> T): T {
+        val entry = entries.compute(key) { _, current ->
+            (current ?: Entry()).also { it.users.incrementAndGet() }
+        } ?: error("Unable to acquire keyed mutex")
+
+        return try {
+            entry.mutex.withLock { action() }
+        } finally {
+            entries.computeIfPresent(key) { _, current ->
+                if (current === entry && current.users.decrementAndGet() == 0) {
+                    null
+                } else {
+                    current
+                }
+            }
+        }
     }
 }
