@@ -1038,6 +1038,22 @@ private fun HomeScreen(
                     Box(
                         modifier = Modifier.width(tagRailWidth).fillMaxHeight()
                     ) {
+                        val tagFrameMiddleHeight by animateDpAsState(
+                            targetValue = 98.dp + visibleTags.size * 58.dp,
+                            animationSpec = spring(
+                                dampingRatio = 0.86f,
+                                stiffness = 380f
+                            ),
+                            label = "tag-frame-middle-height"
+                        )
+                        val tagFrameWidth = tagRailWidth * 1.1f
+                        val tagFrameCapsHeight = tagFrameWidth * (224f / 512f)
+                        TagFrame(
+                            modifier = Modifier.align(Alignment.BottomCenter)
+                                .offset(y = (-2).dp)
+                                .requiredWidth(tagFrameWidth)
+                                .height(tagFrameMiddleHeight + tagFrameCapsHeight)
+                        )
                         Column(
                             modifier = Modifier.fillMaxSize().padding(
                                 horizontal = 9.dp,
@@ -1048,24 +1064,6 @@ private fun HomeScreen(
                             BoxWithConstraints(
                                 modifier = Modifier.weight(1f).fillMaxWidth()
                             ) {
-                                val tagContentHeight = (
-                                    visibleTags.size * 44 +
-                                        (visibleTags.size - 1).coerceAtLeast(0) * 8 + 4
-                                    ).dp
-                                val tagFrameHeight by animateDpAsState(
-                                    targetValue = maxOf(48.dp, tagContentHeight),
-                                    animationSpec = spring(
-                                        dampingRatio = 0.86f,
-                                        stiffness = 380f
-                                    ),
-                                    label = "tag-frame-height"
-                                )
-                                TagFrame(
-                                    modifier = Modifier.align(Alignment.BottomCenter)
-                                        .offset(y = maxHeight * 0.15f - 40.dp)
-                                        .requiredWidth(tagRailWidth * 1.1f)
-                                        .height(tagFrameHeight)
-                                )
                                 LazyColumn(
                                     modifier = Modifier.fillMaxSize()
                                         .pointerInput(tagPageCount, safeTagPage, draggedTagId) {
