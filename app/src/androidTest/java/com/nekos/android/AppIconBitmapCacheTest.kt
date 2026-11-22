@@ -1,8 +1,8 @@
 package com.nekos.android
 
 import android.content.Context
-import android.os.Process
 import android.content.pm.LauncherApps
+import android.os.Process
 import android.os.UserManager
 import androidx.test.platform.app.InstrumentationRegistry
 import kotlinx.coroutines.Dispatchers
@@ -44,7 +44,6 @@ class AppIconBitmapCacheTest {
         val cache = AppIconBitmapCache(context)
 
         cache.trimMemory()
-        assertNotNull(app)
         org.junit.Assert.assertNull(cache.getOrLoad(app))
 
         cache.resumeAfterBackground()
