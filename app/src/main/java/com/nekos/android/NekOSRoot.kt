@@ -291,20 +291,6 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
         saveFavoritePackages(context, updated)
     }
 
-    fun addFavorite(appId: String) {
-        when (val result = addFavoriteToSlots(favoritePackages, appId)) {
-            is FavoriteSlotOperation.Updated -> {
-                updateFavorites(result.packages)
-            }
-            FavoriteSlotOperation.Unchanged -> Unit
-            FavoriteSlotOperation.Full -> Toast.makeText(
-                context,
-                "Favorite slots are full",
-                Toast.LENGTH_SHORT
-            ).show()
-        }
-    }
-
     fun placeFavoriteFromDrawer(appId: String, targetIndex: Int) {
         when (val result = placePackageInFavoriteSlot(favoritePackages, appId, targetIndex)) {
             is FavoriteSlotOperation.Updated -> {
@@ -566,53 +552,43 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
         }
         AnimatedVisibility(
             visible = popupApp != null,
+            modifier = Modifier.zIndex(20f),
             enter = fadeIn(tween(140)) + scaleIn(initialScale = 0.96f, animationSpec = tween(140)),
             exit = fadeOut(tween(100))
         ) {
             popupApp?.let { app ->
-            val isFavorite = app.id in favoritePackages.filterNotNull()
-            val isInteractive = actionMenuApp != null
-            Column(
-                modifier = Modifier
-                    .onSizeChanged { actionMenuPopupSize = it }
-                    .offset {
-                        calculateLauncherPopupOffset(
-                            anchorPosition = actionMenuPreviewPosition,
-                            popupSize = actionMenuPopupSize,
-                            containerSize = IntSize(constraints.maxWidth, constraints.maxHeight)
-                        )
-                    }
-                    .zIndex(20f)
-                    .widthIn(max = minOf(210.dp, maxWidth))
-                    .heightIn(max = maxHeight)
-                    .verticalScroll(rememberScrollState())
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(Color(0xFFFEFCF8))
-                    .padding(horizontal = 10.dp, vertical = 10.dp),
-                verticalArrangement = Arrangement.spacedBy(2.dp)
-            ) {
-                LauncherAppActionMenuContent(
-                    app = app,
-                    isFavorite = isFavorite,
-                    isInteractive = isInteractive,
-                    onAppInfo = {
-                        actionMenuApp = null
-                        openAppInfo(context, app)
-                    },
-                    onFavorite = {
-                        if (isFavorite) {
-                            updateFavorites(favoritePackages.map { if (it == app.id) null else it })
-                        } else {
-                            addFavorite(app.id)
+                val isInteractive = actionMenuApp != null
+                Column(
+                    modifier = Modifier
+                        .onSizeChanged { actionMenuPopupSize = it }
+                        .offset {
+                            calculateLauncherPopupOffset(
+                                anchorPosition = actionMenuPreviewPosition,
+                                popupSize = actionMenuPopupSize,
+                                containerSize = IntSize(constraints.maxWidth, constraints.maxHeight)
+                            )
                         }
-                        actionMenuApp = null
-                    },
-                    onUninstall = {
-                        actionMenuApp = null
-                        requestAppUninstall(context, app)
-                    }
-                )
-            }
+                        .widthIn(max = minOf(210.dp, maxWidth))
+                        .heightIn(max = maxHeight)
+                        .verticalScroll(rememberScrollState())
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color(0xFFFEFCF8))
+                        .padding(horizontal = 10.dp, vertical = 10.dp),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    LauncherAppActionMenuContent(
+                        app = app,
+                        isInteractive = isInteractive,
+                        onAppInfo = {
+                            actionMenuApp = null
+                            openAppInfo(context, app)
+                        },
+                        onUninstall = {
+                            actionMenuApp = null
+                            requestAppUninstall(context, app)
+                        }
+                    )
+                }
             }
         }
 
