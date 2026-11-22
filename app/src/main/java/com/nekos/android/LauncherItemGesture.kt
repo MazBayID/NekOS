@@ -125,6 +125,8 @@ internal class LauncherReorderGestureDetector(
     private val onLongPress: (Offset) -> Unit = {},
     private val onLongPressEnd: () -> Unit = {},
     private val onLongPressCancel: () -> Unit = {},
+    private val onReorderStart: () -> Unit = {},
+    private val onReorderEnd: (cancelled: Boolean) -> Unit = {},
 ) : sh.calvin.reorderable.DragGestureDetector {
     override suspend fun PointerInputScope.detect(
         onDragStart: (Offset) -> Unit,
@@ -165,22 +167,34 @@ internal class LauncherReorderGestureDetector(
                     val change = event.changes.firstOrNull { it.id == down.id }
 
                     if (change == null) {
-                        if (dragging) onDragCancel() else onLongPressCancel()
+                        if (dragging) {
+                            onReorderEnd(true)
+                            onDragCancel()
+                        } else onLongPressCancel()
                         completed = true
                         break
                     }
 
                     if (event.changes.any { it.id != down.id && it.pressed }) {
-                        if (dragging) onDragCancel() else onLongPressCancel()
+                        if (dragging) {
+                            onReorderEnd(true)
+                            onDragCancel()
+                        } else onLongPressCancel()
                         completed = true
                         break
                     }
 
                     if (!change.pressed) {
                         if (change.isConsumed) {
-                            if (dragging) onDragCancel() else onLongPressCancel()
+                            if (dragging) {
+                                onReorderEnd(true)
+                                onDragCancel()
+                            } else onLongPressCancel()
                         } else {
-                            if (dragging) onDragEnd() else onLongPressEnd()
+                            if (dragging) {
+                                onReorderEnd(false)
+                                onDragEnd()
+                            } else onLongPressEnd()
                         }
                         completed = true
                         break
@@ -192,6 +206,7 @@ internal class LauncherReorderGestureDetector(
                     if (!dragging && accumulated.getDistance() > viewConfiguration.touchSlop) {
                         dragging = true
                         onLongPressCancel()
+                        onReorderStart()
                         onDragStart(change.position)
                         yield()
                         change.consume()
@@ -204,7 +219,10 @@ internal class LauncherReorderGestureDetector(
                 }
             } finally {
                 if (!completed) {
-                    if (dragging) onDragCancel() else onLongPressCancel()
+                    if (dragging) {
+                        onReorderEnd(true)
+                        onDragCancel()
+                    } else onLongPressCancel()
                 }
             }
         }
