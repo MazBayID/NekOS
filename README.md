@@ -1,54 +1,114 @@
 # NekOS
 
-*A cozy space for your everyday apps.*
+<p align="center">
+  <img src="main_assets/NekOS_text_logo.png" alt="NekOS" width="260">
+</p>
 
-NekOS is a simple Android launcher for everyday use, with a warm, cozy-tech look and a cat theme. It focuses on making app access comfortable, tidy, and easy, rather than on piling up complex features.
+<p align="center">
+  <em>A cozy space for your everyday apps.</em>
+</p>
 
-## Principles
+NekOS is a simple Android launcher with a cozy-tech, cat-themed look. It brings everyday apps together through a small Favorite Grid, colorful Tag groups, and a searchable App Drawer—without turning the Home Screen into a complicated dashboard.
 
-- **Simple:** only features that are genuinely useful for everyday use.
-- **Comfortable:** a warm, calm look that is easy on the eyes.
-- **Easy to reach:** favorites and tag groups are always a tap or swipe away.
-- **Personal:** you arrange your apps, tags, and Home appearance.
-- **Stable:** a dependable daily experience matters more than a long feature list.
+The goal is simple: **make your apps comfortable to find, organize, and open.**
 
-Flow: **Home → Favorite / Tag → App Drawer → Search → Settings**
+## Screenshots
 
-## What NekOS has today
+### Home Screen
 
-- **Home Screen:** a 5 × 3 Favorite Grid (15 slots) at the bottom and a vertical Tag Rail on the right. Tap to launch; long-press for app actions; drag after long-press to rearrange.
-- **App Drawer:** swipe up from the Home canvas or the Favorite area to open a panel covering about 60% of the screen. It rises above the keyboard while you search. It shows all launchable apps with their native icons in alphabetical order, with partial-name search. Swipe down from the drawer handle, tap the area above the panel, or press Home to return.
-- **App actions:** long-press an app for App info, Add/Remove favorite, and Uninstall. Uninstall is confirmed by Android's own system UI.
-- **Tag System:** create, rename, reorder, and delete tags; pick a color and an optional icon; assign apps; tap a tag to open its apps.
-- **Settings:** Home background presets, custom wallpaper, a gesture hint, and About (version, license, repository link).
+<p align="center">
+  <img src="user_screenshot/ss_main_a.png" alt="NekOS Home Screen with Tag Rail and Favorite Grid" width="300">
+</p>
 
-For the detailed, code-verified status of every feature, see [`docs/FEATURE_INVENTORY.md`](docs/FEATURE_INVENTORY.md).
+The Home Screen keeps favorite apps within easy reach and places app groups in the Tag Rail.
 
-## What NekOS intentionally does not do
+### App Drawer and Search
 
-No widget engine, nested folders, multiple Home pages, news or recommendation feeds, complex automation, elaborate theme system, or large set of gestures. See [`docs/PRODUCT_DIRECTION.md`](docs/PRODUCT_DIRECTION.md).
+<p align="center">
+  <img src="user_screenshot/ss_01.png" alt="NekOS App Drawer showing installed apps" width="260">
+  &nbsp;&nbsp;
+  <img src="user_screenshot/ss_02.png" alt="NekOS App Drawer with search results and keyboard" width="260">
+</p>
 
-## Status
+Swipe up to browse installed apps. Search filters app names as you type, so you can get to an app without scrolling through the whole list.
 
-Version `0.1.0`. Feature status reflects the source code on `main`; it is not a result of a fresh test pass on physical devices. Stabilizing the basics is the current priority.
+## Features
 
-## Project
+- **Favorite Grid** — 15 slots arranged in a 5 × 3 grid. Keep frequently used apps on Home.
+- **Tag Rail** — create, rename, reorder, and delete app groups. Choose a color and an optional icon, then assign installed apps to each tag.
+- **App Drawer** — browse launchable apps with their original Android icons.
+- **App Search** — find apps by any part of their name, without case sensitivity.
+- **App Actions** — open App info, add or remove favorites, and request uninstall through Android's system interface.
+- **Personal appearance** — choose a built-in Home background or use a custom wallpaper.
+- **Multi-profile awareness** — app entries are identified by app and Android profile, helping keep work or other profiles distinct.
 
-- Application ID / namespace: `com.nekos.android`
-- Kotlin + Jetpack Compose, single Activity
-- `minSdk` 26, `targetSdk` 35
+For implementation-level details and current limitations, see the [Feature Inventory](docs/FEATURE_INVENTORY.md).
+
+## How it works
+
+| Area | Interaction |
+| --- | --- |
+| Open an app | Tap its icon |
+| Open app actions | Long-press an app |
+| Rearrange favorites | Long-press, then drag |
+| Open the App Drawer | Swipe up from the Home canvas or Favorite area |
+| Search apps | Type in the App Drawer search field |
+| Open a Tag | Tap the Tag |
+| Manage a Tag | Use its handle to open Tag actions |
+| Return to Home | Close the drawer or press the Android Home button |
+
+## Design philosophy
+
+NekOS intentionally favors a focused everyday experience:
+
+- **Simple:** only keep features that help with everyday app access.
+- **Comfortable:** warm, calm colors and rounded surfaces.
+- **Personal:** arrange favorites, tags, and the Home appearance.
+- **Predictable:** familiar Android interactions and system UI for sensitive actions.
+- **Stable:** reliability comes before adding more features.
+
+NekOS is not intended to become a feature-heavy launcher. It deliberately avoids a widget engine, nested folders, multiple Home pages, news feeds, complex automation, and an elaborate theme system. Read [Product Direction](docs/PRODUCT_DIRECTION.md) for the design boundaries.
+
+## Project status
+
+- **Version:** 0.1.0
+- **Application ID:** `com.nekos.android`
+- **Platform:** Android 8.0 (API 26) and newer
+- **Target SDK:** 35
+- **Status:** early development
+
+The feature list describes what is implemented in the source on `main`; it does not mean every interaction has been verified on every Android device. Physical-device checks and stability improvements remain part of development.
 
 ## Build
 
-Open the repository in Android Studio, sync Gradle, and run the `app` module on a device or emulator. Command-line and Termux notes are in [`docs/BUILDING.md`](docs/BUILDING.md).
+### Android Studio
 
-## Branding assets
+1. Clone or download this repository.
+2. Open the project in Android Studio.
+3. Allow Gradle sync to finish.
+4. Run the `app` configuration on an Android device or emulator.
 
-- `main_assets/app_logo.png`: Android launcher icon.
-- `main_assets/NekOS_text_logo.png`: wordmark shown on the short startup splash.
-- `main_assets/text_logo_sec.png`: secondary wordmark shown in the Home header.
-- Image assets applied in the app are copied into `app/src/main/res/drawable-nodpi/` to keep their proportions.
+The project uses Kotlin, Jetpack Compose, Android Gradle Plugin, and Java 17. This repository does not currently include a Gradle Wrapper.
+
+### Termux
+
+Termux builds may need a local AAPT2 override. Keep this machine-specific setting in `$HOME/.gradle/gradle.properties`, not in the repository:
+
+```properties
+android.aapt2FromMavenOverride=/data/data/com.termux/files/usr/bin/aapt2
+```
+
+Adjust the path only if AAPT2 is installed elsewhere. See [Building NekOS](docs/BUILDING.md) for additional notes.
+
+## Repository map
+
+- `app/` — Android application source and resources.
+- `main_assets/` — source artwork and branding assets.
+- `user_screenshot/` — screenshots used in this README.
+- `docs/FEATURE_INVENTORY.md` — implementation status and known gaps.
+- `docs/PRODUCT_DIRECTION.md` — product goals and intentionally excluded features.
+- `docs/BUILDING.md` — build environment notes.
 
 ## License
 
-MIT. See [`LICENSE`](LICENSE).
+NekOS is released under the [MIT License](LICENSE).
