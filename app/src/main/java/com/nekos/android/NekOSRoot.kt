@@ -313,6 +313,7 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
         val drawerProgress = remember { mutableFloatStateOf(1f) }
         var drawerTargetProgress by remember { mutableFloatStateOf(1f) }
         var drawerVisible by remember { mutableStateOf(false) }
+        var drawerFullyOpen by remember { mutableStateOf(false) }
         var isDrawerDragging by remember { mutableStateOf(false) }
         // Keep frame-by-frame progress reads inside graphicsLayer blocks below.
         // This lets Compose update layer properties without recomposing the launcher root.
@@ -323,11 +324,13 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
                     targetValue = drawerTargetProgress,
                     animationSpec = spring(dampingRatio = 0.82f, stiffness = 420f)
                 ) { value, _ -> drawerProgress.floatValue = value }
+                drawerFullyOpen = drawerTargetProgress <= 0f
                 if (drawerTargetProgress >= 1f) drawerVisible = false
             }
         }
         fun closeDrawer() {
             focusManager.clearFocus()
+            drawerFullyOpen = false
             isDrawerDragging = false
             drawerTargetProgress = 1f
         }
@@ -371,6 +374,7 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
             onDrawerDrag = { totalDrag ->
                 isDrawerDragging = true
                 drawerVisible = true
+                drawerFullyOpen = false
                 drawerProgress.floatValue = (1f + totalDrag / drawerHeightPx).coerceIn(0f, 1f)
             },
             onDrawerDragEnd = { totalDrag, velocityY, cancelled ->
@@ -457,7 +461,7 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
                     .background(WarmBackground)
             )
 
-            if (drawerTargetProgress == 0f && !isDrawerDragging) {
+            if (drawerFullyOpen) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
