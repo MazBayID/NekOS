@@ -144,7 +144,7 @@ fun TagAppsDialog(
                             Row(
                                 modifier = Modifier.fillMaxWidth()
                                     .clip(RoundedCornerShape(14.dp))
-                                    .background(Color(0xFFF7F5F0))
+                                    .background(Color(0xFF114B56))
                                     .clickable { onLaunch(app) }
                                     .padding(horizontal = 12.dp, vertical = 10.dp),
                                 verticalAlignment = Alignment.CenterVertically,
@@ -155,7 +155,7 @@ fun TagAppsDialog(
                                     text = app.label,
                                     modifier = Modifier.weight(1f),
                                     style = MaterialTheme.typography.bodyLarge,
-                                    color = Color(0xFF34332F),
+                                    color = Color.White,
                                     maxLines = 1
                                 )
                             }
@@ -187,21 +187,30 @@ fun TagActionsDialog(
         title = { Text(tag.name) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                TextButton(onClick = onEdit, modifier = Modifier.fillMaxWidth()) {
-                    Text("Edit tag")
-                }
+                TagOptionBar("Edit tag", onEdit)
                 if (movePageLabel != null) {
-                    TextButton(onClick = onMovePage, modifier = Modifier.fillMaxWidth()) {
-                        Text(movePageLabel)
-                    }
+                    TagOptionBar(movePageLabel, onMovePage)
                 }
-                TextButton(onClick = onDelete, modifier = Modifier.fillMaxWidth()) {
-                    Text("Delete tag", color = Color(0xFFB3261E))
-                }
+                TagOptionBar("Delete tag", onDelete)
             }
         },
         confirmButton = { TextButton(onClick = onDismiss) { Text("Close") } }
     )
+}
+
+@Composable
+private fun TagOptionBar(label: String, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color(0xFF114B56))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 11.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(label, color = Color.White, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)
+    }
 }
 
 @Composable
@@ -339,10 +348,14 @@ fun TagManagementDialog(
                     LazyColumn(Modifier.heightIn(max = 160.dp)) {
                         items(filteredApps, key = { it.id }) { app ->
                             Row(
-                                Modifier.fillMaxWidth().clickable {
-                                    selectedPackages = if (app.id in selectedPackages) selectedPackages - app.id
-                                    else selectedPackages + app.id
-                                }.padding(vertical = 5.dp),
+                                Modifier.fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(Color(0xFF114B56))
+                                    .clickable {
+                                        selectedPackages = if (app.id in selectedPackages) selectedPackages - app.id
+                                        else selectedPackages + app.id
+                                    }
+                                    .padding(horizontal = 8.dp, vertical = 5.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Checkbox(
@@ -352,17 +365,17 @@ fun TagManagementDialog(
                                         else selectedPackages - app.id
                                     },
                                     colors = CheckboxDefaults.colors(
-                                        checkedColor = Color(0xFF746657),
-                                        uncheckedColor = Color(0xFF8B8982),
-                                        checkmarkColor = Color.White
+                                        checkedColor = Color.White,
+                                        uncheckedColor = Color.White.copy(alpha = 0.78f),
+                                        checkmarkColor = Color(0xFF114B56)
                                     )
                                 )
                                 TagAppIcon(app)
                                 Column(Modifier.weight(1f).padding(start = 9.dp)) {
-                                    Text(app.label, color = Color(0xFF34332F), maxLines = 1)
+                                    Text(app.label, color = Color.White, maxLines = 1)
                                     Text(
                                         if (app.isInCurrentProfile) "Personal profile" else "Work profile",
-                                        color = Color(0xFF8B8982),
+                                        color = Color.White.copy(alpha = 0.76f),
                                         style = MaterialTheme.typography.labelSmall
                                     )
                                 }
