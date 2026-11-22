@@ -299,7 +299,12 @@ fun TagManagementDialog(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         Modifier.size(38.dp).clip(RoundedCornerShape(11.dp))
-                            .background(Color(0xFFF0EEE8)),
+                            .background(Color(0xFFF0EEE8))
+                            .clickable { showIconPicker = true }
+                            .semantics {
+                                contentDescription = "Choose tag icon"
+                                role = Role.Button
+                            },
                         contentAlignment = Alignment.Center
                     ) {
                         if (selectedIconBitmap != null) {
@@ -312,7 +317,6 @@ fun TagManagementDialog(
                         Text(selectedIconEntry?.name ?: "No icon selected", color = Color(0xFF34332F), style = MaterialTheme.typography.bodyMedium)
                         Text("Tag icon", color = Color(0xFF8B8982), style = MaterialTheme.typography.labelSmall)
                     }
-                    TextButton(onClick = { showIconPicker = true }) { Text("Choose") }
                     TextButton(onClick = { selectedIcon = null }) { Text("Clear") }
                 }
                 Text("Apps (${selectedPackages.size} selected)", style = MaterialTheme.typography.labelMedium)
