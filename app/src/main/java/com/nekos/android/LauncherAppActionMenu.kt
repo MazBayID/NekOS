@@ -1,6 +1,7 @@
 package com.nekos.android
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -105,6 +106,7 @@ private fun PopupAction(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(10.dp))
+            .background(Color(0xFF114B56))
             .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
             .padding(horizontal = 8.dp, vertical = 9.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -113,12 +115,12 @@ private fun PopupAction(
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = if (enabled) ActionMenuInk else ActionMenuMuted,
+            tint = if (enabled) Color.White else Color.White.copy(alpha = 0.48f),
             modifier = Modifier.size(18.dp)
         )
         Text(
             label,
-            color = if (enabled) ActionMenuInk else ActionMenuMuted,
+            color = if (enabled) Color.White else Color.White.copy(alpha = 0.48f),
             fontSize = 13.sp,
             fontWeight = FontWeight.Medium
         )
