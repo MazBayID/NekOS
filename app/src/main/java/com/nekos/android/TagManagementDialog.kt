@@ -451,7 +451,7 @@ fun TagManagementDialog(
                         LaunchedEffect(icon.id, selectedIconFrameColor) {
                             bitmap = withContext(Dispatchers.IO) {
                                 runCatching {
-                                    iconCatalogRepository.loadBitmap(icon, selectedIconFrameColor)?.asImageBitmap()
+                                    iconCatalogRepository.loadPickerBitmap(icon, selectedIconFrameColor)?.asImageBitmap()
                                 }.getOrNull()
                             }
                         }
