@@ -47,12 +47,12 @@ internal fun isValidCatalogIconPath(path: String): Boolean {
 class IconCatalogRepository(context: Context) {
     private val appContext = context.applicationContext
     private var cachedIcons: List<CatalogIcon>? = null
-    private val bitmapCache = object : LruCache<String, Bitmap>(4 * 1024) {
+    private val bitmapCache = object : LruCache<String, Bitmap>(8 * 1024) {
         override fun sizeOf(key: String, bitmap: Bitmap): Int =
             (bitmap.allocationByteCount / 1024).coerceAtLeast(1)
     }
     // Picker thumbnails use a separate cache so full-size tag icons cannot evict them.
-    // 8 MB can retain the 100 catalog icons decoded to roughly 128 x 128 pixels.
+    // 8 MB can retain the 100 catalog icons at the picker's 96 px target size.
     private val pickerBitmapCache = object : LruCache<String, Bitmap>(8 * 1024) {
         override fun sizeOf(key: String, bitmap: Bitmap): Int =
             (bitmap.allocationByteCount / 1024).coerceAtLeast(1)
@@ -115,13 +115,14 @@ class IconCatalogRepository(context: Context) {
     }
 
     /**
-     * Loads a reduced-size bitmap for the icon picker. The picker displays icons
-     * at roughly 50 dp, so decoding the original 512 px assets wastes CPU and RAM.
+     * Loads a reduced-size bitmap for the icon picker. Icons render at roughly
+     * 28 dp, so a 96 px thumbnail is sufficient for high-density displays.
+     * The original asset is decoded near the target size, then scaled exactly.
      */
     fun loadPickerBitmap(
         icon: CatalogIcon,
         frameColorArgb: Long = DEFAULT_TAG_ICON_FRAME_COLOR,
-        maxDimensionPx: Int = 128
+        maxDimensionPx: Int = 96
     ): Bitmap? {
         require(isValidCatalogIconPath(icon.file)) {
             "Invalid catalog asset path: ${icon.file}"
@@ -149,7 +150,21 @@ class IconCatalogRepository(context: Context) {
         val source = appContext.assets.open("ikon/${icon.file}").use {
             BitmapFactory.decodeStream(it, null, decodeOptions)
         } ?: return null
-        val bitmap = recolorIconFrame(source, normalizedColor)
+        val scale = minOf(
+            1f,
+            targetSize.toFloat() / maxOf(source.width, source.height)
+        )
+        val targetWidth = (source.width * scale).toInt().coerceAtLeast(1)
+        val targetHeight = (source.height * scale).toInt().coerceAtLeast(1)
+        val thumbnail = if (
+            source.width == targetWidth && source.height == targetHeight
+        ) {
+            source
+        } else {
+            Bitmap.createScaledBitmap(source, targetWidth, targetHeight, true)
+                .also { source.recycle() }
+        }
+        val bitmap = recolorIconFrame(thumbnail, normalizedColor)
 
         return memoryState.storeIfCurrent(loadEpoch) {
             pickerBitmapCache.put(cacheKey, bitmap)
