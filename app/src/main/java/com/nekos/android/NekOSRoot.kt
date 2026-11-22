@@ -34,6 +34,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -161,8 +162,18 @@ fun NekOSRoot(
     // Discover launchable apps while the brand splash is visible instead of
     // waiting for an artificial timer before starting initialization.
     LaunchedEffect(refreshToken, resumeToken) {
-        val refreshedCatalog = withContext(Dispatchers.IO) {
-            loadLaunchableApps(context)
+        val refreshedCatalog = try {
+            withContext(Dispatchers.IO) {
+                loadLaunchableApps(context)
+            }
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (_: Exception) {
+            // Keep the last known catalog and user collections intact when a
+            // transient package/profile query fails. A later resume retries it.
+            Toast.makeText(context, "Unable to load apps. Try again shortly.", Toast.LENGTH_SHORT).show()
+            if (!isInitialLoadComplete) isInitialLoadComplete = true
+            return@LaunchedEffect
         }
         val refreshedApps = refreshedCatalog.apps
         // A resume-only refresh that found the same apps keeps the current list, so decoded
