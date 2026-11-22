@@ -48,12 +48,22 @@ internal fun saveHomeWallpaper(context: Context, source: Uri): String? = runCatc
         "Selected file is not a supported image or its dimensions are too large"
     }
 
-    Files.move(
-        temporary.toPath(),
-        target.toPath(),
-        StandardCopyOption.REPLACE_EXISTING,
-        StandardCopyOption.ATOMIC_MOVE
-    )
+    try {
+        Files.move(
+            temporary.toPath(),
+            target.toPath(),
+            StandardCopyOption.REPLACE_EXISTING,
+            StandardCopyOption.ATOMIC_MOVE
+        )
+    } catch (_: Exception) {
+        // Some filesystems do not support atomic replacement. Fall back to a
+        // regular replacement rather than failing a valid wallpaper selection.
+        Files.move(
+            temporary.toPath(),
+            target.toPath(),
+            StandardCopyOption.REPLACE_EXISTING
+        )
+    }
     target.absolutePath
 }.getOrElse {
     File(context.filesDir, HOME_WALLPAPER_TEMP_FILE).delete()
