@@ -1323,13 +1323,6 @@ private fun FavoriteSlot(
             modifier = Modifier.size(56.dp),
             contentAlignment = Alignment.Center
         ) {
-            if (app == null) {
-                Box(
-                    Modifier.size(26.dp).clip(CircleShape)
-                        .background(TagSurface.copy(alpha = 0.58f)),
-                    contentAlignment = Alignment.Center
-                ) { Text("+", color = Muted.copy(alpha = 0.72f), fontSize = 17.sp) }
-            }
             this@Column.AnimatedVisibility(
                 visible = app != null && iconBitmap != null,
                 enter = fadeIn(tween(180)) + scaleIn(
