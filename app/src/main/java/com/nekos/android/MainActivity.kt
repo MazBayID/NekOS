@@ -31,6 +31,8 @@ class MainActivity : ComponentActivity() {
     private var resumeRefreshToken by mutableIntStateOf(0)
     /** Bumped when the Home button is pressed while NekOS is already open. */
     private var homeSignal by mutableIntStateOf(0)
+    /** Bumped when the launcher stops being visible so transient drawer UI can reset. */
+    private var backgroundSignal by mutableIntStateOf(0)
     /** Bumped only when a Home intent brings NekOS back from the background. */
     private var homeReturnSignal by mutableIntStateOf(0)
     private var isForcedRefreshPending = false
@@ -132,6 +134,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onStop() {
         stoppedAtElapsedMillis = SystemClock.elapsedRealtime()
+        backgroundSignal++
         mainHandler.removeCallbacks(refreshInstalledAppsRunnable)
         if (isPackageCallbackRegistered) {
             launcherApps.unregisterCallback(packageCallback)
@@ -189,7 +192,8 @@ class MainActivity : ComponentActivity() {
                         refreshToken = appRefreshToken,
                         resumeToken = resumeRefreshToken,
                         homeSignal = homeSignal,
-                        homeReturnSignal = homeReturnSignal
+                        homeReturnSignal = homeReturnSignal,
+                        backgroundSignal = backgroundSignal
                     )
                 }
             }
