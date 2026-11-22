@@ -138,11 +138,6 @@ fun NekOSRoot(
     val focusManager = LocalFocusManager.current
     val launchSourceView = LocalView.current
     var isDefaultLauncher by remember { mutableStateOf(isNekOSDefaultHome(context)) }
-    val homeRoleRequestLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) {
-        isDefaultLauncher = isNekOSDefaultHome(context)
-    }
     LaunchedEffect(resumeToken) {
         isDefaultLauncher = isNekOSDefaultHome(context)
     }
@@ -708,23 +703,21 @@ fun NekOSRoot(
                 appVersion = appVersion,
                 isDefaultLauncher = isDefaultLauncher,
                 onSetAsHome = {
-                    if (isNekOSDefaultHome(context)) {
-                        isDefaultLauncher = true
-                    } else {
-                        runCatching {
-                            val requestIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                                val roleManager = context.getSystemService(RoleManager::class.java)
-                                if (roleManager.isRoleAvailable(RoleManager.ROLE_HOME)) {
-                                    roleManager.createRequestRoleIntent(RoleManager.ROLE_HOME)
-                                } else {
-                                    Intent(Settings.ACTION_HOME_SETTINGS)
-                                }
-                            } else {
-                                Intent(Settings.ACTION_HOME_SETTINGS)
-                            }
-                            homeRoleRequestLauncher.launch(requestIntent)
-                        }.onFailure {
-                            Toast.makeText(context, "Unable to open Home settings", Toast.LENGTH_SHORT).show()
+                    val homeSettingsOpened = runCatching {
+                        context.startActivity(Intent(Settings.ACTION_HOME_SETTINGS))
+                    }.isSuccess
+
+                    if (!homeSettingsOpened) {
+                        val defaultAppsSettingsOpened = runCatching {
+                            context.startActivity(Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS))
+                        }.isSuccess
+
+                        if (!defaultAppsSettingsOpened) {
+                            Toast.makeText(
+                                context,
+                                "Unable to open launcher settings",
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
                     }
                 },
