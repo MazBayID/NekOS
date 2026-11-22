@@ -1,6 +1,7 @@
 package com.nekos.android
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Test
 
 class CacheMemoryStateTest {
@@ -16,7 +17,7 @@ class CacheMemoryStateTest {
             stored = true
         }
 
-        assertEquals(null, result)
+        assertNull(result)
         assertEquals(false, stored)
     }
 
@@ -52,6 +53,6 @@ class CacheMemoryStateTest {
 
         state.trim { cachedValue = 0 }
         assertEquals(0, cachedValue)
-        assertEquals(null, state.beginLoad())
+        assertNull(state.beginLoad())
     }
 }
