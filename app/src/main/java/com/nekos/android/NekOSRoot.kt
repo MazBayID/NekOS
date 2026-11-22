@@ -1203,7 +1203,7 @@ private fun HomeScreen(
                     }
                 }
                 Box(
-                    modifier = Modifier.fillMaxWidth().height(72.dp)
+                    modifier = Modifier.fillMaxWidth().height(88.dp)
                 ) {
                     ThemedUiArtworkImage(
                         resourceId = R.drawable.text_logo_sec,
@@ -1212,8 +1212,8 @@ private fun HomeScreen(
                         contentScale = ContentScale.Fit,
                         modifier = Modifier.align(Alignment.TopStart)
                             .offset(x = (-80).dp)
-                            .fillMaxWidth(0.58f)
-                            .height(72.dp)
+                            .fillMaxWidth(0.72f)
+                            .height(88.dp)
                     )
                     Box(
                         modifier = Modifier.align(Alignment.CenterEnd)
