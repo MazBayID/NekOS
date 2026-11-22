@@ -30,7 +30,12 @@ private val SettingsInk = Color(0xFF34332F)
 private val SettingsMuted = Color(0xFF706B63)
 private val SettingsAccent = Color(0xFF746657)
 
-internal fun nekosBackgroundColor(preset: String): Color = when (preset) {
+internal fun normalizeNekOSBackgroundPreset(preset: String?): String = when (preset) {
+    "warm", "sage", "mist" -> preset
+    else -> "warm"
+}
+
+internal fun nekosBackgroundColor(preset: String): Color = when (normalizeNekOSBackgroundPreset(preset)) {
     "sage" -> Color(0xFFE8EEE5)
     "mist" -> Color(0xFFE8EDF2)
     else -> Color(0xFFF4F1EA)
