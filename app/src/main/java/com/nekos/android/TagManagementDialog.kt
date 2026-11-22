@@ -86,6 +86,7 @@ fun TagAppsDialog(
     tag: NekTag,
     apps: List<InstalledApp>,
     iconBitmapCache: AppIconBitmapCache,
+    launcherSurface: Color,
     onLaunch: (InstalledApp) -> Unit,
     onEdit: () -> Unit,
     onDismiss: () -> Unit
@@ -99,7 +100,7 @@ fun TagAppsDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         shape = RoundedCornerShape(28.dp),
-        containerColor = LAUNCHER_SURFACE,
+        containerColor = launcherSurface,
         titleContentColor = Color(0xFF34332F),
         textContentColor = Color(0xFF34332F),
         title = {
@@ -190,6 +191,7 @@ fun TagAppsDialog(
 fun TagActionsDialog(
     tag: NekTag,
     movePageLabel: String?,
+    launcherSurface: Color,
     onMovePage: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
@@ -198,7 +200,7 @@ fun TagActionsDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         shape = RoundedCornerShape(28.dp),
-        containerColor = LAUNCHER_SURFACE,
+        containerColor = launcherSurface,
         titleContentColor = Color(0xFF34332F),
         textContentColor = Color(0xFF34332F),
         title = { Text(tag.name) },
@@ -227,6 +229,7 @@ fun TagManagementDialog(
     apps: List<InstalledApp>,
     iconBitmapCache: AppIconBitmapCache,
     iconCatalogRepository: IconCatalogRepository,
+    launcherSurface: Color,
     onSave: (NekTag) -> Unit,
     onDelete: (NekTag) -> Unit,
     onDismiss: () -> Unit
@@ -268,7 +271,7 @@ fun TagManagementDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         shape = RoundedCornerShape(28.dp),
-        containerColor = LAUNCHER_SURFACE,
+        containerColor = launcherSurface,
         titleContentColor = Color(0xFF34332F),
         textContentColor = Color(0xFF34332F),
         title = { Text(if (tag == null) "Create tag" else "Edit tag") },
@@ -431,7 +434,7 @@ fun TagManagementDialog(
         AlertDialog(
             onDismissRequest = { showIconPicker = false },
             shape = RoundedCornerShape(28.dp),
-            containerColor = LAUNCHER_SURFACE,
+            containerColor = launcherSurface,
             titleContentColor = Color(0xFF34332F),
             textContentColor = Color(0xFF34332F),
             title = { Text("Choose tag icon") },
@@ -475,7 +478,7 @@ fun TagManagementDialog(
         AlertDialog(
             onDismissRequest = { showIconColorPicker = false },
             shape = RoundedCornerShape(28.dp),
-            containerColor = LAUNCHER_SURFACE,
+            containerColor = launcherSurface,
             titleContentColor = Color(0xFF34332F),
             textContentColor = Color(0xFF34332F),
             title = { Text("Icon Color") },
