@@ -1165,27 +1165,8 @@ private fun HomeScreen(
                                 onClick = { bounds -> app?.let { onFavoriteClick(it, bounds) } },
                                 onLongPress = { position -> onFavoriteLongPress(index, position) },
                                 onLongPressEnd = onFavoriteLongPressEnd,
-                                reorderHandleModifier = { toRootPosition ->
-                                    Modifier.draggableHandle(
-                                        enabled = app != null,
-                                        dragGestureDetector = LauncherReorderGestureDetector(
-                                            toRootPosition = toRootPosition,
-                                            onTap = {
-                                                if (app != null) {
-                                                    val bounds = favoriteSlotBounds[index] ?: Rect.Zero
-                                                    onFavoriteClick(app, bounds)
-                                                }
-                                            },
-                                            onLongPress = { position ->
-                                                if (app != null) onFavoriteLongPress(index, position)
-                                            },
-                                            onLongPressEnd = {
-                                                if (app != null) onFavoriteLongPressEnd()
-                                            },
-                                            onLongPressCancel = onFavoriteLongPressCancel
-                                        )
-                                    )
-                                },
+                                onLongPressCancel = onFavoriteLongPressCancel,
+                                reorderHandleScope = this,
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }
@@ -1206,7 +1187,8 @@ private fun FavoriteSlot(
     onClick: (Rect) -> Unit,
     onLongPress: (Offset) -> Unit,
     onLongPressEnd: () -> Unit,
-    reorderHandleModifier: ((Offset) -> Offset) -> Modifier,
+    onLongPressCancel: () -> Unit,
+    reorderHandleScope: sh.calvin.reorderable.ReorderableCollectionItemScope,
     modifier: Modifier = Modifier
 ) {
     val cachedBitmap = app?.let { iconBitmapCache[it.id] }
@@ -1229,8 +1211,28 @@ private fun FavoriteSlot(
     )
     var slotCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
     val currentSlotCoordinates by rememberUpdatedState(slotCoordinates)
+    val currentOnClick by rememberUpdatedState(onClick)
     val currentOnLongPress by rememberUpdatedState(onLongPress)
     val currentOnLongPressEnd by rememberUpdatedState(onLongPressEnd)
+    val currentOnLongPressCancel by rememberUpdatedState(onLongPressCancel)
+    val reorderHandle = with(reorderHandleScope) {
+        Modifier.draggableHandle(
+            enabled = app != null,
+            dragGestureDetector = LauncherReorderGestureDetector(
+                toRootPosition = { local ->
+                    currentSlotCoordinates?.localToRoot(local) ?: local
+                },
+                onTap = {
+                    if (app != null) {
+                        currentOnClick(currentSlotCoordinates?.boundsInRoot() ?: Rect.Zero)
+                    }
+                },
+                onLongPress = currentOnLongPress,
+                onLongPressEnd = currentOnLongPressEnd,
+                onLongPressCancel = currentOnLongPressCancel
+            )
+        )
+    }
     Column(
         modifier = modifier
             .aspectRatio(1f)
@@ -1240,11 +1242,7 @@ private fun FavoriteSlot(
                 slotCoordinates = it
                 onBoundsChanged(it.boundsInRoot())
             }
-            .then(
-                reorderHandleModifier { local ->
-                    currentSlotCoordinates?.localToRoot(local) ?: local
-                }
-            )
+            .then(reorderHandle)
             .padding(5.dp)
             .then(
                 if (app != null) {
