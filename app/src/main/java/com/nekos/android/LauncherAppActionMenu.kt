@@ -23,7 +23,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Star
@@ -74,7 +74,7 @@ internal fun LauncherAppActionMenuContent(
     PopupAction("App info", Icons.Filled.Info, enabled = isInteractive, onClick = onAppInfo)
     PopupAction(
         if (isFavorite) "Remove from favorite" else "Add to favorite",
-        if (isFavorite) Icons.Filled.Check else Icons.Filled.Star,
+        if (isFavorite) Icons.Filled.Close else Icons.Filled.Star,
         enabled = isInteractive,
         onClick = onFavorite
     )

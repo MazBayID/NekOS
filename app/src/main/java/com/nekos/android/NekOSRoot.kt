@@ -226,7 +226,10 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
         mutableStateOf(preferences.getString("home_wallpaper_path", null))
     }
     var wallpaperBitmap by remember { mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null) }
-    LaunchedEffect(wallpaperPath) {
+    // The wallpaper is always saved to the same file, so the path alone cannot signal a new
+    // image. The revision makes choosing a second wallpaper reload it immediately.
+    var wallpaperRevision by remember { mutableIntStateOf(0) }
+    LaunchedEffect(wallpaperPath, wallpaperRevision) {
         wallpaperBitmap = withContext(Dispatchers.IO) {
             wallpaperPath?.let { path -> loadHomeWallpaper(context, path) }
         }
@@ -242,6 +245,7 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
                 }
                 if (savedPath != null) {
                     wallpaperPath = savedPath
+                    wallpaperRevision++
                     preferences.edit().putString("home_wallpaper_path", savedPath).apply()
                 } else {
                     Toast.makeText(context, "Unable to use this image", Toast.LENGTH_SHORT).show()
