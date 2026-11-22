@@ -66,7 +66,7 @@ internal fun NekOSSettingsDialog(
     backgroundPreset: String,
     launcherThemeKey: String,
     onLauncherThemeChange: (String) -> Unit,
-    hasWallpaper:
+    hasWallpaper: Boolean,
     appVersion: String,
     isDefaultLauncher: Boolean,
     onSetAsHome: () -> Unit,
