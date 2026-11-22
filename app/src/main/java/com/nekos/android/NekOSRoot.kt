@@ -287,15 +287,11 @@ fun NekOSRoot(
     DisposableEffect(context, iconBitmapCache, iconCatalogRepository) {
         val memoryCallbacks = object : ComponentCallbacks2 {
             override fun onTrimMemory(level: Int) {
-                // UI_HIDDEN is a normal launcher transition: retain the bounded
-                // app-icon RAM cache so returning from another app stays fast.
-                // Release cached icons only when Android reports background
-                // memory pressure, not merely because NekOS is temporarily hidden.
-                if (level >= ComponentCallbacks2.TRIM_MEMORY_BACKGROUND) {
+                // Keep launcher bitmaps through ordinary background transitions.
+                // Release them only when Android reports critical memory pressure.
+                if (level >= ComponentCallbacks2.TRIM_MEMORY_COMPLETE) {
                     iconBitmapCache.trimMemory()
                     iconCatalogRepository.trimMemory()
-                }
-                if (level >= ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN) {
                     wallpaperLoadGeneration++
                     wallpaperBitmap = null
                 }
