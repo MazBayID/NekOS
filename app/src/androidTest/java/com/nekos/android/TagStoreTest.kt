@@ -80,7 +80,7 @@ class TagStoreTest {
     fun legacyTagsDefaultIconFrameColorToOcean() {
         tagsPreferences().edit().putString(
             "tag_collection_v1",
-            """[{"id":"legacy","name":"Legacy","iconId":7,"colorArgb":-15724590,"apps":[]}]"""
+            """[{"id":"legacy","name":"Legacy","iconId":7,"apps":[]}]"""
         ).commit()
 
         val loaded = TagStore.load(context).single()
