@@ -1035,7 +1035,7 @@ private fun HomeScreen(
                             ),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Box(
+                            BoxWithConstraints(
                                 modifier = Modifier.weight(1f).fillMaxWidth()
                             ) {
                                 Image(
@@ -1043,7 +1043,7 @@ private fun HomeScreen(
                                     contentDescription = null,
                                     contentScale = ContentScale.FillBounds,
                                     modifier = Modifier.align(Alignment.TopCenter)
-                                        .offset(y = (-10).dp)
+                                        .offset(y = maxHeight * 0.5f - 10.dp)
                                         .requiredWidth(tagRailWidth * 1.1f)
                                         .fillMaxHeight(0.65f)
                                 )
