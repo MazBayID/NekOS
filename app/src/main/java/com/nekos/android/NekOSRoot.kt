@@ -753,8 +753,24 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
         }
 
         actionMenuTag?.let { tag ->
+            val tagIndex = tags.indexOfFirst { it.id == tag.id }
+            val currentPage = tagIndex.coerceAtLeast(0) / 5
+            val pageCount = ((tags.size + 4) / 5).coerceAtLeast(1)
+            val targetPage = when {
+                pageCount < 2 -> null
+                currentPage == 0 -> 1
+                else -> currentPage - 1
+            }
             TagActionsDialog(
                 tag = tag,
+                movePageLabel = targetPage?.let { "Move to page ${it + 1}" },
+                onMovePage = {
+                    targetPage?.let { page ->
+                        saveTags(moveTagToPage(tags, tag.id, page))
+                        activeTagPage = page
+                    }
+                    actionMenuTag = null
+                },
                 onEdit = {
                     actionMenuTag = null
                     tagEditorTarget = tag
