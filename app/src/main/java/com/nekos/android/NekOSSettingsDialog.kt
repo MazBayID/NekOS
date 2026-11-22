@@ -173,7 +173,10 @@ internal fun NekOSSettingsDialog(
                         fontSize = 12.sp,
                         lineHeight = 17.sp
                     )
-                    TextButton(onClick = onSetAsHome) {
+                    TextButton(
+                        onClick = onSetAsHome,
+                        enabled = !isDefaultLauncher
+                    ) {
                         Text(
                             if (isDefaultLauncher) "Default Home app" else "Set as Home",
                             color = SettingsAccent,
