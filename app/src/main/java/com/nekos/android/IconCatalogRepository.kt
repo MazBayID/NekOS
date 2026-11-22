@@ -51,6 +51,12 @@ class IconCatalogRepository(context: Context) {
         override fun sizeOf(key: String, bitmap: Bitmap): Int =
             (bitmap.allocationByteCount / 1024).coerceAtLeast(1)
     }
+    // Picker thumbnails use a separate cache so full-size tag icons cannot evict them.
+    // 8 MB can retain the 100 catalog icons decoded to roughly 128 x 128 pixels.
+    private val pickerBitmapCache = object : LruCache<String, Bitmap>(8 * 1024) {
+        override fun sizeOf(key: String, bitmap: Bitmap): Int =
+            (bitmap.allocationByteCount / 1024).coerceAtLeast(1)
+    }
     private val memoryState = CacheMemoryState()
 
     /** Invalidates TagPill bitmap references after a memory trim or resume. */
@@ -97,6 +103,7 @@ class IconCatalogRepository(context: Context) {
     fun trimMemory() {
         memoryState.trim {
             bitmapCache.evictAll()
+            pickerBitmapCache.evictAll()
             generation++
         }
     }
@@ -104,6 +111,49 @@ class IconCatalogRepository(context: Context) {
     fun resumeAfterBackground() {
         memoryState.resume {
             generation++
+        }
+    }
+
+    /**
+     * Loads a reduced-size bitmap for the icon picker. The picker displays icons
+     * at roughly 50 dp, so decoding the original 512 px assets wastes CPU and RAM.
+     */
+    fun loadPickerBitmap(
+        icon: CatalogIcon,
+        frameColorArgb: Long = DEFAULT_TAG_ICON_FRAME_COLOR,
+        maxDimensionPx: Int = 128
+    ): Bitmap? {
+        require(isValidCatalogIconPath(icon.file)) {
+            "Invalid catalog asset path: ${icon.file}"
+        }
+        val normalizedColor = frameColorArgb and 0xFFFFFFFFL
+        val targetSize = maxDimensionPx.coerceAtLeast(1)
+        val cacheKey = "${icon.file}:${normalizedColor.toString(16)}:picker:$targetSize"
+        memoryState.ifEnabled { pickerBitmapCache.get(cacheKey) }?.let { return it }
+        val loadEpoch = memoryState.beginLoad() ?: return null
+
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        appContext.assets.open("ikon/${icon.file}").use {
+            BitmapFactory.decodeStream(it, null, bounds)
+        }
+        if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null
+
+        var sampleSize = 1
+        while (maxOf(bounds.outWidth, bounds.outHeight) / (sampleSize * 2) >= targetSize) {
+            sampleSize *= 2
+        }
+        val decodeOptions = BitmapFactory.Options().apply {
+            inSampleSize = sampleSize
+            inPreferredConfig = Bitmap.Config.ARGB_8888
+        }
+        val source = appContext.assets.open("ikon/${icon.file}").use {
+            BitmapFactory.decodeStream(it, null, decodeOptions)
+        } ?: return null
+        val bitmap = recolorIconFrame(source, normalizedColor)
+
+        return memoryState.storeIfCurrent(loadEpoch) {
+            pickerBitmapCache.put(cacheKey, bitmap)
+            bitmap
         }
     }
 
