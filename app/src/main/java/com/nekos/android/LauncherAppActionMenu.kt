@@ -23,10 +23,8 @@ import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Info
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
@@ -68,13 +66,13 @@ internal fun LauncherAppActionMenuContent(
         )
     }
     val optionSurface = lerp(launcherSurface, Color.White, 0.48f)
-    PopupAction("App info", Icons.Filled.Info, enabled = isInteractive, surface = optionSurface, onClick = onAppInfo)
+    PopupAction("App info", R.drawable.nekos_ui_info, enabled = isInteractive, surface = optionSurface, onClick = onAppInfo)
     if (onRemoveFavorite != null) {
-        PopupAction("Remove from Favorites", Icons.Filled.Delete, enabled = isInteractive, surface = optionSurface, onClick = onRemoveFavorite)
+        PopupAction("Remove from Favorites", R.drawable.nekos_ui_trash, enabled = isInteractive, surface = optionSurface, onClick = onRemoveFavorite)
     }
     PopupAction(
         if (app.isInCurrentProfile) "Uninstall" else "Manage app",
-        Icons.Filled.Delete,
+        R.drawable.nekos_ui_trash,
         enabled = isInteractive,
         surface = optionSurface,
         iconTint = if (app.isInCurrentProfile) Color(0xFFB3261E) else null,
@@ -93,7 +91,7 @@ internal fun LauncherAppActionMenuContent(
 @Composable
 private fun PopupAction(
     label: String,
-    icon: ImageVector,
+    iconRes: Int,
     enabled: Boolean,
     iconTint: Color? = null,
     surface: Color,
@@ -109,11 +107,12 @@ private fun PopupAction(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        Icon(
-            imageVector = icon,
+        Image(
+            painter = painterResource(iconRes),
             contentDescription = null,
-            tint = if (!enabled) ActionMenuMuted else iconTint ?: ActionMenuInk,
-            modifier = Modifier.size(18.dp)
+            colorFilter = if (!enabled) ColorFilter.tint(ActionMenuMuted)
+                else iconTint?.let { ColorFilter.tint(it) },
+            modifier = Modifier.size(22.dp)
         )
         Text(
             label,
