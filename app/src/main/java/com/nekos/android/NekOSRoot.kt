@@ -422,8 +422,8 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
             },
             onFavoriteReorderEnd = { cancelled ->
                 val snapshot = favoriteOrderSnapshot
-                if (cancelled && snapshot != null) {
-                    favoritePackages = snapshot
+                if (cancelled) {
+                    if (snapshot != null) favoritePackages = snapshot
                 } else {
                     updateFavorites(favoritePackages)
                 }
@@ -442,8 +442,8 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
             },
             onTagReorderEnd = { cancelled ->
                 val snapshot = tagOrderSnapshot
-                if (cancelled && snapshot != null) {
-                    tags = snapshot
+                if (cancelled) {
+                    if (snapshot != null) tags = snapshot
                 } else {
                     saveTags(tags)
                 }
