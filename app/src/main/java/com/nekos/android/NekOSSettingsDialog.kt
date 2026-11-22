@@ -136,14 +136,16 @@ internal fun NekOSSettingsDialog(
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                             SettingsNavigationCard(
                                 modifier = Modifier.weight(1f),
-                                symbol = "▧",
+                                iconRes = R.drawable.nekos_ui_wallpaper,
+                                iconColorArgb = launcherUiColor,
                                 title = "Wallpaper",
                                 description = if (hasWallpaper) "Custom image" else "Color or photo",
                                 onClick = { page = SettingsPage.WALLPAPER }
                             )
                             SettingsNavigationCard(
                                 modifier = Modifier.weight(1f),
-                                symbol = "◒",
+                                iconRes = R.drawable.nekos_ui_palette,
+                                iconColorArgb = launcherUiColor,
                                 title = "Launcher theme",
                                 description = LauncherThemeOptions.first { it.key == launcherThemeKey }.label,
                                 onClick = { page = SettingsPage.LAUNCHER_THEME }
@@ -353,7 +355,8 @@ internal fun NekOSSettingsDialog(
 @Composable
 private fun SettingsNavigationCard(
     modifier: Modifier = Modifier,
-    symbol: String,
+    iconRes: Int,
+    iconColorArgb: Long,
     title: String,
     description: String,
     onClick: () -> Unit
@@ -368,7 +371,11 @@ private fun SettingsNavigationCard(
             .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(7.dp)
     ) {
-        Text(symbol, color = SettingsAccent, fontSize = 22.sp, fontWeight = FontWeight.Medium)
+        ThemedUiArtworkImage(
+            resourceId = iconRes,
+            colorArgb = iconColorArgb,
+            modifier = Modifier.size(28.dp)
+        )
         Text(title, color = SettingsInk, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
         Text(description, color = SettingsMuted, fontSize = 11.sp, lineHeight = 14.sp)
     }
