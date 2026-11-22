@@ -1211,7 +1211,7 @@ private fun HomeScreen(
                         contentDescription = "NekOS",
                         contentScale = ContentScale.Fit,
                         modifier = Modifier.align(Alignment.TopStart)
-                            .offset(x = (-100).dp)
+                            .offset(x = (-200).dp)
                             .fillMaxWidth(1.02f)
                             .height(122.dp)
                     )
