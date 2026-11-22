@@ -172,6 +172,8 @@ fun TagAppsDialog(
 @Composable
 fun TagActionsDialog(
     tag: NekTag,
+    movePageLabel: String?,
+    onMovePage: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     onDismiss: () -> Unit
@@ -187,6 +189,11 @@ fun TagActionsDialog(
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 TextButton(onClick = onEdit, modifier = Modifier.fillMaxWidth()) {
                     Text("Edit tag")
+                }
+                if (movePageLabel != null) {
+                    TextButton(onClick = onMovePage, modifier = Modifier.fillMaxWidth()) {
+                        Text(movePageLabel)
+                    }
                 }
                 TextButton(onClick = onDelete, modifier = Modifier.fillMaxWidth()) {
                     Text("Delete tag", color = Color(0xFFB3261E))

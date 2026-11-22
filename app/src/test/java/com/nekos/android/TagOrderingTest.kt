@@ -45,6 +45,30 @@ class TagOrderingTest {
     }
 
     @Test
+    fun movesTagToNextPageWithoutDroppingOtherTags() {
+        val tenTags = (1..10).map { NekTag(id = "tag-$it", name = "Tag $it") }
+        val moved = moveTagToPage(tenTags, "tag-2", 1)
+        assertEquals("tag-1", moved[0].id)
+        assertEquals("tag-6", moved[4].id)
+        assertEquals("tag-2", moved[9].id)
+        assertEquals(tenTags.map { it.id }.toSet(), moved.map { it.id }.toSet())
+    }
+
+    @Test
+    fun movesTagToPreviousPageWithoutDroppingOtherTags() {
+        val tenTags = (1..10).map { NekTag(id = "tag-$it", name = "Tag $it") }
+        val moved = moveTagToPage(tenTags, "tag-8", 0)
+        assertEquals("tag-8", moved[0].id)
+        assertEquals(tenTags.map { it.id }.toSet(), moved.map { it.id }.toSet())
+    }
+
+    @Test
+    fun invalidPageMoveLeavesTagsUnchanged() {
+        assertSame(tags, moveTagToPage(tags, "missing", 1))
+        assertSame(tags, moveTagToPage(tags, "first", 0))
+    }
+
+    @Test
     fun keepsOrderWhenTagDoesNotExistOrDirectionIsInvalid() {
         assertSame(tags, moveTag(tags, "missing", 1))
         assertSame(tags, moveTag(tags, "second", 0))

@@ -778,9 +778,14 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
                     if (duplicateName) {
                         Toast.makeText(context, "Tag name already exists", Toast.LENGTH_SHORT).show()
                     } else {
-                        saveTags(if (tagEditorTarget == null) tags + saved else tags.map { if (it.id == saved.id) saved else it })
-                        showTagEditor = false
-                        tagEditorTarget = null
+                        if (tagEditorTarget == null && tags.size >= 10) {
+                            Toast.makeText(context, "Maximum of 10 tags", Toast.LENGTH_SHORT).show()
+                        } else {
+                            if (tagEditorTarget == null) activeTagPage = tags.size / 5
+                            saveTags(if (tagEditorTarget == null) tags + saved else tags.map { if (it.id == saved.id) saved else it })
+                            showTagEditor = false
+                            tagEditorTarget = null
+                        }
                     }
                 },
                 onDelete = { deleted -> tagPendingDelete = deleted },
@@ -1010,12 +1015,14 @@ private fun HomeScreen(
                     ) {
                         LazyColumn(
                             modifier = Modifier.weight(1f).fillMaxWidth()
-                                .pointerInput(tagPageCount, safeTagPage) {
+                                .pointerInput(tagPageCount, safeTagPage, draggedTagId) {
                                     var totalDrag = 0f
                                     detectHorizontalDragGestures(
                                         onHorizontalDrag = { change, dragAmount ->
-                                            totalDrag += dragAmount
-                                            change.consume()
+                                            if (draggedTagId == null) {
+                                                totalDrag += dragAmount
+                                                change.consume()
+                                            }
                                         },
                                         onDragEnd = {
                                             when {

@@ -101,3 +101,27 @@ internal fun moveTagToIndex(tags: List<NekTag>, tagId: String, targetIndex: Int)
         reordered.add(targetIndex, moved)
     }
 }
+
+
+/** Moves a tag to the adjacent page while preserving the order of all other tags. */
+internal fun moveTagToPage(
+    tags: List<NekTag>,
+    tagId: String,
+    targetPage: Int,
+    pageSize: Int = 5
+): List<NekTag> {
+    if (pageSize <= 0) return tags
+    val sourceIndex = tags.indexOfFirst { it.id == tagId }
+    if (sourceIndex < 0) return tags
+    val targetPageIndex = targetPage.coerceIn(0, (tags.lastIndex / pageSize).coerceAtLeast(0))
+    if (sourceIndex / pageSize == targetPageIndex) return tags
+    return tags.toMutableList().also { reordered ->
+        val moved = reordered.removeAt(sourceIndex)
+        val insertionIndex = if (targetPageIndex > sourceIndex / pageSize) {
+            ((targetPageIndex + 1) * pageSize - 1).coerceAtMost(reordered.size)
+        } else {
+            (targetPageIndex * pageSize).coerceAtMost(reordered.size)
+        }
+        reordered.add(insertionIndex, moved)
+    }
+}
