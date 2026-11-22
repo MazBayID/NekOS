@@ -1122,8 +1122,6 @@ private fun HomeScreen(
                                 Box(
                                     modifier = Modifier.padding(start = if (tagPageCount > 1) 2.dp else 0.dp)
                                         .size(28.dp)
-                                        .clip(CircleShape)
-                                        .background(TagSurface.copy(alpha = 0.82f))
                                         .clickable(onClick = onAddTag)
                                         .semantics {
                                             contentDescription = "Add tag"
@@ -1131,7 +1129,12 @@ private fun HomeScreen(
                                         },
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    Text("+", color = Ink, fontSize = 20.sp, fontWeight = FontWeight.Medium)
+                                    Image(
+                                        painter = painterResource(R.drawable.nekos_ui_add_tag),
+                                        contentDescription = null,
+                                        contentScale = ContentScale.Fit,
+                                        modifier = Modifier.fillMaxSize()
+                                    )
                                 }
                             }
                         }
