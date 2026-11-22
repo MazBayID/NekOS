@@ -23,10 +23,8 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
@@ -43,10 +41,8 @@ private val ActionMenuMuted = Color(0xFF8B8982)
 @Composable
 internal fun LauncherAppActionMenuContent(
     app: InstalledApp,
-    isFavorite: Boolean,
     isInteractive: Boolean,
     onAppInfo: () -> Unit,
-    onFavorite: () -> Unit,
     onUninstall: () -> Unit
 ) {
     var appIcon by remember(app.id) { mutableStateOf<ImageBitmap?>(null) }
@@ -72,12 +68,6 @@ internal fun LauncherAppActionMenuContent(
         )
     }
     PopupAction("App info", Icons.Filled.Info, enabled = isInteractive, onClick = onAppInfo)
-    PopupAction(
-        if (isFavorite) "Remove from favorite" else "Add to favorite",
-        if (isFavorite) Icons.Filled.Close else Icons.Filled.Star,
-        enabled = isInteractive,
-        onClick = onFavorite
-    )
     PopupAction(
         if (app.isInCurrentProfile) "Uninstall" else "Manage app",
         Icons.Filled.Delete,
