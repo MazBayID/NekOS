@@ -122,7 +122,7 @@ import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyGridState
 import sh.calvin.reorderable.rememberReorderableLazyListState
 
-internal val LAUNCHER_SURFACE = Color(0xFFFEFCF8)
+private val DEFAULT_LAUNCHER_SURFACE = Color(0xFFFEFCF8)
 private val WarmBackground = Color(0xFFF4F1EA)
 private val Ink = Color(0xFF34332F)
 private val Muted = Color(0xFF8B8982)
@@ -253,6 +253,10 @@ fun NekOSRoot(
         mutableStateOf(!preferences.getBoolean("has_seen_drawer_tip", false))
     }
     var showSettings by remember { mutableStateOf(false) }
+    var launcherThemeKey by remember {
+        mutableStateOf(normalizeLauncherTheme(preferences.getString("launcher_theme", "porcelain")))
+    }
+    val launcherSurface = launcherThemeColor(launcherThemeKey)
     var backgroundPreset by remember {
         mutableStateOf(
             normalizeNekOSBackgroundPreset(preferences.getString("background_preset", "warm"))
@@ -544,6 +548,7 @@ fun NekOSRoot(
             ) {
             AppDrawer(
                 apps = apps,
+                launcherSurface = launcherSurface,
                 iconBitmapCache = iconBitmapCache,
                 closeThresholdPx = drawerCloseThresholdPx,
                 modifier = Modifier
@@ -638,7 +643,7 @@ fun NekOSRoot(
                         .heightIn(max = maxHeight)
                         .verticalScroll(rememberScrollState())
                         .clip(RoundedCornerShape(16.dp))
-                        .background(LAUNCHER_SURFACE)
+                        .background(launcherSurface)
                         .padding(horizontal = 10.dp, vertical = 10.dp),
                     verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
@@ -711,6 +716,11 @@ fun NekOSRoot(
         if (showSettings) {
             NekOSSettingsDialog(
                 backgroundPreset = backgroundPreset,
+                launcherThemeKey = launcherThemeKey,
+                onLauncherThemeChange = { key ->
+                    launcherThemeKey = normalizeLauncherTheme(key)
+                    preferences.edit().putString("launcher_theme", launcherThemeKey).apply()
+                },
                 hasWallpaper = wallpaperPath != null,
                 appVersion = appVersion,
                 isDefaultLauncher = isDefaultLauncher,
@@ -771,6 +781,7 @@ fun NekOSRoot(
                 tag = tag,
                 apps = apps,
                 iconBitmapCache = iconBitmapCache,
+                launcherSurface = launcherSurface,
                 onLaunch = { app ->
                     viewingTag = null
                     launchApp(context, app, launchSourceView)
@@ -795,6 +806,7 @@ fun NekOSRoot(
             }
             TagActionsDialog(
                 tag = tag,
+                launcherSurface = launcherSurface,
                 movePageLabel = targetPage?.let { "Move to page ${it + 1}" },
                 onMovePage = {
                     targetPage?.let { page ->
@@ -819,6 +831,7 @@ fun NekOSRoot(
         if (showTagEditor) {
             TagManagementDialog(
                 tag = tagEditorTarget,
+                launcherSurface = launcherSurface,
                 apps = apps,
                 iconBitmapCache = iconBitmapCache,
                 iconCatalogRepository = iconCatalogRepository,
@@ -846,7 +859,7 @@ fun NekOSRoot(
             AlertDialog(
                 onDismissRequest = { tagPendingDelete = null },
                 shape = RoundedCornerShape(28.dp),
-                containerColor = LAUNCHER_SURFACE,
+                containerColor = launcherSurface,
                 titleContentColor = Ink,
                 textContentColor = Ink,
                 title = { Text("Delete “${tag.name}”?") },
@@ -1502,6 +1515,7 @@ private fun TagPill(
 private fun AppDrawer(
     apps: List<InstalledApp>,
     iconBitmapCache: AppIconBitmapCache,
+    launcherSurface: Color,
     closeThresholdPx: Float,
     modifier: Modifier = Modifier,
     onAppClick: (InstalledApp, Rect) -> Unit,
@@ -1578,7 +1592,7 @@ private fun AppDrawer(
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
-            .background(LAUNCHER_SURFACE)
+            .background(launcherSurface)
             .navigationBarsPadding()
     ) {
         Box(
