@@ -954,8 +954,10 @@ private fun HomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .graphicsLayer {
-                    // Fade the Home content in without sliding or scaling it.
-                    alpha = 0.96f + 0.04f * homeReturnProgress.value
+                    val progress = homeReturnProgress.value
+                    alpha = 0.96f + 0.04f * progress
+                    scaleX = 0.94f + 0.06f * progress
+                    scaleY = 0.94f + 0.06f * progress
                 }
                 .statusBarsPadding()
                 .navigationBarsPadding()
