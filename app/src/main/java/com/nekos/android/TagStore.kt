@@ -7,13 +7,15 @@ import java.util.UUID
 
 private const val TAGS_PREFS = "nekos_tags"
 private const val TAGS_KEY = "tag_collection_v1"
+internal const val DEFAULT_TAG_ICON_FRAME_COLOR: Long = 0xFF114B56L
 
 data class NekTag(
     val id: String = UUID.randomUUID().toString(),
     val name: String,
     val iconId: Int? = null,
     val colorArgb: Long = 0xFFE7E1D6,
-    val appPackages: List<String> = emptyList()
+    val appPackages: List<String> = emptyList(),
+    val iconFrameColorArgb: Long = DEFAULT_TAG_ICON_FRAME_COLOR
 ) {
     fun normalized(): NekTag = copy(
         name = name.trim().take(24),
@@ -45,7 +47,11 @@ object TagStore {
                                 for (j in 0 until packages.length()) {
                                     packages.optString(j).takeIf(String::isNotBlank)?.let(::add)
                                 }
-                            }.distinct()
+                            }.distinct(),
+                            iconFrameColorArgb = item.optLong(
+                                "iconFrameColorArgb",
+                                DEFAULT_TAG_ICON_FRAME_COLOR
+                            )
                         )
                     )
                 }
@@ -64,6 +70,7 @@ object TagStore {
                     .put("name", normalized.name)
                     .put("iconId", normalized.iconId ?: JSONObject.NULL)
                     .put("colorArgb", normalized.colorArgb)
+                    .put("iconFrameColorArgb", normalized.iconFrameColorArgb)
                     .put("apps", JSONArray(normalized.appPackages))
             )
         }
