@@ -31,6 +31,8 @@ class MainActivity : ComponentActivity() {
     private var resumeRefreshToken by mutableIntStateOf(0)
     /** Bumped when the Home button is pressed while NekOS is already open. */
     private var homeSignal by mutableIntStateOf(0)
+    /** Bumped only when a Home intent brings NekOS back from the background. */
+    private var homeReturnSignal by mutableIntStateOf(0)
     private var isForcedRefreshPending = false
     private var stoppedAtElapsedMillis = 0L
     private val mainHandler = Handler(Looper.getMainLooper())
@@ -149,8 +151,10 @@ class MainActivity : ComponentActivity() {
         // change made elsewhere (for example an app update) can be missed. Reload fully
         // after a pending event or a longer absence; otherwise do a cheap check that keeps
         // the existing app list and icon cache when nothing changed.
-        val wasAwayForLong = stoppedAtElapsedMillis != 0L &&
-            SystemClock.elapsedRealtime() - stoppedAtElapsedMillis > LONG_ABSENCE_MILLIS
+        val stoppedAt = stoppedAtElapsedMillis
+        stoppedAtElapsedMillis = 0L
+        val wasAwayForLong = stoppedAt != 0L &&
+            SystemClock.elapsedRealtime() - stoppedAt > LONG_ABSENCE_MILLIS
         if (isForcedRefreshPending || wasAwayForLong) {
             isForcedRefreshPending = false
             appRefreshToken++
@@ -162,7 +166,10 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         // Pressing Home while NekOS is open returns to a clean Home screen.
-        if (intent.hasCategory(Intent.CATEGORY_HOME)) homeSignal++
+        if (intent.hasCategory(Intent.CATEGORY_HOME)) {
+            homeSignal++
+            if (stoppedAtElapsedMillis != 0L) homeReturnSignal++
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -181,7 +188,8 @@ class MainActivity : ComponentActivity() {
                     NekOSRoot(
                         refreshToken = appRefreshToken,
                         resumeToken = resumeRefreshToken,
-                        homeSignal = homeSignal
+                        homeSignal = homeSignal,
+                        homeReturnSignal = homeReturnSignal
                     )
                 }
             }
