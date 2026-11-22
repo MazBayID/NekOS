@@ -26,8 +26,6 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.BlurEffect
-import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.layout.ContentScale
@@ -451,15 +449,15 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
         )
 
         if (drawerVisible) {
-            // A subtle warm translucent veil keeps the blurred home screen legible
-            // and provides a graceful dimmed fallback on Android versions below 12.
+            // A lightweight dark scrim separates the drawer from Home without
+            // rendering a second, blurred copy of the wallpaper.
             Box(
                 Modifier
                     .fillMaxSize()
                     .graphicsLayer {
-                        alpha = 0.28f * (1f - drawerProgress.floatValue)
+                        alpha = 0.32f * (1f - drawerProgress.floatValue)
                     }
-                    .background(WarmBackground)
+                    .background(Color.Black)
             )
 
             if (drawerFullyOpen) {
@@ -474,8 +472,8 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
                 )
             }
 
-            // The panel keeps its 60% height but rises above the keyboard while searching,
-            // so results stay visible while typing.
+            // The panel uses roughly 75% of the available screen height and
+            // still adapts when the keyboard is visible.
             val fullScreenHeight = maxHeight
             BoxWithConstraints(
                 Modifier.fillMaxSize().statusBarsPadding().imePadding()
@@ -486,7 +484,7 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
                 closeThresholdPx = drawerCloseThresholdPx,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(minOf(fullScreenHeight * 0.60f, maxHeight))
+                    .height(minOf(fullScreenHeight * 0.75f, maxHeight))
                     .align(Alignment.BottomCenter)
                     .graphicsLayer {
                         // Hide the entire drawer during a drag so no grid rows remain
@@ -853,37 +851,12 @@ private fun HomeScreen(
     val currentOnDrawerDragEnd by rememberUpdatedState(onDrawerDragEnd)
     Box(Modifier.fillMaxSize().background(backgroundColor)) {
         wallpaper?.let { image ->
-            val wallpaperBlurRadiusPx = with(LocalDensity.current) { 16.dp.toPx() }
-            val wallpaperBlurEffect = remember(wallpaperBlurRadiusPx) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    BlurEffect(
-                        wallpaperBlurRadiusPx,
-                        wallpaperBlurRadiusPx,
-                        TileMode.Decal
-                    )
-                } else {
-                    null
-                }
-            }
             Image(
                 bitmap = image,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
             )
-            if (wallpaperBlurEffect != null && isDrawerVisible) {
-                Image(
-                    bitmap = image,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize().graphicsLayer {
-                        renderEffect = wallpaperBlurEffect
-                        alpha = if (isFavoriteDragging) 0f else {
-                            (1f - drawerProgress.value).coerceIn(0f, 1f)
-                        }
-                    }
-                )
-            }
             // A restrained warm scrim keeps dark launcher labels readable over
             // bright or highly detailed wallpapers without hiding the image.
             Box(
