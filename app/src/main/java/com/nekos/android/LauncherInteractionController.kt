@@ -103,3 +103,18 @@ internal fun shouldCloseDrawerAfterDrag(
         else -> totalDrag >= threshold
     }
 }
+
+
+/**
+ * Home swipe starts in the main canvas, with a modest exclusion for the
+ * right-side Tag rail and bottom Favorite grid. These bounds are intentionally
+ * generous so the drawer does not require pixel-perfect gesture placement.
+ */
+internal fun isHomeDrawerGestureEligible(
+    positionX: Float,
+    positionY: Float,
+    containerWidth: Float,
+    containerHeight: Float,
+    excludedBottomPx: Float
+): Boolean = positionX < containerWidth * 0.64f &&
+    positionY < containerHeight - excludedBottomPx
