@@ -1145,26 +1145,6 @@ private fun HomeScreen(
                         key = { index, appId -> appId ?: "empty-$index" }
                     ) { index, appId ->
                         val app = appId?.let { appById[it] }
-                        val reorderGesture = LauncherReorderGestureDetector(
-                            toRootPosition = { local ->
-                                favoriteSlotBounds[index]?.let { bounds ->
-                                    Offset(bounds.left + local.x, bounds.top + local.y)
-                                } ?: local
-                            },
-                            onTap = {
-                                if (app != null) {
-                                    val bounds = favoriteSlotBounds[index] ?: Rect.Zero
-                                    onFavoriteClick(app, bounds)
-                                }
-                            },
-                            onLongPress = { position ->
-                                if (app != null) onFavoriteLongPress(index, position)
-                            },
-                            onLongPressEnd = {
-                                if (app != null) onFavoriteLongPressEnd()
-                            },
-                            onLongPressCancel = onFavoriteLongPressCancel
-                        )
                         ReorderableItem(
                             state = reorderableFavoriteState,
                             key = appId ?: "empty-$index",
@@ -1186,10 +1166,27 @@ private fun HomeScreen(
                                 onLongPress = { position -> onFavoriteLongPress(index, position) },
                                 onLongPressEnd = onFavoriteLongPressEnd,
                                 onLongPressCancel = onFavoriteLongPressCancel,
-                                reorderHandleModifier = Modifier.draggableHandle(
-                                    enabled = app != null,
-                                    dragGestureDetector = reorderGesture
-                                ),
+                                reorderHandleModifier = { toRootPosition ->
+                                    Modifier.draggableHandle(
+                                        enabled = app != null,
+                                        dragGestureDetector = LauncherReorderGestureDetector(
+                                            toRootPosition = toRootPosition,
+                                            onTap = {
+                                                if (app != null) {
+                                                    val bounds = favoriteSlotBounds[index] ?: Rect.Zero
+                                                    onFavoriteClick(app, bounds)
+                                                }
+                                            },
+                                            onLongPress = { position ->
+                                                if (app != null) onFavoriteLongPress(index, position)
+                                            },
+                                            onLongPressEnd = {
+                                                if (app != null) onFavoriteLongPressEnd()
+                                            },
+                                            onLongPressCancel = onFavoriteLongPressCancel
+                                        )
+                                    )
+                                },
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }
@@ -1211,7 +1208,7 @@ private fun FavoriteSlot(
     onLongPress: (Offset) -> Unit,
     onLongPressEnd: () -> Unit,
     onLongPressCancel: () -> Unit,
-    reorderHandleModifier: Modifier,
+    reorderHandleModifier: ((Offset) -> Offset) -> Modifier,
     modifier: Modifier = Modifier
 ) {
     val cachedBitmap = app?.let { iconBitmapCache[it.id] }
@@ -1247,7 +1244,11 @@ private fun FavoriteSlot(
                 slotCoordinates = it
                 onBoundsChanged(it.boundsInRoot())
             }
-            .then(reorderHandleModifier)
+            .then(
+                reorderHandleModifier { local ->
+                    currentSlotCoordinates?.localToRoot(local) ?: local
+                }
+            )
             .padding(5.dp)
             .then(
                 if (app != null) {
