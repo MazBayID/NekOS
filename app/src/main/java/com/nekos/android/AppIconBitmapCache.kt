@@ -30,9 +30,9 @@ import java.security.MessageDigest
 /**
  * Two-level launcher icon cache.
  *
- * The bounded memory cache is discarded when NekOS leaves the foreground.
- * The bounded disk cache lives in filesDir, so Android does not evict it under
- * ordinary cache pressure and it is removed automatically when the app is uninstalled.
+ * The bounded memory cache is retained across ordinary launcher transitions and
+ * released when Android reports substantial background memory pressure.
+ * The bounded disk cache lives in filesDir and is removed automatically on uninstall.
  */
 class AppIconBitmapCache(
     context: Context,
