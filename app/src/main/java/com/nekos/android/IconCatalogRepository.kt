@@ -110,12 +110,16 @@ class IconCatalogRepository(context: Context) {
         require(isValidCatalogIconPath(icon.file)) {
             "Invalid catalog asset path: ${icon.file}"
         }
-        bitmapCache.get(icon.file)?.let { return it }
+        memoryState.ifEnabled { bitmapCache.get(icon.file) }?.let { return it }
+        val loadEpoch = memoryState.beginLoad() ?: return null
 
         val bitmap = appContext.assets.open("ikon/${icon.file}").use {
             BitmapFactory.decodeStream(it)
         } ?: return null
-        bitmapCache.put(icon.file, bitmap)
-        return bitmap
+
+        return memoryState.storeIfCurrent(loadEpoch) {
+            bitmapCache.put(icon.file, bitmap)
+            bitmap
+        }
     }
 }
