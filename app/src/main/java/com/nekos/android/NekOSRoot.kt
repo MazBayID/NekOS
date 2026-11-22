@@ -122,7 +122,6 @@ import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyGridState
 import sh.calvin.reorderable.rememberReorderableLazyListState
 
-private val DEFAULT_LAUNCHER_SURFACE = Color(0xFFFEFCF8)
 private val WarmBackground = Color(0xFFF4F1EA)
 private val Ink = Color(0xFF34332F)
 private val Muted = Color(0xFF8B8982)
@@ -884,7 +883,7 @@ fun NekOSRoot(
                     preferences.edit().putBoolean("has_seen_drawer_tip", true).apply()
                     showFirstLaunchTip = false
                 },
-                containerColor = LAUNCHER_SURFACE,
+                containerColor = launcherSurface,
                 title = { Text("Welcome to NekOS") },
                 text = {
                     Text("Swipe up from Home to open your apps. Swipe down on the handle, or tap above the panel, to return Home.")
