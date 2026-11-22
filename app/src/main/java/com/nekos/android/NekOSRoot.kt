@@ -263,12 +263,17 @@ fun NekOSRoot(
         mutableStateOf(preferences.getString("home_wallpaper_path", null))
     }
     var wallpaperBitmap by remember { mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null) }
+    var wallpaperLoadGeneration by remember { mutableIntStateOf(0) }
     // The wallpaper is always saved to the same file, so the path alone cannot signal a new
     // image. The revision makes choosing a second wallpaper reload it immediately.
     var wallpaperRevision by remember { mutableIntStateOf(0) }
     LaunchedEffect(wallpaperPath, wallpaperRevision, resumeToken) {
-        wallpaperBitmap = withContext(Dispatchers.IO) {
+        val loadGeneration = wallpaperLoadGeneration
+        val loadedWallpaper = withContext(Dispatchers.IO) {
             wallpaperPath?.let { path -> loadHomeWallpaper(context, path) }
+        }
+        if (loadGeneration == wallpaperLoadGeneration) {
+            wallpaperBitmap = loadedWallpaper
         }
     }
     DisposableEffect(context, iconBitmapCache, iconCatalogRepository) {
@@ -283,6 +288,7 @@ fun NekOSRoot(
                     iconCatalogRepository.trimMemory()
                 }
                 if (level >= ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN) {
+                    wallpaperLoadGeneration++
                     wallpaperBitmap = null
                 }
             }
@@ -293,6 +299,7 @@ fun NekOSRoot(
             override fun onLowMemory() {
                 iconBitmapCache.trimMemory()
                 iconCatalogRepository.trimMemory()
+                wallpaperLoadGeneration++
                 wallpaperBitmap = null
             }
         }
