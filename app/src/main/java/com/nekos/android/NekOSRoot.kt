@@ -706,8 +706,11 @@ fun NekOSRoot(
                 appVersion = appVersion,
                 isDefaultLauncher = isDefaultLauncher,
                 onSetAsHome = {
-                    runCatching {
-                        val requestIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    if (isNekOSDefaultHome(context)) {
+                        isDefaultLauncher = true
+                    } else {
+                        runCatching {
+                            val requestIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                             val roleManager = context.getSystemService(RoleManager::class.java)
                             if (roleManager.isRoleAvailable(RoleManager.ROLE_HOME)) {
                                 roleManager.createRequestRoleIntent(RoleManager.ROLE_HOME)
@@ -717,9 +720,10 @@ fun NekOSRoot(
                         } else {
                             Intent(Settings.ACTION_HOME_SETTINGS)
                         }
-                        homeRoleRequestLauncher.launch(requestIntent)
-                    }.onFailure {
-                        Toast.makeText(context, "Unable to open Home settings", Toast.LENGTH_SHORT).show()
+                            homeRoleRequestLauncher.launch(requestIntent)
+                        }.onFailure {
+                            Toast.makeText(context, "Unable to open Home settings", Toast.LENGTH_SHORT).show()
+                        }
                     }
                 },
                 onBackgroundPresetChange = { preset ->
