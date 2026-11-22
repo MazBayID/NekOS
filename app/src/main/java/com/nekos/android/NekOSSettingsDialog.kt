@@ -169,7 +169,11 @@ internal fun NekOSSettingsDialog(
                         fontSize = 14.sp
                     )
                     Text(
-                        "Choose which app opens when you press the Home button.",
+                        if (isDefaultLauncher) {
+                            "NekOS is currently your default Home app. You can choose another launcher here."
+                        } else {
+                            "Choose which app opens when you press the Home button."
+                        },
                         color = SettingsMuted,
                         fontSize = 12.sp,
                         lineHeight = 17.sp
