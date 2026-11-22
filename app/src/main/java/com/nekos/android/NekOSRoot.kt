@@ -859,7 +859,7 @@ private fun HomeScreen(
                                 positionY = position.y,
                                 containerWidth = size.width.toFloat(),
                                 containerHeight = size.height.toFloat(),
-                                excludedBottomPx = 160.dp.toPx()
+                                excludedBottomPx = 210.dp.toPx()
                             )
                             velocityTracker.resetTracking()
                         },
