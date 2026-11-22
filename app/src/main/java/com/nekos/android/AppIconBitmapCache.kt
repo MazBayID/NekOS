@@ -188,11 +188,14 @@ class AppIconBitmapCache(
         val target = diskFile(cacheKey)
         val temporary = File(diskDirectory, "${target.name}.${System.nanoTime()}.tmp")
         try {
-            FileOutputStream(temporary).use { output ->
-                if (!bitmap.compress(Bitmap.CompressFormat.PNG, 100, output)) {
-                    return
-                }
-                output.fd.sync()
+            val compressed = FileOutputStream(temporary).use { output ->
+                val success = bitmap.compress(Bitmap.CompressFormat.PNG, 100, output)
+                if (success) output.fd.sync()
+                success
+            }
+            if (!compressed) {
+                temporary.delete()
+                return
             }
             try {
                 Files.move(
