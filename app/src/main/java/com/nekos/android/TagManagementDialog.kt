@@ -99,7 +99,7 @@ fun TagAppsDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         shape = RoundedCornerShape(28.dp),
-        containerColor = Color(0xFFFEFCF8),
+        containerColor = LAUNCHER_SURFACE,
         titleContentColor = Color(0xFF34332F),
         textContentColor = Color(0xFF34332F),
         title = {
@@ -198,7 +198,7 @@ fun TagActionsDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         shape = RoundedCornerShape(28.dp),
-        containerColor = Color(0xFFFEFCF8),
+        containerColor = LAUNCHER_SURFACE,
         titleContentColor = Color(0xFF34332F),
         textContentColor = Color(0xFF34332F),
         title = { Text(tag.name) },
@@ -268,7 +268,7 @@ fun TagManagementDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         shape = RoundedCornerShape(28.dp),
-        containerColor = Color(0xFFFEFCF8),
+        containerColor = LAUNCHER_SURFACE,
         titleContentColor = Color(0xFF34332F),
         textContentColor = Color(0xFF34332F),
         title = { Text(if (tag == null) "Create tag" else "Edit tag") },
@@ -431,7 +431,7 @@ fun TagManagementDialog(
         AlertDialog(
             onDismissRequest = { showIconPicker = false },
             shape = RoundedCornerShape(28.dp),
-            containerColor = Color(0xFFFEFCF8),
+            containerColor = LAUNCHER_SURFACE,
             titleContentColor = Color(0xFF34332F),
             textContentColor = Color(0xFF34332F),
             title = { Text("Choose tag icon") },
@@ -475,7 +475,7 @@ fun TagManagementDialog(
         AlertDialog(
             onDismissRequest = { showIconColorPicker = false },
             shape = RoundedCornerShape(28.dp),
-            containerColor = Color(0xFFFEFCF8),
+            containerColor = LAUNCHER_SURFACE,
             titleContentColor = Color(0xFF34332F),
             textContentColor = Color(0xFF34332F),
             title = { Text("Icon Color") },
