@@ -40,6 +40,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -92,6 +93,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.Role
@@ -641,6 +643,11 @@ fun NekOSRoot(
                         .widthIn(max = minOf(210.dp, maxWidth))
                         .heightIn(max = maxHeight)
                         .verticalScroll(rememberScrollState())
+                        .border(
+                            width = 1.dp,
+                            color = lerp(launcherSurface, Ink, 0.18f),
+                            shape = RoundedCornerShape(16.dp)
+                        )
                         .clip(RoundedCornerShape(16.dp))
                         .background(launcherSurface)
                         .padding(horizontal = 10.dp, vertical = 10.dp),
