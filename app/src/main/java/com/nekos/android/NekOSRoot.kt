@@ -26,8 +26,6 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.BlurEffect
-import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.layout.ContentScale
@@ -110,6 +108,7 @@ import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlin.math.abs
@@ -309,23 +308,27 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
         val drawerHeightPx = constraints.maxHeight.toFloat().coerceAtLeast(1f)
         val homeSwipeThresholdPx = with(androidx.compose.ui.platform.LocalDensity.current) { 48.dp.toPx() }
         val drawerCloseThresholdPx = with(androidx.compose.ui.platform.LocalDensity.current) { 72.dp.toPx() }
-        val backgroundBlurRadiusPx = with(androidx.compose.ui.platform.LocalDensity.current) { 16.dp.toPx() }
-        var drawerProgress by remember { mutableFloatStateOf(1f) }
+        val drawerProgress = remember { mutableFloatStateOf(1f) }
         var drawerTargetProgress by remember { mutableFloatStateOf(1f) }
+        var drawerVisible by remember { mutableStateOf(false) }
+        var drawerFullyOpen by remember { mutableStateOf(false) }
         var isDrawerDragging by remember { mutableStateOf(false) }
-        // Pointer movement updates one shared progress value directly. A spring
-        // is used only to settle after release, never once per pointer event.
+        // Keep frame-by-frame progress reads inside graphicsLayer blocks below.
+        // This lets Compose update layer properties without recomposing the launcher root.
         LaunchedEffect(drawerTargetProgress, isDrawerDragging) {
             if (!isDrawerDragging) {
                 animate(
-                    initialValue = drawerProgress,
+                    initialValue = drawerProgress.floatValue,
                     targetValue = drawerTargetProgress,
                     animationSpec = spring(dampingRatio = 0.82f, stiffness = 420f)
-                ) { value, _ -> drawerProgress = value }
+                ) { value, _ -> drawerProgress.floatValue = value }
+                drawerFullyOpen = drawerTargetProgress <= 0f
+                if (drawerTargetProgress >= 1f) drawerVisible = false
             }
         }
         fun closeDrawer() {
             focusManager.clearFocus()
+            drawerFullyOpen = false
             isDrawerDragging = false
             drawerTargetProgress = 1f
         }
@@ -344,7 +347,7 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
             }
         }
 
-        BackHandler(enabled = showSettings || actionMenuApp != null || drawerProgress < 1f) {
+        BackHandler(enabled = showSettings || actionMenuApp != null || drawerVisible) {
             when {
                 showSettings -> showSettings = false
                 actionMenuApp != null -> actionMenuApp = null
@@ -364,14 +367,12 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
             iconCatalogRepository = iconCatalogRepository,
             iconBitmapCache = iconBitmapCache,
             homeSwipeThresholdPx = homeSwipeThresholdPx,
-            backgroundBlurRadiusPx = if (favoriteDrag?.hasMoved == true) {
-                0f
-            } else {
-                backgroundBlurRadiusPx * (1f - drawerProgress)
-            },
+            drawerProgress = drawerProgress,
             onDrawerDrag = { totalDrag ->
                 isDrawerDragging = true
-                drawerProgress = (1f + totalDrag / drawerHeightPx).coerceIn(0f, 1f)
+                drawerVisible = true
+                drawerFullyOpen = false
+                drawerProgress.floatValue = (1f + totalDrag / drawerHeightPx).coerceIn(0f, 1f)
             },
             onDrawerDragEnd = { totalDrag, velocityY, cancelled ->
                 isDrawerDragging = false
@@ -445,20 +446,19 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
             }
         )
 
-        if (drawerProgress < 1f) {
-            // A subtle warm translucent veil keeps the blurred home screen legible
-            // and provides a graceful dimmed fallback on Android versions below 12.
+        if (drawerVisible) {
+            // A lightweight dark scrim separates the drawer from Home without
+            // rendering a second, blurred copy of the wallpaper.
             Box(
                 Modifier
                     .fillMaxSize()
-                    .background(
-                        WarmBackground.copy(
-                            alpha = 0.28f * (1f - drawerProgress)
-                        )
-                    )
+                    .graphicsLayer {
+                        alpha = 0.32f * (1f - drawerProgress.floatValue)
+                    }
+                    .background(Color.Black)
             )
 
-            if (drawerProgress <= 0.02f) {
+            if (drawerFullyOpen) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -470,8 +470,8 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
                 )
             }
 
-            // The panel keeps its 60% height but rises above the keyboard while searching,
-            // so results stay visible while typing.
+            // The panel uses roughly 75% of the available screen height and
+            // still adapts when the keyboard is visible.
             val fullScreenHeight = maxHeight
             BoxWithConstraints(
                 Modifier.fillMaxSize().statusBarsPadding().imePadding()
@@ -482,13 +482,13 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
                 closeThresholdPx = drawerCloseThresholdPx,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(minOf(fullScreenHeight * 0.60f, maxHeight))
+                    .height(minOf(fullScreenHeight * 0.75f, maxHeight))
                     .align(Alignment.BottomCenter)
                     .graphicsLayer {
                         // Hide the entire drawer during a drag so no grid rows remain
                         // visible over the Home Favorite area.
                         val isDraggingApp = favoriteDrag?.hasMoved == true
-                        translationY = if (isDraggingApp) size.height * 0.12f else drawerProgress * size.height
+                        translationY = if (isDraggingApp) size.height * 0.12f else drawerProgress.floatValue * size.height
                         alpha = if (isDraggingApp) 0f else 1f
                         scaleX = if (isDraggingApp) 0.985f else 1f
                         scaleY = if (isDraggingApp) 0.985f else 1f
@@ -823,7 +823,7 @@ private fun HomeScreen(
     iconCatalogRepository: IconCatalogRepository,
     iconBitmapCache: AppIconBitmapCache,
     homeSwipeThresholdPx: Float,
-    backgroundBlurRadiusPx: Float,
+    drawerProgress: State<Float>,
     onDrawerDrag: (Float) -> Unit,
     onDrawerDragEnd: (totalDrag: Float, velocityY: Float, cancelled: Boolean) -> Unit,
     onFavoriteClick: (InstalledApp, Rect) -> Unit,
@@ -851,20 +851,7 @@ private fun HomeScreen(
                 bitmap = image,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize().graphicsLayer {
-                    renderEffect = if (
-                        Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
-                        backgroundBlurRadiusPx > 0.5f
-                    ) {
-                        BlurEffect(
-                            backgroundBlurRadiusPx,
-                            backgroundBlurRadiusPx,
-                            TileMode.Decal
-                        )
-                    } else {
-                        null
-                    }
-                }
+                modifier = Modifier.fillMaxSize()
             )
             // A restrained warm scrim keeps dark launcher labels readable over
             // bright or highly detailed wallpapers without hiding the image.
@@ -885,7 +872,7 @@ private fun HomeScreen(
                 .fillMaxSize()
                 .statusBarsPadding()
                 .navigationBarsPadding()
-                // Keep launcher controls sharp while the wallpaper behind them blurs.
+                // Keep launcher controls sharp above the static wallpaper.
                 .pointerInput(homeSwipeThresholdPx) {
                     var totalDrag = 0f
                     var drawerDragStarted = false
@@ -1438,11 +1425,43 @@ private fun AppDrawer(
     val focusManager = LocalFocusManager.current
     // Dragging the list hides the keyboard so results can be browsed. Programmatic scrolls
     // (such as jumping back to the top when the query changes) do not reach this connection.
-    val dismissKeyboardOnScroll = remember(focusManager) {
+    // The grid keeps normal scrolling. Only downward scroll left over after
+    // it reaches the top is intercepted as a drawer-close gesture.
+    val pendingDrawerCloseDrag = remember { floatArrayOf(0f) }
+    val drawerScrollConnection = remember(focusManager, gridState) {
         object : NestedScrollConnection {
             override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
                 if (available.y != 0f) focusManager.clearFocus()
+                if (available.y < 0f) pendingDrawerCloseDrag[0] = 0f
                 return Offset.Zero
+            }
+
+            override fun onPostScroll(
+                consumed: Offset,
+                available: Offset,
+                source: NestedScrollSource
+            ): Offset {
+                if (
+                    source == NestedScrollSource.UserInput &&
+                    available.y > 0f &&
+                    !gridState.canScrollBackward
+                ) {
+                    pendingDrawerCloseDrag[0] += available.y
+                    return Offset(0f, available.y)
+                }
+                return Offset.Zero
+            }
+
+            override suspend fun onPostFling(
+                consumed: Velocity,
+                available: Velocity
+            ): Velocity {
+                val dragDistance = pendingDrawerCloseDrag[0]
+                pendingDrawerCloseDrag[0] = 0f
+                if (dragDistance > 0f || available.y > 0f) {
+                    currentOnCloseDrawer(dragDistance, available.y)
+                }
+                return Velocity.Zero
             }
         }
     }
@@ -1552,7 +1571,7 @@ private fun AppDrawer(
                 contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 10.dp, bottom = 28.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier.weight(1f).fillMaxWidth().nestedScroll(dismissKeyboardOnScroll)
+                modifier = Modifier.weight(1f).fillMaxWidth().nestedScroll(drawerScrollConnection)
             ) {
                 items(filteredApps, key = { it.id }) { app ->
                     val cachedBitmap = iconBitmapCache[app.id]
