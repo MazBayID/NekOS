@@ -299,10 +299,9 @@ fun NekOSRoot(
         context.registerComponentCallbacks(memoryCallbacks)
         onDispose { context.unregisterComponentCallbacks(memoryCallbacks) }
     }
-    LaunchedEffect(resumeToken) {
-        iconBitmapCache.resumeAfterBackground()
-    }
     LaunchedEffect(apps, resumeToken) {
+        // Resume before preloading so the two operations cannot race each other.
+        iconBitmapCache.resumeAfterBackground()
         if (apps.isNotEmpty()) {
             iconBitmapCache.configureForAppCount(apps.size)
             iconBitmapCache.preload(apps)
