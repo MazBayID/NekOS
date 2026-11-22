@@ -42,7 +42,8 @@ internal fun LauncherAppActionMenuContent(
     onAppInfo: () -> Unit,
     onUninstall: () -> Unit,
     onRemoveFavorite: (() -> Unit)? = null,
-    launcherSurface: Color
+    launcherSurface: Color,
+    uiColorArgb: Long
 ) {
     var appIcon by remember(app.id) { mutableStateOf<ImageBitmap?>(null) }
     LaunchedEffect(app.id) {
@@ -65,15 +66,16 @@ internal fun LauncherAppActionMenuContent(
         )
     }
     val optionSurface = lerp(launcherSurface, Color.White, 0.48f)
-    PopupAction("App info", R.drawable.nekos_ui_info, enabled = isInteractive, surface = optionSurface, onClick = onAppInfo)
+    PopupAction("App info", R.drawable.nekos_ui_info, enabled = isInteractive, surface = optionSurface, uiColorArgb = uiColorArgb, onClick = onAppInfo)
     if (onRemoveFavorite != null) {
-        PopupAction("Remove from Favorites", R.drawable.nekos_ui_remove, enabled = isInteractive, surface = optionSurface, onClick = onRemoveFavorite)
+        PopupAction("Remove from Favorites", R.drawable.nekos_ui_remove, enabled = isInteractive, surface = optionSurface, uiColorArgb = uiColorArgb, onClick = onRemoveFavorite)
     }
     PopupAction(
         if (app.isInCurrentProfile) "Uninstall" else "Manage app",
         R.drawable.nekos_ui_trash,
         enabled = isInteractive,
         surface = optionSurface,
+        uiColorArgb = uiColorArgb,
         onClick = onUninstall
     )
     if (!isInteractive) {
@@ -93,6 +95,7 @@ private fun PopupAction(
     enabled: Boolean,
     iconTint: Color? = null,
     surface: Color,
+    uiColorArgb: Long,
     onClick: () -> Unit
 ) {
     Row(
@@ -105,8 +108,9 @@ private fun PopupAction(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        Image(
-            painter = painterResource(iconRes),
+        ThemedUiArtworkImage(
+            resourceId = iconRes,
+            colorArgb = uiColorArgb,
             contentDescription = null,
             colorFilter = if (!enabled) ColorFilter.tint(ActionMenuMuted)
                 else iconTint?.let { ColorFilter.tint(it) },
