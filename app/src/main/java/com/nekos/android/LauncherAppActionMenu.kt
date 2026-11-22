@@ -31,9 +31,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.graphics.drawable.toBitmap
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 private val ActionMenuInk = Color(0xFF34332F)
 private val ActionMenuMuted = Color(0xFF8B8982)
@@ -41,15 +38,14 @@ private val ActionMenuMuted = Color(0xFF8B8982)
 @Composable
 internal fun LauncherAppActionMenuContent(
     app: InstalledApp,
+    iconBitmapCache: AppIconBitmapCache,
     isInteractive: Boolean,
     onAppInfo: () -> Unit,
     onUninstall: () -> Unit
 ) {
     var appIcon by remember(app.id) { mutableStateOf<ImageBitmap?>(null) }
     LaunchedEffect(app.id) {
-        appIcon = withContext(Dispatchers.Default) {
-            app.icon.toBitmap(72, 72).asImageBitmap()
-        }
+        appIcon = iconBitmapCache.getOrLoad(app)
     }
     Row(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 6.dp),
