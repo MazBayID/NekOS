@@ -72,6 +72,7 @@ internal fun LauncherAppActionMenuContent(
         if (app.isInCurrentProfile) "Uninstall" else "Manage app",
         Icons.Filled.Delete,
         enabled = isInteractive,
+        iconTint = if (app.isInCurrentProfile) Color(0xFFB3261E) else null,
         onClick = onUninstall
     )
     if (!isInteractive) {
@@ -89,6 +90,7 @@ private fun PopupAction(
     label: String,
     icon: ImageVector,
     enabled: Boolean,
+    iconTint: Color? = null,
     onClick: () -> Unit
 ) {
     Row(
@@ -103,7 +105,7 @@ private fun PopupAction(
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = if (enabled) ActionMenuInk else ActionMenuMuted,
+            tint = if (!enabled) ActionMenuMuted else iconTint ?: ActionMenuInk,
             modifier = Modifier.size(18.dp)
         )
         Text(
