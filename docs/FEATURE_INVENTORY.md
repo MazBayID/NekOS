@@ -1,120 +1,95 @@
 # NekOS — Feature Inventory
 
-> Snapshot: 2026-11-21  
-> Scope: implementation currently present on `main`, compared with the product direction and architecture documents.
+> Snapshot: 2026-11-22 (after the interaction polish pass)  
+> Scope: what the source code on `main` does today, compared with `PRODUCT_DIRECTION.md`.
 
-This inventory records what exists today, what is only partially implemented, and what remains planned or intentionally deferred. A feature is marked **implemented** only when there is corresponding source code in the repository; the list is not a claim that every edge case has been fully validated on every Android version.
+A feature is marked **implemented** only when matching source code exists. This is not a claim that every edge case has been verified on every Android version or on physical devices.
 
 ## 1. Implemented
 
 ### Launcher foundation
-- Android app exposes both the launcher entry point (`MAIN` + `HOME` + `DEFAULT`) and a normal launcher-app entry point.
-- Single-Activity application built with Kotlin and Jetpack Compose.
-- Installed launchable apps are discovered through Android's package manager, deduplicated by package name, and sorted alphabetically by label.
-- App launch, App info, and uninstall requests are handed to Android's system APIs.
-- App list refresh and stale favorite/tag reference cleanup are implemented.
-- Startup splash remains visible until initial app discovery and reference cleanup complete; no fixed artificial startup delay is used.
+- Manifest exposes the launcher entry (`MAIN` + `HOME` + `DEFAULT`) and a normal app entry (`MAIN` + `LAUNCHER`).
+- Single Activity, Kotlin + Jetpack Compose.
+- Launchable apps come from `LauncherApps`, deduplicated per profile, sorted alphabetically by label using the device locale.
+- App launch uses `LauncherApps`; App info and uninstall are handed to Android system screens.
+- The app list refreshes automatically on package added, removed, changed, and available/unavailable events, plus profile changes. Bursts of events are coalesced into one refresh. On resume the list is re-checked; it is kept as-is (so decoded icons are reused and Favorite icons do not re-animate) when nothing changed, and fully reloaded after a pending package event or an absence longer than 30 seconds.
+- Pressing Home while NekOS is open closes the drawer, Settings, and app/tag menus and returns to a clean Home. An in-progress tag edit is kept. The Activity uses `singleTask` so Home always returns to the same instance.
+- Stale favorite and tag references are cleaned up after a refresh. References belonging to a stopped, locked, or quiet-mode profile are kept intact.
+- Launch failures show a short message (app no longer available, not allowed, or profile unavailable) instead of crashing.
+- The startup splash stays until the first app scan and cleanup finish; there is no fixed delay.
 
-### Home screen and favorites
-- Minimal home screen with a top tag strip and a 5 × 3 (15-slot) favorite area.
-- Empty favorite slots are preserved; adding an app does not automatically fill or compact unrelated slots.
-- Favorite apps launch on tap.
-- Long-press opens app actions; drag after long-press supports favorite reordering and slot placement.
-- Favorite package names are persisted locally in private SharedPreferences.
-- First-use App Drawer hint is shown and its dismissal is persisted.
+### Home Screen
+- Favorite Grid: 15 slots (5 × 3) at the bottom. Empty slots are preserved and never auto-filled.
+- Tag Rail: a vertical list of tags on the right, about 38% of the content width, ending with an "add tag" pill.
+- Header (top left): small secondary wordmark and a Settings (gear) button.
+- Wallpaper behind everything: three presets or a custom image.
+- Favorites launch on tap; long-press opens app actions; drag after long-press reorders or places into a slot.
+- A dismissible first-use App Drawer hint is shown once.
 
 ### App Drawer
-- Opens with an upward home gesture and closes with a downward gesture.
-- Displays installed launchable apps in a five-column grid with native Android app icons.
-- App list is alphabetically sorted.
-- Prefix search/filter is implemented.
-- Tap launches an app; long-press exposes App info, Add/Remove favorite, and Uninstall actions.
-- A transparent close target covers the upper 40% of the screen while the App Drawer is fully open; the existing drawer handle icon remains visually unchanged.
-- A cancelled swipe is distinguished from a completed drag so a cancelled gesture does not open the drawer.
+- Swipe up opens a panel covering about 60% of the screen. The swipe can start in the main Home canvas or anywhere in the Favorite band at the bottom; only the scrolling Tag Rail above that band is excluded. While the drawer is fully open, the upper 40% is a transparent close target.
+- Swipe down from the drawer handle closes it. Cancelled swipes do not open it.
+- Shows all launchable apps with native icons in an adaptive grid (minimum cell width 68 dp, so the number of columns depends on screen width).
+- Search matches any part of the app name, ignoring case. An empty result shows "No apps match your search". The keyboard offers a Search action that dismisses it, dragging the list also dismisses it, and the panel rises above the keyboard (keeping its height) so results stay visible while typing. Closing the drawer clears the search and the keyboard.
+- Tap launches; long-press opens App info, Add/Remove favorite, and Uninstall.
 
-### Tags and collections
-- Create, edit, and delete user-defined tags.
-- Tag names are trimmed and limited to 24 characters.
-- Choose from six preset tag colors.
-- Choose an optional icon from the bundled 100-icon catalog.
-- Assign and unassign installed apps to a tag.
-- Tap a tag to open its app collection; tap an app in the collection to launch it.
-- Tap a tag body to open its app collection; the body has no long-press action.
-- Tap the dedicated six-dot handle to open Edit/Delete options.
-- Long-press and drag the same handle to reorder tags; the handle also exposes an accessible button action for opening options.
-- Tag data is stored as versioned JSON in private SharedPreferences, with basic malformed-data and duplicate filtering.
-- Uninstalled app references are cleaned from tags.
-- Tags can be persistently reordered by dragging a dedicated handle; the handle is anchored at the right edge of each Tag pill.
+### Tag System
+- Create, edit, and delete tags; names are trimmed and limited to 24 characters.
+- Six preset colors and an optional icon from the bundled 100-icon catalog.
+- Assign and unassign installed apps; tapping a tag opens its collection and tapping an app launches it.
+- The tag body has no long-press action. The six-dot handle at the right edge of each tag opens Edit/Delete, and long-press plus drag on the handle reorders tags. Order is persisted.
+- Deleting a tag, from either the options menu or the editor, asks for confirmation first.
+- Tags are stored as versioned JSON in private SharedPreferences, with malformed-data and duplicate filtering.
 
-### Settings and appearance
-- Settings can be opened from the home screen's empty-area interaction.
-- Three home background presets are available: Warm paper, Soft sage, and Cool mist.
-- A custom image can be selected as the home wallpaper and removed later.
-- Wallpaper data is copied into app-private storage, with file-size and decode-dimension limits.
-- Background preset and wallpaper path are persisted locally.
+### Settings
+- Opened with the gear button in the Home header.
+- **Appearance:** Warm paper, Soft sage, Cool mist.
+- **Wallpaper:** choose a custom image or remove it. The image is copied to app-private storage with file-size and decode-dimension limits.
+- **Home behavior:** show the App Drawer hint again.
+- **About:** version, MIT license, copyright, and repository link.
 
 ### Accessibility and interaction
-- Favorite slots and App Drawer items expose button semantics.
-- App items expose a TalkBack custom action for the app actions menu.
-- Gesture handling distinguishes tap, long-press, drag, drag completion, and cancellation.
-- Back handling closes the settings/action UI or returns from the drawer.
+- Favorite slots and drawer items expose button semantics; app items offer a TalkBack custom action for the action menu.
+- Gesture handling distinguishes tap, long-press, drag, completed drag, and cancellation.
+- Back closes dialogs and menus, or returns from the drawer.
 
-### Branding and assets
-- Android launcher icon and startup wordmark assets are included.
-- Source icon catalogs include machine-readable JSON and human-readable Markdown indexes.
-- Runtime tag icon assets are bundled with the application.
-- App icons shown for installed apps remain the original Android-provided icons.
+### Assets
+- Launcher icon and startup wordmark are included. Tag icon catalog (JSON plus Markdown indexes) is bundled as runtime assets.
+- App icons are always the original Android icons.
 
-## 2. Partially implemented / needs product follow-through
+## 2. Gaps against the concept (to review)
 
-- **Settings:** the agreed MVP scope is implemented: Appearance (background presets and custom wallpaper), Home behavior (show the App Drawer hint again), and About (version, MIT license information, and repository link). A broader settings system is intentionally out of scope.
-- **Tag customization:** create/edit/color/icon/app assignment and persistent drag ordering are implemented. Tap the dedicated six-dot handle for options; long-press and drag it to reorder. Move up / Move down actions are not part of the Tag action dialog.
-- **Onboarding:** a dismissible first-use App Drawer hint exists, with a Settings action to show it again; a broader first-run walkthrough is not implemented.
-- **Persistence:** favorites and tags persist locally, but the project does not yet provide user-facing export/import or a documented migration/backup workflow.
-- **Visual customization:** home background and wallpaper are supported; a broader theme engine, typography controls, and configurable accent system are not implemented.
+These are places where the code and `PRODUCT_DIRECTION.md` do not fully line up. Each needs a deliberate decision rather than a silent change.
 
-## 3. Planned next, based on current product direction
+| Area | Current state | Concept expectation | Suggested action |
+|---|---|---|---|
+| Drawer columns | Adaptive grid, not fixed | Not mandated; older docs claimed five columns | Keep adaptive, or fix to five columns if a consistent look matters more |
+| Home header | Persistent wordmark plus gear button | Simple, calm Home; earlier docs said no branding on Home | Decide whether the header stays; the gear is currently the only way to reach Settings |
+| Settings entry | Gear button only (intentional: the concept asks for few gestures) | Settings reachable from Home | None; keep the gear |
+| Typography | System font; the Nunito Sans recommendation was removed from the docs | Warm, calm look | None |
+| Disabled or suspended single apps | Not specially handled; relies on launch error messages | "Check handling of disabled or unavailable apps" | Verify on a device and add explicit handling if needed |
+| Notification dots | No code found | Optional, only if needed | Leave out unless there is a clear need |
+| Backup | `allowBackup` is enabled; there is no documented backup or export workflow | Personal data should survive | Document the behavior or add an explicit decision |
 
-These items should be prioritized only after confirming they still fit the intended NekOS experience:
+## 3. Next steps
 
-1. Stabilize the completed MVP with focused physical-device checks for Tag drag ordering and handle alignment, the expanded App Drawer close target, favorite gestures, App Drawer behavior, Settings actions, and persistence across restart.
-2. Review accessibility and gesture discoverability without adding persistent visual clutter.
-3. Review persistence and recovery expectations before adding more user-owned customization; keep export/import and backup decisions explicit rather than adding them implicitly.
+Follow the concept's priorities: stability over new features.
+
+1. Test on physical devices: drawer gesture, drag-and-drop for favorites and tags, the 40% close target, and persistence after restart.
+2. Check behavior after installing and uninstalling apps, and with disabled or unavailable apps.
+3. Confirm search feels comfortable with real app lists.
+4. Resolve the gaps in section 2.
 
 ## 4. Explicitly deferred
 
-The product direction currently defers:
-- Home-screen widgets.
-- AI-powered tagging.
-- Alphabetical-rail and color-based search systems.
-- Private/work profile features.
-- A full theme engine.
-- Advanced gesture customization.
-- Extra multi-feature panels or widget hubs.
+Widget engine, nested folders, multiple Home pages, feeds or recommendations, complex automation, a full theme system, many gestures, AI tagging, alphabet or color search, and advanced gesture customization. Add none of these implicitly.
 
-These should not be added implicitly during implementation. Revisit them only through an explicit product decision.
+## 5. Automated tests
 
-## 5. Existing automated test areas
+Unit and instrumented tests exist for: favorite slot operations and persistence, tag persistence, tag ordering and normalization, icon catalog loading and asset paths, drawer filtering, label sorting, interaction controller, popup positioning, gesture thresholds and integration, reference cleanup, app identity, wallpaper validation, and item accessibility.
 
-The repository currently contains tests covering:
-- Favorite slot operations and favorite persistence.
-- Tag persistence.
-- Icon catalog loading.
-- App Drawer filtering.
-- Launcher interaction controller and popup positioning.
-- Gesture thresholds and gesture integration, including cancelled gestures.
-- Stale launcher-reference cleanup.
-- Launcher item accessibility semantics.
+Presence of tests is not complete verification of every user journey. Keep CI green and do focused device checks at each checkpoint.
 
-Test-file presence indicates existing automated coverage, not complete verification of every user journey. Continue to require CI and targeted device checks at phase checkpoints.
+## 6. Maintenance
 
-## 6. Recommended development order
-
-1. Keep the agreed MVP scope explicit; Tag drag reordering and the minimal Settings scope are now implemented.
-2. Implement one cohesive feature group at a time and avoid adding deferred systems implicitly.
-3. At each checkpoint: run CI, review regressions in existing behavior, and perform a focused device test where UI/Android integration is involved.
-4. Run a dedicated stabilization pass across persistence, accessibility, performance, and Android lifecycle behavior.
-
-## 7. Inventory maintenance
-
-Update this document whenever a feature is added, removed, or deliberately deferred. Keep implementation status separate from product intent so the roadmap does not mistake a planned feature for an existing one.
+Update this file whenever a feature is added, removed, or deferred. Keep implementation status separate from product intent.

@@ -1,49 +1,105 @@
-# NekOS — Product Direction & MVP
+# NekOS — Product Direction
 
-## Product identity
-NekOS is a calm, personal Android launcher: fast to scan, easy to arrange, and intentionally quiet. It should have its own visual language and interaction model; Cyclauncher is a conceptual reference only, not a template.
+> *A cozy space for your everyday apps.*
 
-## Core experience (MVP)
-- **Home:** no visible buttons or search field by default. Keep Android status bar/time and notification shade accessible.
-- **Tags:** a compact strip/area at the top of the home screen. Tags act as user-defined app collections (folder-like), each with a user-selected accent/background color and optional icon from NekOS assets. Tapping a tag opens its apps in a lightweight overlay/panel.
-- **Favorites:** fixed lower home area, at most **5 columns × 3 rows (15 slots)**. Empty slots are allowed and should not be filled automatically. App icons launch apps. Long-press and release without moving opens App info, Remove from favorite, and Uninstall actions; moving beyond touch slop after the long-press begins reordering.
-- **App drawer:** swipe up from the home screen to reveal the full installed-app list in a **5-column grid** (5 × as many rows as needed), using each app's original Android icon. The drawer scrolls vertically, with alphabetical ordering and prefix search. Long-press an app to open App info, Add to favorite, and Uninstall actions. Uninstall is handed off to Android's system uninstall confirmation UI.
-- **Settings:** long-press an empty area of home to enter launcher settings. Settings can initially be a single, simple screen.
-- **Customization:** tags can be created, renamed, reordered, assigned apps, and given a color and optional NekOS catalog icon. Home favorites can be reordered and selected.
-- **Persistency:** settings, tag definitions/members, tag order, favorites, and chosen colors survive process restart and device reboot. Favorite order is persisted when icons are rearranged.
+NekOS is a simple Android launcher for everyday use with a cozy-tech, cat-themed look. Its job is to make app access comfortable, tidy, and easy. It is not meant to be a launcher with many complex features.
 
-## Icon policy
-- NekOS `main_assets/ikon/` catalog icons are for **tag icons and launcher UI only** (settings, supporting UI, empty states, etc.).
-- App drawer, home favorites, and app entries within tag views use the **original app icons** obtained from Android, never catalog icons as replacements.
-- The icon catalog JSON/Markdown is the source of truth for names and metadata; avoid duplicating catalog labels in code.
-- Icon tinting is technically possible for PNGs using alpha as a mask, but it replaces their existing colors and can flatten multicolor artwork. For the MVP, keep catalog icons in their original colors. Tag color customization applies to the tag's surface/accent, not the icon itself. Do not expose icon-color customization unless it can preserve the artwork well and is visually tested; it can be reconsidered later.
+This document is the product intent. For what is actually implemented, see `FEATURE_INVENTORY.md`.
 
-## Branding & startup
-- Use `main_assets/app_logo.png` for the Android launcher icon.
-- Use `main_assets/NekOS_text_logo.png` (wordmark + slogan) on a brief, understated startup splash. Keep the home screen free of persistent branding so it remains minimal.
-- Splash should be short, avoid artificial loading delays, and transition into the launcher home as soon as initialization is complete.
+## 1. Philosophy
 
-## Visual direction
-- Cozy-tech: warm, rounded, understated, with precise spacing and restrained accent colors.
-- Avoid Cyclauncher's distinctive side alphabet rail, wheel, color-search system, widget hub, and multi-feature panels. NekOS should be recognizable through its **top tag strip + 5×3 favorite grid + gesture-only clean home**.
-- Recommended primary font: **Nunito Sans** (friendly, legible, rounded without looking childish). Use system fallback for missing glyphs. Keep font weights limited (Regular / SemiBold).
-- Suggested baseline: neutral warm background; tags use soft/tinted color surfaces; app icons stay native; UI icon assets should be selectively used rather than decorating every surface.
+- **Simple:** only features that are genuinely useful for general use.
+- **Comfortable:** warm, calm, and not tiring to look at.
+- **Easy to reach:** favorites and apps grouped by tag are quick to get to.
+- **Personal:** users arrange apps, tags, and the Home appearance.
+- **Stable:** everyday reliability comes before adding features.
 
-## MVP implementation outline
-1. Android launcher shell: manifest MAIN + HOME + DEFAULT, app list retrieval, launch intents, status bar behavior.
-2. Home composition and gestures: top tags, 5×3 favorites, swipe-up drawer, long-press empty-space settings.
-3. App drawer: installed apps, native app icons, 5-column grid, alphabetical ordering and search.
-4. Tag model + tag management + catalog icon picker and app assignment.
-5. Favorites reorder/slot management.
-6. Settings: theme/accent, tag color/icon picker, gesture/behavior options (only after core flow works).
-7. Persist data with a small local store (DataStore for preferences; Room or a carefully versioned JSON store for collections). Keep UI state and persistence separate.
+**Usage flow:** Home → Favorite / Tag → App Drawer → Search → Settings
 
-## Initial design principles
-- Gesture discoverability should be subtle but not cryptic: first-run hints can be dismissed.
-- Keep animations short and purposeful; avoid motion that slows app launching.
-- Use stable app identifiers/package names for saved assignments, and gracefully handle uninstalled apps.
-- The launcher should never block access to system status/notification shade or Android navigation.
-- Build a working vertical slice before adding advanced customization.
+## 2. Main structure
 
-## Explicitly deferred
-Widgets, AI tagging, alphabet/color search, private/work profile features, theme engines, advanced gesture customization, and any extra features not required by the MVP.
+| Part | Role |
+|---|---|
+| **Home Screen** | Central access point with a Favorite Grid and a Tag Rail on the right. |
+| **App Drawer** | Panel rising from the bottom, about 60% of the screen, with app search. |
+| **Tag System** | Groups apps with tags that can be created, renamed, reordered, and deleted. |
+| **Settings** | Appearance, wallpaper, gesture hint, version, and app information. |
+
+## 3. Home Screen design
+
+- **Favorite Grid:** 15 slots in 5 columns × 3 rows at the bottom. Empty slots are allowed and are never filled automatically.
+- **Tag Rail:** a vertical list of tags on the right side. Tapping a tag opens its app collection in a lightweight panel.
+- **Wallpaper:** background presets and a custom image.
+- **Gestures:** swipe up from the Home canvas or the Favorite area to open the App Drawer; long-press and drag to arrange apps and tags. Pressing Home while NekOS is open returns to a clean Home.
+- Keep the Android status bar and notification shade accessible, and never block system navigation.
+
+## 4. App behavior
+
+- **Tap** an app to launch it.
+- **Long-press and release** without moving opens the app action menu: App info, Add/Remove favorite, Uninstall.
+- **Long-press and move** beyond touch slop starts a drag to reorder.
+- **Uninstall** is always confirmed by Android's system UI.
+- **Search** matches any part of an app name, ignoring case.
+- App icons in the drawer, favorites, and tag collections are always the **original Android icons**.
+
+## 5. Tag System
+
+- Create, rename, reorder, and delete tags.
+- Each tag has a name (max 24 characters), a color from a small palette, and an optional icon from the bundled catalog.
+- Deleting a tag always asks for confirmation.
+- Assign and unassign installed apps.
+- Tag color applies to the tag surface only; catalog icons keep their original colors.
+
+## 6. Icon policy
+
+- Catalog icons in `main_assets/ikon/` are for **tag icons and launcher UI only**.
+- The catalog JSON is the source of truth for icon names and metadata; the Markdown indexes are human-readable references.
+- Do not expose icon-color customization unless it preserves the artwork and has been visually tested.
+
+## 7. Visual direction
+
+- Cozy-tech: warm, rounded, calm, with precise spacing and restrained accent colors.
+- Warm neutral backgrounds; tags use soft tinted surfaces; app icons stay native.
+- Animations are short and purposeful and must never slow down launching an app.
+- Use UI icon assets selectively rather than decorating every surface.
+- Branding: the launcher icon is `app_logo.png`; a short, calm startup splash uses the wordmark; the Home header shows a small secondary wordmark.
+
+## 8. Settings scope
+
+Settings stays small and simple:
+
+1. **Appearance:** Home background presets.
+2. **Wallpaper:** choose or remove a custom image.
+3. **Home behavior:** show the App Drawer gesture hint again.
+4. **About:** version, license, and repository link.
+
+## 9. Features NekOS deliberately leaves out
+
+To protect its focus, NekOS does not add:
+
+- A widget engine.
+- Nested folders.
+- Multiple Home pages.
+- News or recommendation feeds.
+- Complex automation.
+- An elaborate theme system.
+- Too many gestures.
+
+Also deferred: AI tagging, alphabet or color search, and advanced gesture customization. Revisit these only through an explicit product decision.
+
+## 10. Development priorities
+
+Do not add features first. Make the basics work well:
+
+1. Keep the app list up to date after apps are installed or removed.
+2. Make app search comfortable to use.
+3. Handle disabled or unavailable apps gracefully.
+4. Keep gestures and drag-and-drop stable on physical devices.
+5. Consider small refinements, such as notification dots, only if they are really needed.
+
+## 11. Design principles
+
+- Gesture discovery is subtle but not cryptic; hints are dismissible.
+- Use stable identifiers (package name plus profile) for saved assignments and handle uninstalled apps gracefully.
+- Build and verify the core flow before any customization.
+- Add something only if it truly improves everyday comfort. If a feature does not help users reach and manage their apps more easily, leave it out.

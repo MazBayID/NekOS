@@ -219,3 +219,15 @@ fun requestAppUninstall(context: Context, app: InstalledApp) {
         ).show()
     }
 }
+
+/**
+ * True when two catalogs list the same launchable entries in the same order.
+ * Used to keep the current list, and its decoded icon cache, after a refresh that
+ * found nothing new.
+ */
+internal fun hasSameAppCatalog(current: List<InstalledApp>, refreshed: List<InstalledApp>): Boolean =
+    current.size == refreshed.size && current.indices.all { index ->
+        val old = current[index]
+        val new = refreshed[index]
+        old.id == new.id && old.label == new.label && old.componentName == new.componentName
+    }

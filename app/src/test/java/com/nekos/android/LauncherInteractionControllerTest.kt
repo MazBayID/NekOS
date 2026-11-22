@@ -125,10 +125,11 @@ class LauncherInteractionControllerTest {
     }
 
     @Test
-    fun homeSwipeAreaKeepsTagRailAndFavoriteBottomExcluded() {
+    fun homeSwipeAreaCoversMainCanvasAndFavoriteBandButNotTagRail() {
         assertTrue(isHomeDrawerGestureEligible(600f, 500f, 1000f, 1000f, 210f))
         assertFalse(isHomeDrawerGestureEligible(650f, 500f, 1000f, 1000f, 210f))
-        assertFalse(isHomeDrawerGestureEligible(500f, 800f, 1000f, 1000f, 210f))
+        assertTrue(isHomeDrawerGestureEligible(500f, 800f, 1000f, 1000f, 210f))
+        assertTrue(isHomeDrawerGestureEligible(900f, 900f, 1000f, 1000f, 210f))
     }
 
     @Test

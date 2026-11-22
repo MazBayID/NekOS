@@ -14,8 +14,8 @@ NekOS uses a single Activity with Jetpack Compose. Keep the Activity responsible
 ## State and persistence rules
 
 - Keep one source of truth for each user-owned collection.
-- Persist package names, never Drawable or Bitmap instances.
-- Treat package names as stable app identifiers; refresh the installed-app list after returning from system app info/uninstall screens.
+- Persist app IDs and package names, never Drawable or Bitmap instances.
+- Treat the app ID (profile serial number plus package name) as the stable identifier; the installed-app list refreshes from `LauncherApps` callbacks and on resume, including after returning from system app info/uninstall screens.
 - Remove stale package references after an app is uninstalled.
 - Preserve the 15-slot favorite layout and its empty slots when moving or removing apps.
 - Do not make a UI action appear successful until the underlying state change has completed.
@@ -24,6 +24,7 @@ NekOS uses a single Activity with Jetpack Compose. Keep the Activity responsible
 
 ## Interaction rules
 
+- Home layout: Favorite Grid (5 × 3) at the bottom, Tag Rail on the right, App Drawer rising to about 60% of the screen height.
 - A normal tap launches the app.
 - A long-press followed by release without meaningful movement opens the app action menu.
 - Movement beyond touch slop after a long-press begins a drag; the final target is calculated from the full drag distance, not the initial finger position inside the icon.
@@ -38,10 +39,9 @@ NekOS uses a single Activity with Jetpack Compose. Keep the Activity responsible
 - Keep source PNGs untouched. The catalog index and icon files are bundled as runtime assets for the tag icon picker.
 - Keep source icon IDs and filenames intact when mapping them into app resources.
 
-## Implementation sequence
+## Current priorities
 
-1. Stabilize app actions, favorite interactions, and app-list refresh.
-2. Extract favorite state and package actions from the root composable into focused domain/data components.
-3. Implement tag management UI with catalog icon selection, color palette, and app assignment.
-4. Add tag collection view for launching assigned apps and refine the home-screen tag interaction.
-5. Extract remaining root state and add settings after the home/drawer/favorites/tags vertical slice is reliable.
+1. Verify gestures, drag-and-drop, and app-list refresh on physical devices.
+2. Handle disabled or unavailable apps gracefully.
+3. Reduce the size of `NekOSRoot.kt` (about 1,500 lines) by extracting Home, App Drawer, and Tag Rail composables and their state into focused files, without changing behavior.
+4. Keep new features out unless they pass the test in `PRODUCT_DIRECTION.md`.

@@ -90,6 +90,13 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalViewConfiguration
@@ -108,26 +115,33 @@ private val Muted = Color(0xFF8B8982)
 private val TagSurface = Color(0xFFE7E1D6)
 
 @Composable
-fun NekOSRoot(refreshToken: Int) {
+fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
     val launchSourceView = LocalView.current
     val iconCatalogRepository = remember(context) { IconCatalogRepository(context) }
     var apps by remember { mutableStateOf(emptyList<InstalledApp>()) }
     var favoritePackages by remember { mutableStateOf(loadFavoritePackages(context)) }
     var tags by remember { mutableStateOf(TagStore.load(context)) }
     var isInitialLoadComplete by remember { mutableStateOf(false) }
+    var lastAppliedRefreshToken by remember { mutableIntStateOf(-1) }
 
     val latestFavoritePackages by rememberUpdatedState(favoritePackages)
     val latestTags by rememberUpdatedState(tags)
 
     // Discover launchable apps while the brand splash is visible instead of
     // waiting for an artificial timer before starting initialization.
-    LaunchedEffect(refreshToken) {
+    LaunchedEffect(refreshToken, resumeToken) {
         val refreshedCatalog = withContext(Dispatchers.IO) {
             loadLaunchableApps(context)
         }
         val refreshedApps = refreshedCatalog.apps
-        apps = refreshedApps
+        // A resume-only refresh that found the same apps keeps the current list, so decoded
+        // icons are reused and Favorite icons do not re-animate every time Home is shown.
+        if (refreshToken != lastAppliedRefreshToken || !hasSameAppCatalog(apps, refreshedApps)) {
+            apps = refreshedApps
+        }
+        lastAppliedRefreshToken = refreshToken
         val currentProfileSerialNumber = context
             .getSystemService(UserManager::class.java)
             .getSerialNumberForUser(Process.myUserHandle())
@@ -184,6 +198,7 @@ fun NekOSRoot(refreshToken: Int) {
     var tagEditorTarget by remember { mutableStateOf<NekTag?>(null) }
     var viewingTag by remember { mutableStateOf<NekTag?>(null) }
     var actionMenuTag by remember { mutableStateOf<NekTag?>(null) }
+    var tagPendingDelete by remember { mutableStateOf<NekTag?>(null) }
     val tagPillBounds = remember { mutableStateMapOf<String, Rect>() }
     var draggedTagId by remember { mutableStateOf<String?>(null) }
     var draggedTagPreview by remember { mutableStateOf<NekTag?>(null) }
@@ -303,8 +318,23 @@ fun NekOSRoot(refreshToken: Int) {
             }
         }
         fun closeDrawer() {
+            focusManager.clearFocus()
             isDrawerDragging = false
             drawerTargetProgress = 1f
+        }
+
+        // Pressing Home while NekOS is open returns to a clean Home screen. An in-progress
+        // tag edit is left alone so the user does not lose what they typed.
+        LaunchedEffect(homeSignal) {
+            if (homeSignal > 0) {
+                closeDrawer()
+                showSettings = false
+                actionMenuApp = null
+                actionMenuPreviewApp = null
+                viewingTag = null
+                actionMenuTag = null
+                tagPendingDelete = null
+            }
         }
 
         BackHandler(enabled = showSettings || actionMenuApp != null || drawerProgress < 1f) {
@@ -477,13 +507,19 @@ fun NekOSRoot(refreshToken: Int) {
                 )
             }
 
+            // The panel keeps its 60% height but rises above the keyboard while searching,
+            // so results stay visible while typing.
+            val fullScreenHeight = maxHeight
+            BoxWithConstraints(
+                Modifier.fillMaxSize().statusBarsPadding().imePadding()
+            ) {
             AppDrawer(
                 apps = apps,
                 iconBitmapCache = iconBitmapCache,
                 closeThresholdPx = drawerCloseThresholdPx,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .fillMaxHeight(0.60f)
+                    .height(minOf(fullScreenHeight * 0.60f, maxHeight))
                     .align(Alignment.BottomCenter)
                     .graphicsLayer {
                         // Hide the entire drawer during a drag so no grid rows remain
@@ -537,6 +573,7 @@ fun NekOSRoot(refreshToken: Int) {
                     if ((totalDrag == 0f && velocityY == 0f) || shouldCloseDrawerAfterDrag(totalDrag, drawerCloseThresholdPx, velocityY)) closeDrawer()
                 }
             )
+            }
         }
 
         val popupApp = actionMenuPreviewApp ?: actionMenuApp
@@ -709,8 +746,8 @@ fun NekOSRoot(refreshToken: Int) {
                     showTagEditor = true
                 },
                 onDelete = {
-                    saveTags(tags.filterNot { it.id == tag.id })
                     actionMenuTag = null
+                    tagPendingDelete = tag
                 },
                 onDismiss = { actionMenuTag = null }
             )
@@ -731,12 +768,31 @@ fun NekOSRoot(refreshToken: Int) {
                         tagEditorTarget = null
                     }
                 },
-                onDelete = { deleted ->
-                    saveTags(tags.filterNot { it.id == deleted.id })
-                    showTagEditor = false
-                    tagEditorTarget = null
-                },
+                onDelete = { deleted -> tagPendingDelete = deleted },
                 onDismiss = { showTagEditor = false; tagEditorTarget = null }
+            )
+        }
+
+        tagPendingDelete?.let { tag ->
+            AlertDialog(
+                onDismissRequest = { tagPendingDelete = null },
+                shape = RoundedCornerShape(28.dp),
+                containerColor = Color(0xFFFEFCF8),
+                titleContentColor = Ink,
+                textContentColor = Ink,
+                title = { Text("Delete “${tag.name}”?") },
+                text = { Text("Only the tag is removed. Your apps are not affected.") },
+                confirmButton = {
+                    TextButton(onClick = {
+                        saveTags(tags.filterNot { it.id == tag.id })
+                        tagPendingDelete = null
+                        showTagEditor = false
+                        tagEditorTarget = null
+                    }) { Text("Delete", color = Color(0xFFB3261E)) }
+                },
+                dismissButton = {
+                    TextButton(onClick = { tagPendingDelete = null }) { Text("Cancel") }
+                }
             )
         }
 
@@ -748,7 +804,7 @@ fun NekOSRoot(refreshToken: Int) {
                 },
                 title = { Text("Welcome to NekOS") },
                 text = {
-                    Text("Swipe up from Home to open your apps. Swipe down from the drawer handle to return home.")
+                    Text("Swipe up from Home to open your apps. Swipe down on the handle, or tap above the panel, to return Home.")
                 },
                 confirmButton = {
                     TextButton(onClick = {
@@ -851,15 +907,14 @@ private fun HomeScreen(
                         onDragStart = { position ->
                             totalDrag = 0f
                             drawerDragStarted = false
-                            // Keep the Tag rail and Favorite grid free to scroll
-                            // and interact; the launcher swipe starts in the main
-                            // Home canvas instead.
+                            // The swipe can start in the main Home canvas or the
+                            // Favorite band; the scrolling Tag rail stays free.
                             gestureEligible = isHomeDrawerGestureEligible(
                                 positionX = position.x,
                                 positionY = position.y,
                                 containerWidth = size.width.toFloat(),
                                 containerHeight = size.height.toFloat(),
-                                excludedBottomPx = 210.dp.toPx()
+                                favoriteBandPx = 244.dp.toPx()
                             )
                             velocityTracker.resetTracking()
                         },
@@ -1291,9 +1346,20 @@ private fun AppDrawer(
                 label = app.label,
                 query = searchQuery
             )
-        }.sortedWith(compareBy(appLabelComparator()) { it.label })
+        }
     }
     val gridState = rememberLazyGridState()
+    val focusManager = LocalFocusManager.current
+    // Dragging the list hides the keyboard so results can be browsed. Programmatic scrolls
+    // (such as jumping back to the top when the query changes) do not reach this connection.
+    val dismissKeyboardOnScroll = remember(focusManager) {
+        object : NestedScrollConnection {
+            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                if (available.y != 0f) focusManager.clearFocus()
+                return Offset.Zero
+            }
+        }
+    }
 
     LaunchedEffect(searchQuery) {
         gridState.scrollToItem(0)
@@ -1364,6 +1430,8 @@ private fun AppDrawer(
             onValueChange = { searchQuery = it },
             placeholder = { Text("Search apps", color = Muted) },
             singleLine = true,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+            keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() }),
             shape = RoundedCornerShape(18.dp),
             colors = TextFieldDefaults.colors(
                 focusedTextColor = Ink,
@@ -1387,7 +1455,7 @@ private fun AppDrawer(
         )
         if (filteredApps.isEmpty()) {
             Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                Text("No apps found", color = Muted)
+                Text("No apps match your search", color = Muted)
             }
         } else {
             LazyVerticalGrid(
@@ -1398,7 +1466,7 @@ private fun AppDrawer(
                 contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 10.dp, bottom = 28.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier.weight(1f).fillMaxWidth()
+                modifier = Modifier.weight(1f).fillMaxWidth().nestedScroll(dismissKeyboardOnScroll)
             ) {
                 items(filteredApps, key = { it.id }) { app ->
                     val cachedBitmap = iconBitmapCache[app.id]

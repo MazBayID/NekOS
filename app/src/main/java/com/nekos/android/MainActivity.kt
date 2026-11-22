@@ -8,6 +8,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.os.UserHandle
 import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
@@ -24,9 +25,19 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 
 class MainActivity : ComponentActivity() {
+    /** Bumped when Android reports a package or profile change; always reloads the catalog. */
     private var appRefreshToken by mutableIntStateOf(0)
+    /** Bumped on resume; reloads the catalog but keeps it (and its icon cache) if nothing changed. */
+    private var resumeRefreshToken by mutableIntStateOf(0)
+    /** Bumped when the Home button is pressed while NekOS is already open. */
+    private var homeSignal by mutableIntStateOf(0)
+    private var isForcedRefreshPending = false
+    private var stoppedAtElapsedMillis = 0L
     private val mainHandler = Handler(Looper.getMainLooper())
-    private val refreshInstalledAppsRunnable = Runnable { appRefreshToken++ }
+    private val refreshInstalledAppsRunnable = Runnable {
+        isForcedRefreshPending = false
+        appRefreshToken++
+    }
     private val launcherApps by lazy { getSystemService(LauncherApps::class.java) }
     private val packageCallback = object : LauncherApps.Callback() {
         override fun onPackageAdded(packageName: String, user: UserHandle) {
@@ -76,6 +87,7 @@ class MainActivity : ComponentActivity() {
     private fun refreshInstalledApps() {
         // Package updates can emit several callbacks in quick succession.
         // Coalesce them into one app-catalog refresh.
+        isForcedRefreshPending = true
         mainHandler.removeCallbacks(refreshInstalledAppsRunnable)
         mainHandler.postDelayed(refreshInstalledAppsRunnable, 250L)
     }
@@ -117,6 +129,7 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onStop() {
+        stoppedAtElapsedMillis = SystemClock.elapsedRealtime()
         mainHandler.removeCallbacks(refreshInstalledAppsRunnable)
         if (isPackageCallbackRegistered) {
             launcherApps.unregisterCallback(packageCallback)
@@ -132,7 +145,24 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         mainHandler.removeCallbacks(refreshInstalledAppsRunnable)
-        appRefreshToken++
+        // Package callbacks are only registered while the Activity is started, so a
+        // change made elsewhere (for example an app update) can be missed. Reload fully
+        // after a pending event or a longer absence; otherwise do a cheap check that keeps
+        // the existing app list and icon cache when nothing changed.
+        val wasAwayForLong = stoppedAtElapsedMillis != 0L &&
+            SystemClock.elapsedRealtime() - stoppedAtElapsedMillis > LONG_ABSENCE_MILLIS
+        if (isForcedRefreshPending || wasAwayForLong) {
+            isForcedRefreshPending = false
+            appRefreshToken++
+        } else {
+            resumeRefreshToken++
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        // Pressing Home while NekOS is open returns to a clean Home screen.
+        if (intent.hasCategory(Intent.CATEGORY_HOME)) homeSignal++
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -148,9 +178,17 @@ class MainActivity : ComponentActivity() {
         setContent {
             MaterialTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    NekOSRoot(refreshToken = appRefreshToken)
+                    NekOSRoot(
+                        refreshToken = appRefreshToken,
+                        resumeToken = resumeRefreshToken,
+                        homeSignal = homeSignal
+                    )
                 }
             }
         }
+    }
+
+    private companion object {
+        const val LONG_ABSENCE_MILLIS = 30_000L
     }
 }
