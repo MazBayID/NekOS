@@ -208,6 +208,7 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
     val iconBitmapCache = remember(apps) { AppIconBitmapCache() }
     val interactionController = remember { LauncherInteractionController() }
     var favoriteDrag by remember { mutableStateOf<LauncherDragSession?>(null) }
+    var draggedFavoriteAppId by remember { mutableStateOf<String?>(null) }
     val favoriteSlotBounds = remember { mutableStateMapOf<Int, Rect>() }
     var cancelDropBounds by remember { mutableStateOf<Rect?>(null) }
     var tagEditorTarget by remember { mutableStateOf<NekTag?>(null) }
@@ -370,6 +371,7 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
             wallpaper = wallpaperBitmap,
             onOpenSettings = { showSettings = true },
             favoritePackages = favoritePackages,
+            draggedFavoriteAppId = draggedFavoriteAppId.takeIf { favoriteDrag?.hasMoved == true },
             tags = tags,
             activeTagPage = activeTagPage,
             onTagPageChange = { activeTagPage = it },
@@ -409,6 +411,7 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
             onFavoriteDragStart = { app, position ->
                 clearActionMenuPreview()
                 cancelDropBounds = null
+                draggedFavoriteAppId = app.id
                 favoriteDrag = interactionController.startDrag(
                     app.id,
                     LauncherDragSource.FAVORITE,
@@ -428,11 +431,13 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
                     drag.targetIndex?.let { placeFavoriteFromDrawer(drag.appId, it) }
                 }
                 favoriteDrag = null
+                draggedFavoriteAppId = null
                 cancelDropBounds = null
             },
             onFavoriteDragCancel = {
                 interactionController.cancelDrag()
                 favoriteDrag = null
+                draggedFavoriteAppId = null
                 cancelDropBounds = null
             },
             onTagClick = { tag -> viewingTag = tag },
@@ -892,6 +897,7 @@ private fun HomeScreen(
     wallpaper: androidx.compose.ui.graphics.ImageBitmap?,
     onOpenSettings: () -> Unit,
     favoritePackages: List<String?>,
+    draggedFavoriteAppId: String?,
     tags: List<NekTag>,
     activeTagPage: Int,
     onTagPageChange: (Int) -> Unit,
@@ -1210,6 +1216,7 @@ private fun HomeScreen(
                             val app = favoritePackages.getOrNull(index)?.let { appById[it] }
                             FavoriteSlot(
                                 app = app,
+                                isBeingDragged = app?.id == draggedFavoriteAppId,
                                 iconBitmapCache = iconBitmapCache,
                                 onBoundsChanged = { bounds -> onFavoriteSlotBounds(index, bounds) },
                                 isDropTarget = favoriteDropTarget == index,
@@ -1235,6 +1242,7 @@ private fun HomeScreen(
 @Composable
 private fun FavoriteSlot(
     app: InstalledApp?,
+    isBeingDragged: Boolean,
     iconBitmapCache: AppIconBitmapCache,
     onBoundsChanged: (Rect) -> Unit,
     isDropTarget: Boolean,
@@ -1324,7 +1332,7 @@ private fun FavoriteSlot(
             contentAlignment = Alignment.Center
         ) {
             this@Column.AnimatedVisibility(
-                visible = app != null && iconBitmap != null,
+                visible = app != null && iconBitmap != null && !isBeingDragged,
                 enter = fadeIn(tween(180)) + scaleIn(
                     initialScale = 0.90f,
                     animationSpec = tween(180)
