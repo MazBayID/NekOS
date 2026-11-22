@@ -41,10 +41,32 @@ internal fun nekosBackgroundColor(preset: String): Color = when (normalizeNekOSB
     else -> Color(0xFFF4F1EA)
 }
 
+internal data class LauncherThemeOption(val key: String, val label: String, val color: Color)
+
+internal val LauncherThemeOptions = listOf(
+    LauncherThemeOption("porcelain", "Porcelain", Color(0xFFFEFCF8)),
+    LauncherThemeOption("sand", "Sand", Color(0xFFF5EBDD)),
+    LauncherThemeOption("sage", "Sage", Color(0xFFE8EEE5)),
+    LauncherThemeOption("mist", "Mist", Color(0xFFE8EDF2)),
+    LauncherThemeOption("lavender", "Lavender", Color(0xFFEFEAF5)),
+    LauncherThemeOption("blush", "Blush", Color(0xFFF5E8E6)),
+    LauncherThemeOption("mint", "Mint", Color(0xFFE6F1EC)),
+    LauncherThemeOption("sky", "Sky", Color(0xFFE5F0F7))
+)
+
+internal fun normalizeLauncherTheme(key: String?): String =
+    LauncherThemeOptions.firstOrNull { it.key == key }?.key ?: "porcelain"
+
+internal fun launcherThemeColor(key: String): Color =
+    LauncherThemeOptions.firstOrNull { it.key == normalizeLauncherTheme(key) }?.color
+        ?: Color(0xFFFEFCF8)
+
 @Composable
 internal fun NekOSSettingsDialog(
     backgroundPreset: String,
-    hasWallpaper: Boolean,
+    launcherThemeKey: String,
+    onLauncherThemeChange: (String) -> Unit,
+    hasWallpaper:
     appVersion: String,
     isDefaultLauncher: Boolean,
     onSetAsHome: () -> Unit,
@@ -122,6 +144,50 @@ internal fun NekOSSettingsDialog(
                     }
                 }
 
+                Column(verticalArrangement = Arrangement.spacedBy(9.dp)) {
+                    Text(
+                        "Launcher theme",
+                        color = SettingsInk,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 14.sp
+                    )
+                    Text(
+                        "App Drawer and dialog background",
+                        color = SettingsMuted,
+                        fontSize = 12.sp
+                    )
+                    LauncherThemeOptions.forEach { option ->
+                        val selected = launcherThemeKey == option.key
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .defaultMinSize(minHeight = 48.dp)
+                                .clip(RoundedCornerShape(13.dp))
+                                .background(option.color)
+                                .border(
+                                    width = if (selected) 1.5.dp else 1.dp,
+                                    color = if (selected) SettingsAccent else SettingsInk.copy(alpha = 0.10f),
+                                    shape = RoundedCornerShape(13.dp)
+                                )
+                                .selectable(
+                                    selected = selected,
+                                    role = Role.RadioButton,
+                                    onClick = { onLauncherThemeChange(option.key) }
+                                )
+                                .padding(horizontal = 14.dp, vertical = 11.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                option.label,
+                                color = SettingsInk,
+                                fontSize = 14.sp,
+                                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal
+                            )
+                            if (selected) Text("✓", color = SettingsAccent, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
                 HorizontalDivider(color = SettingsInk.copy(alpha = 0.12f))
 
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -234,7 +300,7 @@ internal fun NekOSSettingsDialog(
                 Text("Done", color = SettingsAccent, fontWeight = FontWeight.SemiBold)
             }
         },
-        containerColor = LAUNCHER_SURFACE,
+        containerColor = launcherThemeColor(launcherThemeKey),
         titleContentColor = SettingsInk,
         textContentColor = SettingsInk
     )
