@@ -105,7 +105,7 @@ class AppIconBitmapCache(
                         }
                         bitmap.asImageBitmap()
                     }.also { bitmap ->
-                        if (bitmap != null && memoryLoadsEnabled) {
+                        if (memoryLoadsEnabled) {
                             memoryCache.put(cacheKey, bitmap)
                         }
                     }
