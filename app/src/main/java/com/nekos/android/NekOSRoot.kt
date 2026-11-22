@@ -1,6 +1,8 @@
 package com.nekos.android
 
 import android.content.Context
+import android.content.ComponentCallbacks2
+import android.content.res.Configuration
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -113,7 +115,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlin.math.abs
 import kotlin.math.roundToInt
-import androidx.core.graphics.drawable.toBitmap
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyGridState
 import sh.calvin.reorderable.rememberReorderableLazyListState
@@ -211,7 +212,9 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
         return
     }
 
-    val iconBitmapCache = remember(apps) { AppIconBitmapCache() }
+    val iconBitmapCache = remember(context.applicationContext) {
+        AppIconBitmapCache(context.applicationContext)
+    }
     val interactionController = remember { LauncherInteractionController() }
     var favoriteDrag by remember { mutableStateOf<LauncherDragSession?>(null) }
     val favoriteSlotBounds = remember { mutableStateMapOf<Int, Rect>() }
@@ -245,10 +248,35 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
     // The wallpaper is always saved to the same file, so the path alone cannot signal a new
     // image. The revision makes choosing a second wallpaper reload it immediately.
     var wallpaperRevision by remember { mutableIntStateOf(0) }
-    LaunchedEffect(wallpaperPath, wallpaperRevision) {
+    LaunchedEffect(wallpaperPath, wallpaperRevision, resumeToken) {
         wallpaperBitmap = withContext(Dispatchers.IO) {
             wallpaperPath?.let { path -> loadHomeWallpaper(context, path) }
         }
+    }
+    DisposableEffect(context, iconBitmapCache, iconCatalogRepository) {
+        val memoryCallbacks = object : ComponentCallbacks2 {
+            override fun onTrimMemory(level: Int) {
+                if (level >= ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN) {
+                    iconBitmapCache.trimMemory()
+                    iconCatalogRepository.clearMemoryCache()
+                    wallpaperBitmap = null
+                }
+            }
+
+            override fun onConfigurationChanged(newConfig: Configuration) = Unit
+
+            @Suppress("DEPRECATION")
+            override fun onLowMemory() {
+                iconBitmapCache.trimMemory()
+                iconCatalogRepository.clearMemoryCache()
+                wallpaperBitmap = null
+            }
+        }
+        context.registerComponentCallbacks(memoryCallbacks)
+        onDispose { context.unregisterComponentCallbacks(memoryCallbacks) }
+    }
+    LaunchedEffect(resumeToken) {
+        iconBitmapCache.resumeAfterBackground()
     }
     val wallpaperPickerScope = rememberCoroutineScope()
     val wallpaperPicker = rememberLauncherForActivityResult(
@@ -603,16 +631,13 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
         favoriteDrag?.takeIf { it.hasMoved }?.let { drag ->
             val draggedApp = apps.firstOrNull { it.id == drag.appId }
             if (draggedApp != null) {
-                val cachedBitmap = iconBitmapCache[draggedApp.id]
-                var bitmap by remember(draggedApp.id) { mutableStateOf(cachedBitmap) }
-                LaunchedEffect(draggedApp, cachedBitmap) {
-                    bitmap = cachedBitmap
-                    if (cachedBitmap == null) {
-                        val loadedBitmap = withContext(Dispatchers.Default) {
-                            draggedApp.icon.toBitmap(96, 96).asImageBitmap()
-                        }
-                        iconBitmapCache.put(draggedApp.id, loadedBitmap)
-                        bitmap = loadedBitmap
+                val cacheGeneration = iconBitmapCache.generation
+                val cachedBitmap = iconBitmapCache[draggedApp.iconCacheKey]
+                var bitmap by remember(draggedApp.iconCacheKey) { mutableStateOf(cachedBitmap) }
+                LaunchedEffect(draggedApp.iconCacheKey, cacheGeneration) {
+                    bitmap = iconBitmapCache[draggedApp.iconCacheKey]
+                    if (bitmap == null) {
+                        bitmap = iconBitmapCache.getOrLoad(draggedApp)
                     }
                 }
                 val iconOffset = with(LocalDensity.current) { 28.dp.toPx() }
@@ -1177,17 +1202,14 @@ private fun FavoriteSlot(
     reorderHandleScope: sh.calvin.reorderable.ReorderableCollectionItemScope,
     modifier: Modifier = Modifier
 ) {
-    val cachedBitmap = app?.let { iconBitmapCache[it.id] }
-    var bitmap by remember(app?.id) { mutableStateOf(cachedBitmap) }
-    LaunchedEffect(app, cachedBitmap) {
-        bitmap = cachedBitmap
+    val cacheGeneration = iconBitmapCache.generation
+    val cachedBitmap = app?.let { iconBitmapCache[it.iconCacheKey] }
+    var bitmap by remember(app?.iconCacheKey) { mutableStateOf(cachedBitmap) }
+    LaunchedEffect(app?.iconCacheKey, cacheGeneration) {
+        bitmap = app?.let { iconBitmapCache[it.iconCacheKey] }
         val currentApp = app ?: return@LaunchedEffect
-        if (cachedBitmap == null) {
-            val loadedBitmap = withContext(Dispatchers.Default) {
-                currentApp.icon.toBitmap(96, 96).asImageBitmap()
-            }
-            iconBitmapCache.put(currentApp.id, loadedBitmap)
-            bitmap = loadedBitmap
+        if (bitmap == null) {
+            bitmap = iconBitmapCache.getOrLoad(currentApp)
         }
     }
     val slotBackground by animateColorAsState(
@@ -1555,18 +1577,15 @@ private fun AppDrawer(
                     .nestedScroll(drawerScrollConnection)
             ) {
                 items(filteredApps, key = { it.id }) { app ->
-                    val cachedBitmap = iconBitmapCache[app.id]
-                    var bitmap by remember(app.id) {
+                    val cacheGeneration = iconBitmapCache.generation
+                    val cachedBitmap = iconBitmapCache[app.iconCacheKey]
+                    var bitmap by remember(app.iconCacheKey) {
                         mutableStateOf(cachedBitmap)
                     }
-                    LaunchedEffect(app, cachedBitmap) {
-                        bitmap = cachedBitmap
-                        if (cachedBitmap == null) {
-                            val loadedBitmap = withContext(Dispatchers.Default) {
-                                app.icon.toBitmap(96, 96).asImageBitmap()
-                            }
-                            iconBitmapCache.put(app.id, loadedBitmap)
-                            bitmap = loadedBitmap
+                    LaunchedEffect(app.iconCacheKey, cacheGeneration) {
+                        bitmap = iconBitmapCache[app.iconCacheKey]
+                        if (bitmap == null) {
+                            bitmap = iconBitmapCache.getOrLoad(app)
                         }
                     }
                     AppGridItem(
@@ -1655,20 +1674,12 @@ private fun AppGridItem(
             modifier = Modifier.size(56.dp),
             contentAlignment = Alignment.Center
         ) {
-            this@Column.AnimatedVisibility(
-                visible = bitmap != null,
-                enter = fadeIn(tween(180)) + scaleIn(
-                    initialScale = 0.90f,
-                    animationSpec = tween(180)
+            bitmap?.let { loadedBitmap ->
+                Image(
+                    bitmap = loadedBitmap,
+                    contentDescription = app.label,
+                    modifier = Modifier.size(52.dp)
                 )
-            ) {
-                bitmap?.let { loadedBitmap ->
-                    Image(
-                        bitmap = loadedBitmap,
-                        contentDescription = app.label,
-                        modifier = Modifier.size(52.dp)
-                    )
-                }
             }
         }
         Spacer(Modifier.height(5.dp))
