@@ -309,19 +309,20 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
         val drawerHeightPx = constraints.maxHeight.toFloat().coerceAtLeast(1f)
         val homeSwipeThresholdPx = with(androidx.compose.ui.platform.LocalDensity.current) { 48.dp.toPx() }
         val drawerCloseThresholdPx = with(androidx.compose.ui.platform.LocalDensity.current) { 72.dp.toPx() }
-        val backgroundBlurRadiusPx = with(androidx.compose.ui.platform.LocalDensity.current) { 16.dp.toPx() }
-        var drawerProgress by remember { mutableFloatStateOf(1f) }
+        val drawerProgress = remember { mutableFloatStateOf(1f) }
         var drawerTargetProgress by remember { mutableFloatStateOf(1f) }
+        var drawerVisible by remember { mutableStateOf(false) }
         var isDrawerDragging by remember { mutableStateOf(false) }
-        // Pointer movement updates one shared progress value directly. A spring
-        // is used only to settle after release, never once per pointer event.
+        // Keep frame-by-frame progress reads inside graphicsLayer blocks below.
+        // This lets Compose update layer properties without recomposing the launcher root.
         LaunchedEffect(drawerTargetProgress, isDrawerDragging) {
             if (!isDrawerDragging) {
                 animate(
-                    initialValue = drawerProgress,
+                    initialValue = drawerProgress.floatValue,
                     targetValue = drawerTargetProgress,
                     animationSpec = spring(dampingRatio = 0.82f, stiffness = 420f)
-                ) { value, _ -> drawerProgress = value }
+                ) { value, _ -> drawerProgress.floatValue = value }
+                if (drawerTargetProgress >= 1f) drawerVisible = false
             }
         }
         fun closeDrawer() {
@@ -344,7 +345,7 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
             }
         }
 
-        BackHandler(enabled = showSettings || actionMenuApp != null || drawerProgress < 1f) {
+        BackHandler(enabled = showSettings || actionMenuApp != null || drawerVisible) {
             when {
                 showSettings -> showSettings = false
                 actionMenuApp != null -> actionMenuApp = null
@@ -364,14 +365,12 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
             iconCatalogRepository = iconCatalogRepository,
             iconBitmapCache = iconBitmapCache,
             homeSwipeThresholdPx = homeSwipeThresholdPx,
-            backgroundBlurRadiusPx = if (favoriteDrag?.hasMoved == true) {
-                0f
-            } else {
-                backgroundBlurRadiusPx * (1f - drawerProgress)
-            },
+            drawerProgress = drawerProgress,
+            isFavoriteDragging = favoriteDrag?.hasMoved == true,
             onDrawerDrag = { totalDrag ->
                 isDrawerDragging = true
-                drawerProgress = (1f + totalDrag / drawerHeightPx).coerceIn(0f, 1f)
+                drawerVisible = true
+                drawerProgress.floatValue = (1f + totalDrag / drawerHeightPx).coerceIn(0f, 1f)
             },
             onDrawerDragEnd = { totalDrag, velocityY, cancelled ->
                 isDrawerDragging = false
@@ -445,20 +444,19 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
             }
         )
 
-        if (drawerProgress < 1f) {
+        if (drawerVisible) {
             // A subtle warm translucent veil keeps the blurred home screen legible
             // and provides a graceful dimmed fallback on Android versions below 12.
             Box(
                 Modifier
                     .fillMaxSize()
-                    .background(
-                        WarmBackground.copy(
-                            alpha = 0.28f * (1f - drawerProgress)
-                        )
-                    )
+                    .graphicsLayer {
+                        alpha = 0.28f * (1f - drawerProgress.floatValue)
+                    }
+                    .background(WarmBackground)
             )
 
-            if (drawerProgress <= 0.02f) {
+            if (drawerTargetProgress == 0f && !isDrawerDragging) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -488,7 +486,7 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
                         // Hide the entire drawer during a drag so no grid rows remain
                         // visible over the Home Favorite area.
                         val isDraggingApp = favoriteDrag?.hasMoved == true
-                        translationY = if (isDraggingApp) size.height * 0.12f else drawerProgress * size.height
+                        translationY = if (isDraggingApp) size.height * 0.12f else drawerProgress.floatValue * size.height
                         alpha = if (isDraggingApp) 0f else 1f
                         scaleX = if (isDraggingApp) 0.985f else 1f
                         scaleY = if (isDraggingApp) 0.985f else 1f
@@ -823,7 +821,8 @@ private fun HomeScreen(
     iconCatalogRepository: IconCatalogRepository,
     iconBitmapCache: AppIconBitmapCache,
     homeSwipeThresholdPx: Float,
-    backgroundBlurRadiusPx: Float,
+    drawerProgress: State<Float>,
+    isFavoriteDragging: Boolean,
     onDrawerDrag: (Float) -> Unit,
     onDrawerDragEnd: (totalDrag: Float, velocityY: Float, cancelled: Boolean) -> Unit,
     onFavoriteClick: (InstalledApp, Rect) -> Unit,
@@ -847,25 +846,37 @@ private fun HomeScreen(
     val currentOnDrawerDragEnd by rememberUpdatedState(onDrawerDragEnd)
     Box(Modifier.fillMaxSize().background(backgroundColor)) {
         wallpaper?.let { image ->
+            val wallpaperBlurRadiusPx = with(LocalDensity.current) { 16.dp.toPx() }
+            val wallpaperBlurEffect = remember(wallpaperBlurRadiusPx) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    BlurEffect(
+                        wallpaperBlurRadiusPx,
+                        wallpaperBlurRadiusPx,
+                        TileMode.Decal
+                    )
+                } else {
+                    null
+                }
+            }
             Image(
                 bitmap = image,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize().graphicsLayer {
-                    renderEffect = if (
-                        Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
-                        backgroundBlurRadiusPx > 0.5f
-                    ) {
-                        BlurEffect(
-                            backgroundBlurRadiusPx,
-                            backgroundBlurRadiusPx,
-                            TileMode.Decal
-                        )
-                    } else {
-                        null
-                    }
-                }
+                modifier = Modifier.fillMaxSize()
             )
+            if (wallpaperBlurEffect != null) {
+                Image(
+                    bitmap = image,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize().graphicsLayer {
+                        renderEffect = wallpaperBlurEffect
+                        alpha = if (isFavoriteDragging) 0f else {
+                            (1f - drawerProgress.value).coerceIn(0f, 1f)
+                        }
+                    }
+                )
+            }
             // A restrained warm scrim keeps dark launcher labels readable over
             // bright or highly detailed wallpapers without hiding the image.
             Box(
