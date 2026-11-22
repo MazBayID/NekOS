@@ -169,31 +169,18 @@ internal fun NekOSSettingsDialog(
                         fontSize = 14.sp
                     )
                     Text(
-                        if (isDefaultLauncher) {
-                            "NekOS is currently your default Home app."
-                        } else {
-                            "Set NekOS as your Home app to open it when you press the Home button."
-                        },
+                        "Choose which app opens when you press the Home button.",
                         color = SettingsMuted,
                         fontSize = 12.sp,
                         lineHeight = 17.sp
                     )
-                    TextButton(
-                        onClick = onSetAsHome,
-                        enabled = !isDefaultLauncher
-                    ) {
+                    TextButton(onClick = onSetAsHome) {
                         Text(
-                            if (isDefaultLauncher) "Default Home app" else "Set as Home",
+                            "Choose launcher",
                             color = SettingsAccent,
                             fontWeight = FontWeight.SemiBold
                         )
                     }
-                    Text(
-                        "You can also set NekOS manually in Android Settings → Default launcher.",
-                        color = SettingsMuted,
-                        fontSize = 12.sp,
-                        lineHeight = 17.sp
-                    )
                     Text(
                         "Gesture hints",
                         color = SettingsInk,
