@@ -46,7 +46,12 @@ class AppIconBitmapCache(
             (bitmap.width * bitmap.height * 4 / 1024).coerceAtLeast(1)
     }
     private val loadSemaphore = Semaphore(2)
-    private val keyLocks = ConcurrentHashMap<String, Mutex>()
+    private class KeyLockEntry {
+        val mutex = Mutex()
+        var users: Int = 0
+    }
+
+    private val keyLocks = ConcurrentHashMap<String, KeyLockEntry>()
 
     @Volatile
     private var memoryLoadsEnabled = true
@@ -76,27 +81,43 @@ class AppIconBitmapCache(
         memoryCache.get(app.iconCacheKey)?.let { return it }
         if (!memoryLoadsEnabled) return null
 
-        // A preload worker and a visible Compose item may request the same icon.
-        // Serialize only requests for the same key, while retaining two-way
-        // concurrency for different applications.
-        return keyLocks.getOrPut(app.iconCacheKey) { Mutex() }.withLock {
-            memoryCache.get(app.iconCacheKey)?.let { return@withLock it }
-            if (!memoryLoadsEnabled) return@withLock null
+        val cacheKey = app.iconCacheKey
+        // Count both the active loader and any waiters before entering the mutex.
+        // The entry is removed only after the last caller has left, so a new caller
+        // cannot create a second mutex while another request is still waiting.
+        val lockEntry = keyLocks.compute(cacheKey) { _, current ->
+            (current ?: KeyLockEntry()).also { it.users++ }
+        }
 
-            loadSemaphore.withPermit {
-                memoryCache.get(app.iconCacheKey)?.let { return@withPermit it }
-                if (!memoryLoadsEnabled) return@withPermit null
+        return try {
+            lockEntry.mutex.withLock {
+                memoryCache.get(cacheKey)?.let { return@withLock it }
+                if (!memoryLoadsEnabled) return@withLock null
 
-                withContext(Dispatchers.IO) {
-                    val diskBitmap = readDiskBitmap(app.iconCacheKey)
-                    val bitmap = diskBitmap ?: createAppIcon(app).also {
-                        writeDiskBitmap(app.iconCacheKey, it)
+                loadSemaphore.withPermit {
+                    memoryCache.get(cacheKey)?.let { return@withPermit it }
+                    if (!memoryLoadsEnabled) return@withPermit null
+
+                    withContext(Dispatchers.IO) {
+                        val diskBitmap = readDiskBitmap(cacheKey)
+                        val bitmap = diskBitmap ?: createAppIcon(app).also {
+                            writeDiskBitmap(cacheKey, it)
+                        }
+                        bitmap.asImageBitmap()
+                    }.also { bitmap ->
+                        if (bitmap != null && memoryLoadsEnabled) {
+                            memoryCache.put(cacheKey, bitmap)
+                        }
                     }
-                    bitmap.asImageBitmap()
-                }.also { bitmap ->
-                    if (bitmap != null && memoryLoadsEnabled) {
-                        memoryCache.put(app.iconCacheKey, bitmap)
-                    }
+                }
+            }
+        } finally {
+            keyLocks.computeIfPresent(cacheKey) { _, current ->
+                if (current === lockEntry) {
+                    current.users--
+                    if (current.users == 0) null else current
+                } else {
+                    current
                 }
             }
         }
