@@ -456,19 +456,10 @@ fun NekOSRoot(refreshToken: Int, resumeToken: Int = 0, homeSignal: Int = 0) {
                         alpha = 0.32f * (1f - drawerProgress.floatValue)
                     }
                     .background(Color.Black)
+                    .clickable {
+                        closeDrawer()
+                    }
             )
-
-            if (drawerFullyOpen) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .fillMaxHeight(0.40f)
-                        .align(Alignment.TopCenter)
-                        .clickable {
-                            closeDrawer()
-                        }
-                )
-            }
 
             // The panel uses roughly 75% of the available screen height and
             // still adapts when the keyboard is visible.
