@@ -113,9 +113,22 @@ class LauncherInteractionControllerTest {
 
     @Test
     fun drawerOpensOnlyAfterCompletedUpwardSwipeBeyondThreshold() {
-        assertTrue(shouldOpenDrawerAfterDrag(totalDrag = -80f, threshold = 64f))
-        assertFalse(shouldOpenDrawerAfterDrag(totalDrag = -40f, threshold = 64f))
-        assertFalse(shouldOpenDrawerAfterDrag(totalDrag = 80f, threshold = 64f))
+        assertTrue(shouldOpenDrawerAfterDrag(totalDrag = -52f, threshold = 48f))
+        assertFalse(shouldOpenDrawerAfterDrag(totalDrag = -32f, threshold = 48f))
+        assertFalse(shouldOpenDrawerAfterDrag(totalDrag = 80f, threshold = 48f))
+    }
+
+    @Test
+    fun exactReducedThresholdOpensAndOnePixelLessDoesNot() {
+        assertTrue(shouldOpenDrawerAfterDrag(totalDrag = -48f, threshold = 48f))
+        assertFalse(shouldOpenDrawerAfterDrag(totalDrag = -47f, threshold = 48f))
+    }
+
+    @Test
+    fun homeSwipeAreaKeepsTagRailAndFavoriteBottomExcluded() {
+        assertTrue(isHomeDrawerGestureEligible(600f, 500f, 1000f, 1000f, 210f))
+        assertFalse(isHomeDrawerGestureEligible(650f, 500f, 1000f, 1000f, 210f))
+        assertFalse(isHomeDrawerGestureEligible(500f, 800f, 1000f, 1000f, 210f))
     }
 
     @Test
@@ -123,7 +136,7 @@ class LauncherInteractionControllerTest {
         assertTrue(
             shouldOpenDrawerAfterDrag(
                 totalDrag = -24f,
-                threshold = 64f,
+                threshold = 48f,
                 velocityY = -1100f
             )
         )
@@ -134,7 +147,7 @@ class LauncherInteractionControllerTest {
         assertFalse(
             shouldOpenDrawerAfterDrag(
                 totalDrag = -24f,
-                threshold = 64f,
+                threshold = 48f,
                 velocityY = 1100f
             )
         )
@@ -145,7 +158,7 @@ class LauncherInteractionControllerTest {
         assertFalse(
             shouldOpenDrawerAfterDrag(
                 totalDrag = -24f,
-                threshold = 64f,
+                threshold = 48f,
                 velocityY = -300f
             )
         )
@@ -156,14 +169,14 @@ class LauncherInteractionControllerTest {
         assertFalse(
             shouldOpenDrawerAfterDrag(
                 totalDrag = -100f,
-                threshold = 64f,
+                threshold = 48f,
                 velocityY = 1200f
             )
         )
         assertTrue(
             shouldOpenDrawerAfterDrag(
                 totalDrag = 100f,
-                threshold = 64f,
+                threshold = 48f,
                 velocityY = -1200f
             )
         )
@@ -204,7 +217,7 @@ class LauncherInteractionControllerTest {
         assertFalse(
             shouldOpenDrawerAfterDrag(
                 totalDrag = -120f,
-                threshold = 64f,
+                threshold = 48f,
                 cancelled = true
             )
         )
