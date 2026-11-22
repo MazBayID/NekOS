@@ -234,7 +234,7 @@ internal fun NekOSSettingsDialog(
                 Text("Done", color = SettingsAccent, fontWeight = FontWeight.SemiBold)
             }
         },
-        containerColor = Color(0xFFFEFCF8),
+        containerColor = LAUNCHER_SURFACE,
         titleContentColor = SettingsInk,
         textContentColor = SettingsInk
     )
