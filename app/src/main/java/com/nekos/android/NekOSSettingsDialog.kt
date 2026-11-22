@@ -101,11 +101,12 @@ internal fun NekOSSettingsDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
+            DialogTitleWithFrame(launcherUiColor) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
                 if (page != SettingsPage.MAIN) {
                     Text(
                         "‹",
@@ -124,6 +125,7 @@ internal fun NekOSSettingsDialog(
                     fontSize = 22.sp,
                     fontWeight = FontWeight.SemiBold
                 )
+                }
             }
         },
         text = {

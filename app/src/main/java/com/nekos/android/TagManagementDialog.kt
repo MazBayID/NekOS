@@ -87,6 +87,7 @@ fun TagAppsDialog(
     apps: List<InstalledApp>,
     iconBitmapCache: AppIconBitmapCache,
     launcherSurface: Color,
+    launcherUiColorArgb: Long,
     onLaunch: (InstalledApp) -> Unit,
     onEdit: () -> Unit,
     onDismiss: () -> Unit
@@ -104,7 +105,8 @@ fun TagAppsDialog(
         titleContentColor = Color(0xFF34332F),
         textContentColor = Color(0xFF34332F),
         title = {
-            Row(
+            DialogTitleWithFrame(launcherUiColorArgb) {
+                Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -192,6 +194,7 @@ fun TagActionsDialog(
     tag: NekTag,
     movePageLabel: String?,
     launcherSurface: Color,
+    launcherUiColorArgb: Long,
     onMovePage: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
@@ -203,7 +206,7 @@ fun TagActionsDialog(
         containerColor = launcherSurface,
         titleContentColor = Color(0xFF34332F),
         textContentColor = Color(0xFF34332F),
-        title = { Text(tag.name) },
+        title = { DialogTitleWithFrame(launcherUiColorArgb) { Text(tag.name) } },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 TextButton(onClick = onEdit, modifier = Modifier.fillMaxWidth()) {
@@ -230,6 +233,7 @@ fun TagManagementDialog(
     iconBitmapCache: AppIconBitmapCache,
     iconCatalogRepository: IconCatalogRepository,
     launcherSurface: Color,
+    launcherUiColorArgb: Long,
     onSave: (NekTag) -> Unit,
     onDelete: (NekTag) -> Unit,
     onDismiss: () -> Unit
@@ -274,7 +278,7 @@ fun TagManagementDialog(
         containerColor = launcherSurface,
         titleContentColor = Color(0xFF34332F),
         textContentColor = Color(0xFF34332F),
-        title = { Text(if (tag == null) "Create tag" else "Edit tag") },
+        title = { DialogTitleWithFrame(launcherUiColorArgb) { Text(if (tag == null) "Create tag" else "Edit tag") } },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 TextField(
@@ -437,7 +441,7 @@ fun TagManagementDialog(
             containerColor = launcherSurface,
             titleContentColor = Color(0xFF34332F),
             textContentColor = Color(0xFF34332F),
-            title = { Text("Choose tag icon") },
+            title = { DialogTitleWithFrame(launcherUiColorArgb) { Text("Choose tag icon") } },
             text = {
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(5),
@@ -481,7 +485,7 @@ fun TagManagementDialog(
             containerColor = launcherSurface,
             titleContentColor = Color(0xFF34332F),
             textContentColor = Color(0xFF34332F),
-            title = { Text("Icon Color") },
+            title = { DialogTitleWithFrame(launcherUiColorArgb) { Text("Icon Color") } },
             text = {
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(3),

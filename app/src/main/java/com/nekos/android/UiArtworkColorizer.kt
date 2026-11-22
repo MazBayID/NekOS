@@ -7,11 +7,19 @@ import android.graphics.Color as AndroidColor
 import android.util.LruCache
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.Dispatchers
@@ -143,5 +151,53 @@ internal fun ThemedUiArtworkImage(
             colorFilter = colorFilter,
             modifier = modifier
         )
+    }
+}
+
+
+@Composable
+internal fun DialogFrameTop(colorArgb: Long, modifier: Modifier = Modifier) {
+    val bitmap = rememberThemedUiArtwork(R.drawable.dialog_frame_top, colorArgb)
+    if (bitmap != null) {
+        Canvas(modifier = modifier.fillMaxWidth().height(32.dp)) {
+            val scale = size.height / 64f
+            val endWidth = 64f * scale
+            val crestWidth = 96f * scale
+            val lineBaseWidth = 144f * scale
+            val extraLineWidth = ((size.width - endWidth * 2f - crestWidth - lineBaseWidth * 2f) / 2f)
+                .coerceAtLeast(0f)
+            val leftLineWidth = lineBaseWidth + extraLineWidth
+            val rightLineWidth = lineBaseWidth + extraLineWidth
+            var destinationX = 0f
+
+            fun drawSlice(sourceX: Int, sourceWidth: Int, destinationWidth: Float) {
+                val width = destinationWidth.roundToInt().coerceAtLeast(1)
+                drawImage(
+                    image = bitmap,
+                    srcOffset = IntOffset(sourceX, 0),
+                    srcSize = IntSize(sourceWidth, 64),
+                    dstOffset = IntOffset(destinationX.roundToInt(), 0),
+                    dstSize = IntSize(width, size.height.roundToInt().coerceAtLeast(1))
+                )
+                destinationX += destinationWidth
+            }
+
+            drawSlice(0, 64, endWidth)
+            drawSlice(64, 144, leftLineWidth)
+            drawSlice(208, 96, crestWidth)
+            drawSlice(304, 144, rightLineWidth)
+            drawSlice(448, 64, endWidth)
+        }
+    }
+}
+
+@Composable
+internal fun DialogTitleWithFrame(
+    colorArgb: Long,
+    content: @Composable () -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        DialogFrameTop(colorArgb)
+        content()
     }
 }

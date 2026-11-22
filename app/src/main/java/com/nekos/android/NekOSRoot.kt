@@ -802,6 +802,7 @@ fun NekOSRoot(
                 apps = apps,
                 iconBitmapCache = iconBitmapCache,
                 launcherSurface = launcherSurface,
+                launcherUiColorArgb = launcherUiColorArgb,
                 onLaunch = { app ->
                     viewingTag = null
                     launchApp(context, app, launchSourceView)
@@ -827,6 +828,7 @@ fun NekOSRoot(
             TagActionsDialog(
                 tag = tag,
                 launcherSurface = launcherSurface,
+                launcherUiColorArgb = launcherUiColorArgb,
                 movePageLabel = targetPage?.let { "Move to page ${it + 1}" },
                 onMovePage = {
                     targetPage?.let { page ->
@@ -855,6 +857,7 @@ fun NekOSRoot(
                 apps = apps,
                 iconBitmapCache = iconBitmapCache,
                 iconCatalogRepository = iconCatalogRepository,
+                launcherUiColorArgb = launcherUiColorArgb,
                 onSave = { saved ->
                     val duplicateName = tags.any { it.id != saved.id && it.name.equals(saved.name, ignoreCase = true) }
                     if (duplicateName) {
@@ -882,7 +885,7 @@ fun NekOSRoot(
                 containerColor = launcherSurface,
                 titleContentColor = Ink,
                 textContentColor = Ink,
-                title = { Text("Delete “${tag.name}”?") },
+                title = { DialogTitleWithFrame(launcherUiColorArgb) { Text("Delete “${tag.name}”?") } },
                 text = { Text("Only the tag is removed. Your apps are not affected.") },
                 confirmButton = {
                     TextButton(onClick = {
@@ -905,7 +908,7 @@ fun NekOSRoot(
                     showFirstLaunchTip = false
                 },
                 containerColor = launcherSurface,
-                title = { Text("Welcome to NekOS") },
+                title = { DialogTitleWithFrame(launcherUiColorArgb) { Text("Welcome to NekOS") } },
                 text = {
                     Text("Swipe up from Home to open your apps. Swipe down on the handle, or tap above the panel, to return Home.")
                 },
