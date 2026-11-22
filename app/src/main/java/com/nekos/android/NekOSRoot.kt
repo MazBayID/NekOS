@@ -673,7 +673,7 @@ fun NekOSRoot(
             if (draggedApp != null) {
                 val cacheGeneration = iconBitmapCache.generation
                 val cachedBitmap = iconBitmapCache[draggedApp.iconCacheKey]
-                var bitmap by remember(draggedApp.iconCacheKey) { mutableStateOf(cachedBitmap) }
+                var bitmap by remember(draggedApp.iconCacheKey, cacheGeneration) { mutableStateOf(cachedBitmap) }
                 LaunchedEffect(draggedApp.iconCacheKey, cacheGeneration) {
                     bitmap = iconBitmapCache[draggedApp.iconCacheKey]
                     if (bitmap == null) {
@@ -1272,7 +1272,7 @@ private fun FavoriteSlot(
 ) {
     val cacheGeneration = iconBitmapCache.generation
     val cachedBitmap = app?.let { iconBitmapCache[it.iconCacheKey] }
-    var bitmap by remember(app?.iconCacheKey) { mutableStateOf(cachedBitmap) }
+    var bitmap by remember(app?.iconCacheKey, cacheGeneration) { mutableStateOf(cachedBitmap) }
     LaunchedEffect(app?.iconCacheKey, cacheGeneration) {
         bitmap = app?.let { iconBitmapCache[it.iconCacheKey] }
         val currentApp = app ?: return@LaunchedEffect
@@ -1400,7 +1400,7 @@ private fun TagPill(
         label = "tag-drag-elevation"
     )
     val iconCacheGeneration = iconCatalogRepository.generation
-    var tagIcon by remember(tag.iconId) {
+    var tagIcon by remember(tag.iconId, iconCacheGeneration) {
         mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null)
     }
     val currentOnHandleClick by rememberUpdatedState(onHandleClick)
@@ -1649,7 +1649,7 @@ private fun AppDrawer(
                 items(filteredApps, key = { it.id }) { app ->
                     val cacheGeneration = iconBitmapCache.generation
                     val cachedBitmap = iconBitmapCache[app.iconCacheKey]
-                    var bitmap by remember(app.iconCacheKey) {
+                    var bitmap by remember(app.iconCacheKey, cacheGeneration) {
                         mutableStateOf(cachedBitmap)
                     }
                     LaunchedEffect(app.iconCacheKey, cacheGeneration) {
