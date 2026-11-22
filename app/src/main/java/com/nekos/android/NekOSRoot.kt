@@ -1030,10 +1030,6 @@ private fun HomeScreen(
                     val tagPageCount = ((tags.size + 4) / 5).coerceAtLeast(1)
                     val safeTagPage = activeTagPage.coerceIn(0, tagPageCount - 1)
                     val visibleTags = tags.drop(safeTagPage * 5).take(5)
-                    val tagCountForFrame = visibleTags.size.coerceAtLeast(1)
-                    val tagFrameHeight = (
-                        tagCountForFrame * 44 + (tagCountForFrame - 1) * 8 + 16
-                    ).dp
                     LaunchedEffect(tagPageCount, activeTagPage) {
                         if (activeTagPage != safeTagPage) onTagPageChange(safeTagPage)
                     }
@@ -1057,7 +1053,7 @@ private fun HomeScreen(
                                     modifier = Modifier.align(Alignment.TopCenter)
                                         .offset(y = maxHeight * 0.5f - 40.dp)
                                         .requiredWidth(tagRailWidth * 1.1f)
-                                        .height(tagFrameHeight)
+                                        .fillMaxHeight(0.65f)
                                 )
                                 LazyColumn(
                                     modifier = Modifier.fillMaxSize()
