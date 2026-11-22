@@ -110,6 +110,7 @@ import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlin.math.abs
@@ -1449,11 +1450,43 @@ private fun AppDrawer(
     val focusManager = LocalFocusManager.current
     // Dragging the list hides the keyboard so results can be browsed. Programmatic scrolls
     // (such as jumping back to the top when the query changes) do not reach this connection.
-    val dismissKeyboardOnScroll = remember(focusManager) {
+    // The grid keeps normal scrolling. Only downward scroll left over after
+    // it reaches the top is intercepted as a drawer-close gesture.
+    val pendingDrawerCloseDrag = remember { floatArrayOf(0f) }
+    val drawerScrollConnection = remember(focusManager, gridState) {
         object : NestedScrollConnection {
             override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
                 if (available.y != 0f) focusManager.clearFocus()
+                if (available.y < 0f) pendingDrawerCloseDrag[0] = 0f
                 return Offset.Zero
+            }
+
+            override fun onPostScroll(
+                consumed: Offset,
+                available: Offset,
+                source: NestedScrollSource
+            ): Offset {
+                if (
+                    source == NestedScrollSource.UserInput &&
+                    available.y > 0f &&
+                    !gridState.canScrollBackward
+                ) {
+                    pendingDrawerCloseDrag[0] += available.y
+                    return Offset(0f, available.y)
+                }
+                return Offset.Zero
+            }
+
+            override suspend fun onPostFling(
+                consumed: Velocity,
+                available: Velocity
+            ): Velocity {
+                val dragDistance = pendingDrawerCloseDrag[0]
+                pendingDrawerCloseDrag[0] = 0f
+                if (dragDistance > 0f || available.y > 0f) {
+                    currentOnCloseDrawer(dragDistance, available.y)
+                }
+                return Velocity.Zero
             }
         }
     }
@@ -1563,7 +1596,7 @@ private fun AppDrawer(
                 contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 10.dp, bottom = 28.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier.weight(1f).fillMaxWidth().nestedScroll(dismissKeyboardOnScroll)
+                modifier = Modifier.weight(1f).fillMaxWidth().nestedScroll(drawerScrollConnection)
             ) {
                 items(filteredApps, key = { it.id }) { app ->
                     val cachedBitmap = iconBitmapCache[app.id]
