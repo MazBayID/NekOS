@@ -912,7 +912,6 @@ private fun HomeScreen(
     val currentOnDrawerDrag by rememberUpdatedState(onDrawerDrag)
     val currentOnDrawerDragEnd by rememberUpdatedState(onDrawerDragEnd)
     val homeReturnProgress = remember { Animatable(1f) }
-    val homeReturnOffsetPx = with(LocalDensity.current) { 12.dp.toPx() }
     LaunchedEffect(homeReturnSignal) {
         if (homeReturnSignal > 0) {
             homeReturnProgress.snapTo(0f)
@@ -955,11 +954,8 @@ private fun HomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .graphicsLayer {
-                    val progress = homeReturnProgress.value
-                    alpha = 0.96f + 0.04f * progress
-                    scaleX = 0.985f + 0.015f * progress
-                    scaleY = 0.985f + 0.015f * progress
-                    translationY = homeReturnOffsetPx * (1f - progress)
+                    // Fade the Home content in without sliding or scaling it.
+                    alpha = 0.96f + 0.04f * homeReturnProgress.value
                 }
                 .statusBarsPadding()
                 .navigationBarsPadding()
