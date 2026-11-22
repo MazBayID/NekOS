@@ -1032,7 +1032,9 @@ private fun HomeScreen(
                             painter = painterResource(R.drawable.nekos_ui_tag_frame),
                             contentDescription = null,
                             contentScale = ContentScale.FillBounds,
-                            modifier = Modifier.matchParentSize()
+                            modifier = Modifier.align(Alignment.Center)
+                                .requiredWidth(tagRailWidth * 1.1f)
+                                .fillMaxHeight(0.5f)
                         )
                         Column(
                             modifier = Modifier.fillMaxSize().padding(
