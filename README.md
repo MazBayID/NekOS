@@ -1,7 +1,7 @@
 # NekOS
 
 <p align="center">
-  <img src="docs/NekOS.png" alt="NekOS" width="260">
+  <img src="main_assets/NekOS_A.jpg" alt="NekOS" width="300">
 </p>
 
 <p align="center">
