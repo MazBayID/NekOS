@@ -412,7 +412,7 @@ internal fun NekOSSettingsDialog(
                         }
                     }
                 }
-                TopFrame(Modifier.align(Alignment.TopCenter).offset(y = (-1).dp).padding(horizontal = 6.dp))
+                TopFrame(Modifier.align(Alignment.TopCenter).offset(y = (-2).dp).padding(horizontal = 6.dp))
             }
         }
     }
