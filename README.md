@@ -5,6 +5,10 @@
 </p>
 
 <p align="center">
+  <em>ニャーフェクトリー ミニマル</em>
+</p>
+
+<p align="center">
   <em>A cozy space for your everyday apps.</em>
 </p>
 
