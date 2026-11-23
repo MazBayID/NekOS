@@ -33,3 +33,15 @@ One repair at a time: inspect current source -> make the smallest targeted chang
 - Android Developers, Loading Large Bitmaps Efficiently: https://developer.android.com/topic/performance/graphics/load-bitmap.html
 - Android Developers, BitmapFactory.Options / inSampleSize: https://developer.android.com/reference/android/graphics/BitmapFactory.Options
 - Android Developers, Modifier.pointerInput: https://developer.android.com/reference/kotlin/androidx/compose/ui/input/pointer/pointerInput.modifier
+
+
+## CI efficiency pass — 2026-11-23
+- [x] Android CI: use `gradle/actions/setup-gradle@v6` enhanced cache (the default) instead of basic cache. NekOS is a public repository, so the enhanced cache is available without a paid private-repository entitlement.
+- [x] Android CI: ignore documentation-only changes (`**/*.md`, `docs/**`, `.gitignore`) on push and pull requests; Android resources and source remain covered.
+- [x] Android CI: retain the existing branch-scoped concurrency cancellation and Ubuntu runner.
+- [x] Android CI: reduce the generous 60-minute job timeout to 35 minutes; this still leaves room for Android emulator startup and Compose UI tests.
+- [x] Android CI: remove `--no-daemon` from both Gradle invocations so the job can reuse its Gradle daemon between build/test and emulator test steps.
+- [x] Release: switch to enhanced Gradle cache, reduce timeout to 35 minutes, and restore default shallow checkout because release validation only compares the tag name with app version; no git history is used.
+- [x] Keep build, unit tests, and lint in one runner/job. Splitting them into parallel runners would duplicate JDK/SDK setup and Gradle configuration/cache work, increasing total billed minutes. No matrix is used, so `fail-fast` is not applicable.
+- [ ] Verify workflow syntax and observe the next CI/release workflow runs.
+- References: GitHub Actions dependency caching and workflow syntax; Gradle Actions setup-gradle v6 documentation.
