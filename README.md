@@ -71,11 +71,11 @@ NekOS is not intended to become a feature-heavy launcher. It deliberately avoids
 
 ## Project status
 
-- **Version:** 0.1.0
+- **Version:** 0.6.1
 - **Application ID:** `com.nekos.android`
 - **Platform:** Android 8.0 (API 26) and newer
 - **Target SDK:** 35
-- **Status:** early development
+- **Status:** in active development; not yet a stable production release
 
 The feature list describes what is implemented in the source on `main`; it does not mean every interaction has been verified on every Android device. Physical-device checks and stability improvements remain part of development.
 
