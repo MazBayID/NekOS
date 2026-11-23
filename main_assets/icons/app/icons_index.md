@@ -1,4 +1,4 @@
-# Daftar Ikon (512×512 PNG)
+# Daftar Ikon (512×512 WebP)
 
 Urutan: kiri → kanan, atas → bawah (10 kolom × 10 baris).
 

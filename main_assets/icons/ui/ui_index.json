@@ -5,7 +5,7 @@
   "items": [
     {
       "id": 1,
-      "file": "ui/icon_001.webp",
+      "file": "icon_001.webp",
       "row": 1,
       "column": 1,
       "name": "pencil",
@@ -14,7 +14,7 @@
     },
     {
       "id": 2,
-      "file": "ui/icon_002.webp",
+      "file": "icon_002.webp",
       "row": 1,
       "column": 2,
       "name": "heart",
@@ -23,7 +23,7 @@
     },
     {
       "id": 3,
-      "file": "ui/icon_003.webp",
+      "file": "icon_003.webp",
       "row": 1,
       "column": 3,
       "name": "settings_a",
@@ -32,7 +32,7 @@
     },
     {
       "id": 4,
-      "file": "ui/icon_004.webp",
+      "file": "icon_004.webp",
       "row": 1,
       "column": 4,
       "name": "search_a",
@@ -41,7 +41,7 @@
     },
     {
       "id": 5,
-      "file": "ui/icon_005.webp",
+      "file": "icon_005.webp",
       "row": 1,
       "column": 5,
       "name": "search_b",
@@ -50,7 +50,7 @@
     },
     {
       "id": 6,
-      "file": "ui/icon_006.webp",
+      "file": "icon_006.webp",
       "row": 1,
       "column": 6,
       "name": "home",
@@ -59,7 +59,7 @@
     },
     {
       "id": 7,
-      "file": "ui/icon_007.webp",
+      "file": "icon_007.webp",
       "row": 1,
       "column": 7,
       "name": "user",
@@ -68,7 +68,7 @@
     },
     {
       "id": 8,
-      "file": "ui/icon_008.webp",
+      "file": "icon_008.webp",
       "row": 1,
       "column": 8,
       "name": "group",
@@ -77,7 +77,7 @@
     },
     {
       "id": 9,
-      "file": "ui/icon_009.webp",
+      "file": "icon_009.webp",
       "row": 1,
       "column": 9,
       "name": "folder_a",
@@ -86,7 +86,7 @@
     },
     {
       "id": 10,
-      "file": "ui/icon_010.webp",
+      "file": "icon_010.webp",
       "row": 1,
       "column": 10,
       "name": "folder_b",
@@ -95,7 +95,7 @@
     },
     {
       "id": 11,
-      "file": "ui/icon_011.webp",
+      "file": "icon_011.webp",
       "row": 1,
       "column": 11,
       "name": "document",
@@ -104,7 +104,7 @@
     },
     {
       "id": 12,
-      "file": "ui/icon_012.webp",
+      "file": "icon_012.webp",
       "row": 1,
       "column": 12,
       "name": "more_horizontal",
@@ -113,7 +113,7 @@
     },
     {
       "id": 13,
-      "file": "ui/icon_013.webp",
+      "file": "icon_013.webp",
       "row": 2,
       "column": 1,
       "name": "star",
@@ -122,7 +122,7 @@
     },
     {
       "id": 14,
-      "file": "ui/icon_014.webp",
+      "file": "icon_014.webp",
       "row": 2,
       "column": 2,
       "name": "bookmark",
@@ -131,7 +131,7 @@
     },
     {
       "id": 15,
-      "file": "ui/icon_015.webp",
+      "file": "icon_015.webp",
       "row": 2,
       "column": 3,
       "name": "tag",
@@ -140,7 +140,7 @@
     },
     {
       "id": 16,
-      "file": "ui/icon_016.webp",
+      "file": "icon_016.webp",
       "row": 2,
       "column": 4,
       "name": "bell_a",
@@ -149,7 +149,7 @@
     },
     {
       "id": 17,
-      "file": "ui/icon_017.webp",
+      "file": "icon_017.webp",
       "row": 2,
       "column": 5,
       "name": "bell_b",
@@ -158,7 +158,7 @@
     },
     {
       "id": 18,
-      "file": "ui/icon_018.webp",
+      "file": "icon_018.webp",
       "row": 2,
       "column": 6,
       "name": "calendar_a",
@@ -167,7 +167,7 @@
     },
     {
       "id": 19,
-      "file": "ui/icon_019.webp",
+      "file": "icon_019.webp",
       "row": 2,
       "column": 7,
       "name": "calendar_day",
@@ -176,7 +176,7 @@
     },
     {
       "id": 20,
-      "file": "ui/icon_020.webp",
+      "file": "icon_020.webp",
       "row": 2,
       "column": 8,
       "name": "alarm_a",
@@ -185,7 +185,7 @@
     },
     {
       "id": 21,
-      "file": "ui/icon_021.webp",
+      "file": "icon_021.webp",
       "row": 2,
       "column": 9,
       "name": "alarm_b",
@@ -194,7 +194,7 @@
     },
     {
       "id": 22,
-      "file": "ui/icon_022.webp",
+      "file": "icon_022.webp",
       "row": 2,
       "column": 10,
       "name": "brightness",
@@ -203,7 +203,7 @@
     },
     {
       "id": 23,
-      "file": "ui/icon_023.webp",
+      "file": "icon_023.webp",
       "row": 2,
       "column": 11,
       "name": "location_a",
@@ -212,7 +212,7 @@
     },
     {
       "id": 24,
-      "file": "ui/icon_024.webp",
+      "file": "icon_024.webp",
       "row": 2,
       "column": 12,
       "name": "location_b",
@@ -221,7 +221,7 @@
     },
     {
       "id": 25,
-      "file": "ui/icon_025.webp",
+      "file": "icon_025.webp",
       "row": 3,
       "column": 1,
       "name": "mail",
@@ -230,7 +230,7 @@
     },
     {
       "id": 26,
-      "file": "ui/icon_026.webp",
+      "file": "icon_026.webp",
       "row": 3,
       "column": 2,
       "name": "chat_dots",
@@ -239,7 +239,7 @@
     },
     {
       "id": 27,
-      "file": "ui/icon_027.webp",
+      "file": "icon_027.webp",
       "row": 3,
       "column": 3,
       "name": "chat_bubble",
@@ -248,7 +248,7 @@
     },
     {
       "id": 28,
-      "file": "ui/icon_028.webp",
+      "file": "icon_028.webp",
       "row": 3,
       "column": 4,
       "name": "reply",
@@ -257,7 +257,7 @@
     },
     {
       "id": 29,
-      "file": "ui/icon_029.webp",
+      "file": "icon_029.webp",
       "row": 3,
       "column": 5,
       "name": "forward",
@@ -266,7 +266,7 @@
     },
     {
       "id": 30,
-      "file": "ui/icon_030.webp",
+      "file": "icon_030.webp",
       "row": 3,
       "column": 6,
       "name": "arrow_right",
@@ -275,7 +275,7 @@
     },
     {
       "id": 31,
-      "file": "ui/icon_031.webp",
+      "file": "icon_031.webp",
       "row": 3,
       "column": 7,
       "name": "share",
@@ -284,7 +284,7 @@
     },
     {
       "id": 32,
-      "file": "ui/icon_032.webp",
+      "file": "icon_032.webp",
       "row": 3,
       "column": 8,
       "name": "attachment",
@@ -293,7 +293,7 @@
     },
     {
       "id": 33,
-      "file": "ui/icon_033.webp",
+      "file": "icon_033.webp",
       "row": 3,
       "column": 9,
       "name": "link_a",
@@ -302,7 +302,7 @@
     },
     {
       "id": 34,
-      "file": "ui/icon_034.webp",
+      "file": "icon_034.webp",
       "row": 3,
       "column": 10,
       "name": "link_b",
@@ -311,7 +311,7 @@
     },
     {
       "id": 35,
-      "file": "ui/icon_035.webp",
+      "file": "icon_035.webp",
       "row": 3,
       "column": 11,
       "name": "image",
@@ -320,7 +320,7 @@
     },
     {
       "id": 36,
-      "file": "ui/icon_036.webp",
+      "file": "icon_036.webp",
       "row": 3,
       "column": 12,
       "name": "camera",
@@ -329,7 +329,7 @@
     },
     {
       "id": 37,
-      "file": "ui/icon_037.webp",
+      "file": "icon_037.webp",
       "row": 4,
       "column": 1,
       "name": "play",
@@ -338,7 +338,7 @@
     },
     {
       "id": 38,
-      "file": "ui/icon_038.webp",
+      "file": "icon_038.webp",
       "row": 4,
       "column": 2,
       "name": "music",
@@ -347,7 +347,7 @@
     },
     {
       "id": 39,
-      "file": "ui/icon_039.webp",
+      "file": "icon_039.webp",
       "row": 4,
       "column": 3,
       "name": "microphone",
@@ -356,7 +356,7 @@
     },
     {
       "id": 40,
-      "file": "ui/icon_040.webp",
+      "file": "icon_040.webp",
       "row": 4,
       "column": 4,
       "name": "volume",
@@ -365,7 +365,7 @@
     },
     {
       "id": 41,
-      "file": "ui/icon_041.webp",
+      "file": "icon_041.webp",
       "row": 4,
       "column": 5,
       "name": "volume_mute",
@@ -374,7 +374,7 @@
     },
     {
       "id": 42,
-      "file": "ui/icon_042.webp",
+      "file": "icon_042.webp",
       "row": 4,
       "column": 6,
       "name": "battery_a",
@@ -383,7 +383,7 @@
     },
     {
       "id": 43,
-      "file": "ui/icon_043.webp",
+      "file": "icon_043.webp",
       "row": 4,
       "column": 7,
       "name": "battery_b",
@@ -392,7 +392,7 @@
     },
     {
       "id": 44,
-      "file": "ui/icon_044.webp",
+      "file": "icon_044.webp",
       "row": 4,
       "column": 8,
       "name": "wifi",
@@ -401,7 +401,7 @@
     },
     {
       "id": 45,
-      "file": "ui/icon_045.webp",
+      "file": "icon_045.webp",
       "row": 4,
       "column": 9,
       "name": "bluetooth",
@@ -410,7 +410,7 @@
     },
     {
       "id": 46,
-      "file": "ui/icon_046.webp",
+      "file": "icon_046.webp",
       "row": 4,
       "column": 10,
       "name": "nfc",
@@ -419,7 +419,7 @@
     },
     {
       "id": 47,
-      "file": "ui/icon_047.webp",
+      "file": "icon_047.webp",
       "row": 4,
       "column": 11,
       "name": "flashlight_a",
@@ -428,7 +428,7 @@
     },
     {
       "id": 48,
-      "file": "ui/icon_048.webp",
+      "file": "icon_048.webp",
       "row": 4,
       "column": 12,
       "name": "flashlight_b",
@@ -437,7 +437,7 @@
     },
     {
       "id": 49,
-      "file": "ui/icon_049.webp",
+      "file": "icon_049.webp",
       "row": 5,
       "column": 1,
       "name": "refresh",
@@ -446,7 +446,7 @@
     },
     {
       "id": 50,
-      "file": "ui/icon_050.webp",
+      "file": "icon_050.webp",
       "row": 5,
       "column": 2,
       "name": "sync_a",
@@ -455,7 +455,7 @@
     },
     {
       "id": 51,
-      "file": "ui/icon_051.webp",
+      "file": "icon_051.webp",
       "row": 5,
       "column": 3,
       "name": "backup_restore",
@@ -464,7 +464,7 @@
     },
     {
       "id": 52,
-      "file": "ui/icon_052.webp",
+      "file": "icon_052.webp",
       "row": 5,
       "column": 4,
       "name": "download",
@@ -473,7 +473,7 @@
     },
     {
       "id": 53,
-      "file": "ui/icon_053.webp",
+      "file": "icon_053.webp",
       "row": 5,
       "column": 5,
       "name": "upload",
@@ -482,7 +482,7 @@
     },
     {
       "id": 54,
-      "file": "ui/icon_054.webp",
+      "file": "icon_054.webp",
       "row": 5,
       "column": 6,
       "name": "cloud",
@@ -491,7 +491,7 @@
     },
     {
       "id": 55,
-      "file": "ui/icon_055.webp",
+      "file": "icon_055.webp",
       "row": 5,
       "column": 7,
       "name": "cloud_upload_a",
@@ -500,7 +500,7 @@
     },
     {
       "id": 56,
-      "file": "ui/icon_056.webp",
+      "file": "icon_056.webp",
       "row": 5,
       "column": 8,
       "name": "cloud_upload_b",
@@ -509,7 +509,7 @@
     },
     {
       "id": 57,
-      "file": "ui/icon_057.webp",
+      "file": "icon_057.webp",
       "row": 5,
       "column": 9,
       "name": "database_a",
@@ -518,7 +518,7 @@
     },
     {
       "id": 58,
-      "file": "ui/icon_058.webp",
+      "file": "icon_058.webp",
       "row": 5,
       "column": 10,
       "name": "database_b",
@@ -527,7 +527,7 @@
     },
     {
       "id": 59,
-      "file": "ui/icon_059.webp",
+      "file": "icon_059.webp",
       "row": 5,
       "column": 11,
       "name": "network",
@@ -536,7 +536,7 @@
     },
     {
       "id": 60,
-      "file": "ui/icon_060.webp",
+      "file": "icon_060.webp",
       "row": 5,
       "column": 12,
       "name": "shield_check",
@@ -545,7 +545,7 @@
     },
     {
       "id": 61,
-      "file": "ui/icon_061.webp",
+      "file": "icon_061.webp",
       "row": 6,
       "column": 1,
       "name": "lock",
@@ -554,7 +554,7 @@
     },
     {
       "id": 62,
-      "file": "ui/icon_062.webp",
+      "file": "icon_062.webp",
       "row": 6,
       "column": 2,
       "name": "unlock",
@@ -563,7 +563,7 @@
     },
     {
       "id": 63,
-      "file": "ui/icon_063.webp",
+      "file": "icon_063.webp",
       "row": 6,
       "column": 3,
       "name": "key",
@@ -572,7 +572,7 @@
     },
     {
       "id": 64,
-      "file": "ui/icon_064.webp",
+      "file": "icon_064.webp",
       "row": 6,
       "column": 4,
       "name": "dialpad",
@@ -581,7 +581,7 @@
     },
     {
       "id": 65,
-      "file": "ui/icon_065.webp",
+      "file": "icon_065.webp",
       "row": 6,
       "column": 5,
       "name": "calculator",
@@ -590,7 +590,7 @@
     },
     {
       "id": 66,
-      "file": "ui/icon_066.webp",
+      "file": "icon_066.webp",
       "row": 6,
       "column": 6,
       "name": "ruler",
@@ -599,7 +599,7 @@
     },
     {
       "id": 67,
-      "file": "ui/icon_067.webp",
+      "file": "icon_067.webp",
       "row": 6,
       "column": 7,
       "name": "ruler_pencil",
@@ -608,7 +608,7 @@
     },
     {
       "id": 68,
-      "file": "ui/icon_068.webp",
+      "file": "icon_068.webp",
       "row": 6,
       "column": 8,
       "name": "compass",
@@ -617,7 +617,7 @@
     },
     {
       "id": 69,
-      "file": "ui/icon_069.webp",
+      "file": "icon_069.webp",
       "row": 6,
       "column": 9,
       "name": "barcode",
@@ -626,7 +626,7 @@
     },
     {
       "id": 70,
-      "file": "ui/icon_070.webp",
+      "file": "icon_070.webp",
       "row": 6,
       "column": 10,
       "name": "qr_code",
@@ -635,7 +635,7 @@
     },
     {
       "id": 71,
-      "file": "ui/icon_071.webp",
+      "file": "icon_071.webp",
       "row": 6,
       "column": 11,
       "name": "fingerprint_a",
@@ -644,7 +644,7 @@
     },
     {
       "id": 72,
-      "file": "ui/icon_072.webp",
+      "file": "icon_072.webp",
       "row": 6,
       "column": 12,
       "name": "fingerprint_b",
@@ -653,7 +653,7 @@
     },
     {
       "id": 73,
-      "file": "ui/icon_073.webp",
+      "file": "icon_073.webp",
       "row": 7,
       "column": 1,
       "name": "printer",
@@ -662,7 +662,7 @@
     },
     {
       "id": 74,
-      "file": "ui/icon_074.webp",
+      "file": "icon_074.webp",
       "row": 7,
       "column": 2,
       "name": "scan_frame",
@@ -671,7 +671,7 @@
     },
     {
       "id": 75,
-      "file": "ui/icon_075.webp",
+      "file": "icon_075.webp",
       "row": 7,
       "column": 3,
       "name": "cast",
@@ -680,7 +680,7 @@
     },
     {
       "id": 76,
-      "file": "ui/icon_076.webp",
+      "file": "icon_076.webp",
       "row": 7,
       "column": 4,
       "name": "monitor",
@@ -689,7 +689,7 @@
     },
     {
       "id": 77,
-      "file": "ui/icon_077.webp",
+      "file": "icon_077.webp",
       "row": 7,
       "column": 5,
       "name": "tv",
@@ -698,7 +698,7 @@
     },
     {
       "id": 78,
-      "file": "ui/icon_078.webp",
+      "file": "icon_078.webp",
       "row": 7,
       "column": 6,
       "name": "tablet",
@@ -707,7 +707,7 @@
     },
     {
       "id": 79,
-      "file": "ui/icon_079.webp",
+      "file": "icon_079.webp",
       "row": 7,
       "column": 7,
       "name": "phone",
@@ -716,7 +716,7 @@
     },
     {
       "id": 80,
-      "file": "ui/icon_080.webp",
+      "file": "icon_080.webp",
       "row": 7,
       "column": 8,
       "name": "vr_headset",
@@ -725,7 +725,7 @@
     },
     {
       "id": 81,
-      "file": "ui/icon_081.webp",
+      "file": "icon_081.webp",
       "row": 7,
       "column": 9,
       "name": "gamepad",
@@ -734,7 +734,7 @@
     },
     {
       "id": 82,
-      "file": "ui/icon_082.webp",
+      "file": "icon_082.webp",
       "row": 7,
       "column": 10,
       "name": "palette",
@@ -743,7 +743,7 @@
     },
     {
       "id": 83,
-      "file": "ui/icon_083.webp",
+      "file": "icon_083.webp",
       "row": 7,
       "column": 11,
       "name": "brush_a",
@@ -752,7 +752,7 @@
     },
     {
       "id": 84,
-      "file": "ui/icon_084.webp",
+      "file": "icon_084.webp",
       "row": 7,
       "column": 12,
       "name": "brush_b",
@@ -761,7 +761,7 @@
     },
     {
       "id": 85,
-      "file": "ui/icon_085.webp",
+      "file": "icon_085.webp",
       "row": 8,
       "column": 1,
       "name": "add",
@@ -770,7 +770,7 @@
     },
     {
       "id": 86,
-      "file": "ui/icon_086.webp",
+      "file": "icon_086.webp",
       "row": 8,
       "column": 2,
       "name": "remove",
@@ -779,7 +779,7 @@
     },
     {
       "id": 87,
-      "file": "ui/icon_087.webp",
+      "file": "icon_087.webp",
       "row": 8,
       "column": 3,
       "name": "trash",
@@ -788,7 +788,7 @@
     },
     {
       "id": 88,
-      "file": "ui/icon_088.webp",
+      "file": "icon_088.webp",
       "row": 8,
       "column": 4,
       "name": "archive",
@@ -797,7 +797,7 @@
     },
     {
       "id": 89,
-      "file": "ui/icon_089.webp",
+      "file": "icon_089.webp",
       "row": 8,
       "column": 5,
       "name": "translate",
@@ -806,7 +806,7 @@
     },
     {
       "id": 90,
-      "file": "ui/icon_090.webp",
+      "file": "icon_090.webp",
       "row": 8,
       "column": 6,
       "name": "edit_square",
@@ -815,7 +815,7 @@
     },
     {
       "id": 91,
-      "file": "ui/icon_091.webp",
+      "file": "icon_091.webp",
       "row": 8,
       "column": 7,
       "name": "clipboard",
@@ -824,7 +824,7 @@
     },
     {
       "id": 92,
-      "file": "ui/icon_092.webp",
+      "file": "icon_092.webp",
       "row": 8,
       "column": 8,
       "name": "clipboard_copy",
@@ -833,7 +833,7 @@
     },
     {
       "id": 93,
-      "file": "ui/icon_093.webp",
+      "file": "icon_093.webp",
       "row": 8,
       "column": 9,
       "name": "cut",
@@ -842,7 +842,7 @@
     },
     {
       "id": 94,
-      "file": "ui/icon_094.webp",
+      "file": "icon_094.webp",
       "row": 8,
       "column": 10,
       "name": "undo_a",
@@ -851,7 +851,7 @@
     },
     {
       "id": 95,
-      "file": "ui/icon_095.webp",
+      "file": "icon_095.webp",
       "row": 8,
       "column": 11,
       "name": "undo_b",
@@ -860,7 +860,7 @@
     },
     {
       "id": 96,
-      "file": "ui/icon_096.webp",
+      "file": "icon_096.webp",
       "row": 8,
       "column": 12,
       "name": "redo",
@@ -869,7 +869,7 @@
     },
     {
       "id": 97,
-      "file": "ui/icon_097.webp",
+      "file": "icon_097.webp",
       "row": 9,
       "column": 1,
       "name": "power",
@@ -878,7 +878,7 @@
     },
     {
       "id": 98,
-      "file": "ui/icon_098.webp",
+      "file": "icon_098.webp",
       "row": 9,
       "column": 2,
       "name": "reload",
@@ -887,7 +887,7 @@
     },
     {
       "id": 99,
-      "file": "ui/icon_099.webp",
+      "file": "icon_099.webp",
       "row": 9,
       "column": 3,
       "name": "eject",
@@ -896,7 +896,7 @@
     },
     {
       "id": 100,
-      "file": "ui/icon_100.webp",
+      "file": "icon_100.webp",
       "row": 9,
       "column": 4,
       "name": "sort_updown",
@@ -905,7 +905,7 @@
     },
     {
       "id": 101,
-      "file": "ui/icon_101.webp",
+      "file": "icon_101.webp",
       "row": 9,
       "column": 5,
       "name": "swap_vertical",
@@ -914,7 +914,7 @@
     },
     {
       "id": 102,
-      "file": "ui/icon_102.webp",
+      "file": "icon_102.webp",
       "row": 9,
       "column": 6,
       "name": "filter",
@@ -923,7 +923,7 @@
     },
     {
       "id": 103,
-      "file": "ui/icon_103.webp",
+      "file": "icon_103.webp",
       "row": 9,
       "column": 7,
       "name": "zoom_in",
@@ -932,7 +932,7 @@
     },
     {
       "id": 104,
-      "file": "ui/icon_104.webp",
+      "file": "icon_104.webp",
       "row": 9,
       "column": 8,
       "name": "zoom_out",
@@ -941,7 +941,7 @@
     },
     {
       "id": 105,
-      "file": "ui/icon_105.webp",
+      "file": "icon_105.webp",
       "row": 9,
       "column": 9,
       "name": "fullscreen",
@@ -950,7 +950,7 @@
     },
     {
       "id": 106,
-      "file": "ui/icon_106.webp",
+      "file": "icon_106.webp",
       "row": 9,
       "column": 10,
       "name": "crop_a",
@@ -959,7 +959,7 @@
     },
     {
       "id": 107,
-      "file": "ui/icon_107.webp",
+      "file": "icon_107.webp",
       "row": 9,
       "column": 11,
       "name": "crop_b",
@@ -968,7 +968,7 @@
     },
     {
       "id": 108,
-      "file": "ui/icon_108.webp",
+      "file": "icon_108.webp",
       "row": 9,
       "column": 12,
       "name": "sync_b",
@@ -977,7 +977,7 @@
     },
     {
       "id": 109,
-      "file": "ui/icon_109.webp",
+      "file": "icon_109.webp",
       "row": 10,
       "column": 1,
       "name": "check",
@@ -986,7 +986,7 @@
     },
     {
       "id": 110,
-      "file": "ui/icon_110.webp",
+      "file": "icon_110.webp",
       "row": 10,
       "column": 2,
       "name": "close",
@@ -995,7 +995,7 @@
     },
     {
       "id": 111,
-      "file": "ui/icon_111.webp",
+      "file": "icon_111.webp",
       "row": 10,
       "column": 3,
       "name": "info",
@@ -1004,7 +1004,7 @@
     },
     {
       "id": 112,
-      "file": "ui/icon_112.webp",
+      "file": "icon_112.webp",
       "row": 10,
       "column": 4,
       "name": "warning",
@@ -1013,7 +1013,7 @@
     },
     {
       "id": 113,
-      "file": "ui/icon_113.webp",
+      "file": "icon_113.webp",
       "row": 10,
       "column": 5,
       "name": "help_a",
@@ -1022,7 +1022,7 @@
     },
     {
       "id": 114,
-      "file": "ui/icon_114.webp",
+      "file": "icon_114.webp",
       "row": 10,
       "column": 6,
       "name": "help_b",
@@ -1031,7 +1031,7 @@
     },
     {
       "id": 115,
-      "file": "ui/icon_115.webp",
+      "file": "icon_115.webp",
       "row": 10,
       "column": 7,
       "name": "menu",
@@ -1040,7 +1040,7 @@
     },
     {
       "id": 116,
-      "file": "ui/icon_116.webp",
+      "file": "icon_116.webp",
       "row": 10,
       "column": 8,
       "name": "apps_grid",
@@ -1049,7 +1049,7 @@
     },
     {
       "id": 117,
-      "file": "ui/icon_117.webp",
+      "file": "icon_117.webp",
       "row": 10,
       "column": 9,
       "name": "list_a",
@@ -1058,7 +1058,7 @@
     },
     {
       "id": 118,
-      "file": "ui/icon_118.webp",
+      "file": "icon_118.webp",
       "row": 10,
       "column": 10,
       "name": "list_b",
@@ -1067,7 +1067,7 @@
     },
     {
       "id": 119,
-      "file": "ui/icon_119.webp",
+      "file": "icon_119.webp",
       "row": 10,
       "column": 11,
       "name": "settings_b",
@@ -1076,7 +1076,7 @@
     },
     {
       "id": 120,
-      "file": "ui/icon_120.webp",
+      "file": "icon_120.webp",
       "row": 10,
       "column": 12,
       "name": "shield",

@@ -1,7 +1,7 @@
 # NekOS
 
 <p align="center">
-  <img src="main_assets/NekOS_A.jpg" alt="NekOS" width="300">
+  <img src="main_assets/branding/NekOS_A.jpg" alt="NekOS" width="300">
 </p>
 
 <p align="center">
@@ -103,7 +103,10 @@ Adjust the path only if AAPT2 is installed elsewhere. See [Building NekOS](docs/
 ## Repository map
 
 - `app/` — Android application source and resources.
-- `main_assets/` — source artwork and branding assets.
+- `main_assets/branding/` — logos, concept artwork, and project visuals.
+- `main_assets/icons/app/` — 100 application-style icons and their index.
+- `main_assets/icons/ui/` — 120 interface icons and their index.
+- `main_assets/dynamic/` — animated UI artwork and frame assets.
 - `user_screenshot/` — screenshots used in this README.
 - `docs/FEATURE_INVENTORY.md` — implementation status and known gaps.
 - `docs/PRODUCT_DIRECTION.md` — product goals and intentionally excluded features.
