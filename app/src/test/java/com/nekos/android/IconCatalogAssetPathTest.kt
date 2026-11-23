@@ -49,4 +49,25 @@ class IconCatalogAssetPathTest {
     fun rejectsNullCharacter() {
         assertFalse(isValidCatalogIconPath("icons/icon\u0000.png"))
     }
+
+    @Test
+    fun acceptsCompleteCatalogEntry() {
+        assertTrue(isValidCatalogIconEntry(1, "icons/icon_001.png", "cloud", 1, 1))
+    }
+
+    @Test
+    fun rejectsNonPositiveCatalogId() {
+        assertFalse(isValidCatalogIconEntry(0, "icons/icon_001.png", "cloud", 1, 1))
+    }
+
+    @Test
+    fun rejectsBlankCatalogName() {
+        assertFalse(isValidCatalogIconEntry(1, "icons/icon_001.png", " ", 1, 1))
+    }
+
+    @Test
+    fun rejectsInvalidGridCoordinates() {
+        assertFalse(isValidCatalogIconEntry(1, "icons/icon_001.png", "cloud", 0, 1))
+        assertFalse(isValidCatalogIconEntry(1, "icons/icon_001.png", "cloud", 1, -1))
+    }
 }
