@@ -132,7 +132,7 @@ internal fun NekOSRoot(
     resumeToken: Int = 0,
     homeSignal: Int = 0,
     backgroundSignal: Int = 0,
-remove root contract parameters    skipStartupSplash: Boolean = false
+    skipStartupSplash: Boolean = false
 ) {
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
