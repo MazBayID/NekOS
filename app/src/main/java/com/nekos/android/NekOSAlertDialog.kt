@@ -31,7 +31,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 internal fun NekOSAlertDialog(
     onDismissRequest: () -> Unit,
-    shape: Shape = RoundedCornerShape(28.dp),
+    shape: Shape = RoundedCornerShape(22.dp),
     containerColor: Color = Color(0xFFFFFBFE),
     titleContentColor: Color = Color(0xFF1D1B20),
     textContentColor: Color = Color(0xFF49454F),
@@ -56,16 +56,16 @@ internal fun NekOSAlertDialog(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .widthIn(max = 420.dp)
-                    .padding(horizontal = 14.dp)
-                    .padding(top = 16.dp)
+                    .widthIn(max = 392.dp)
+                    .padding(horizontal = 18.dp)
+                    .padding(top = 12.dp)
             ) {
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 10.dp)
+                        .padding(horizontal = 8.dp)
                         .padding(top = 32.dp)
-                        .heightIn(max = availableDialogHeight * 0.88f - 16.dp),
+                        .heightIn(max = availableDialogHeight * 0.80f - 12.dp),
                     shape = shape,
                     color = containerColor,
                     tonalElevation = 6.dp,
@@ -74,19 +74,19 @@ internal fun NekOSAlertDialog(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(start = 22.dp, end = 22.dp, top = 38.dp, bottom = 12.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                            .padding(start = 16.dp, end = 16.dp, top = 34.dp, bottom = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         if (title != null) {
                             CompositionLocalProvider(LocalContentColor provides titleContentColor) {
-                                ProvideTextStyle(MaterialTheme.typography.titleLarge) {
+                                ProvideTextStyle(MaterialTheme.typography.titleMedium) {
                                     title()
                                 }
                             }
                         }
                         if (text != null) {
                             CompositionLocalProvider(LocalContentColor provides textContentColor) {
-                                ProvideTextStyle(MaterialTheme.typography.bodyMedium) {
+                                ProvideTextStyle(MaterialTheme.typography.bodySmall) {
                                     text()
                                 }
                             }
@@ -103,7 +103,7 @@ internal fun NekOSAlertDialog(
                 }
                 TopFrame(
                     colorArgb = topFrameColorArgb,
-                    modifier = Modifier.align(Alignment.TopCenter).padding(horizontal = 10.dp)
+                    modifier = Modifier.align(Alignment.TopCenter).padding(horizontal = 8.dp)
                 )
             }
         }
