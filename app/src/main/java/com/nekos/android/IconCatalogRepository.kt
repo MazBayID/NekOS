@@ -172,23 +172,58 @@ class IconCatalogRepository(context: Context) {
         }
     }
 
+    /**
+     * Loads a display-sized Tag icon. Home pills render at 20 dp and the editor
+     * preview is only slightly larger, so 128 px preserves sharpness on dense
+     * screens without retaining the original 512 px asset in memory.
+     */
     @Synchronized
     fun loadBitmap(
         icon: CatalogIcon,
-        frameColorArgb: Long = DEFAULT_TAG_ICON_FRAME_COLOR
+        frameColorArgb: Long = DEFAULT_TAG_ICON_FRAME_COLOR,
+        maxDimensionPx: Int = 128
     ): Bitmap? {
         require(isValidCatalogIconPath(icon.file)) {
             "Invalid catalog asset path: ${icon.file}"
         }
         val normalizedColor = frameColorArgb and 0xFFFFFFFFL
-        val cacheKey = "${icon.file}:${normalizedColor.toString(16)}"
+        val targetSize = maxDimensionPx.coerceAtLeast(1)
+        val cacheKey = "${icon.file}:${normalizedColor.toString(16)}:display:$targetSize"
         memoryState.ifEnabled { bitmapCache.get(cacheKey) }?.let { return it }
         val loadEpoch = memoryState.beginLoad() ?: return null
 
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        appContext.assets.open("ikon/${icon.file}").use {
+            BitmapFactory.decodeStream(it, null, bounds)
+        }
+        if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null
+
+        var sampleSize = 1
+        while (maxOf(bounds.outWidth, bounds.outHeight) / (sampleSize * 2) >= targetSize) {
+            sampleSize *= 2
+        }
+        val decodeOptions = BitmapFactory.Options().apply {
+            inSampleSize = sampleSize
+            inPreferredConfig = Bitmap.Config.ARGB_8888
+        }
         val source = appContext.assets.open("ikon/${icon.file}").use {
-            BitmapFactory.decodeStream(it)
+            BitmapFactory.decodeStream(it, null, decodeOptions)
         } ?: return null
-        val bitmap = recolorIconFrame(source, normalizedColor)
+        val scale = minOf(
+            1f,
+            targetSize.toFloat() / maxOf(source.width, source.height)
+        )
+        val targetWidth = (source.width * scale).toInt().coerceAtLeast(1)
+        val targetHeight = (source.height * scale).toInt().coerceAtLeast(1)
+        val displayBitmap = if (
+            source.width == targetWidth && source.height == targetHeight
+        ) {
+            source
+        } else {
+            Bitmap.createScaledBitmap(source, targetWidth, targetHeight, true)
+                .also { source.recycle() }
+        }
+        val bitmap = recolorIconFrame(displayBitmap, normalizedColor)
 
         return memoryState.storeIfCurrent(loadEpoch) {
             bitmapCache.put(cacheKey, bitmap)
