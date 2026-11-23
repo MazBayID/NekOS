@@ -28,7 +28,6 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.runtime.rememberCoroutineScope
@@ -217,10 +216,7 @@ fun NekOSRoot(
             modifier = Modifier.fillMaxSize().background(WarmBackground),
             contentAlignment = Alignment.Center
         ) {
-            Image(
-                painter = painterResource(R.drawable.nekos_text_logo),
-                contentDescription = "NekOS",
-                contentScale = ContentScale.Fit,
+            StartupLogo(
                 modifier = Modifier.fillMaxWidth(0.84f)
             )
         }
