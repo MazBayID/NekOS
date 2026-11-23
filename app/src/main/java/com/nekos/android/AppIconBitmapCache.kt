@@ -34,6 +34,15 @@ import java.security.MessageDigest
  * released when Android reports substantial background memory pressure.
  * The bounded disk cache lives in filesDir and is removed automatically on uninstall.
  */
+internal fun isValidCachedIconDimensions(
+    width: Int,
+    height: Int,
+    maxDimensionPx: Int = 96
+): Boolean =
+    maxDimensionPx > 0 &&
+        width in 1..maxDimensionPx &&
+        height in 1..maxDimensionPx
+
 class AppIconBitmapCache(
     context: Context,
     maxSizeKb: Int = 4 * 1024,
@@ -156,8 +165,23 @@ class AppIconBitmapCache(
         val file = diskFile(cacheKey)
         if (!file.isFile) return null
 
-        val bitmap = BitmapFactory.decodeFile(file.absolutePath)
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeFile(file.absolutePath, bounds)
+        if (!isValidCachedIconDimensions(bounds.outWidth, bounds.outHeight)) {
+            file.delete()
+            return null
+        }
+
+        val options = BitmapFactory.Options().apply {
+            inPreferredConfig = Bitmap.Config.ARGB_8888
+        }
+        val bitmap = BitmapFactory.decodeFile(file.absolutePath, options)
         if (bitmap == null) {
+            file.delete()
+            return null
+        }
+        if (!isValidCachedIconDimensions(bitmap.width, bitmap.height)) {
+            bitmap.recycle()
             file.delete()
             return null
         }
