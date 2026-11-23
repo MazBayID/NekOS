@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 internal fun NekOSAlertDialog(
     frameColorArgb: Long = DEFAULT_LAUNCHER_UI_COLOR,
+    frameProfile: DialogFrameCalibration.Profile = DialogFrameCalibration.Profile.STANDARD,
     onDismissRequest: () -> Unit,
     shape: Shape = RoundedCornerShape(28.dp),
     containerColor: Color = Color(0xFFFFFBFE),
@@ -114,6 +115,7 @@ internal fun NekOSAlertDialog(
                     DialogFrameTop(
                         colorArgb = frameColorArgb,
                         containerWidth = surfaceWidth,
+                        profile = frameProfile,
                         modifier = Modifier
                             .align(Alignment.TopCenter)
                             .zIndex(1f)
