@@ -228,17 +228,5 @@ internal fun DialogTitleWithFrame(
     colorArgb: Long,
     content: @Composable () -> Unit
 ) {
-    BoxWithConstraints {
-        Box(modifier = Modifier.padding(top = 14.dp)) {
-            content()
-        }
-        DialogFrameTop(
-            colorArgb,
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .requiredWidth(maxWidth + 48.dp)
-                .offset(y = (-48).dp)
-                .zIndex(1f)
-        )
-    }
+    content()
 }
