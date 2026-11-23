@@ -16,7 +16,7 @@ jobs:
   release:
     name: Verify, sign, and publish APK
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 35
     env:
       ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
       ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
@@ -26,8 +26,6 @@ jobs:
     steps:
       - name: Checkout tagged source
         uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
 
       - name: Confirm release version and signing secrets
         shell: bash
@@ -61,7 +59,6 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
         with:
           gradle-version: '8.9'
-          cache-provider: basic
 
       - name: Prepare private signing key
         shell: bash
@@ -73,7 +70,7 @@ jobs:
           echo "ANDROID_KEYSTORE_FILE=$KEYSTORE_PATH" >> "$GITHUB_ENV"
 
       - name: Build release APK, run unit tests, and lint
-        run: gradle --no-daemon assembleRelease testDebugUnitTest lintDebug -Pandroid.aapt2FromMavenOverride="$ANDROID_HOME/build-tools/35.0.0/aapt2" --stacktrace
+        run: gradle assembleRelease testDebugUnitTest lintDebug -Pandroid.aapt2FromMavenOverride="$ANDROID_HOME/build-tools/35.0.0/aapt2" --stacktrace
 
       - name: Enable KVM for Android emulator
         run: |
@@ -89,7 +86,7 @@ jobs:
           arch: x86_64
           profile: pixel_2
           disable-animations: true
-          script: gradle --no-daemon connectedDebugAndroidTest -Pandroid.aapt2FromMavenOverride="$ANDROID_HOME/build-tools/35.0.0/aapt2" --stacktrace
+          script: gradle connectedDebugAndroidTest -Pandroid.aapt2FromMavenOverride="$ANDROID_HOME/build-tools/35.0.0/aapt2" --stacktrace
 
       - name: Verify APK signature
         shell: bash
