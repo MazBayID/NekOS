@@ -133,8 +133,7 @@ internal fun NekOSSettingsDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 6.dp)
-                        .heightIn(max = availableDialogHeight * 0.84f - 12.dp)
-,
+                        .heightIn(max = availableDialogHeight * 0.84f - 12.dp),
                     shape = RoundedCornerShape(22.dp),
                     color = surfaceColor,
                     tonalElevation = 6.dp,
