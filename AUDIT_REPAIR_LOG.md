@@ -28,7 +28,7 @@ One repair at a time: inspect current source -> make the smallest targeted chang
 - Initial source-level audit and prioritization: completed 2026-11-23.
 - Repairs 1–3: bounded icon/artwork decoding and startup logo downsampling are implemented; CI #520 passed APK build, unit tests, lint, and emulator UI tests. Physical-device visual verification remains outstanding.
 - Repair 6: the existing width-range lint error is fixed without removing the intentional logo bleed; CI #520 lint passed.
-- Stage 7 review: confirmed AAPT2 is already the build-time PNG resource compiler/cruncher for `res` assets. No duplicate custom crunch task was added. A local lossless WebP benchmark script is now available; no icon source assets have been changed.
+- Stage 7 review: confirmed AAPT2 is already the build-time PNG resource compiler/cruncher for `res` assets. No duplicate custom crunch task was added. A local lossless WebP benchmark script is available; no icon source assets have been changed. Commit `5014446` documents Termux's native `python-pillow` package so the benchmark setup does not unnecessarily attempt a slow Pillow source build.
 
 ## References
 - Android Developers, Optimize bitmap images in Jetpack Compose: https://developer.android.com/develop/ui/compose/graphics/images/optimization
