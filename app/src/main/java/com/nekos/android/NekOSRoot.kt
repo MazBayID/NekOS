@@ -400,9 +400,27 @@ fun NekOSRoot(
             drawerTargetProgress = 1f
         }
 
-        // Reset transient drawer state whenever NekOS is no longer visible.
+        // Reset transient interactions whenever NekOS is no longer visible.
+        // Keep user-facing dialogs intact; only cancel gestures and temporary overlays.
         LaunchedEffect(backgroundSignal) {
-            if (backgroundSignal > 0) closeDrawer()
+            if (backgroundSignal > 0) {
+                closeDrawer()
+                drawerVisible = false
+                drawerProgress.floatValue = 1f
+                drawerFullyOpen = false
+
+                interactionController.cancelDrag()
+                favoriteDrag = null
+                cancelDropBounds = null
+
+                favoriteOrderSnapshot?.let { favoritePackages = it }
+                favoriteOrderSnapshot = null
+                tagOrderSnapshot?.let { tags = it }
+                tagOrderSnapshot = null
+
+                actionMenuApp = null
+                clearActionMenuPreview()
+            }
         }
 
         // Pressing Home while the tag editor is open dismisses it just like Back.
@@ -990,7 +1008,7 @@ private fun HomeScreen(
                 .statusBarsPadding()
                 .navigationBarsPadding()
                 // Keep launcher controls sharp above the static wallpaper.
-                .pointerInput(homeSwipeThresholdPx) {
+                .pointerInput(homeSwipeThresholdPx, backgroundSignal) {
                     var totalDrag = 0f
                     var drawerDragStarted = false
                     var gestureEligible = false
