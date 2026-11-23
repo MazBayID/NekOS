@@ -31,7 +31,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 internal fun NekOSAlertDialog(
     onDismissRequest: () -> Unit,
-    shape: Shape = RoundedCornerShape(22.dp),
+    shape: Shape = RoundedCornerShape(18.dp),
     containerColor: Color = Color(0xFFFFFBFE),
     titleContentColor: Color = Color(0xFF1D1B20),
     textContentColor: Color = Color(0xFF49454F),
@@ -55,15 +55,14 @@ internal fun NekOSAlertDialog(
             val availableDialogHeight = maxHeight
             Box(
                 modifier = Modifier
+                    .widthIn(max = 360.dp)
                     .fillMaxWidth()
-                    .widthIn(max = 392.dp)
-                    .padding(horizontal = 18.dp)
+                    .padding(horizontal = 12.dp)
                     .padding(top = 12.dp)
             ) {
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 8.dp)
                         .padding(top = 32.dp)
                         .heightIn(max = availableDialogHeight * 0.80f - 12.dp),
                     shape = shape,
@@ -74,8 +73,8 @@ internal fun NekOSAlertDialog(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(start = 16.dp, end = 16.dp, top = 34.dp, bottom = 8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                            .padding(start = 12.dp, end = 12.dp, top = 28.dp, bottom = 6.dp),
+                        verticalArrangement = Arrangement.spacedBy(5.dp)
                     ) {
                         if (title != null) {
                             CompositionLocalProvider(LocalContentColor provides titleContentColor) {
