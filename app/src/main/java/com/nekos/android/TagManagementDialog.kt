@@ -104,7 +104,7 @@ fun TagAppsDialog(
     NekOSAlertDialog(
         topFrameColorArgb = launcherUiColorArgb,
         onDismissRequest = onDismiss,
-        shape = RoundedCornerShape(22.dp),
+        shape = RoundedCornerShape(18.dp),
         containerColor = launcherSurface,
         titleContentColor = Color(0xFF34332F),
         textContentColor = Color(0xFF34332F),
@@ -112,7 +112,7 @@ fun TagAppsDialog(
             Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     Box(Modifier.size(12.dp).clip(CircleShape).background(tagColor))
                     Text(
@@ -123,7 +123,7 @@ fun TagAppsDialog(
                 }
         },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
                 Text(
                     text = "${assignedApps.size} ${if (assignedApps.size == 1) "app" else "apps"}",
                     style = MaterialTheme.typography.labelMedium,
@@ -134,9 +134,9 @@ fun TagAppsDialog(
                         modifier = Modifier.fillMaxWidth()
                             .clip(RoundedCornerShape(18.dp))
                             .background(Color(0xFFF4F1EA))
-                            .padding(horizontal = 14.dp, vertical = 18.dp),
+                            .padding(horizontal = 10.dp, vertical = 10.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalArrangement = Arrangement.spacedBy(5.dp)
                     ) {
                         Text("No apps in this tag", color = Color(0xFF34332F))
                         Text(
@@ -146,12 +146,12 @@ fun TagAppsDialog(
                         )
                     }
                 } else {
-                    LazyColumn(Modifier.heightIn(max = 240.dp)) {
+                    LazyColumn(Modifier.heightIn(max = 200.dp)) {
                         items(assignedApps, key = { it.id }) { app ->
                             Row(
                                 modifier = Modifier.fillMaxWidth()
                                     .clickable { onLaunch(app) }
-                                    .padding(vertical = 7.dp),
+                                    .padding(vertical = 4.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 TagAppIcon(app, iconBitmapCache)
@@ -186,7 +186,7 @@ fun TagActionsDialog(
     NekOSAlertDialog(
         topFrameColorArgb = launcherUiColorArgb,
         onDismissRequest = onDismiss,
-        shape = RoundedCornerShape(22.dp),
+        shape = RoundedCornerShape(18.dp),
         containerColor = launcherSurface,
         titleContentColor = Color(0xFF34332F),
         textContentColor = Color(0xFF34332F),
@@ -249,7 +249,7 @@ fun TagManagementDialog(
     NekOSAlertDialog(
         topFrameColorArgb = launcherUiColorArgb,
         onDismissRequest = onDismiss,
-        shape = RoundedCornerShape(22.dp),
+        shape = RoundedCornerShape(18.dp),
         containerColor = launcherSurface,
         titleContentColor = Color(0xFF34332F),
         textContentColor = Color(0xFF34332F),
@@ -257,11 +257,11 @@ fun TagManagementDialog(
         text = {
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(5.dp)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     Column(
                         modifier = Modifier.weight(1f),
@@ -293,11 +293,11 @@ fun TagManagementDialog(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(44.dp)
+                                .height(38.dp)
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(Color(0xFFF4F1EA))
                                 .clickable { showTagColorPicker = true }
-                                .padding(horizontal = 12.dp),
+                                .padding(horizontal = 9.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
@@ -312,7 +312,7 @@ fun TagManagementDialog(
                     }
                 }
 
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
@@ -325,7 +325,7 @@ fun TagManagementDialog(
                     LazyRow(
                         state = iconCarouselState,
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
                         contentPadding = PaddingValues(horizontal = 2.dp)
                     ) {
                         items(catalog, key = { it.id }) { icon ->
@@ -341,7 +341,7 @@ fun TagManagementDialog(
                             }
                             val selected = selectedIcon == icon.id
                             Box(
-                                Modifier.size(44.dp).clip(RoundedCornerShape(12.dp))
+                                Modifier.size(38.dp).clip(RoundedCornerShape(10.dp))
                                     .background(if (selected) Color(0xFFE7E1D6) else Color(0xFFF4F1EA))
                                     .border(
                                         if (selected) 2.dp else 1.dp,
@@ -358,7 +358,7 @@ fun TagManagementDialog(
                     }
                 }
 
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
                     Text("App assignment · ${selectedPackages.size} selected", color = Color(0xFF34332F), style = MaterialTheme.typography.labelMedium)
                     TextField(
                         value = appSearch,
@@ -384,7 +384,7 @@ fun TagManagementDialog(
                             modifier = Modifier.padding(vertical = 12.dp)
                         )
                     } else {
-                        LazyColumn(Modifier.heightIn(max = 150.dp)) {
+                        LazyColumn(Modifier.heightIn(max = 120.dp)) {
                             items(filteredApps, key = { it.id }) { app ->
                                 Row(
                                     Modifier.fillMaxWidth().clickable {
@@ -449,7 +449,7 @@ fun TagManagementDialog(
         NekOSAlertDialog(
             topFrameColorArgb = launcherUiColorArgb,
             onDismissRequest = { showTagColorPicker = false },
-            shape = RoundedCornerShape(22.dp),
+            shape = RoundedCornerShape(18.dp),
             containerColor = launcherSurface,
             titleContentColor = Color(0xFF34332F),
             textContentColor = Color(0xFF34332F),
@@ -457,9 +457,9 @@ fun TagManagementDialog(
             text = {
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(3),
-                    modifier = Modifier.heightIn(max = 240.dp),
+                    modifier = Modifier.heightIn(max = 200.dp),
                     contentPadding = PaddingValues(2.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     items(TagColorOptions) { (name, colorValue) ->
@@ -502,7 +502,7 @@ fun TagManagementDialog(
         NekOSAlertDialog(
             topFrameColorArgb = launcherUiColorArgb,
             onDismissRequest = { showIconColorPicker = false },
-            shape = RoundedCornerShape(22.dp),
+            shape = RoundedCornerShape(18.dp),
             containerColor = launcherSurface,
             titleContentColor = Color(0xFF34332F),
             textContentColor = Color(0xFF34332F),
@@ -510,10 +510,10 @@ fun TagManagementDialog(
             text = {
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(3),
-                    modifier = Modifier.heightIn(max = 240.dp),
+                    modifier = Modifier.heightIn(max = 200.dp),
                     contentPadding = PaddingValues(4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(5.dp)
                 ) {
                     items(TagIconFrameColors) { (name, colorValue) ->
                         val selected = selectedIconFrameColor == colorValue
