@@ -134,8 +134,6 @@ internal fun NekOSRoot(
     resumeToken: Int = 0,
     homeSignal: Int = 0,
     backgroundSignal: Int = 0,
-    gestureNavContract: GestureNavContractData? = null,
-    onGestureNavFinished: () -> Unit = {},
     skipStartupSplash: Boolean = false
 ) {
     val context = LocalContext.current
@@ -232,36 +230,6 @@ internal fun NekOSRoot(
     val interactionController = remember { LauncherInteractionController() }
     var favoriteDrag by remember { mutableStateOf<LauncherDragSession?>(null) }
     val favoriteSlotBounds = remember { mutableStateMapOf<Int, Rect>() }
-    val gestureTargetApp = remember(gestureNavContract, apps) {
-        gestureNavContract?.let { contract ->
-            apps.firstOrNull {
-                it.packageName == contract.componentName.packageName && it.user == contract.user
-            }
-        }
-    }
-    val gestureTargetFavoriteIndex = remember(gestureTargetApp, favoritePackages) {
-        gestureTargetApp?.let { favoritePackages.indexOf(it.id) }?.takeIf { it >= 0 }
-    }
-    val gestureTargetBounds = gestureTargetFavoriteIndex?.let { favoriteSlotBounds[it] }
-    var gestureTargetBitmap by remember { mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null) }
-    LaunchedEffect(gestureNavContract, gestureTargetApp?.iconCacheKey) {
-        gestureTargetBitmap = null
-        val target = gestureTargetApp ?: return@LaunchedEffect
-        gestureTargetBitmap = iconBitmapCache.getOrLoad(target)
-    }
-    LaunchedEffect(
-        gestureNavContract,
-        isInitialLoadComplete,
-        lastAppliedRefreshToken,
-        gestureTargetApp,
-        gestureTargetFavoriteIndex
-    ) {
-        if (gestureNavContract != null && isInitialLoadComplete && lastAppliedRefreshToken >= 0 &&
-            (gestureTargetApp == null || gestureTargetFavoriteIndex == null)
-        ) {
-            onGestureNavFinished()
-        }
-    }
     var cancelDropBounds by remember { mutableStateOf<Rect?>(null) }
     var tagEditorTarget by remember { mutableStateOf<NekTag?>(null) }
     var viewingTag by remember { mutableStateOf<NekTag?>(null) }
@@ -588,37 +556,6 @@ internal fun NekOSRoot(
                 }
             }
         )
-
-        val targetBitmap = gestureTargetBitmap
-        val targetBounds = gestureTargetBounds
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R &&
-            gestureNavContract != null && targetBitmap != null && targetBounds != null
-        ) {
-            val iconSizePx = with(LocalDensity.current) { 50.dp.toPx() }
-            AndroidView(
-                factory = { viewContext ->
-                    GestureNavSurfaceView(
-                        context = viewContext,
-                        bitmap = targetBitmap.asAndroidBitmap(),
-                        contract = gestureNavContract
-                    ) {
-                        onGestureNavFinished()
-                    }
-                },
-                update = { view ->
-                    view.updateBitmap(targetBitmap.asAndroidBitmap())
-                    view.updateContract(gestureNavContract)
-                },
-                modifier = Modifier
-                    .offset {
-                        IntOffset(
-                            (targetBounds.center.x - iconSizePx / 2f).roundToInt(),
-                            (targetBounds.center.y - iconSizePx / 2f).roundToInt()
-                        )
-                    }
-                    .size(50.dp)
-            )
-        }
 
         if (drawerVisible) {
             // A lightweight dark scrim separates the drawer from Home without

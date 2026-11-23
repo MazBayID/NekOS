@@ -2,7 +2,8 @@
 <resources>
     <style name="Theme.NekOS" parent="android:style/Theme.Material.Light.NoActionBar">
         <item name="android:windowLightStatusBar">true</item>
-        <item name="android:windowBackground">#F4F1EA</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowShowWallpaper">true</item>
     </style>
 
     <style name="Theme.NekOS.Starting" parent="Theme.SplashScreen">

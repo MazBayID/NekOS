@@ -37,8 +37,6 @@ class MainActivity : ComponentActivity() {
     private var homeSignal by mutableIntStateOf(0)
     /** Bumped when the launcher stops being visible so transient drawer UI can reset. */
     private var backgroundSignal by mutableIntStateOf(0)
-    /** Contract supplied by System UI for the app-to-Home gesture animation. */
-    private var gestureNavContract by mutableStateOf<GestureNavContractData?>(null)
     private var isForcedRefreshPending = false
     private var stoppedAtElapsedMillis = 0L
     private val mainHandler = Handler(Looper.getMainLooper())
@@ -172,7 +170,6 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        gestureNavContract = GestureNavContractData.fromIntent(intent)
         // Pressing Home while NekOS is open returns to a clean Home screen.
         if (intent.hasCategory(Intent.CATEGORY_HOME)) {
             homeSignal++
@@ -185,7 +182,6 @@ class MainActivity : ComponentActivity() {
         val isRestoredActivity = savedInstanceState != null
         installSplashScreen()
         super.onCreate(savedInstanceState)
-        gestureNavContract = GestureNavContractData.fromIntent(intent)
         logProcessDiagnostics(savedInstanceState != null)
         WindowCompat.setDecorFitsSystemWindows(window, false)
         window.statusBarColor = android.graphics.Color.TRANSPARENT
@@ -202,8 +198,6 @@ class MainActivity : ComponentActivity() {
                         resumeToken = resumeRefreshToken,
                         homeSignal = homeSignal,
                         backgroundSignal = backgroundSignal,
-                        gestureNavContract = gestureNavContract,
-                        onGestureNavFinished = { gestureNavContract = null },
                         skipStartupSplash = isRestoredActivity
                     )
                 }
