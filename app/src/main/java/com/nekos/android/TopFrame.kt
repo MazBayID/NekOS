@@ -34,7 +34,7 @@ internal fun TopFrame(modifier: Modifier = Modifier) {
         value = withContext(Dispatchers.IO) {
             runCatching {
                 val sheet = context.assets.open(
-                    "dynamic/top_frame/topframe_spritesheet@4x.png"
+                    "topframe_spritesheet@4x.png"
                 ).use { stream ->
                     BitmapFactory.decodeStream(stream)
                 } ?: error("Unable to decode topframe spritesheet")
