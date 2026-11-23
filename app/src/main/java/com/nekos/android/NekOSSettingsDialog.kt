@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -411,7 +412,7 @@ internal fun NekOSSettingsDialog(
                         }
                     }
                 }
-                TopFrame(Modifier.align(Alignment.TopCenter).padding(horizontal = 6.dp))
+                TopFrame(Modifier.align(Alignment.TopCenter).offset(y = (-1).dp).padding(horizontal = 6.dp))
             }
         }
     }
