@@ -178,7 +178,11 @@ internal fun ThemedUiArtworkImage(
 
 
 @Composable
-internal fun DialogFrameTop(colorArgb: Long, modifier: Modifier = Modifier) {
+internal fun DialogFrameTop(
+    colorArgb: Long,
+    modifier: Modifier = Modifier,
+    fitWidth: Boolean = false
+) {
     val bitmap = rememberThemedUiArtwork(
         R.drawable.dialog_frame_top,
         colorArgb,
@@ -186,24 +190,30 @@ internal fun DialogFrameTop(colorArgb: Long, modifier: Modifier = Modifier) {
     )
     if (bitmap != null) {
         Canvas(
-            modifier = modifier
-                .fillMaxWidth()
-                .height(48.dp)
-                .layout { measurable, constraints ->
-                    val extraWidth = 20.dp.roundToPx()
-                    val expandedWidth = constraints.maxWidth + extraWidth
-                    val placeable = measurable.measure(
-                        constraints.copy(
-                            minWidth = expandedWidth,
-                            maxWidth = expandedWidth
+            modifier = if (fitWidth) {
+                modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+            } else {
+                modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+                    .layout { measurable, constraints ->
+                        val extraWidth = 20.dp.roundToPx()
+                        val expandedWidth = constraints.maxWidth + extraWidth
+                        val placeable = measurable.measure(
+                            constraints.copy(
+                                minWidth = expandedWidth,
+                                maxWidth = expandedWidth
+                            )
                         )
-                    )
-                    layout(constraints.maxWidth, placeable.height) {
-                        placeable.placeRelative(-extraWidth / 2, 0)
+                        layout(constraints.maxWidth, placeable.height) {
+                            placeable.placeRelative(-extraWidth / 2, 0)
+                        }
                     }
-                }
+            }
         ) {
-            val scale = size.height / 64f
+            val scale = if (fitWidth) size.width / 512f else size.height / 64f
             val endWidth = 64f * scale
             val crestWidth = 96f * scale
             val lineBaseWidth = 144f * scale
