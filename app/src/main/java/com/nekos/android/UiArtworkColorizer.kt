@@ -216,3 +216,12 @@ internal fun DialogFrameTop(colorArgb: Long, modifier: Modifier = Modifier) {
     }
 }
 
+
+
+@Composable
+internal fun DialogTitleWithFrame(
+    colorArgb: Long,
+    content: @Composable () -> Unit
+) {
+    content()
+}
