@@ -14,24 +14,18 @@ The goal is simple: **make your apps comfortable to find, organize, and open.**
 
 ## Screenshots
 
-### Home Screen
+The following screenshots show the NekOS 0.6.1 interface.
 
 <p align="center">
-  <img src="user_screenshot/ss_main_a.png" alt="NekOS Home Screen with Tag Rail and Favorite Grid" width="300">
+  <img src="https://raw.githubusercontent.com/MazBayID/NekOS/25ca7edbff48e9fc9e11ec1bf0e52c2187466541/user_screenshot/v0.6.1/ss_1.png" alt="NekOS 0.6.1 screenshot 1" width="32%">
+  <img src="https://raw.githubusercontent.com/MazBayID/NekOS/25ca7edbff48e9fc9e11ec1bf0e52c2187466541/user_screenshot/v0.6.1/ss_2.png" alt="NekOS 0.6.1 screenshot 2" width="32%">
+  <img src="https://raw.githubusercontent.com/MazBayID/NekOS/25ca7edbff48e9fc9e11ec1bf0e52c2187466541/user_screenshot/v0.6.1/ss_3.png" alt="NekOS 0.6.1 screenshot 3" width="32%">
 </p>
-
-The Home Screen keeps favorite apps within easy reach and places app groups in the Tag Rail.
-
-### App Drawer and Search
-
 <p align="center">
-  <img src="user_screenshot/ss_01.png" alt="NekOS App Drawer showing installed apps" width="260">
-  &nbsp;&nbsp;
-  <img src="user_screenshot/ss_02.png" alt="NekOS App Drawer with search results and keyboard" width="260">
+  <img src="https://raw.githubusercontent.com/MazBayID/NekOS/25ca7edbff48e9fc9e11ec1bf0e52c2187466541/user_screenshot/v0.6.1/ss_4.png" alt="NekOS 0.6.1 screenshot 4" width="32%">
+  <img src="https://raw.githubusercontent.com/MazBayID/NekOS/25ca7edbff48e9fc9e11ec1bf0e52c2187466541/user_screenshot/v0.6.1/ss_5.png" alt="NekOS 0.6.1 screenshot 5" width="32%">
+  <img src="https://raw.githubusercontent.com/MazBayID/NekOS/25ca7edbff48e9fc9e11ec1bf0e52c2187466541/user_screenshot/v0.6.1/ss_6.png" alt="NekOS 0.6.1 screenshot 6" width="32%">
 </p>
-
-Swipe up to browse installed apps. Search filters app names as you type, so you can get to an app without scrolling through the whole list.
-
 ## Features
 
 - **Favorite Grid** — 15 slots arranged in a 5 × 3 grid. Keep frequently used apps on Home.
