@@ -234,7 +234,7 @@ internal fun NekOSSettingsDialog(
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .defaultMinSize(minHeight = 42.dp)
+                                    .defaultMinSize(minHeight = 48.dp)
                                     .clip(SettingsCardShape)
                                     .background(nekosBackgroundColor(key))
                                     .border(
