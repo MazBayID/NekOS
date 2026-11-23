@@ -980,6 +980,7 @@ internal fun NekOSRoot(
         if (showFirstLaunchTip) {
             NekOSAlertDialog(
                 frameColorArgb = launcherUiColorArgb,
+                frameProfile = DialogFrameCalibration.Profile.TAG_TUTORIAL,
                 onDismissRequest = {
                     preferences.edit().putBoolean("has_seen_drawer_tip", true).apply()
                     showFirstLaunchTip = false
