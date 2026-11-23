@@ -709,8 +709,8 @@ fun NekOSRoot(
                             launcherUiColorArgb,
                             modifier = Modifier
                                 .align(Alignment.TopCenter)
-                                .width(popupContentWidthDp + 20.dp)
-                                .offset(x = (-10).dp, y = (-24).dp)
+                                .width(popupContentWidthDp + 40.dp)
+                                .offset(x = 0.dp, y = (-24).dp)
                                 .zIndex(1f),
                             fitWidth = true
                         )
