@@ -1197,7 +1197,8 @@ private fun HomeScreen(
                                         colorArgb = launcherUiColorArgb,
                                         contentDescription = null,
                                         contentScale = ContentScale.Fit,
-                                        modifier = Modifier.fillMaxSize()
+                                        modifier = Modifier.fillMaxSize(),
+                                         maxDimensionPx = 128
                                     )
                                 }
                             }
@@ -1235,7 +1236,8 @@ private fun HomeScreen(
                             colorArgb = launcherUiColorArgb,
                             contentDescription = null,
                             contentScale = ContentScale.Fit,
-                            modifier = Modifier.fillMaxSize().padding(6.dp)
+                            modifier = Modifier.fillMaxSize().padding(6.dp),
+                             maxDimensionPx = 128
                         )
                     }
                 }
