@@ -9,7 +9,7 @@ One repair at a time: inspect current source -> make the smallest targeted chang
 
 | # | Task | Status | Completion evidence | Next |
 |---|---|---|---|---|
-| 1 | Optimize Tag icon decoding (decode near rendered size; retain a larger size only where preview quality requires it) | NEXT | Pending source-path confirmation and baseline measurement | Implement targeted downsampling and test Tag Home, preview, and picker |
+| 1 | Optimize Tag icon decoding (decode near rendered size; retain a larger size only where preview quality requires it) | IMPLEMENTED — CI pending | Commit `2a62f586`; `loadBitmap()` now reads bounds, downsamples to max 128 px, scales exactly, recolors the reduced bitmap, and keys cache by target size. Android CI run #499 is pending. | Confirm CI and relevant tests; then mark complete and move to UI artwork recoloring |
 | 2 | Optimize UI artwork decoding/recoloring | QUEUED | Pending | Downsample before pixel recoloring; verify appearance and cache behavior |
 | 3 | Right-size startup logo bitmap | QUEUED | Pending | Add a display-sized asset variant and compare visual quality |
 | 4 | Harden background lifecycle cleanup for transient gestures/overlays | QUEUED | Pending | Reset only transient interaction state; preserve dialogs that should survive |
