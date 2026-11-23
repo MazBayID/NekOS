@@ -10,6 +10,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import org.json.JSONObject
+import java.io.File
+import java.io.FileOutputStream
+import java.security.MessageDigest
 
 data class CatalogIcon(
     val id: Int,
@@ -60,6 +63,7 @@ internal fun isValidCatalogIconEntry(
  */
 class IconCatalogRepository(context: Context) {
     private val appContext = context.applicationContext
+    private val displayDiskDirectory = File(appContext.filesDir, "tag_icon_cache")
     private var cachedIcons: List<CatalogIcon>? = null
     private val bitmapCache = object : LruCache<String, Bitmap>(8 * 1024) {
         override fun sizeOf(key: String, bitmap: Bitmap): Int =
@@ -212,6 +216,12 @@ class IconCatalogRepository(context: Context) {
         val cacheKey = "${icon.file}:${normalizedColor.toString(16)}:display:$targetSize"
         memoryState.ifEnabled { bitmapCache.get(cacheKey) }?.let { return it }
         val loadEpoch = memoryState.beginLoad() ?: return null
+        readDisplayDiskBitmap(cacheKey)?.let { cachedBitmap ->
+            return memoryState.storeIfCurrent(loadEpoch) {
+                bitmapCache.put(cacheKey, cachedBitmap)
+                cachedBitmap
+            }
+        }
 
         val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
         appContext.assets.open("ikon/${icon.file}").use {
@@ -245,10 +255,57 @@ class IconCatalogRepository(context: Context) {
                 .also { source.recycle() }
         }
         val bitmap = recolorIconFrame(displayBitmap, normalizedColor)
+        writeDisplayDiskBitmap(cacheKey, bitmap)
 
         return memoryState.storeIfCurrent(loadEpoch) {
             bitmapCache.put(cacheKey, bitmap)
             bitmap
+        }
+    }
+
+    private fun displayDiskFile(cacheKey: String): File {
+        val digest = MessageDigest.getInstance("SHA-256")
+            .digest(cacheKey.toByteArray(Charsets.UTF_8))
+        val name = digest.joinToString("") { byte -> "%02x".format(byte) }
+        return File(displayDiskDirectory, "$name.png")
+    }
+
+    private fun readDisplayDiskBitmap(cacheKey: String): Bitmap? {
+        val file = displayDiskFile(cacheKey)
+        if (!file.isFile) return null
+        val bitmap = BitmapFactory.decodeFile(file.absolutePath)
+        if (bitmap == null || bitmap.width <= 0 || bitmap.height <= 0) {
+            file.delete()
+            return null
+        }
+        file.setLastModified(System.currentTimeMillis())
+        return bitmap
+    }
+
+    private fun writeDisplayDiskBitmap(cacheKey: String, bitmap: Bitmap) {
+        if (!displayDiskDirectory.isDirectory &&
+            !displayDiskDirectory.mkdirs() &&
+            !displayDiskDirectory.isDirectory
+        ) return
+
+        val target = displayDiskFile(cacheKey)
+        val temporary = File(displayDiskDirectory, "${target.name}.${System.nanoTime()}.tmp")
+        try {
+            val success = FileOutputStream(temporary).use { output ->
+                val compressed = bitmap.compress(Bitmap.CompressFormat.PNG, 100, output)
+                if (compressed) output.fd.sync()
+                compressed
+            }
+            if (success) {
+                if (!temporary.renameTo(target)) {
+                    temporary.copyTo(target, overwrite = true)
+                    temporary.delete()
+                }
+            } else {
+                temporary.delete()
+            }
+        } catch (_: Exception) {
+            temporary.delete()
         }
     }
 
