@@ -726,16 +726,6 @@ internal fun NekOSRoot(
                             uiColorArgb = launcherUiColorArgb
                         )
                     }
-                    if (popupContentWidth > 0) {
-                        DialogFrameTop(
-                            colorArgb = launcherUiColorArgb,
-                            containerWidth = popupContentWidthDp,
-                            profile = DialogFrameCalibration.Profile.APP_ACTION,
-                            modifier = Modifier
-                                .align(Alignment.TopCenter)
-                                .zIndex(1f)
-                        )
-                    }
                 }
             }
         }
@@ -955,13 +945,12 @@ internal fun NekOSRoot(
 
         tagPendingDelete?.let { tag ->
             NekOSAlertDialog(
-                frameColorArgb = launcherUiColorArgb,
                 onDismissRequest = { tagPendingDelete = null },
                 shape = RoundedCornerShape(28.dp),
                 containerColor = launcherSurface,
                 titleContentColor = Ink,
                 textContentColor = Ink,
-                title = { DialogTitleWithFrame(launcherUiColorArgb) { Text("Delete “${tag.name}”?") } },
+                title = { Text("Delete “${tag.name}”?") },
                 text = { Text("Only the tag is removed. Your apps are not affected.") },
                 confirmButton = {
                     TextButton(onClick = {
@@ -979,14 +968,12 @@ internal fun NekOSRoot(
 
         if (showFirstLaunchTip) {
             NekOSAlertDialog(
-                frameColorArgb = launcherUiColorArgb,
-                frameProfile = DialogFrameCalibration.Profile.TAG_TUTORIAL,
                 onDismissRequest = {
                     preferences.edit().putBoolean("has_seen_drawer_tip", true).apply()
                     showFirstLaunchTip = false
                 },
                 containerColor = launcherSurface,
-                title = { DialogTitleWithFrame(launcherUiColorArgb) { Text("Welcome to NekOS") } },
+                title = { Text("Welcome to NekOS") },
                 text = {
                     Text("Swipe up from Home to open your apps. Swipe down on the handle, or tap above the panel, to return Home.")
                 },
