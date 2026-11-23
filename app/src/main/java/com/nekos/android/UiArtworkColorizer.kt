@@ -61,13 +61,33 @@ internal object UiArtworkColorizer {
     }
 
     @Synchronized
-    fun load(context: Context, @DrawableRes resourceId: Int, targetColorArgb: Long): Bitmap? {
+    fun load(
+        context: Context,
+        @DrawableRes resourceId: Int,
+        targetColorArgb: Long,
+        maxDimensionPx: Int = 512
+    ): Bitmap? {
         val color = normalizeLauncherUiColor(targetColorArgb)
-        val key = "$resourceId:${color.toString(16)}"
+        val targetSize = maxDimensionPx.coerceAtLeast(1)
+        val key = "$resourceId:${color.toString(16)}:$targetSize"
         cache.get(key)?.let { return it }
 
-        val source = BitmapFactory.decodeResource(context.resources, resourceId) ?: return null
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeResource(context.resources, resourceId, bounds)
+        val sourceMaxDimension = maxOf(bounds.outWidth, bounds.outHeight)
+        if (sourceMaxDimension <= 0) return null
+
+        var sampleSize = 1
+        while (sourceMaxDimension / sampleSize > targetSize) {
+            sampleSize *= 2
+        }
+        val options = BitmapFactory.Options().apply {
+            inSampleSize = sampleSize
+            inPreferredConfig = Bitmap.Config.ARGB_8888
+        }
+        val source = BitmapFactory.decodeResource(context.resources, resourceId, options) ?: return null
         val result = recolor(source, color)
+        if (result !== source) source.recycle()
         cache.put(key, result)
         return result
     }
@@ -117,17 +137,18 @@ internal object UiArtworkColorizer {
 @Composable
 internal fun rememberThemedUiArtwork(
     @DrawableRes resourceId: Int,
-    colorArgb: Long
+    colorArgb: Long,
+    maxDimensionPx: Int = 512
 ): ImageBitmap? {
     val context = LocalContext.current
-    var bitmap by remember(resourceId, colorArgb) {
+    var bitmap by remember(resourceId, colorArgb, maxDimensionPx) {
         mutableStateOf<ImageBitmap?>(null)
     }
 
-    LaunchedEffect(resourceId, colorArgb) {
+    LaunchedEffect(resourceId, colorArgb, maxDimensionPx) {
         bitmap = withContext(Dispatchers.IO) {
             runCatching {
-                UiArtworkColorizer.load(context, resourceId, colorArgb)?.asImageBitmap()
+                UiArtworkColorizer.load(context, resourceId, colorArgb, maxDimensionPx)?.asImageBitmap()
             }.getOrNull()
         }
     }
@@ -141,9 +162,10 @@ internal fun ThemedUiArtworkImage(
     modifier: Modifier = Modifier,
     contentDescription: String? = null,
     contentScale: ContentScale = ContentScale.Fit,
-    colorFilter: ColorFilter? = null
+    colorFilter: ColorFilter? = null,
+    maxDimensionPx: Int = 512
 ) {
-    val bitmap = rememberThemedUiArtwork(resourceId, colorArgb)
+    val bitmap = rememberThemedUiArtwork(resourceId, colorArgb, maxDimensionPx)
     if (bitmap != null) {
         Image(
             bitmap = bitmap,
@@ -158,7 +180,11 @@ internal fun ThemedUiArtworkImage(
 
 @Composable
 internal fun DialogFrameTop(colorArgb: Long, modifier: Modifier = Modifier) {
-    val bitmap = rememberThemedUiArtwork(R.drawable.dialog_frame_top, colorArgb)
+    val bitmap = rememberThemedUiArtwork(
+        R.drawable.dialog_frame_top,
+        colorArgb,
+        maxDimensionPx = 512
+    )
     if (bitmap != null) {
         Canvas(modifier = modifier.fillMaxWidth().height(32.dp)) {
             val scale = size.height / 64f
