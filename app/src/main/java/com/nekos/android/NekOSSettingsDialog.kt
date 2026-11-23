@@ -415,7 +415,7 @@ internal fun NekOSSettingsDialog(
                 }
                 TopFrame(
                     colorArgb = launcherUiColor,
-                    modifier = Modifier.align(Alignment.TopCenter).offset(y = (-1).dp)
+                    modifier = Modifier.align(Alignment.TopCenter).offset(y = (-6).dp)
                 )
             }
         }
