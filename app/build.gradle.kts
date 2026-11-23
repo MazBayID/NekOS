@@ -59,7 +59,7 @@ android {
 
     sourceSets {
         getByName("main") {
-            assets.srcDir("../main_assets")
+            assets.srcDir("../main_assets/dynamic/top_frame")
         }
     }
 
