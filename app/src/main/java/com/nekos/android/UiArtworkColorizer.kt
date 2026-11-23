@@ -12,6 +12,14 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
@@ -226,5 +234,64 @@ internal fun DialogTitleWithFrame(
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         DialogFrameTop(colorArgb)
         content()
+    }
+}
+
+
+/**
+ * Shared NekOS dialog surface. The decorative frame is deliberately the first
+ * child of the clipped card so it touches the dialog's top edge.
+ */
+@Composable
+internal fun NekOSDialogShell(
+    onDismissRequest: () -> Unit,
+    colorArgb: Long,
+    containerColor: androidx.compose.ui.graphics.Color,
+    title: @Composable () -> Unit,
+    content: @Composable () -> Unit,
+    actions: @Composable () -> Unit
+) {
+    Dialog(
+        onDismissRequest = onDismissRequest,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth(0.92f)
+                .widthIn(max = 420.dp)
+                .heightIn(max = 680.dp),
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = containerColor)
+        ) {
+            Column {
+                // No padding or spacer may be placed above this artwork.
+                DialogFrameTop(colorArgb)
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 8.dp)
+                ) {
+                    title()
+                }
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f, fill = false)
+                        .padding(horizontal = 20.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    content()
+                }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 8.dp),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    actions()
+                }
+            }
+        }
     }
 }
