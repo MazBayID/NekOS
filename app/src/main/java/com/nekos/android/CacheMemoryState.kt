@@ -35,9 +35,11 @@ internal class CacheMemoryState {
 
     fun resume(action: () -> Unit) {
         synchronized(lock) {
-            enabled = true
-            epoch++
-            action()
+            if (!enabled) {
+                enabled = true
+                epoch++
+                action()
+            }
         }
     }
 }

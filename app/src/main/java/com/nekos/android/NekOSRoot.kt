@@ -279,7 +279,7 @@ internal fun NekOSRoot(
     // The wallpaper is always saved to the same file, so the path alone cannot signal a new
     // image. The revision makes choosing a second wallpaper reload it immediately.
     var wallpaperRevision by remember { mutableIntStateOf(0) }
-    LaunchedEffect(wallpaperPath, builtInWallpaperKey, wallpaperRevision, resumeToken) {
+    LaunchedEffect(wallpaperPath, builtInWallpaperKey, wallpaperRevision, wallpaperLoadGeneration) {
         val loadGeneration = wallpaperLoadGeneration
         val loadedWallpaper = withContext(Dispatchers.IO) {
             when {
@@ -321,10 +321,12 @@ internal fun NekOSRoot(
         context.registerComponentCallbacks(memoryCallbacks)
         onDispose { context.unregisterComponentCallbacks(memoryCallbacks) }
     }
-    LaunchedEffect(apps, resumeToken) {
-        // Resume before preloading so the two operations cannot race each other.
+    LaunchedEffect(resumeToken) {
+        // Re-enable caches only when a critical memory trim actually disabled them.
         iconBitmapCache.resumeAfterBackground()
         iconCatalogRepository.resumeAfterBackground()
+    }
+    LaunchedEffect(apps) {
         if (apps.isNotEmpty()) {
             iconBitmapCache.configureForAppCount(apps.size)
             iconBitmapCache.preload(apps)
