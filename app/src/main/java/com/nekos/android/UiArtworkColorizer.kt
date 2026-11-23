@@ -266,9 +266,9 @@ internal fun NekOSDialogShell(
                     .fillMaxWidth(0.92f)
                     .widthIn(max = 420.dp)
                     .heightIn(max = maxHeight * 0.88f),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = containerColor)
-        ) {
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = containerColor)
+            ) {
             Column {
                 // No padding or spacer may be placed above this artwork.
                 DialogFrameTop(colorArgb)
@@ -300,4 +300,5 @@ internal fun NekOSDialogShell(
             }
         }
     }
+}
 }
