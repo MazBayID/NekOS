@@ -74,7 +74,7 @@ internal fun NekOSAlertDialog(
                     ) {
                         if (title != null) {
                             CompositionLocalProvider(LocalContentColor provides titleContentColor) {
-                                ProvideTextStyle(MaterialTheme.typography.headlineSmall) {
+                                ProvideTextStyle(MaterialTheme.typography.titleLarge) {
                                     title()
                                 }
                             }
