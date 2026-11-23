@@ -210,6 +210,7 @@ internal fun NekOSSettingsDialog(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(SettingsCardShape)
+                                .background(SettingsInk.copy(alpha = 0.025f))
                                 .border(1.dp, SettingsBorder, SettingsCardShape)
                                 .padding(13.dp),
                             verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -442,9 +443,10 @@ private fun SettingsActionCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(SettingsCardShape)
+            .background(SettingsInk.copy(alpha = 0.025f))
             .border(1.dp, SettingsBorder, SettingsCardShape)
             .clickable(onClick = onClick)
-            .padding(horizontal = 13.dp, vertical = 12.dp),
+            .padding(horizontal = 13.dp, vertical = 13.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
@@ -463,6 +465,7 @@ private fun SettingsSectionTitle(label: String) {
         color = SettingsMuted,
         fontSize = 10.sp,
         letterSpacing = 1.2.sp,
-        fontWeight = FontWeight.Bold
+        fontWeight = FontWeight.Bold,
+        modifier = Modifier.padding(top = 5.dp, bottom = 1.dp)
     )
 }
