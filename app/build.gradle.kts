@@ -57,6 +57,12 @@ android {
         }
     }
 
+    sourceSets {
+        getByName("main") {
+            assets.srcDir("../main_assets")
+        }
+    }
+
     buildFeatures {
         compose = true
     }
