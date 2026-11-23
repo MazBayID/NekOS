@@ -47,6 +47,8 @@ def main() -> int:
                         help="Directory containing source PNG icons.")
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT,
                         help="Directory for CSV and summary output (default: build/webp-benchmark).")
+    parser.add_argument("--method", type=int, choices=range(7), default=0,
+                        help="WebP effort level 0 (fastest) to 6 (slowest); default: 0.")
     parser.add_argument("--write-candidates", action="store_true",
                         help="Also write WebP candidates here; source PNG files remain untouched.")
     args = parser.parse_args()
@@ -75,7 +77,8 @@ def main() -> int:
     exact_count = 0
     failed_count = 0
 
-    for path in files:
+    for index, path in enumerate(files, start=1):
+        print(f"[{index}/{len(files)}] Processing {path.name}...", flush=True)
         png_size = path.stat().st_size
         try:
             with Image.open(path) as source:
@@ -91,7 +94,7 @@ def main() -> int:
                     format="WEBP",
                     lossless=True,
                     quality=100,
-                    method=6,
+                    method=args.method,
                     exact=True,
                 )
                 webp_data = buffer.getvalue()
@@ -162,6 +165,7 @@ def main() -> int:
         "NekOS PNG vs lossless WebP benchmark",
         f"Source: {args.source}",
         f"Images found: {len(files)}",
+        f"WebP method: {args.method} (0 = fastest, 6 = slowest)",
         f"Successfully encoded: {len(files) - failed_count}",
         f"Pixel-exact matches: {exact_count}/{len(files)}",
         f"Files where WebP is smaller: {smaller_count}/{len(files)}",
