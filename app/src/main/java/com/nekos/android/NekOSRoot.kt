@@ -157,30 +157,6 @@ internal fun NekOSRoot(
     var lastAppliedRefreshToken by remember { mutableIntStateOf(-1) }
 
     val latestFavoritePackages by rememberUpdatedState(favoritePackages)
-    val gestureTargetApp = remember(gestureNavContract, apps) {
-        gestureNavContract?.let { contract ->
-            apps.firstOrNull {
-                it.componentName == contract.componentName && it.user == contract.user
-            }
-        }
-    }
-    val gestureTargetFavoriteIndex = remember(gestureTargetApp, favoritePackages) {
-        gestureTargetApp?.let { favoritePackages.indexOf(it.id) }?.takeIf { it >= 0 }
-    }
-    val gestureTargetBounds = gestureTargetFavoriteIndex?.let { favoriteSlotBounds[it] }
-    var gestureTargetBitmap by remember { mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null) }
-    LaunchedEffect(gestureNavContract, gestureTargetApp?.iconCacheKey) {
-        gestureTargetBitmap = null
-        val target = gestureTargetApp ?: return@LaunchedEffect
-        gestureTargetBitmap = iconBitmapCache.getOrLoad(target)
-    }
-    LaunchedEffect(gestureNavContract, isInitialLoadComplete, gestureTargetApp, gestureTargetFavoriteIndex) {
-        if (gestureNavContract != null && isInitialLoadComplete &&
-            (gestureTargetApp == null || gestureTargetFavoriteIndex == null)
-        ) {
-            onGestureNavFinished()
-        }
-    }
     val latestTags by rememberUpdatedState(tags)
 
     // Discover launchable apps while the brand splash is visible instead of
@@ -256,6 +232,30 @@ internal fun NekOSRoot(
     val interactionController = remember { LauncherInteractionController() }
     var favoriteDrag by remember { mutableStateOf<LauncherDragSession?>(null) }
     val favoriteSlotBounds = remember { mutableStateMapOf<Int, Rect>() }
+    val gestureTargetApp = remember(gestureNavContract, apps) {
+        gestureNavContract?.let { contract ->
+            apps.firstOrNull {
+                it.componentName == contract.componentName && it.user == contract.user
+            }
+        }
+    }
+    val gestureTargetFavoriteIndex = remember(gestureTargetApp, favoritePackages) {
+        gestureTargetApp?.let { favoritePackages.indexOf(it.id) }?.takeIf { it >= 0 }
+    }
+    val gestureTargetBounds = gestureTargetFavoriteIndex?.let { favoriteSlotBounds[it] }
+    var gestureTargetBitmap by remember { mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null) }
+    LaunchedEffect(gestureNavContract, gestureTargetApp?.iconCacheKey) {
+        gestureTargetBitmap = null
+        val target = gestureTargetApp ?: return@LaunchedEffect
+        gestureTargetBitmap = iconBitmapCache.getOrLoad(target)
+    }
+    LaunchedEffect(gestureNavContract, isInitialLoadComplete, gestureTargetApp, gestureTargetFavoriteIndex) {
+        if (gestureNavContract != null && isInitialLoadComplete &&
+            (gestureTargetApp == null || gestureTargetFavoriteIndex == null)
+        ) {
+            onGestureNavFinished()
+        }
+    }
     var cancelDropBounds by remember { mutableStateOf<Rect?>(null) }
     var tagEditorTarget by remember { mutableStateOf<NekTag?>(null) }
     var viewingTag by remember { mutableStateOf<NekTag?>(null) }
