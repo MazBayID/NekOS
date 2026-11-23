@@ -485,7 +485,6 @@ fun NekOSRoot(
                         actionMenuPreviewApp = app
                         actionMenuPreviewPosition = position
                     }
-                }
             },
             onFavoriteLongPressEnd = ::openActionMenuAfterRelease,
             onFavoriteLongPressCancel = ::clearActionMenuPreview,
@@ -498,7 +497,6 @@ fun NekOSRoot(
                     updated[fromIndex] = updated[toIndex]
                     updated[toIndex] = moved
                     favoritePackages = updated
-                }
             },
             onFavoriteReorderStart = {
                 favoriteOrderSnapshot = favoritePackages.toList()
@@ -518,7 +516,6 @@ fun NekOSRoot(
                 val sourceId = tags.getOrNull(fromIndex)?.id
                 if (sourceId != null) {
                     tags = moveTagToIndex(tags, sourceId, toIndex)
-                }
             },
             onTagReorderStart = {
                 tagOrderSnapshot = tags.toList()
@@ -902,7 +899,7 @@ fun NekOSRoot(
                 containerColor = launcherSurface,
                 titleContentColor = Ink,
                 textContentColor = Ink,
-                title = { DialogTitleWithFrame(launcherUiColorArgb) { Text("Delete “${tag.name}”?") } },
+                title = {  Text("Delete “${tag.name}”?") } },
                 text = { Text("Only the tag is removed. Your apps are not affected.") },
                 confirmButton = {
                     TextButton(onClick = {
@@ -926,7 +923,7 @@ fun NekOSRoot(
                     showFirstLaunchTip = false
                 },
                 containerColor = launcherSurface,
-                title = { DialogTitleWithFrame(launcherUiColorArgb) { Text("Welcome to NekOS") } },
+                title = {  Text("Welcome to NekOS") } },
                 text = {
                     Text("Swipe up from Home to open your apps. Swipe down on the handle, or tap above the panel, to return Home.")
                 },
@@ -1682,7 +1679,6 @@ private fun AppDrawer(
                     TextButton(onClick = { searchQuery = "" }) {
                         Text("Clear", color = Muted)
                     }
-                }
             },
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)
         )
