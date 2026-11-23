@@ -646,7 +646,7 @@ fun NekOSRoot(
         ) {
             popupApp?.let { app ->
                 val isInteractive = actionMenuApp != null
-                Column(
+                Box(
                     modifier = Modifier
                         .onSizeChanged { actionMenuPopupSize = it }
                         .offset {
@@ -657,40 +657,52 @@ fun NekOSRoot(
                             )
                         }
                         .widthIn(max = minOf(210.dp, maxWidth))
-                        .heightIn(max = maxHeight)
-                        .verticalScroll(rememberScrollState())
-                        .border(
-                            width = 1.dp,
-                            color = lerp(launcherSurface, Ink, 0.18f),
-                            shape = RoundedCornerShape(16.dp)
-                        )
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(launcherSurface)
-                        .padding(horizontal = 10.dp, vertical = 10.dp),
-                    verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
-                    LauncherAppActionMenuContent(
-                        app = app,
-                        iconBitmapCache = iconBitmapCache,
-                        isInteractive = isInteractive,
-                        onAppInfo = {
-                            actionMenuApp = null
-                            openAppInfo(context, app)
-                        },
-                        onUninstall = {
-                            actionMenuApp = null
-                            requestAppUninstall(context, app)
-                        },
-                        onRemoveFavorite = if (favoritePackages.any { it == app.id }) {
-                            {
-                                updateFavorites(favoritePackages.map { favoriteId ->
-                                    if (favoriteId == app.id) null else favoriteId
-                                })
+                    Column(
+                        modifier = Modifier
+                            .widthIn(max = minOf(210.dp, maxWidth))
+                            .heightIn(max = maxHeight)
+                            .verticalScroll(rememberScrollState())
+                            .border(
+                                width = 1.dp,
+                                color = lerp(launcherSurface, Ink, 0.18f),
+                                shape = RoundedCornerShape(16.dp)
+                            )
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(launcherSurface)
+                            .padding(horizontal = 10.dp, vertical = 10.dp),
+                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
+                        LauncherAppActionMenuContent(
+                            app = app,
+                            iconBitmapCache = iconBitmapCache,
+                            isInteractive = isInteractive,
+                            onAppInfo = {
                                 actionMenuApp = null
-                            }
-                        } else null,
-                        launcherSurface = launcherSurface,
-                        uiColorArgb = launcherUiColorArgb
+                                openAppInfo(context, app)
+                            },
+                            onUninstall = {
+                                actionMenuApp = null
+                                requestAppUninstall(context, app)
+                            },
+                            onRemoveFavorite = if (favoritePackages.any { it == app.id }) {
+                                {
+                                    updateFavorites(favoritePackages.map { favoriteId ->
+                                        if (favoriteId == app.id) null else favoriteId
+                                    })
+                                    actionMenuApp = null
+                                }
+                            } else null,
+                            launcherSurface = launcherSurface,
+                            uiColorArgb = launcherUiColorArgb
+                        )
+                    }
+                    DialogFrameTop(
+                        launcherUiColorArgb,
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .offset(y = (-24).dp)
+                            .zIndex(1f)
                     )
                 }
             }
