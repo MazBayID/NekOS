@@ -146,6 +146,9 @@ internal fun NekOSRoot(
     val iconCatalogRepository = remember(context) { IconCatalogRepository(context) }
     var apps by remember { mutableStateOf(emptyList<InstalledApp>()) }
     var favoritePackages by remember { mutableStateOf(loadFavoritePackages(context)) }
+    var favoriteAppSnapshots by remember {
+        mutableStateOf(FavoriteAppSnapshotStore.load(context))
+    }
     var tags by remember { mutableStateOf(TagStore.load(context)) }
     var favoriteOrderSnapshot by remember { mutableStateOf<List<String?>?>(null) }
     var tagOrderSnapshot by remember { mutableStateOf<List<NekTag>?>(null) }
@@ -201,6 +204,19 @@ internal fun NekOSRoot(
             installedAppIds = installedAppIds,
             unavailableProfileSerialNumbers = refreshedCatalog.unavailableProfileSerialNumbers
         )
+        val activeFavoriteIds = cleanedReferences.favorites.filterNotNull().toSet()
+        val retainedSnapshots = favoriteAppSnapshots.filterKeys { it in activeFavoriteIds }
+        val refreshedSnapshots = refreshedApps
+            .filter { it.id in activeFavoriteIds }
+            .associate { app ->
+                app.id to FavoriteAppSnapshot(
+                    appId = app.id,
+                    label = app.label,
+                    iconCacheKey = app.iconCacheKey
+                )
+            }
+        favoriteAppSnapshots = retainedSnapshots + refreshedSnapshots
+        FavoriteAppSnapshotStore.save(context, favoriteAppSnapshots.values)
         if (cleanedReferences.favorites != latestFavoritePackages) {
             favoritePackages = cleanedReferences.favorites
             saveFavoritePackages(context, cleanedReferences.favorites)
@@ -370,6 +386,19 @@ internal fun NekOSRoot(
     fun updateFavorites(updated: List<String?>) {
         favoritePackages = updated
         saveFavoritePackages(context, updated)
+        val activeFavoriteIds = updated.filterNotNull().toSet()
+        val retainedSnapshots = favoriteAppSnapshots.filterKeys { it in activeFavoriteIds }
+        val refreshedSnapshots = apps
+            .filter { it.id in activeFavoriteIds }
+            .associate { app ->
+                app.id to FavoriteAppSnapshot(
+                    appId = app.id,
+                    label = app.label,
+                    iconCacheKey = app.iconCacheKey
+                )
+            }
+        favoriteAppSnapshots = retainedSnapshots + refreshedSnapshots
+        FavoriteAppSnapshotStore.save(context, favoriteAppSnapshots.values)
     }
 
     fun placeFavoriteFromDrawer(appId: String, targetIndex: Int) {
@@ -473,6 +502,7 @@ internal fun NekOSRoot(
             launcherUiColorArgb = launcherUiColorArgb,
             onOpenSettings = { showSettings = true },
             favoritePackages = favoritePackages,
+            favoriteAppSnapshots = favoriteAppSnapshots,
             tags = tags,
             activeTagPage = activeTagPage,
             onTagPageChange = { activeTagPage = it },
@@ -996,6 +1026,7 @@ private fun HomeScreen(
     launcherUiColorArgb: Long,
     onOpenSettings: () -> Unit,
     favoritePackages: List<String?>,
+    favoriteAppSnapshots: Map<String, FavoriteAppSnapshot>,
     tags: List<NekTag>,
     activeTagPage: Int,
     onTagPageChange: (Int) -> Unit,
@@ -1344,6 +1375,7 @@ private fun HomeScreen(
                         ) {
                             FavoriteSlot(
                                 app = app,
+                                snapshot = appId?.let { favoriteAppSnapshots[it] },
                                 iconBitmapCache = iconBitmapCache,
                                 onBoundsChanged = { bounds -> onFavoriteSlotBounds(index, bounds) },
                                 isDropTarget = favoriteDropTarget == index,
@@ -1368,6 +1400,7 @@ private fun HomeScreen(
 @Composable
 private fun FavoriteSlot(
     app: InstalledApp?,
+    snapshot: FavoriteAppSnapshot?,
     iconBitmapCache: AppIconBitmapCache,
     onBoundsChanged: (Rect) -> Unit,
     isDropTarget: Boolean,
@@ -1381,13 +1414,17 @@ private fun FavoriteSlot(
     modifier: Modifier = Modifier
 ) {
     val cacheGeneration = iconBitmapCache.generation
-    val cachedBitmap = app?.let { iconBitmapCache[it.iconCacheKey] }
-    var bitmap by remember(app?.iconCacheKey, cacheGeneration) { mutableStateOf(cachedBitmap) }
-    LaunchedEffect(app?.iconCacheKey, cacheGeneration) {
-        bitmap = app?.let { iconBitmapCache[it.iconCacheKey] }
-        val currentApp = app ?: return@LaunchedEffect
-        if (bitmap == null) {
-            bitmap = iconBitmapCache.getOrLoad(currentApp)
+    val iconCacheKey = app?.iconCacheKey ?: snapshot?.iconCacheKey
+    val cachedBitmap = iconCacheKey?.let { iconBitmapCache[it] }
+    var bitmap by remember(iconCacheKey, cacheGeneration) { mutableStateOf(cachedBitmap) }
+    LaunchedEffect(iconCacheKey, app?.id, cacheGeneration) {
+        bitmap = iconCacheKey?.let { iconBitmapCache[it] }
+        if (bitmap == null && iconCacheKey != null) {
+            bitmap = if (app != null) {
+                iconBitmapCache.getOrLoad(app)
+            } else {
+                iconBitmapCache.getCached(iconCacheKey)
+            }
         }
     }
     val slotBackground by animateColorAsState(
@@ -1457,16 +1494,16 @@ private fun FavoriteSlot(
             contentAlignment = Alignment.Center
         ) {
             this@Column.AnimatedVisibility(
-                visible = app != null && iconBitmap != null,
+                visible = iconBitmap != null,
                 enter = fadeIn(tween(180)) + scaleIn(
                     initialScale = 0.90f,
                     animationSpec = tween(180)
                 )
             ) {
-                if (app != null && iconBitmap != null) {
+                if (iconBitmap != null) {
                     Image(
                         bitmap = iconBitmap,
-                        contentDescription = app.label,
+                        contentDescription = app?.label ?: snapshot?.label,
                         modifier = Modifier.size(50.dp)
                     )
                 }
@@ -1510,7 +1547,7 @@ private fun TagPill(
         label = "tag-drag-elevation"
     )
     val iconCacheGeneration = iconCatalogRepository.generation
-    var tagIcon by remember(tag.iconId, tag.iconFrameColorArgb, iconCacheGeneration) {
+    var tagIcon by remember(tag.iconId, tag.iconFrameColorArgb) {
         mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null)
     }
     val currentOnHandleClick by rememberUpdatedState(onHandleClick)
@@ -1526,8 +1563,7 @@ private fun TagPill(
         )
     }
     LaunchedEffect(tag.iconId, tag.iconFrameColorArgb, iconCacheGeneration) {
-        tagIcon = null
-        tagIcon = withContext(Dispatchers.IO) {
+        val refreshedTagIcon = withContext(Dispatchers.IO) {
             runCatching {
                 tag.iconId?.let { id ->
                     iconCatalogRepository.loadCatalog().firstOrNull { it.id == id }
@@ -1536,6 +1572,7 @@ private fun TagPill(
                 }
             }.getOrNull()
         }
+        if (refreshedTagIcon != null) tagIcon = refreshedTagIcon
     }
     Row(
         modifier = modifier
