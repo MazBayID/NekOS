@@ -187,12 +187,14 @@ internal fun ThemedUiArtworkImage(
 internal object DialogFrameCalibration {
     enum class Profile {
         STANDARD,
+        TAG_TUTORIAL,
         APP_ACTION
     }
 
     private fun overhangPerSide(profile: Profile): Dp = when (profile) {
         Profile.STANDARD -> 20.dp
-        Profile.APP_ACTION -> 9.dp
+        Profile.TAG_TUTORIAL -> 19.dp
+        Profile.APP_ACTION -> 10.dp
     }
 
     fun frameWidth(containerWidth: Dp, profile: Profile): Dp =
