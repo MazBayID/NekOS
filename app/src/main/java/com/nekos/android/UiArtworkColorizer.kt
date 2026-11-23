@@ -9,7 +9,7 @@ import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -194,7 +194,7 @@ internal fun DialogFrameTop(
         val frameHeight = minOf(48.dp, frameWidth / 8f)
         Canvas(
             modifier = modifier
-                .width(frameWidth)
+                .requiredWidth(frameWidth)
                 .height(frameHeight)
                 .offset(y = -frameHeight / 2f)
         ) {
