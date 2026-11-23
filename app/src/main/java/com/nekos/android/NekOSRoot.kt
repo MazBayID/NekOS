@@ -1502,7 +1502,12 @@ private fun TagPill(
             }
             .shadow(dragElevation, RoundedCornerShape(18.dp))
             .clip(RoundedCornerShape(18.dp))
-            .background(Color(tag.colorArgb.toInt())),
+            .background(Color(tag.colorArgb.toInt()))
+            .border(
+                width = 1.dp,
+                color = Ink.copy(alpha = 0.18f),
+                shape = RoundedCornerShape(18.dp)
+            ),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Row(
