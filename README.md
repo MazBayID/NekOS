@@ -30,6 +30,7 @@ The following screenshots show the NekOS 0.6.1 interface.
   <img src="https://raw.githubusercontent.com/MazBayID/NekOS/25ca7edbff48e9fc9e11ec1bf0e52c2187466541/user_screenshot/v0.6.1/ss_5.png" alt="NekOS 0.6.1 screenshot 5" width="32%">
   <img src="https://raw.githubusercontent.com/MazBayID/NekOS/25ca7edbff48e9fc9e11ec1bf0e52c2187466541/user_screenshot/v0.6.1/ss_6.png" alt="NekOS 0.6.1 screenshot 6" width="32%">
 </p>
+
 ## Features
 
 - **Favorite Grid** — 15 slots arranged in a 5 × 3 grid. Keep frequently used apps on Home.
