@@ -235,7 +235,7 @@ internal fun NekOSSettingsDialog(
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .defaultMinSize(minHeight = 40.dp)
+                                    .defaultMinSize(minHeight = 48.dp)
                                     .clip(SettingsCardShape)
                                     .background(nekosBackgroundColor(key))
                                     .border(
@@ -252,7 +252,7 @@ internal fun NekOSSettingsDialog(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text(label, color = SettingsInk, fontSize = 13.sp,
+                                Text(label, color = SettingsInk, fontSize = 12.sp,
                                     fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal)
                                 if (selected) Text("✓", color = SettingsAccent, fontSize = 17.sp, fontWeight = FontWeight.Bold)
                             }
@@ -290,7 +290,7 @@ internal fun NekOSSettingsDialog(
                                     Text(
                                         option.label,
                                         color = SettingsInk,
-                                        fontSize = 14.sp,
+                                        fontSize = 12.sp,
                                         fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium
                                     )
                                 }
@@ -340,7 +340,7 @@ internal fun NekOSSettingsDialog(
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
-                                        Text(option.label, color = SettingsInk, fontSize = 13.sp,
+                                        Text(option.label, color = SettingsInk, fontSize = 12.sp,
                                             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal)
                                         if (selected) Text("✓", color = SettingsAccent, fontSize = 16.sp, fontWeight = FontWeight.Bold)
                                     }
@@ -497,7 +497,7 @@ private fun SettingsActionCard(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        Text(title, color = SettingsInk, fontWeight = FontWeight.SemiBold, fontSize = 13.sp,
+        Text(title, color = SettingsInk, fontWeight = FontWeight.SemiBold, fontSize = 12.sp,
             modifier = Modifier.weight(1f))
         Text(action, color = SettingsAccent, fontWeight = FontWeight.SemiBold, fontSize = 12.sp)
     }
