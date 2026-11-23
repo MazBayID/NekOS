@@ -81,6 +81,29 @@ class AppIconBitmapCache(
         memoryCache.resize(estimatedCatalogKb.coerceIn(4 * 1024, deviceBudgetKb))
     }
 
+    suspend fun getCached(cacheKey: String): ImageBitmap? {
+        memoryState.ifEnabled { memoryCache.get(cacheKey) }?.let { return it }
+
+        return keyLocks.withLock(cacheKey) {
+            memoryState.ifEnabled { memoryCache.get(cacheKey) }?.let {
+                return@withLock it
+            }
+            loadSemaphore.withPermit {
+                memoryState.ifEnabled { memoryCache.get(cacheKey) }?.let {
+                    return@withPermit it
+                }
+                val loadEpoch = memoryState.beginLoad() ?: return@withPermit null
+                val bitmap = withContext(Dispatchers.IO) {
+                    readDiskBitmap(cacheKey)?.asImageBitmap()
+                } ?: return@withPermit null
+                memoryState.storeIfCurrent(loadEpoch) {
+                    memoryCache.put(cacheKey, bitmap)
+                    bitmap
+                }
+            }
+        }
+    }
+
     suspend fun getOrLoad(app: InstalledApp): ImageBitmap? {
         memoryState.ifEnabled { memoryCache.get(app.iconCacheKey) }?.let { return it }
 
