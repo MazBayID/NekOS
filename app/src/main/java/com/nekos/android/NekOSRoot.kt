@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.ComponentCallbacks2
 import android.content.res.Configuration
 import android.content.Intent
-import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
 import android.os.Process
