@@ -158,6 +158,7 @@ internal fun NekOSRoot(
     var lastAppliedRefreshToken by remember { mutableIntStateOf(-1) }
 
     val latestFavoritePackages by rememberUpdatedState(favoritePackages)
+    val latestFavoriteAppSnapshots by rememberUpdatedState(favoriteAppSnapshots)
     val latestTags by rememberUpdatedState(tags)
 
     // Discover launchable apps while the brand splash is visible instead of
@@ -205,7 +206,7 @@ internal fun NekOSRoot(
             unavailableProfileSerialNumbers = refreshedCatalog.unavailableProfileSerialNumbers
         )
         val activeFavoriteIds = cleanedReferences.favorites.filterNotNull().toSet()
-        val retainedSnapshots = favoriteAppSnapshots.filterKeys { it in activeFavoriteIds }
+        val retainedSnapshots = latestFavoriteAppSnapshots.filterKeys { it in activeFavoriteIds }
         val refreshedSnapshots = refreshedApps
             .filter { it.id in activeFavoriteIds }
             .associate { app ->
