@@ -249,8 +249,14 @@ internal fun NekOSRoot(
         val target = gestureTargetApp ?: return@LaunchedEffect
         gestureTargetBitmap = iconBitmapCache.getOrLoad(target)
     }
-    LaunchedEffect(gestureNavContract, isInitialLoadComplete, gestureTargetApp, gestureTargetFavoriteIndex) {
-        if (gestureNavContract != null && isInitialLoadComplete &&
+    LaunchedEffect(
+        gestureNavContract,
+        isInitialLoadComplete,
+        lastAppliedRefreshToken,
+        gestureTargetApp,
+        gestureTargetFavoriteIndex
+    ) {
+        if (gestureNavContract != null && isInitialLoadComplete && lastAppliedRefreshToken >= 0 &&
             (gestureTargetApp == null || gestureTargetFavoriteIndex == null)
         ) {
             onGestureNavFinished()
