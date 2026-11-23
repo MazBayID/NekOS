@@ -1231,7 +1231,11 @@ private fun HomeScreen(
                         contentScale = ContentScale.Fit,
                         modifier = Modifier.align(Alignment.TopStart)
                             .offset(x = (-158).dp)
-                            .fillMaxWidth(1.02f)
+                            .fillMaxWidth()
+                            .graphicsLayer {
+                                scaleX = 1.02f
+                                transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0f, 0.5f)
+                            }
                             .height(122.dp)
                     )
                     Box(
