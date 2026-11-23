@@ -90,13 +90,16 @@
     "runtime_crop_rule": "Koordinat dan ukuran crop 1x dikalikan 4 saat mengambil gambar dari spritesheet 4x. Jangan membagi spritesheet menjadi empat bagian sama besar; gunakan koordinat atlas setiap frame."
   },
   "positioning": {
-    "anchor": "Garis tengah artwork pada Y = 32 dp sejajar dengan sisi atas Surface dialog.",
+    "anchor": "Anchor geometris artwork: garis tengah pada Y = 32 dp sejajar dengan sisi atas Surface dialog sebelum koreksi visual runtime.",
     "overlap": {
       "above_dialog": 32,
       "inside_dialog": 32
     },
-    "known_instance_offsets_dp": {},
-    "offset_note": "Tidak ada offset khusus pada dialog. Garis tengah artwork (Y=32 dp) tepat sejajar dengan sisi atas Surface dialog."
+    "known_instance_offsets_dp": {
+      "alert_dialog_topframe_y": -6,
+      "launcher_settings_topframe_y": -6
+    },
+    "offset_note": "TopFrame digeser ke atas 6 dp pada Alert Dialog dan Launcher Settings untuk menyelaraskan artwork secara visual dengan frame dialog. Offset ini merupakan koreksi visual runtime; geometri sprite, anchor dasar, dan rumus pembagian lebar tetap tidak berubah."
   },
   "rendering": {
     "width": "Mengisi lebar parent dialog yang sudah dibatasi (maksimal 360 dp pada dialog standar dan Settings).",
