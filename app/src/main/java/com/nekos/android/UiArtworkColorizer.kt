@@ -179,16 +179,24 @@ internal fun ThemedUiArtworkImage(
 
 
 /**
- * Central calibration for every dialog frame.
+ * Central calibration profiles for dialog frames.
  *
- * Adjust this single value after checking the frame against the actual UI.
- * The overhang is applied equally to the left and right sides.
+ * Add or tune profiles here; dialog layouts only select a profile.
+ * Overhang is applied equally to the left and right sides.
  */
 internal object DialogFrameCalibration {
-    private val overhangPerSide = 16.dp
+    enum class Profile {
+        STANDARD,
+        APP_ACTION
+    }
 
-    fun frameWidth(containerWidth: Dp): Dp =
-        containerWidth + overhangPerSide * 2
+    private fun overhangPerSide(profile: Profile): Dp = when (profile) {
+        Profile.STANDARD -> 26.dp
+        Profile.APP_ACTION -> 6.dp
+    }
+
+    fun frameWidth(containerWidth: Dp, profile: Profile): Dp =
+        containerWidth + overhangPerSide(profile) * 2
 
     fun frameHeight(frameWidth: Dp): Dp =
         minOf(48.dp, frameWidth / 8f)
@@ -198,7 +206,8 @@ internal object DialogFrameCalibration {
 internal fun DialogFrameTop(
     colorArgb: Long,
     containerWidth: Dp,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    profile: DialogFrameCalibration.Profile = DialogFrameCalibration.Profile.STANDARD
 ) {
     val bitmap = rememberThemedUiArtwork(
         R.drawable.dialog_frame_top,
@@ -206,7 +215,7 @@ internal fun DialogFrameTop(
         maxDimensionPx = 512
     )
     if (bitmap != null && containerWidth > 0.dp) {
-        val frameWidth = DialogFrameCalibration.frameWidth(containerWidth)
+        val frameWidth = DialogFrameCalibration.frameWidth(containerWidth, profile)
         val frameHeight = DialogFrameCalibration.frameHeight(frameWidth)
         Canvas(
             modifier = modifier
