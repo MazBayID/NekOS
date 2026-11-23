@@ -119,12 +119,13 @@ internal fun NekOSSettingsDialog(
                 modifier = Modifier
                     .fillMaxWidth()
                     .widthIn(max = 420.dp)
-                    .padding(horizontal = 24.dp)
+                    .padding(horizontal = 14.dp)
                     .padding(top = 16.dp)
             ) {
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .padding(horizontal = 10.dp)
                         .heightIn(max = availableDialogHeight * 0.88f - 16.dp),
                     shape = RoundedCornerShape(28.dp),
                     color = surfaceColor,
@@ -393,7 +394,7 @@ internal fun NekOSSettingsDialog(
                     launcherUiColor,
                     modifier = Modifier
                         .align(Alignment.TopCenter)
-                        .offset(y = (-16).dp)
+                        .offset(y = (-24).dp)
                         .zIndex(1f)
                 )
             }
