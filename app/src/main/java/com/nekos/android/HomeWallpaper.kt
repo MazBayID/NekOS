@@ -10,6 +10,47 @@ import java.io.File
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 
+
+internal data class BuiltInWallpaperOption(
+    val key: String,
+    val label: String,
+    val resourceId: Int
+)
+
+internal val BuiltInWallpaperOptions = listOf(
+    BuiltInWallpaperOption("nekos_main_wallpaper", "NekOS Main", R.drawable.nekos_main_wallpaper),
+    BuiltInWallpaperOption("nekos_wallpaper_01", "Wallpaper 01", R.drawable.nekos_wallpaper_01),
+    BuiltInWallpaperOption("nekos_wallpaper_02", "Wallpaper 02", R.drawable.nekos_wallpaper_02)
+)
+
+internal fun normalizeBuiltInWallpaperKey(key: String?): String = when (key) {
+    "nekos_main_wallpaper", "nekos_wallpaper_01", "nekos_wallpaper_02", "none" -> key
+    else -> "none"
+}
+
+internal fun loadBuiltInHomeWallpaper(
+    context: Context,
+    resourceId: Int,
+    maxDimension: Int = HOME_WALLPAPER_MAX_DIMENSION
+): androidx.compose.ui.graphics.ImageBitmap? = runCatching {
+    val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+    BitmapFactory.decodeResource(context.resources, resourceId, bounds)
+    require(bounds.outWidth > 0 && bounds.outHeight > 0)
+
+    var sampleSize = 1
+    while (maxOf(bounds.outWidth / sampleSize, bounds.outHeight / sampleSize) > maxDimension) {
+        sampleSize *= 2
+    }
+    BitmapFactory.decodeResource(
+        context.resources,
+        resourceId,
+        BitmapFactory.Options().apply {
+            inSampleSize = sampleSize
+            inPreferredConfig = android.graphics.Bitmap.Config.ARGB_8888
+        }
+    )?.asImageBitmap()
+}.getOrNull()
+
 private const val HOME_WALLPAPER_FILE = "home_wallpaper"
 private const val HOME_WALLPAPER_TEMP_FILE = "home_wallpaper.tmp"
 private const val HOME_WALLPAPER_MAX_DIMENSION = 2048

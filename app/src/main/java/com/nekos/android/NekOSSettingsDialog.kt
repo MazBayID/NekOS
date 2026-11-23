@@ -89,10 +89,12 @@ internal fun NekOSSettingsDialog(
     launcherUiColor: Long,
     onLauncherUiColorChange: (Long) -> Unit,
     hasWallpaper: Boolean,
+    selectedBuiltInWallpaper: String?,
     appVersion: String,
     isDefaultLauncher: Boolean,
     onSetAsHome: () -> Unit,
     onBackgroundPresetChange: (String) -> Unit,
+    onBuiltInWallpaperChange: (String) -> Unit,
     onChooseWallpaper: () -> Unit,
     onClearWallpaper: () -> Unit,
     onShowDrawerHint: () -> Unit,
@@ -227,7 +229,7 @@ internal fun NekOSSettingsDialog(
 
                     SettingsPage.WALLPAPER -> {
                         Text(
-                            "Choose a soft color or use a photo from your gallery.",
+                            "Preview and apply a built-in wallpaper, choose a background color, or use your own photo.",
                             color = SettingsMuted,
                             fontSize = 12.sp,
                             lineHeight = 17.sp
@@ -262,6 +264,57 @@ internal fun NekOSSettingsDialog(
                                 Text(label, color = SettingsInk, fontSize = 14.sp,
                                     fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal)
                                 if (selected) Text("✓", color = SettingsAccent, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                        SettingsSectionTitle("BUILT-IN WALLPAPERS")
+                        BuiltInWallpaperOptions.forEach { option ->
+                            val selected = selectedBuiltInWallpaper == option.key
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(SettingsCardShape)
+                                    .background(SettingsInk.copy(alpha = 0.025f))
+                                    .border(
+                                        width = if (selected) 1.5.dp else 1.dp,
+                                        color = if (selected) SettingsAccent else SettingsBorder,
+                                        shape = SettingsCardShape
+                                    )
+                                    .selectable(
+                                        selected = selected,
+                                        role = Role.RadioButton,
+                                        onClick = { onBuiltInWallpaperChange(option.key) }
+                                    )
+                                    .padding(9.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Image(
+                                    painter = painterResource(option.resourceId),
+                                    contentDescription = option.label,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier
+                                        .size(width = 92.dp, height = 112.dp)
+                                        .clip(RoundedCornerShape(10.dp))
+                                )
+                                Column(
+                                    modifier = Modifier.weight(1f),
+                                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Text(
+                                        option.label,
+                                        color = SettingsInk,
+                                        fontSize = 14.sp,
+                                        fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium
+                                    )
+                                    Text(
+                                        if (selected) "Currently selected" else "Tap to preview and apply",
+                                        color = SettingsMuted,
+                                        fontSize = 11.sp
+                                    )
+                                }
+                                if (selected) {
+                                    Text("✓", color = SettingsAccent, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                                }
                             }
                         }
                         SettingsSectionTitle("YOUR PHOTO")

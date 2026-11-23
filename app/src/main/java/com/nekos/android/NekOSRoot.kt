@@ -267,15 +267,27 @@ fun NekOSRoot(
     var wallpaperPath by remember {
         mutableStateOf(preferences.getString("home_wallpaper_path", null))
     }
+    var builtInWallpaperKey by remember {
+        mutableStateOf(normalizeBuiltInWallpaperKey(
+            preferences.getString("built_in_wallpaper_key", "nekos_main_wallpaper")
+        ))
+    }
     var wallpaperBitmap by remember { mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null) }
     var wallpaperLoadGeneration by remember { mutableIntStateOf(0) }
     // The wallpaper is always saved to the same file, so the path alone cannot signal a new
     // image. The revision makes choosing a second wallpaper reload it immediately.
     var wallpaperRevision by remember { mutableIntStateOf(0) }
-    LaunchedEffect(wallpaperPath, wallpaperRevision, resumeToken) {
+    LaunchedEffect(wallpaperPath, builtInWallpaperKey, wallpaperRevision, resumeToken) {
         val loadGeneration = wallpaperLoadGeneration
         val loadedWallpaper = withContext(Dispatchers.IO) {
-            wallpaperPath?.let { path -> loadHomeWallpaper(context, path) }
+            when {
+                wallpaperPath != null -> loadHomeWallpaper(context, wallpaperPath!!)
+                builtInWallpaperKey != "none" -> {
+                    val resourceId = BuiltInWallpaperOptions.firstOrNull { it.key == builtInWallpaperKey }?.resourceId
+                    resourceId?.let { loadBuiltInHomeWallpaper(context, it) }
+                }
+                else -> null
+            }
         }
         if (loadGeneration == wallpaperLoadGeneration) {
             wallpaperBitmap = loadedWallpaper
@@ -780,6 +792,7 @@ fun NekOSRoot(
                     preferences.edit().putLong("launcher_ui_color", launcherUiColorArgb).apply()
                 },
                 hasWallpaper = wallpaperPath != null,
+                selectedBuiltInWallpaper = if (wallpaperPath == null && builtInWallpaperKey != "none") builtInWallpaperKey else null,
                 appVersion = appVersion,
                 isDefaultLauncher = isDefaultLauncher,
                 onSetAsHome = {
@@ -811,7 +824,21 @@ fun NekOSRoot(
                         wallpaperPath = null
                         preferences.edit().remove("home_wallpaper_path").apply()
                     }
-                    preferences.edit().putString("background_preset", normalizedPreset).apply()
+                    builtInWallpaperKey = "none"
+                    preferences.edit()
+                        .putString("built_in_wallpaper_key", "none")
+                        .putString("background_preset", normalizedPreset)
+                        .apply()
+                },
+                onBuiltInWallpaperChange = { key ->
+                    val normalizedKey = normalizeBuiltInWallpaperKey(key)
+                    builtInWallpaperKey = normalizedKey
+                    if (wallpaperPath != null) {
+                        clearHomeWallpaper(context)
+                        wallpaperPath = null
+                        preferences.edit().remove("home_wallpaper_path").apply()
+                    }
+                    preferences.edit().putString("built_in_wallpaper_key", normalizedKey).apply()
                 },
                 onChooseWallpaper = {
                     wallpaperPicker.launch(
