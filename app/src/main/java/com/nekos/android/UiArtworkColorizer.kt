@@ -9,6 +9,9 @@ import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -225,14 +228,16 @@ internal fun DialogTitleWithFrame(
     colorArgb: Long,
     content: @Composable () -> Unit
 ) {
-    Box {
-        Box(modifier = Modifier.padding(top = 36.dp)) {
+    BoxWithConstraints {
+        Box(modifier = Modifier.padding(top = 14.dp)) {
             content()
         }
         DialogFrameTop(
             colorArgb,
             modifier = Modifier
                 .align(Alignment.TopCenter)
+                .requiredWidth(maxWidth + 48.dp)
+                .offset(y = (-24).dp)
                 .zIndex(1f)
         )
     }
