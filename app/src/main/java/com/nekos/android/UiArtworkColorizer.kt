@@ -186,7 +186,7 @@ internal fun DialogFrameTop(colorArgb: Long, modifier: Modifier = Modifier) {
         maxDimensionPx = 512
     )
     if (bitmap != null) {
-        Canvas(modifier = modifier.fillMaxWidth().height(48.dp)) {
+        Canvas(modifier = modifier.fillMaxWidth().height(68.dp)) {
             val scale = size.height / 64f
             val endWidth = 64f * scale
             val crestWidth = 96f * scale
