@@ -304,8 +304,23 @@ class IconCatalogRepository(context: Context) {
             } else {
                 temporary.delete()
             }
+            pruneDisplayDiskCache()
         } catch (_: Exception) {
             temporary.delete()
+        }
+    }
+
+    private fun pruneDisplayDiskCache() {
+        val files = displayDiskDirectory.listFiles()
+            ?.filter { it.isFile && it.name.endsWith(".png") }
+            ?: return
+        var totalBytes = files.sumOf { it.length() }
+        val maxBytes = 16L * 1024L * 1024L
+        if (totalBytes <= maxBytes) return
+        for (file in files.sortedBy { it.lastModified() }) {
+            if (totalBytes <= maxBytes) break
+            val size = file.length()
+            if (file.delete()) totalBytes -= size
         }
     }
 
