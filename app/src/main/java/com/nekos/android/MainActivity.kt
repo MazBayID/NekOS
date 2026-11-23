@@ -35,6 +35,8 @@ class MainActivity : ComponentActivity() {
     private var backgroundSignal by mutableIntStateOf(0)
     /** Bumped when NekOS returns to the foreground after another activity was shown. */
     private var homeReturnSignal by mutableIntStateOf(0)
+    /** Parsed once from the system's gesture-to-Home intent; consumed by the next stage. */
+    private var pendingGestureNavContract: GestureNavContractData? = null
     private var isForcedRefreshPending = false
     private var stoppedAtElapsedMillis = 0L
     private val mainHandler = Handler(Looper.getMainLooper())
@@ -170,6 +172,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        pendingGestureNavContract = GestureNavContractData.fromIntent(intent)
         // Pressing Home while NekOS is open returns to a clean Home screen.
         if (intent.hasCategory(Intent.CATEGORY_HOME)) {
             homeSignal++
@@ -182,6 +185,7 @@ class MainActivity : ComponentActivity() {
         val isRestoredActivity = savedInstanceState != null
         installSplashScreen()
         super.onCreate(savedInstanceState)
+        pendingGestureNavContract = GestureNavContractData.fromIntent(intent)
         WindowCompat.setDecorFitsSystemWindows(window, false)
         window.statusBarColor = android.graphics.Color.TRANSPARENT
         window.navigationBarColor = android.graphics.Color.TRANSPARENT
