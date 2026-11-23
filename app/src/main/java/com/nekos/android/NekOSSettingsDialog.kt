@@ -133,6 +133,7 @@ internal fun NekOSSettingsDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 6.dp)
+                        .padding(top = 32.dp)
                         .heightIn(max = availableDialogHeight * 0.84f - 12.dp),
                     shape = RoundedCornerShape(22.dp),
                     color = surfaceColor,
@@ -410,6 +411,7 @@ internal fun NekOSSettingsDialog(
                         }
                     }
                 }
+                TopFrame(Modifier.align(Alignment.TopCenter))
             }
         }
     }
