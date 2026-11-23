@@ -93,6 +93,8 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -134,6 +136,8 @@ fun NekOSRoot(
     homeSignal: Int = 0,
     backgroundSignal: Int = 0,
     homeReturnSignal: Int = 0,
+    gestureNavContract: GestureNavContractData? = null,
+    onGestureNavContractFinished: (GestureNavContractData) -> Unit = {},
     skipStartupSplash: Boolean = false
 ) {
     val context = LocalContext.current
@@ -231,6 +235,37 @@ fun NekOSRoot(
     val interactionController = remember { LauncherInteractionController() }
     var favoriteDrag by remember { mutableStateOf<LauncherDragSession?>(null) }
     val favoriteSlotBounds = remember { mutableStateMapOf<Int, Rect>() }
+    val gestureTargetApp = remember(gestureNavContract, apps) {
+        gestureNavContract?.let { request ->
+            apps.firstOrNull { app ->
+                app.componentName == request.componentName && app.user == request.user
+            }
+        }
+    }
+    val gestureFavoriteIndex = remember(gestureTargetApp, favoritePackages) {
+        gestureTargetApp?.let { favoritePackages.indexOf(it.id) } ?: -1
+    }
+    var gestureIconBitmap by remember { mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null) }
+    val currentOnGestureNavContractFinished by rememberUpdatedState(onGestureNavContractFinished)
+    LaunchedEffect(gestureNavContract, gestureTargetApp, gestureFavoriteIndex, iconBitmapCacheGeneration = 0) {
+        gestureIconBitmap = null
+        val request = gestureNavContract ?: return@LaunchedEffect
+        val targetApp = gestureTargetApp
+        if (
+            targetApp == null ||
+            gestureFavoriteIndex !in favoritePackages.indices ||
+            favoritePackages[gestureFavoriteIndex] != targetApp.id
+        ) {
+            currentOnGestureNavContractFinished(request)
+            return@LaunchedEffect
+        }
+        val bitmap = iconBitmapCache.getOrLoad(targetApp)
+        if (bitmap == null) {
+            currentOnGestureNavContractFinished(request)
+        } else {
+            gestureIconBitmap = bitmap
+        }
+    }
     var cancelDropBounds by remember { mutableStateOf<Rect?>(null) }
     var tagEditorTarget by remember { mutableStateOf<NekTag?>(null) }
     var viewingTag by remember { mutableStateOf<NekTag?>(null) }
@@ -558,6 +593,65 @@ fun NekOSRoot(
                 }
             }
         )
+
+        val activeGestureContract = gestureNavContract
+        val activeGestureBitmap = gestureIconBitmap
+        val favoriteBounds = favoriteSlotBounds[gestureFavoriteIndex]
+        val gestureIconBounds = favoriteBounds?.let { bounds ->
+            val halfIconSize = with(LocalDensity.current) { 25.dp.toPx() }
+            Rect(
+                left = bounds.center.x - halfIconSize,
+                top = bounds.center.y - halfIconSize,
+                right = bounds.center.x + halfIconSize,
+                bottom = bounds.center.y + halfIconSize
+            )
+        }
+        if (activeGestureContract != null && activeGestureBitmap != null && gestureIconBounds != null) {
+            key(activeGestureContract) {
+                AndroidView(
+                    factory = { viewContext ->
+                        GestureNavSurfaceView(viewContext).apply {
+                            configure(
+                                bitmap = activeGestureBitmap.asAndroidBitmap(),
+                                destination = android.graphics.RectF(
+                                    gestureIconBounds.left,
+                                    gestureIconBounds.top,
+                                    gestureIconBounds.right,
+                                    gestureIconBounds.bottom
+                                ),
+                                contract = activeGestureContract,
+                                onFinished = {
+                                    currentOnGestureNavContractFinished(activeGestureContract)
+                                }
+                            )
+                        }
+                    },
+                    update = { surfaceView ->
+                        surfaceView.configure(
+                            bitmap = activeGestureBitmap.asAndroidBitmap(),
+                            destination = android.graphics.RectF(
+                                gestureIconBounds.left,
+                                gestureIconBounds.top,
+                                gestureIconBounds.right,
+                                gestureIconBounds.bottom
+                            ),
+                            contract = activeGestureContract,
+                            onFinished = {
+                                currentOnGestureNavContractFinished(activeGestureContract)
+                            }
+                        )
+                    },
+                    modifier = Modifier
+                        .offset {
+                            IntOffset(
+                                gestureIconBounds.left.roundToInt(),
+                                gestureIconBounds.top.roundToInt()
+                            )
+                        }
+                        .size(50.dp)
+                )
+            }
+        }
 
         if (drawerVisible) {
             // A lightweight dark scrim separates the drawer from Home without

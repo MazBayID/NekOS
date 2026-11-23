@@ -21,6 +21,9 @@ internal data class GestureNavContractData(
 ) {
     companion object {
         const val EXTRA_GESTURE_CONTRACT = "gesture_nav_contract_v1"
+        const val EXTRA_ICON_POSITION = "gesture_nav_contract_icon_position"
+        const val EXTRA_ICON_SURFACE = "gesture_nav_contract_surface_control"
+        const val EXTRA_ON_FINISH_CALLBACK = "gesture_nav_contract_finish_callback"
         private const val EXTRA_REMOTE_CALLBACK = "android.intent.extra.REMOTE_CALLBACK"
 
         fun fromIntent(intent: Intent): GestureNavContractData? {

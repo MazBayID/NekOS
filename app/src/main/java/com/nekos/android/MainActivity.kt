@@ -21,6 +21,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 
@@ -36,7 +37,7 @@ class MainActivity : ComponentActivity() {
     /** Bumped when NekOS returns to the foreground after another activity was shown. */
     private var homeReturnSignal by mutableIntStateOf(0)
     /** Parsed once from the system's gesture-to-Home intent; consumed by the next stage. */
-    private var pendingGestureNavContract: GestureNavContractData? = null
+    private var pendingGestureNavContract by mutableStateOf<GestureNavContractData?>(null)
     private var isForcedRefreshPending = false
     private var stoppedAtElapsedMillis = 0L
     private val mainHandler = Handler(Looper.getMainLooper())
@@ -202,6 +203,12 @@ class MainActivity : ComponentActivity() {
                         homeSignal = homeSignal,
                         backgroundSignal = backgroundSignal,
                         homeReturnSignal = homeReturnSignal,
+                        gestureNavContract = pendingGestureNavContract,
+                        onGestureNavContractFinished = { finishedContract ->
+                            if (pendingGestureNavContract == finishedContract) {
+                                pendingGestureNavContract = null
+                            }
+                        },
                         skipStartupSplash = isRestoredActivity
                     )
                 }
