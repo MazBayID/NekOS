@@ -69,7 +69,6 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -896,7 +895,8 @@ fun NekOSRoot(
         }
 
         tagPendingDelete?.let { tag ->
-            AlertDialog(
+            NekOSAlertDialog(
+                frameColorArgb = launcherUiColorArgb,
                 onDismissRequest = { tagPendingDelete = null },
                 shape = RoundedCornerShape(28.dp),
                 containerColor = launcherSurface,
@@ -919,7 +919,8 @@ fun NekOSRoot(
         }
 
         if (showFirstLaunchTip) {
-            AlertDialog(
+            NekOSAlertDialog(
+                frameColorArgb = launcherUiColorArgb,
                 onDismissRequest = {
                     preferences.edit().putBoolean("has_seen_drawer_tip", true).apply()
                     showFirstLaunchTip = false
