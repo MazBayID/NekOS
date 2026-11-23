@@ -63,8 +63,7 @@ internal fun NekOSAlertDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 10.dp)
-                        .heightIn(max = availableDialogHeight * 0.88f - 16.dp)
-,
+                        .heightIn(max = availableDialogHeight * 0.88f - 16.dp),
                     shape = shape,
                     color = containerColor,
                     tonalElevation = 6.dp,
