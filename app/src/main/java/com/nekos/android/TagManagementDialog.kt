@@ -3,8 +3,6 @@ package com.nekos.android
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -25,23 +23,13 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-
-private val TagColors = listOf(
-    Color(0xFFE7E1D6), Color(0xFFD8E6D7), Color(0xFFDCE4F3),
-    Color(0xFFF2DCD6), Color(0xFFE9DDF1), Color(0xFFF1E7C9)
-)
 
 private val TagIconFrameColors = listOf(
     "Ocean" to 0xFF114B56L,
@@ -234,25 +222,10 @@ fun TagManagementDialog(
     var selectedPackages by remember(tag?.id) { mutableStateOf(tag?.appPackages?.toSet().orEmpty()) }
     var showIconColorPicker by remember { mutableStateOf(false) }
     var appSearch by remember(tag?.id) { mutableStateOf("") }
-    val selectedIconEntry = remember(catalog, selectedIcon) {
-        catalog.firstOrNull { it.id == selectedIcon }
-    }
     val iconCarouselState = androidx.compose.foundation.lazy.rememberLazyListState()
     LaunchedEffect(selectedIcon, catalog) {
         val index = catalog.indexOfFirst { it.id == selectedIcon }
         if (index >= 0) iconCarouselState.scrollToItem(index)
-    }
-    var selectedIconBitmap by remember(selectedIcon, selectedIconFrameColor) {
-        mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null)
-    }
-    LaunchedEffect(selectedIcon, selectedIconEntry, selectedIconFrameColor) {
-        selectedIconBitmap = withContext(Dispatchers.IO) {
-            selectedIconEntry?.let {
-                runCatching {
-                    iconCatalogRepository.loadBitmap(it, selectedIconFrameColor)?.asImageBitmap()
-                }.getOrNull()
-            }
-        }
     }
     val filteredApps = remember(apps, appSearch) {
         if (appSearch.isBlank()) apps
