@@ -30,13 +30,13 @@ import androidx.compose.ui.Modifier
 class MainActivity : ComponentActivity() {
     /** Bumped when Android reports a package or profile change; always reloads the catalog. */
     private var appRefreshToken by mutableIntStateOf(0)
-    /** Bumped on resume; reloads the catalog but keeps it (and its icon cache) if nothing changed. */
+    /** Bumped on resume to refresh only the default-launcher role state. */
     private var resumeRefreshToken by mutableIntStateOf(0)
     /** Bumped when the Home button is pressed while NekOS is already open. */
     private var homeSignal by mutableIntStateOf(0)
     /** Bumped when the launcher stops being visible so transient drawer UI can reset. */
     private var backgroundSignal by mutableIntStateOf(0)
-remove activity state    private var isForcedRefreshPending = false
+    private var isForcedRefreshPending = false
     private var stoppedAtElapsedMillis = 0L
     private val mainHandler = Handler(Looper.getMainLooper())
     private val refreshInstalledAppsRunnable = Runnable {
@@ -152,10 +152,8 @@ remove activity state    private var isForcedRefreshPending = false
     override fun onResume() {
         super.onResume()
         mainHandler.removeCallbacks(refreshInstalledAppsRunnable)
-        // Package callbacks are only registered while the Activity is started, so a
-        // change made elsewhere (for example an app update) can be missed. Reload fully
-        // after a pending event or a longer absence; otherwise do a cheap check that keeps
-        // the existing app list and icon cache when nothing changed.
+        // Refresh the catalog only after a pending package event or a longer absence.
+        // Ordinary returns only refresh the lightweight default-launcher role state.
         val stoppedAt = stoppedAtElapsedMillis
         stoppedAtElapsedMillis = 0L
         val wasAwayForLong = stoppedAt != 0L &&
