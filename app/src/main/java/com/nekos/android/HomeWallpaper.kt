@@ -24,7 +24,10 @@ internal val BuiltInWallpaperOptions = listOf(
 )
 
 internal fun normalizeBuiltInWallpaperKey(key: String?): String = when (key) {
-    "nekos_main_wallpaper", "nekos_wallpaper_01", "nekos_wallpaper_02", "none" -> key
+    "nekos_main_wallpaper" -> "nekos_main_wallpaper"
+    "nekos_wallpaper_01" -> "nekos_wallpaper_01"
+    "nekos_wallpaper_02" -> "nekos_wallpaper_02"
+    "none" -> "none"
     else -> "none"
 }
 
