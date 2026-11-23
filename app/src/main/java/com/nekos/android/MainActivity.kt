@@ -98,6 +98,8 @@ class MainActivity : ComponentActivity() {
 
     override fun onStart() {
         super.onStart()
+        // Prepare the Home return animation as soon as the launcher becomes visible.
+        if (stoppedAtElapsedMillis != 0L) homeReturnSignal++
         if (!isPackageCallbackRegistered) {
             launcherApps.registerCallback(packageCallback, Handler(Looper.getMainLooper()))
             isPackageCallbackRegistered = true
@@ -156,7 +158,6 @@ class MainActivity : ComponentActivity() {
         // the existing app list and icon cache when nothing changed.
         val stoppedAt = stoppedAtElapsedMillis
         stoppedAtElapsedMillis = 0L
-        if (stoppedAt != 0L) homeReturnSignal++
         val wasAwayForLong = stoppedAt != 0L &&
             SystemClock.elapsedRealtime() - stoppedAt > LONG_ABSENCE_MILLIS
         if (isForcedRefreshPending || wasAwayForLong) {

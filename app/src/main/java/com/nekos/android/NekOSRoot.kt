@@ -1047,7 +1047,7 @@ private fun HomeScreen(
             homeContentProgress.animateTo(
                 targetValue = 1f,
                 animationSpec = tween(
-                    durationMillis = 260,
+                    durationMillis = 320,
                     easing = FastOutSlowInEasing
                 )
             )
@@ -1086,10 +1086,11 @@ private fun HomeScreen(
                 .navigationBarsPadding()
                 .graphicsLayer {
                     val progress = homeContentProgress.value
-                    alpha = progress
-                    val scale = 0.985f + 0.015f * progress
+                    alpha = 0.68f + 0.32f * progress
+                    val scale = 0.97f + 0.03f * progress
                     scaleX = scale
                     scaleY = scale
+                    translationY = 18.dp.toPx() * (1f - progress)
                 }
                 // Keep launcher controls sharp above the static wallpaper.
                 .pointerInput(homeSwipeThresholdPx, backgroundSignal) {
