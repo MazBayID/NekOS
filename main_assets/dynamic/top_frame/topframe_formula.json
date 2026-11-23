@@ -1,0 +1,76 @@
+{
+  "name": "NekOS TopFrame Formula",
+  "version": 1,
+  "purpose": "Dokumentasi geometri, pembagian sprite, peregangan, dan posisi TopFrame.",
+  "coordinate_system": {
+    "logical_unit": "dp",
+    "source_atlas_unit": "px",
+    "base_scale": "1x",
+    "runtime_scale": "4x"
+  },
+  "geometry": {
+    "height_dp": 64,
+    "fixed_widths_dp": {
+      "left_cap": 32,
+      "head": 60,
+      "right_cap": 32
+    },
+    "stretch_element": "bar_tile",
+    "layout_order": [
+      "left_cap",
+      "left_bar",
+      "head",
+      "right_bar",
+      "right_cap"
+    ],
+    "formula": {
+      "total_width": "W",
+      "bar_width_each": "(W - (2 * 32) - 60) / 2",
+      "simplified": "(W - 124) / 2",
+      "constraint": "W must be at least 124 dp for non-negative bar widths."
+    },
+    "stretch_behavior": "Kedua bagian bar memiliki lebar dinamis yang sama. Bar menggunakan tile 4x64 dp yang diulang atau di-stretch secara horizontal. Cap kiri, head, dan cap kanan mempertahankan ukuran serta proporsinya."
+  },
+  "atlas": {
+    "height_1x": 64,
+    "transparent_gap_px_1x": 2,
+    "frames_1x": {
+      "left_cap": { "x": 0, "y": 0, "width": 32, "height": 64 },
+      "bar_tile": { "x": 34, "y": 0, "width": 4, "height": 64 },
+      "head": { "x": 40, "y": 0, "width": 60, "height": 64 },
+      "right_cap": { "x": 102, "y": 0, "width": 32, "height": 64 }
+    },
+    "frames_4x": {
+      "left_cap": { "x": 0, "y": 0, "width": 128, "height": 256 },
+      "bar_tile": { "x": 136, "y": 0, "width": 16, "height": 256 },
+      "head": { "x": 160, "y": 0, "width": 240, "height": 256 },
+      "right_cap": { "x": 408, "y": 0, "width": 128, "height": 256 }
+    },
+    "runtime_source": "topframe_spritesheet@4x.png",
+    "runtime_crop_rule": "Koordinat dan ukuran crop 1x dikalikan 4 saat mengambil gambar dari spritesheet 4x. Jangan membagi spritesheet menjadi empat bagian sama besar; gunakan koordinat atlas setiap frame."
+  },
+  "positioning": {
+    "anchor": "Garis tengah artwork pada Y = 32 dp sejajar dengan sisi atas Surface dialog.",
+    "overlap": {
+      "above_dialog": 32,
+      "inside_dialog": 32
+    },
+    "known_instance_offsets_dp": {
+      "launcher_settings": -1,
+      "app_action": -2
+    },
+    "offset_note": "Offset adalah penyesuaian posisi instance terhadap anchor dasar, bukan perubahan geometri sprite."
+  },
+  "rendering": {
+    "width": "Mengisi lebar parent (fillMaxWidth).",
+    "height": "64 dp.",
+    "content_scale": "FillBounds untuk setiap bagian sprite.",
+    "color": "Spritesheet di-recolor menggunakan UiArtworkColorizer.recolorBitmap dengan warna Shared UI Color sebelum di-crop.",
+    "fixed_parts": "left_cap, head, dan right_cap menggunakan lebar tetap.",
+    "dynamic_parts": "Dua bar menggunakan bobot yang sama agar lebarnya selalu seimbang."
+  },
+  "implementation_reference": {
+    "source_file": "app/src/main/java/com/nekos/android/TopFrame.kt",
+    "atlas_definition": "main_assets/dynamic/top_frame/topframe_atlas.json"
+  }
+}
