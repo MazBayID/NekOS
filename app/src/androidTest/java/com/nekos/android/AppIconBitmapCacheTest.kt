@@ -39,6 +39,14 @@ class AppIconBitmapCacheTest {
     }
 
     @Test
+    fun densityChangeMakesTheAppCatalogDifferent() {
+        val app = createTestApp()
+        val refreshedApp = app.copy(iconDensityDpi = app.iconDensityDpi + 1)
+
+        org.junit.Assert.assertFalse(hasSameAppCatalog(listOf(app), listOf(refreshedApp)))
+    }
+
+    @Test
     fun trimmingDisablesLoadsUntilTheCacheResumes() = runBlocking {
         val app = createTestApp()
         val cache = AppIconBitmapCache(context)
