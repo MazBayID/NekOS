@@ -18,7 +18,7 @@ One repair at a time: inspect current source -> make the smallest targeted chang
 |---|---|---|---|---|
 | 1 | Optimize Tag icon decoding (decode near rendered size; retain a larger size only where preview quality requires it) | IMPLEMENTED — build/unit tests passed; lint blocked by existing issue | Commit `2a62f586` downsamples Tag icons to max 128 px before recoloring. CI run #500 completed: `assembleDebug` and `testDebugUnitTest` passed; `lintDebug` failed only on existing `NekOSRoot.kt:1217` `fillMaxWidth(1.02f)` Range lint. | Keep lint issue tracked separately; continue with UI artwork decoding/recoloring |
 | 2 | Optimize UI artwork decoding/recoloring | IN PROGRESS | New bounded decoding path and per-call target sizes are being added; small 28 dp UI icons target 128 px while title artwork and coordinate-based frames retain up to 512 px. | Verify compile, tests, recolor output, and cache behavior |
-| 3 | Right-size startup logo bitmap | QUEUED | Pending | Add a display-sized asset variant and compare visual quality |
+| 3 | Right-size startup logo bitmap | IMPLEMENTED — CI pending | Added `StartupLogo.kt`: reads source bounds, downsamples off the main thread to a maximum dimension of 1280 px, and keeps the original resource untouched. Replaced the full-resolution `painterResource()` splash placeholder. | Verify compile/unit tests and inspect startup-logo appearance on device |
 | 4 | Harden background lifecycle cleanup for transient gestures/overlays | QUEUED | Pending | Reset only transient interaction state; preserve dialogs that should survive |
 | 5 | Harden icon cache/catalog validation | QUEUED | Pending | Validate disk bitmap dimensions and include density in catalog comparison |
 | 6 | Repair CI lint issue and run full relevant checks | QUEUED | Existing lint failure is `fillMaxWidth(1.02f)` at `NekOSRoot.kt:1217`; fix separately without mixing it into image changes. | Confirm debug/release lint and available tests pass |
@@ -26,7 +26,7 @@ One repair at a time: inspect current source -> make the smallest targeted chang
 
 ## Completed
 - Initial source-level audit and prioritization: completed 2026-11-23.
-- Tag icon decoding is implemented and its APK build/unit tests passed; the combined CI job remains red only because of the pre-existing lint error recorded above.
+- Tag icon decoding and UI artwork bounded decoding are implemented. CI for the UI artwork change compiled the APK and passed unit tests; lint remains blocked by the pre-existing `fillMaxWidth(1.02f)` error. Startup logo downsampling is now implemented and awaits CI verification.
 
 ## References
 - Android Developers, Optimize bitmap images in Jetpack Compose: https://developer.android.com/develop/ui/compose/graphics/images/optimization
