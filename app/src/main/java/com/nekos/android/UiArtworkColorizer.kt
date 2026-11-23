@@ -83,6 +83,9 @@ internal object UiArtworkColorizer {
         return result
     }
 
+    fun recolorBitmap(source: Bitmap, targetColorArgb: Long): Bitmap =
+        recolor(source, normalizeLauncherUiColor(targetColorArgb))
+
     private fun recolor(source: Bitmap, targetColorArgb: Long): Bitmap {
         if (targetColorArgb == DEFAULT_LAUNCHER_UI_COLOR) return source
 
