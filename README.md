@@ -76,6 +76,7 @@ NekOS is not intended to become a feature-heavy launcher. It deliberately avoids
 - **Platform:** Android 8.0 (API 26) and newer
 - **Target SDK:** 35
 - **Status:** in active development; not yet a stable production release
+- **Latest release notes:** [NekOS 0.6.1](docs/releases/v0.6.1.md)
 
 The feature list describes what is implemented in the source on `main`; it does not mean every interaction has been verified on every Android device. Physical-device checks and stability improvements remain part of development.
 
