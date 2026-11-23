@@ -35,6 +35,7 @@ internal fun NekOSAlertDialog(
     containerColor: Color = Color(0xFFFFFBFE),
     titleContentColor: Color = Color(0xFF1D1B20),
     textContentColor: Color = Color(0xFF49454F),
+    topFrameColorArgb: Long = DEFAULT_LAUNCHER_UI_COLOR,
     title: (@Composable () -> Unit)? = null,
     text: (@Composable () -> Unit)? = null,
     confirmButton: @Composable () -> Unit = {},
@@ -101,7 +102,7 @@ internal fun NekOSAlertDialog(
                     }
                 }
                 TopFrame(
-                    colorArgb = DEFAULT_LAUNCHER_UI_COLOR,
+                    colorArgb = topFrameColorArgb,
                     modifier = Modifier.align(Alignment.TopCenter).padding(horizontal = 10.dp)
                 )
             }
