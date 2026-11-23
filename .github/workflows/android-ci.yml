@@ -4,9 +4,17 @@ on:
   pull_request:
     branches:
       - main
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - '.gitignore'
   push:
     branches:
       - main
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - '.gitignore'
   workflow_dispatch:
 
 permissions:
@@ -20,7 +28,7 @@ jobs:
   build-and-test:
     name: Build, static checks, and Compose UI tests
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 35
 
     steps:
       - name: Checkout source
@@ -42,10 +50,9 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
         with:
           gradle-version: '8.9'
-          cache-provider: basic
 
       - name: Build APK, run unit tests, and lint
-        run: gradle --no-daemon assembleDebug testDebugUnitTest lintDebug -Pandroid.aapt2FromMavenOverride="$ANDROID_HOME/build-tools/35.0.0/aapt2" --stacktrace
+        run: gradle assembleDebug testDebugUnitTest lintDebug -Pandroid.aapt2FromMavenOverride="$ANDROID_HOME/build-tools/35.0.0/aapt2" --stacktrace
 
       - name: Enable KVM for Android emulator
         run: |
@@ -61,7 +68,7 @@ jobs:
           arch: x86_64
           profile: pixel_2
           disable-animations: true
-          script: gradle --no-daemon connectedDebugAndroidTest -Pandroid.aapt2FromMavenOverride="$ANDROID_HOME/build-tools/35.0.0/aapt2" --stacktrace
+          script: gradle connectedDebugAndroidTest -Pandroid.aapt2FromMavenOverride="$ANDROID_HOME/build-tools/35.0.0/aapt2" --stacktrace
 
       - name: Upload debug APK
         if: success()
