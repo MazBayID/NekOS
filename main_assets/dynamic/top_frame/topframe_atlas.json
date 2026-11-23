@@ -1,99 +1,166 @@
 {
- "height_1x": 64,
- "fixed_widths_1x": {
-  "cap": 32,
-  "head": 60
- },
- "stretch_part": "bar_tile (diulang/di-stretch horizontal)",
- "layout": "left_cap | bar(stretch) | head | bar(stretch) | right_cap",
- "formula": "bar_width = (total_width - 2*cap - head) / 2",
- "sheets": {
-  "1x": {
-   "file": "topframe_spritesheet.png",
-   "frames": {
-    "left_cap": {
-     "x": 0,
-     "y": 0,
-     "w": 32,
-     "h": 64
-    },
-    "bar_tile": {
-     "x": 34,
-     "y": 0,
-     "w": 4,
-     "h": 64
-    },
-    "head": {
-     "x": 40,
-     "y": 0,
-     "w": 60,
-     "h": 64
-    },
-    "right_cap": {
-     "x": 102,
-     "y": 0,
-     "w": 32,
-     "h": 64
-    }
-   }
+  "name": "NekOS TopFrame Atlas",
+  "version": 1,
+  "purpose": "Definisi koordinat crop sprite TopFrame untuk setiap resolusi spritesheet.",
+  "logical_size_1x": {
+    "width": 134,
+    "height": 64
   },
-  "2x": {
-   "file": "topframe_spritesheet@2x.png",
-   "frames": {
-    "left_cap": {
-     "x": 0,
-     "y": 0,
-     "w": 64,
-     "h": 128
-    },
-    "bar_tile": {
-     "x": 68,
-     "y": 0,
-     "w": 8,
-     "h": 128
-    },
-    "head": {
-     "x": 80,
-     "y": 0,
-     "w": 120,
-     "h": 128
-    },
-    "right_cap": {
-     "x": 204,
-     "y": 0,
-     "w": 64,
-     "h": 128
-    }
-   }
+  "transparent_gap_px_1x": 2,
+  "fixed_widths_1x": {
+    "left_cap": 32,
+    "head": 60,
+    "right_cap": 32
   },
-  "4x": {
-   "file": "topframe_spritesheet@4x.png",
-   "frames": {
-    "left_cap": {
-     "x": 0,
-     "y": 0,
-     "w": 128,
-     "h": 256
+  "stretch_part": {
+    "name": "bar_tile",
+    "source_size_1x": {
+      "width": 4,
+      "height": 64
     },
-    "bar_tile": {
-     "x": 136,
-     "y": 0,
-     "w": 16,
-     "h": 256
+    "runtime_behavior": "Dua bar memakai gambar sumber yang sama dan masing-masing di-stretch secara horizontal menggunakan ContentScale.FillBounds. Runtime tidak mengulang tile."
+  },
+  "layout": [
+    "left_cap",
+    "left_bar",
+    "head",
+    "right_bar",
+    "right_cap"
+  ],
+  "width_formula": {
+    "total_width": "W",
+    "bar_width_each": "(W - (2 * 32) - 60) / 2",
+    "simplified": "(W - 124) / 2",
+    "minimum_width_dp": 124
+  },
+  "sheets": {
+    "1x": {
+      "file": "topframe_spritesheet.png",
+      "scale_factor": 1,
+      "frames": {
+        "left_cap": {
+          "x": 0,
+          "y": 0,
+          "w": 32,
+          "h": 64
+        },
+        "bar_tile": {
+          "x": 34,
+          "y": 0,
+          "w": 4,
+          "h": 64
+        },
+        "head": {
+          "x": 40,
+          "y": 0,
+          "w": 60,
+          "h": 64
+        },
+        "right_cap": {
+          "x": 102,
+          "y": 0,
+          "w": 32,
+          "h": 64
+        }
+      }
     },
-    "head": {
-     "x": 160,
-     "y": 0,
-     "w": 240,
-     "h": 256
+    "2x": {
+      "file": "topframe_spritesheet@2x.png",
+      "scale_factor": 2,
+      "frames": {
+        "left_cap": {
+          "x": 0,
+          "y": 0,
+          "w": 64,
+          "h": 128
+        },
+        "bar_tile": {
+          "x": 68,
+          "y": 0,
+          "w": 8,
+          "h": 128
+        },
+        "head": {
+          "x": 80,
+          "y": 0,
+          "w": 120,
+          "h": 128
+        },
+        "right_cap": {
+          "x": 204,
+          "y": 0,
+          "w": 64,
+          "h": 128
+        }
+      }
     },
-    "right_cap": {
-     "x": 408,
-     "y": 0,
-     "w": 128,
-     "h": 256
+    "4x": {
+      "file": "topframe_spritesheet@4x.png",
+      "scale_factor": 4,
+      "frames": {
+        "left_cap": {
+          "x": 0,
+          "y": 0,
+          "w": 128,
+          "h": 256
+        },
+        "bar_tile": {
+          "x": 136,
+          "y": 0,
+          "w": 16,
+          "h": 256
+        },
+        "head": {
+          "x": 160,
+          "y": 0,
+          "w": 240,
+          "h": 256
+        },
+        "right_cap": {
+          "x": 408,
+          "y": 0,
+          "w": 128,
+          "h": 256
+        }
+      }
     }
-   }
+  },
+  "runtime": {
+    "source_sheet": "topframe_spritesheet@4x.png",
+    "crop_rule": "Koordinat dan ukuran crop 1x dikalikan 4 untuk mengambil sprite dari spritesheet 4x.",
+    "crop_rectangles_4x": {
+      "left_cap": {
+        "x": 0,
+        "y": 0,
+        "width": 128,
+        "height": 256
+      },
+      "bar_tile": {
+        "x": 136,
+        "y": 0,
+        "width": 16,
+        "height": 256
+      },
+      "head": {
+        "x": 160,
+        "y": 0,
+        "width": 240,
+        "height": 256
+      },
+      "right_cap": {
+        "x": 408,
+        "y": 0,
+        "width": 128,
+        "height": 256
+      }
+    },
+    "display_size_dp": {
+      "height": 64,
+      "left_cap_width": 32,
+      "head_width": 60,
+      "right_cap_width": 32
+    },
+    "content_scale": "FillBounds",
+    "implementation_reference": "app/src/main/java/com/nekos/android/TopFrame.kt"
   }
- }
 }
