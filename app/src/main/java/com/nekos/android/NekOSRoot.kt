@@ -132,7 +132,8 @@ fun NekOSRoot(
     refreshToken: Int,
     resumeToken: Int = 0,
     homeSignal: Int = 0,
-    backgroundSignal: Int = 0
+    backgroundSignal: Int = 0,
+    skipStartupSplash: Boolean = false
 ) {
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
@@ -148,7 +149,8 @@ fun NekOSRoot(
     var favoriteOrderSnapshot by remember { mutableStateOf<List<String?>?>(null) }
     var tagOrderSnapshot by remember { mutableStateOf<List<NekTag>?>(null) }
     var activeTagPage by remember { mutableIntStateOf(0) }
-    var isInitialLoadComplete by remember { mutableStateOf(false) }
+    // Restored launcher tasks render Home immediately while the app catalog refreshes.
+    var isInitialLoadComplete by remember { mutableStateOf(skipStartupSplash) }
     var lastAppliedRefreshToken by remember { mutableIntStateOf(-1) }
 
     val latestFavoritePackages by rememberUpdatedState(favoritePackages)
