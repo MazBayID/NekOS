@@ -29,6 +29,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.unit.dp
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 internal fun NekOSAlertDialog(
     frameColorArgb: Long = DEFAULT_LAUNCHER_UI_COLOR,
@@ -42,7 +43,6 @@ internal fun NekOSAlertDialog(
     confirmButton: @Composable () -> Unit = {},
     dismissButton: (@Composable () -> Unit)? = null
 ) {
-    @OptIn(ExperimentalComposeUiApi::class)
     Dialog(
         onDismissRequest = onDismissRequest,
         properties = DialogProperties(
