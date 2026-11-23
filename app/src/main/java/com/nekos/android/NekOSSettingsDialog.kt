@@ -125,18 +125,17 @@ internal fun NekOSSettingsDialog(
             val availableDialogHeight = maxHeight
             Box(
                 modifier = Modifier
+                    .widthIn(max = 360.dp)
                     .fillMaxWidth()
-                    .widthIn(max = 392.dp)
-                    .padding(horizontal = 18.dp)
+                    .padding(horizontal = 12.dp)
                     .padding(top = 10.dp)
             ) {
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 8.dp)
                         .padding(top = 32.dp)
                         .heightIn(max = availableDialogHeight * 0.78f - 10.dp),
-                    shape = RoundedCornerShape(22.dp),
+                    shape = RoundedCornerShape(18.dp),
                     color = surfaceColor,
                     tonalElevation = 6.dp,
                     shadowElevation = 12.dp
@@ -144,8 +143,8 @@ internal fun NekOSSettingsDialog(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(start = 13.dp, end = 13.dp, top = 28.dp, bottom = 6.dp),
-                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                            .padding(start = 10.dp, end = 10.dp, top = 24.dp, bottom = 4.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -213,7 +212,7 @@ internal fun NekOSSettingsDialog(
                                 .clip(SettingsCardShape)
                                 .background(SettingsInk.copy(alpha = 0.025f))
                                 .border(1.dp, SettingsBorder, SettingsCardShape)
-                                .padding(13.dp),
+                                .padding(9.dp),
                             verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
                             Text("NekOS", color = SettingsInk, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
@@ -235,7 +234,7 @@ internal fun NekOSSettingsDialog(
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .defaultMinSize(minHeight = 48.dp)
+                                    .defaultMinSize(minHeight = 42.dp)
                                     .clip(SettingsCardShape)
                                     .background(nekosBackgroundColor(key))
                                     .border(
@@ -248,7 +247,7 @@ internal fun NekOSSettingsDialog(
                                         role = Role.RadioButton,
                                         onClick = { onBackgroundPresetChange(key) }
                                     )
-                                    .padding(horizontal = 11.dp, vertical = 8.dp),
+                                    .padding(horizontal = 9.dp, vertical = 5.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
@@ -275,7 +274,7 @@ internal fun NekOSSettingsDialog(
                                         role = Role.RadioButton,
                                         onClick = { onBuiltInWallpaperChange(option.key) }
                                     )
-                                    .padding(7.dp),
+                                    .padding(5.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
@@ -336,7 +335,7 @@ internal fun NekOSSettingsDialog(
                                                 role = Role.RadioButton,
                                                 onClick = { onLauncherThemeChange(option.key) }
                                             )
-                                            .padding(horizontal = 9.dp, vertical = 7.dp),
+                                            .padding(horizontal = 7.dp, vertical = 4.dp),
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
@@ -370,7 +369,7 @@ internal fun NekOSSettingsDialog(
                                                 role = Role.RadioButton,
                                                 onClick = { onLauncherUiColorChange(option.argb) }
                                             )
-                                            .padding(horizontal = 6.dp, vertical = 6.dp),
+                                            .padding(horizontal = 5.dp, vertical = 4.dp),
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                                     ) {
@@ -414,7 +413,7 @@ internal fun NekOSSettingsDialog(
                 }
                 TopFrame(
                     colorArgb = launcherUiColor,
-                    modifier = Modifier.align(Alignment.TopCenter).offset(y = (-1).dp).padding(horizontal = 8.dp)
+                    modifier = Modifier.align(Alignment.TopCenter).padding(horizontal = 8.dp)
                 )
             }
         }
