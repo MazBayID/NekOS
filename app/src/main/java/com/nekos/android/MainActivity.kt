@@ -173,6 +173,9 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // A restored launcher task should return directly to Home instead of replaying
+        // the branded startup screen after Android recreates the Activity.
+        val isRestoredActivity = savedInstanceState != null
         installSplashScreen()
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -189,7 +192,8 @@ class MainActivity : ComponentActivity() {
                         refreshToken = appRefreshToken,
                         resumeToken = resumeRefreshToken,
                         homeSignal = homeSignal,
-                        backgroundSignal = backgroundSignal
+                        backgroundSignal = backgroundSignal,
+                        skipStartupSplash = isRestoredActivity
                     )
                 }
             }
