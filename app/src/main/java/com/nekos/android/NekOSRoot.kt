@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.ComponentCallbacks2
 import android.content.res.Configuration
 import android.content.Intent
+import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
 import android.os.Process
@@ -92,6 +93,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -107,6 +109,7 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.text.font.FontWeight
@@ -132,6 +135,8 @@ internal fun NekOSRoot(
     resumeToken: Int = 0,
     homeSignal: Int = 0,
     backgroundSignal: Int = 0,
+    gestureNavContract: GestureNavContractData? = null,
+    onGestureNavFinished: () -> Unit = {},
     skipStartupSplash: Boolean = false
 ) {
     val context = LocalContext.current
@@ -153,6 +158,30 @@ internal fun NekOSRoot(
     var lastAppliedRefreshToken by remember { mutableIntStateOf(-1) }
 
     val latestFavoritePackages by rememberUpdatedState(favoritePackages)
+    val gestureTargetApp = remember(gestureNavContract, apps) {
+        gestureNavContract?.let { contract ->
+            apps.firstOrNull {
+                it.componentName == contract.componentName && it.user == contract.user
+            }
+        }
+    }
+    val gestureTargetFavoriteIndex = remember(gestureTargetApp, favoritePackages) {
+        gestureTargetApp?.let { favoritePackages.indexOf(it.id) }?.takeIf { it >= 0 }
+    }
+    val gestureTargetBounds = gestureTargetFavoriteIndex?.let { favoriteSlotBounds[it] }
+    var gestureTargetBitmap by remember { mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null) }
+    LaunchedEffect(gestureNavContract, gestureTargetApp?.iconCacheKey) {
+        gestureTargetBitmap = null
+        val target = gestureTargetApp ?: return@LaunchedEffect
+        gestureTargetBitmap = iconBitmapCache.getOrLoad(target)
+    }
+    LaunchedEffect(gestureNavContract, isInitialLoadComplete, gestureTargetApp, gestureTargetFavoriteIndex) {
+        if (gestureNavContract != null && isInitialLoadComplete &&
+            (gestureTargetApp == null || gestureTargetFavoriteIndex == null)
+        ) {
+            onGestureNavFinished()
+        }
+    }
     val latestTags by rememberUpdatedState(tags)
 
     // Discover launchable apps while the brand splash is visible instead of
@@ -554,6 +583,37 @@ internal fun NekOSRoot(
                 }
             }
         )
+
+        val targetBitmap = gestureTargetBitmap
+        val targetBounds = gestureTargetBounds
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R &&
+            gestureNavContract != null && targetBitmap != null && targetBounds != null
+        ) {
+            val iconSizePx = with(LocalDensity.current) { 50.dp.toPx() }
+            AndroidView(
+                factory = { viewContext ->
+                    GestureNavSurfaceView(
+                        context = viewContext,
+                        bitmap = targetBitmap.asAndroidBitmap(),
+                        contract = gestureNavContract
+                    ) {
+                        onGestureNavFinished()
+                    }
+                },
+                update = { view ->
+                    view.updateBitmap(targetBitmap.asAndroidBitmap())
+                    view.updateContract(gestureNavContract)
+                },
+                modifier = Modifier
+                    .offset {
+                        IntOffset(
+                            (targetBounds.center.x - iconSizePx / 2f).roundToInt(),
+                            (targetBounds.center.y - iconSizePx / 2f).roundToInt()
+                        )
+                    }
+                    .size(50.dp)
+            )
+        }
 
         if (drawerVisible) {
             // A lightweight dark scrim separates the drawer from Home without
