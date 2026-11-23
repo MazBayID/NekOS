@@ -171,7 +171,9 @@ internal fun NekOSSettingsDialog(
                             )
                         }
         Column(
-                modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()),
+                modifier = Modifier
+                    .heightIn(max = availableDialogHeight * 0.58f)
+                    .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 when (page) {
@@ -413,7 +415,7 @@ internal fun NekOSSettingsDialog(
                 }
                 TopFrame(
                     colorArgb = launcherUiColor,
-                    modifier = Modifier.align(Alignment.TopCenter).padding(horizontal = 8.dp)
+                    modifier = Modifier.align(Alignment.TopCenter).offset(y = (-1).dp)
                 )
             }
         }
