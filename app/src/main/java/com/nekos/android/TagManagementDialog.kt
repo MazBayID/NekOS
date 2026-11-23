@@ -186,7 +186,7 @@ fun TagActionsDialog(
     NekOSAlertDialog(
         topFrameColorArgb = launcherUiColorArgb,
         onDismissRequest = onDismiss,
-        shape = RoundedCornerShape(28.dp),
+        shape = RoundedCornerShape(22.dp),
         containerColor = launcherSurface,
         titleContentColor = Color(0xFF34332F),
         textContentColor = Color(0xFF34332F),
@@ -249,7 +249,7 @@ fun TagManagementDialog(
     NekOSAlertDialog(
         topFrameColorArgb = launcherUiColorArgb,
         onDismissRequest = onDismiss,
-        shape = RoundedCornerShape(28.dp),
+        shape = RoundedCornerShape(22.dp),
         containerColor = launcherSurface,
         titleContentColor = Color(0xFF34332F),
         textContentColor = Color(0xFF34332F),
@@ -257,11 +257,11 @@ fun TagManagementDialog(
         text = {
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Column(
                         modifier = Modifier.weight(1f),
@@ -447,7 +447,7 @@ fun TagManagementDialog(
         NekOSAlertDialog(
             topFrameColorArgb = launcherUiColorArgb,
             onDismissRequest = { showTagColorPicker = false },
-            shape = RoundedCornerShape(28.dp),
+            shape = RoundedCornerShape(22.dp),
             containerColor = launcherSurface,
             titleContentColor = Color(0xFF34332F),
             textContentColor = Color(0xFF34332F),
@@ -455,7 +455,7 @@ fun TagManagementDialog(
             text = {
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(3),
-                    modifier = Modifier.heightIn(max = 300.dp),
+                    modifier = Modifier.heightIn(max = 240.dp),
                     contentPadding = PaddingValues(2.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(6.dp)
@@ -500,7 +500,7 @@ fun TagManagementDialog(
         NekOSAlertDialog(
             topFrameColorArgb = launcherUiColorArgb,
             onDismissRequest = { showIconColorPicker = false },
-            shape = RoundedCornerShape(28.dp),
+            shape = RoundedCornerShape(22.dp),
             containerColor = launcherSurface,
             titleContentColor = Color(0xFF34332F),
             textContentColor = Color(0xFF34332F),
@@ -508,7 +508,7 @@ fun TagManagementDialog(
             text = {
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(3),
-                    modifier = Modifier.heightIn(max = 300.dp),
+                    modifier = Modifier.heightIn(max = 240.dp),
                     contentPadding = PaddingValues(4.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -523,7 +523,7 @@ fun TagManagementDialog(
                                     selectedIconFrameColor = colorValue
                                     showIconColorPicker = false
                                 }
-                                .padding(8.dp),
+                                .padding(6.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(7.dp)
                         ) {
