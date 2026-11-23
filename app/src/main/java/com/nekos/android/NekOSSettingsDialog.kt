@@ -114,6 +114,7 @@ internal fun NekOSSettingsDialog(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
+            val availableDialogHeight = maxHeight
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -124,7 +125,7 @@ internal fun NekOSSettingsDialog(
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(max = maxHeight * 0.88f - 16.dp),
+                        .heightIn(max = availableDialogHeight * 0.88f - 16.dp),
                     shape = RoundedCornerShape(28.dp),
                     color = surfaceColor,
                     tonalElevation = 6.dp,
@@ -372,7 +373,6 @@ internal fun NekOSSettingsDialog(
                     }
                 }
             }
-        }
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.End
