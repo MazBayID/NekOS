@@ -102,15 +102,13 @@ fun TagAppsDialog(
     val tagColor = Color(tag.colorArgb.toInt())
 
     NekOSAlertDialog(
-        frameColorArgb = launcherUiColorArgb,
         onDismissRequest = onDismiss,
         shape = RoundedCornerShape(28.dp),
         containerColor = launcherSurface,
         titleContentColor = Color(0xFF34332F),
         textContentColor = Color(0xFF34332F),
         title = {
-            DialogTitleWithFrame(launcherUiColorArgb) {
-                Row(
+            Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -122,7 +120,6 @@ fun TagAppsDialog(
                         style = MaterialTheme.typography.titleLarge
                     )
                 }
-            }
         },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -186,13 +183,12 @@ fun TagActionsDialog(
     onDismiss: () -> Unit
 ) {
     NekOSAlertDialog(
-        frameColorArgb = launcherUiColorArgb,
         onDismissRequest = onDismiss,
         shape = RoundedCornerShape(28.dp),
         containerColor = launcherSurface,
         titleContentColor = Color(0xFF34332F),
         textContentColor = Color(0xFF34332F),
-        title = { DialogTitleWithFrame(launcherUiColorArgb) { Text(tag.name) } },
+        title = { Text(tag.name) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 TextButton(onClick = onEdit, modifier = Modifier.fillMaxWidth()) {
@@ -249,14 +245,12 @@ fun TagManagementDialog(
     }
 
     NekOSAlertDialog(
-        frameColorArgb = launcherUiColorArgb,
-        frameProfile = DialogFrameCalibration.Profile.TAG_TUTORIAL,
         onDismissRequest = onDismiss,
         shape = RoundedCornerShape(28.dp),
         containerColor = launcherSurface,
         titleContentColor = Color(0xFF34332F),
         textContentColor = Color(0xFF34332F),
-        title = { DialogTitleWithFrame(launcherUiColorArgb) { Text(if (tag == null) "Create tag" else "Edit tag") } },
+        title = { Text(if (tag == null) "Create tag" else "Edit tag") },
         text = {
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
@@ -448,13 +442,12 @@ fun TagManagementDialog(
 
     if (showTagColorPicker) {
         NekOSAlertDialog(
-            frameColorArgb = launcherUiColorArgb,
             onDismissRequest = { showTagColorPicker = false },
             shape = RoundedCornerShape(28.dp),
             containerColor = launcherSurface,
             titleContentColor = Color(0xFF34332F),
             textContentColor = Color(0xFF34332F),
-            title = { DialogTitleWithFrame(launcherUiColorArgb) { Text("Tag Color") } },
+            title = { Text("Tag Color") },
             text = {
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(3),
@@ -501,13 +494,12 @@ fun TagManagementDialog(
 
     if (showIconColorPicker) {
         NekOSAlertDialog(
-            frameColorArgb = launcherUiColorArgb,
             onDismissRequest = { showIconColorPicker = false },
             shape = RoundedCornerShape(28.dp),
             containerColor = launcherSurface,
             titleContentColor = Color(0xFF34332F),
             textContentColor = Color(0xFF34332F),
-            title = { DialogTitleWithFrame(launcherUiColorArgb) { Text("Icon Color") } },
+            title = { Text("Icon Color") },
             text = {
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(3),
