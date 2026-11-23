@@ -2,7 +2,6 @@ package com.nekos.android
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.PixelFormat
 import android.graphics.PorterDuff
@@ -13,6 +12,7 @@ import android.os.Handler
 import android.os.Looper
 import android.os.Message
 import android.os.Messenger
+import java.lang.ref.WeakReference
 import android.os.RemoteException
 import android.view.SurfaceHolder
 import android.view.SurfaceView
@@ -29,13 +29,6 @@ internal class GestureNavSurfaceView(context: Context) : SurfaceView(context), S
     private var contract: GestureNavContractData? = null
     private var onFinished: (() -> Unit)? = null
     private var lastSentPosition: RectF? = null
-
-    private val finishMessenger = Messenger(
-        Handler(Looper.getMainLooper()) {
-            onFinished?.invoke()
-            true
-        }
-    )
 
     init {
         setZOrderOnTop(true)
@@ -103,6 +96,10 @@ internal class GestureNavSurfaceView(context: Context) : SurfaceView(context), S
         }
     }
 
+    internal fun dispatchContractFinished() {
+        onFinished?.invoke()
+    }
+
     private fun sendContract() {
         val request = contract ?: return
         val position = destination ?: return
@@ -114,7 +111,7 @@ internal class GestureNavSurfaceView(context: Context) : SurfaceView(context), S
             putParcelable(GestureNavContractData.EXTRA_ICON_SURFACE, surfaceControl)
             putParcelable(
                 GestureNavContractData.EXTRA_ON_FINISH_CALLBACK,
-                Message.obtain().apply { replyTo = finishMessenger }
+                FinishCallbackReceiver.messageFor(this)
             )
         }
         val response = Message.obtain().apply {
@@ -128,5 +125,23 @@ internal class GestureNavSurfaceView(context: Context) : SurfaceView(context), S
         } catch (_: RemoteException) {
             // The system may cancel the gesture before the surface is ready.
         }
+    }
+}
+
+
+/** Shared finish receiver, mirroring Launcher3's weak-reference lifecycle. */
+private object FinishCallbackReceiver : Handler.Callback {
+    private var currentTarget = WeakReference<GestureNavSurfaceView>(null)
+    val messenger = Messenger(Handler(Looper.getMainLooper(), this))
+
+    fun messageFor(target: GestureNavSurfaceView): Message {
+        currentTarget = WeakReference(target)
+        return Message.obtain().apply { replyTo = messenger }
+    }
+
+    override fun handleMessage(message: Message): Boolean {
+        currentTarget.get()?.dispatchContractFinished()
+        currentTarget.clear()
+        return true
     }
 }

@@ -4,15 +4,14 @@ import android.content.ComponentName
 import android.content.Intent
 import android.os.BadParcelableException
 import android.os.Build
-import android.os.Bundle
 import android.os.Message
 import android.os.UserHandle
 
 /**
  * The public AOSP handshake payload used by gesture navigation when returning Home.
  *
- * This class only reads and validates the request. Resolving an icon and replying with
- * its SurfaceControl are deliberately handled by later launcher stages.
+ * This class reads and validates the system request before the launcher resolves and
+ * replies with the target icon's SurfaceControl.
  */
 internal data class GestureNavContractData(
     val componentName: ComponentName,

@@ -247,7 +247,7 @@ fun NekOSRoot(
     }
     var gestureIconBitmap by remember { mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null) }
     val currentOnGestureNavContractFinished by rememberUpdatedState(onGestureNavContractFinished)
-    LaunchedEffect(gestureNavContract, gestureTargetApp, gestureFavoriteIndex, iconBitmapCache.generation) {
+    LaunchedEffect(gestureNavContract, gestureTargetApp, gestureFavoriteIndex) {
         gestureIconBitmap = null
         val request = gestureNavContract ?: return@LaunchedEffect
         val targetApp = gestureTargetApp
@@ -606,7 +606,7 @@ fun NekOSRoot(
                 bottom = bounds.center.y + halfIconSize
             )
         }
-        if (activeGestureContract != null && activeGestureBitmap != null && gestureIconBounds != null) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && activeGestureContract != null && activeGestureBitmap != null && gestureIconBounds != null) {
             key(activeGestureContract) {
                 AndroidView(
                     factory = { viewContext ->
