@@ -103,7 +103,6 @@ fun TagAppsDialog(
 
     NekOSAlertDialog(
         frameColorArgb = launcherUiColorArgb,
-        frameProfile = DialogFrameCalibration.Profile.TAG_TUTORIAL,
         onDismissRequest = onDismiss,
         shape = RoundedCornerShape(28.dp),
         containerColor = launcherSurface,
@@ -251,6 +250,7 @@ fun TagManagementDialog(
 
     NekOSAlertDialog(
         frameColorArgb = launcherUiColorArgb,
+        frameProfile = DialogFrameCalibration.Profile.TAG_TUTORIAL,
         onDismissRequest = onDismiss,
         shape = RoundedCornerShape(28.dp),
         containerColor = launcherSurface,
