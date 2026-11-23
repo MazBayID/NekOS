@@ -723,7 +723,7 @@ internal fun NekOSRoot(
                             uiColorArgb = launcherUiColorArgb
                         )
                     }
-                    TopFrame(Modifier.align(Alignment.TopCenter).offset(y = (-4).dp))
+                    TopFrame(Modifier.align(Alignment.TopCenter).offset(y = (-5).dp))
                     }
                 }
             }
