@@ -13,11 +13,8 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.activity.compose.BackHandler
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -98,10 +95,11 @@ internal fun NekOSSettingsDialog(
         page = SettingsPage.MAIN
     }
 
-    AlertDialog(
+    NekOSDialogShell(
         onDismissRequest = onDismiss,
+        colorArgb = launcherUiColor,
+        containerColor = surfaceColor,
         title = {
-            DialogTitleWithFrame(launcherUiColor) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
@@ -126,11 +124,9 @@ internal fun NekOSSettingsDialog(
                     fontWeight = FontWeight.SemiBold
                 )
                 }
-            }
         },
-        text = {
+        content = {
             Column(
-                modifier = Modifier.verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(13.dp)
             ) {
                 when (page) {
@@ -342,15 +338,15 @@ internal fun NekOSSettingsDialog(
                 }
             }
         },
-        confirmButton = {
+        actions = {
             TextButton(onClick = if (page == SettingsPage.MAIN) onDismiss else ({ page = SettingsPage.MAIN })) {
-                Text(if (page == SettingsPage.MAIN) "Done" else "Back", color = SettingsAccent, fontWeight = FontWeight.SemiBold)
+                Text(
+                    if (page == SettingsPage.MAIN) "Done" else "Back",
+                    color = SettingsAccent,
+                    fontWeight = FontWeight.SemiBold
+                )
             }
-        },
-        containerColor = surfaceColor,
-        titleContentColor = SettingsInk,
-        textContentColor = SettingsInk,
-        shape = RoundedCornerShape(28.dp)
+        }
     )
 }
 
