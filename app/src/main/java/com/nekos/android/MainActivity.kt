@@ -33,6 +33,8 @@ class MainActivity : ComponentActivity() {
     private var homeSignal by mutableIntStateOf(0)
     /** Bumped when the launcher stops being visible so transient drawer UI can reset. */
     private var backgroundSignal by mutableIntStateOf(0)
+    /** Bumped when NekOS returns to the foreground after another activity was shown. */
+    private var homeReturnSignal by mutableIntStateOf(0)
     private var isForcedRefreshPending = false
     private var stoppedAtElapsedMillis = 0L
     private val mainHandler = Handler(Looper.getMainLooper())
@@ -154,6 +156,7 @@ class MainActivity : ComponentActivity() {
         // the existing app list and icon cache when nothing changed.
         val stoppedAt = stoppedAtElapsedMillis
         stoppedAtElapsedMillis = 0L
+        if (stoppedAt != 0L) homeReturnSignal++
         val wasAwayForLong = stoppedAt != 0L &&
             SystemClock.elapsedRealtime() - stoppedAt > LONG_ABSENCE_MILLIS
         if (isForcedRefreshPending || wasAwayForLong) {
@@ -193,6 +196,7 @@ class MainActivity : ComponentActivity() {
                         resumeToken = resumeRefreshToken,
                         homeSignal = homeSignal,
                         backgroundSignal = backgroundSignal,
+                        homeReturnSignal = homeReturnSignal,
                         skipStartupSplash = isRestoredActivity
                     )
                 }

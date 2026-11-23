@@ -16,6 +16,8 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
@@ -131,6 +133,7 @@ fun NekOSRoot(
     resumeToken: Int = 0,
     homeSignal: Int = 0,
     backgroundSignal: Int = 0,
+    homeReturnSignal: Int = 0,
     skipStartupSplash: Boolean = false
 ) {
     val context = LocalContext.current
@@ -476,6 +479,7 @@ fun NekOSRoot(
             iconBitmapCache = iconBitmapCache,
             homeSwipeThresholdPx = homeSwipeThresholdPx,
             backgroundSignal = backgroundSignal,
+            homeReturnSignal = homeReturnSignal,
             drawerProgress = drawerProgress,
             onDrawerDrag = { totalDrag ->
                 isDrawerDragging = true
@@ -1013,6 +1017,7 @@ private fun HomeScreen(
     iconBitmapCache: AppIconBitmapCache,
     homeSwipeThresholdPx: Float,
     backgroundSignal: Int,
+    homeReturnSignal: Int,
     drawerProgress: State<Float>,
     onDrawerDrag: (Float) -> Unit,
     onDrawerDragEnd: (totalDrag: Float, velocityY: Float, cancelled: Boolean) -> Unit,
@@ -1035,6 +1040,19 @@ private fun HomeScreen(
     val appById = remember(apps) { apps.associateBy { it.id } }
     val currentOnDrawerDrag by rememberUpdatedState(onDrawerDrag)
     val currentOnDrawerDragEnd by rememberUpdatedState(onDrawerDragEnd)
+    val homeContentProgress = remember { Animatable(1f) }
+    LaunchedEffect(homeReturnSignal) {
+        if (homeReturnSignal > 0) {
+            homeContentProgress.snapTo(0f)
+            homeContentProgress.animateTo(
+                targetValue = 1f,
+                animationSpec = tween(
+                    durationMillis = 260,
+                    easing = FastOutSlowInEasing
+                )
+            )
+        }
+    }
     Box(
         Modifier
             .fillMaxSize()
@@ -1066,6 +1084,13 @@ private fun HomeScreen(
                 .fillMaxSize()
                 .statusBarsPadding()
                 .navigationBarsPadding()
+                .graphicsLayer {
+                    val progress = homeContentProgress.value
+                    alpha = progress
+                    val scale = 0.985f + 0.015f * progress
+                    scaleX = scale
+                    scaleY = scale
+                }
                 // Keep launcher controls sharp above the static wallpaper.
                 .pointerInput(homeSwipeThresholdPx, backgroundSignal) {
                     var totalDrag = 0f
