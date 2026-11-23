@@ -14,7 +14,6 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.MaterialTheme
@@ -98,7 +97,8 @@ fun TagAppsDialog(
     }
     val tagColor = Color(tag.colorArgb.toInt())
 
-    AlertDialog(
+    NekOSAlertDialog(
+        frameColorArgb = launcherUiColorArgb,
         onDismissRequest = onDismiss,
         shape = RoundedCornerShape(28.dp),
         containerColor = launcherSurface,
@@ -201,7 +201,8 @@ fun TagActionsDialog(
     onDelete: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    AlertDialog(
+    NekOSAlertDialog(
+        frameColorArgb = launcherUiColorArgb,
         onDismissRequest = onDismiss,
         shape = RoundedCornerShape(28.dp),
         containerColor = launcherSurface,
@@ -273,7 +274,8 @@ fun TagManagementDialog(
             it.packageName.contains(appSearch.trim(), ignoreCase = true) }
     }
 
-    AlertDialog(
+    NekOSAlertDialog(
+        frameColorArgb = launcherUiColorArgb,
         onDismissRequest = onDismiss,
         shape = RoundedCornerShape(28.dp),
         containerColor = launcherSurface,
@@ -436,7 +438,8 @@ fun TagManagementDialog(
     )
 
     if (showIconPicker) {
-        AlertDialog(
+        NekOSAlertDialog(
+            frameColorArgb = launcherUiColorArgb,
             onDismissRequest = { showIconPicker = false },
             shape = RoundedCornerShape(28.dp),
             containerColor = launcherSurface,
@@ -480,7 +483,8 @@ fun TagManagementDialog(
         )
     }
     if (showIconColorPicker) {
-        AlertDialog(
+        NekOSAlertDialog(
+            frameColorArgb = launcherUiColorArgb,
             onDismissRequest = { showIconColorPicker = false },
             shape = RoundedCornerShape(28.dp),
             containerColor = launcherSurface,
