@@ -191,8 +191,8 @@ internal object DialogFrameCalibration {
     }
 
     private fun overhangPerSide(profile: Profile): Dp = when (profile) {
-        Profile.STANDARD -> 16.dp
-        Profile.APP_ACTION -> 16.dp
+        Profile.STANDARD -> 21.dp
+        Profile.APP_ACTION -> 8.dp
     }
 
     fun frameWidth(containerWidth: Dp, profile: Profile): Dp =
