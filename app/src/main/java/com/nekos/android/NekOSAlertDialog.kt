@@ -12,15 +12,21 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.zIndex
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.window.Dialog
@@ -55,6 +61,8 @@ internal fun NekOSAlertDialog(
             contentAlignment = Alignment.Center
         ) {
             val availableDialogHeight = maxHeight
+            var surfaceWidthPx by remember { mutableIntStateOf(0) }
+            val surfaceWidth = with(LocalDensity.current) { surfaceWidthPx.toDp() }
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -66,7 +74,8 @@ internal fun NekOSAlertDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 10.dp)
-                        .heightIn(max = availableDialogHeight * 0.88f - 16.dp),
+                        .heightIn(max = availableDialogHeight * 0.88f - 16.dp)
+                        .onSizeChanged { surfaceWidthPx = it.width },
                     shape = shape,
                     color = containerColor,
                     tonalElevation = 6.dp,
@@ -102,13 +111,15 @@ internal fun NekOSAlertDialog(
                         }
                     }
                 }
-                DialogFrameTop(
-                    frameColorArgb,
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .offset(y = (-24).dp)
-                        .zIndex(1f)
-                )
+                if (surfaceWidthPx > 0) {
+                    DialogFrameTop(
+                        colorArgb = frameColorArgb,
+                        containerWidth = surfaceWidth,
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .zIndex(1f)
+                    )
+                }
             }
         }
     }

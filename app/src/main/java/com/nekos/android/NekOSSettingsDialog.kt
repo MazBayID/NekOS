@@ -29,11 +29,14 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.layout.offset
@@ -124,6 +127,8 @@ internal fun NekOSSettingsDialog(
             contentAlignment = Alignment.Center
         ) {
             val availableDialogHeight = maxHeight
+            var surfaceWidthPx by remember { mutableIntStateOf(0) }
+            val surfaceWidth = with(LocalDensity.current) { surfaceWidthPx.toDp() }
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -135,7 +140,8 @@ internal fun NekOSSettingsDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 6.dp)
-                        .heightIn(max = availableDialogHeight * 0.84f - 12.dp),
+                        .heightIn(max = availableDialogHeight * 0.84f - 12.dp)
+                        .onSizeChanged { surfaceWidthPx = it.width },
                     shape = RoundedCornerShape(22.dp),
                     color = surfaceColor,
                     tonalElevation = 6.dp,
@@ -412,13 +418,15 @@ internal fun NekOSSettingsDialog(
                         }
                     }
                 }
-                DialogFrameTop(
-                    launcherUiColor,
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .offset(y = (-24).dp)
-                        .zIndex(1f)
-                )
+                if (surfaceWidthPx > 0) {
+                    DialogFrameTop(
+                        colorArgb = launcherUiColor,
+                        containerWidth = surfaceWidth,
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .zIndex(1f)
+                    )
+                }
             }
         }
     }

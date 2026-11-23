@@ -728,13 +728,11 @@ internal fun NekOSRoot(
                     }
                     if (popupContentWidth > 0) {
                         DialogFrameTop(
-                            launcherUiColorArgb,
+                            colorArgb = launcherUiColorArgb,
+                            containerWidth = popupContentWidthDp,
                             modifier = Modifier
                                 .align(Alignment.TopCenter)
-                                .requiredWidth(popupContentWidthDp + 24.dp)
-                                .offset(x = 0.dp, y = (-24).dp)
-                                .zIndex(1f),
-                            fitWidth = true
+                                .zIndex(1f)
                         )
                     }
                 }

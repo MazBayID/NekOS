@@ -8,9 +8,9 @@ import android.util.LruCache
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.ui.layout.layout
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.offset
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -180,45 +181,30 @@ internal fun ThemedUiArtworkImage(
 @Composable
 internal fun DialogFrameTop(
     colorArgb: Long,
-    modifier: Modifier = Modifier,
-    fitWidth: Boolean = false
+    containerWidth: Dp,
+    modifier: Modifier = Modifier
 ) {
     val bitmap = rememberThemedUiArtwork(
         R.drawable.dialog_frame_top,
         colorArgb,
         maxDimensionPx = 512
     )
-    if (bitmap != null) {
+    if (bitmap != null && containerWidth > 0.dp) {
+        val frameWidth = containerWidth + 32.dp
+        val frameHeight = minOf(48.dp, frameWidth / 8f)
         Canvas(
-            modifier = if (fitWidth) {
-                modifier
-                    .fillMaxWidth()
-                    .height(48.dp)
-            } else {
-                modifier
-                    .fillMaxWidth()
-                    .height(48.dp)
-                    .layout { measurable, constraints ->
-                        val extraWidth = 20.dp.roundToPx()
-                        val expandedWidth = constraints.maxWidth + extraWidth
-                        val placeable = measurable.measure(
-                            constraints.copy(
-                                minWidth = expandedWidth,
-                                maxWidth = expandedWidth
-                            )
-                        )
-                        layout(constraints.maxWidth, placeable.height) {
-                            placeable.placeRelative(-extraWidth / 2, 0)
-                        }
-                    }
-            }
+            modifier = modifier
+                .width(frameWidth)
+                .height(frameHeight)
+                .offset(y = -frameHeight / 2f)
         ) {
-            val scale = if (fitWidth) size.width / 512f else size.height / 64f
+            val scale = size.height / 64f
             val endWidth = 64f * scale
             val crestWidth = 96f * scale
             val lineBaseWidth = 144f * scale
-            val extraLineWidth = ((size.width - endWidth * 2f - crestWidth - lineBaseWidth * 2f) / 2f)
-                .coerceAtLeast(0f)
+            val extraLineWidth = (
+                (size.width - endWidth * 2f - crestWidth - lineBaseWidth * 2f) / 2f
+            ).coerceAtLeast(0f)
             val leftLineWidth = lineBaseWidth + extraLineWidth
             val rightLineWidth = lineBaseWidth + extraLineWidth
             var destinationX = 0f
