@@ -30,6 +30,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,6 +42,9 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 private val SettingsInk = Color(0xFF34332F)
 private val SettingsMuted = Color(0xFF706B63)
@@ -176,7 +180,11 @@ internal fun NekOSSettingsDialog(
                                 iconRes = R.drawable.nekos_ui_wallpaper,
                                 iconColorArgb = launcherUiColor,
                                 title = "Wallpaper",
-                                description = if (hasWallpaper) "Custom image" else "Color or photo",
+                                description = when {
+                                    hasWallpaper -> "Custom image"
+                                    selectedBuiltInWallpaper != null -> "Built-in wallpaper"
+                                    else -> "Color or photo"
+                                },
                                 onClick = { page = SettingsPage.WALLPAPER }
                             )
                             SettingsNavigationCard(
@@ -288,13 +296,9 @@ internal fun NekOSSettingsDialog(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
-                                Image(
-                                    painter = painterResource(option.resourceId),
-                                    contentDescription = option.label,
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier
-                                        .size(width = 92.dp, height = 112.dp)
-                                        .clip(RoundedCornerShape(10.dp))
+                                BuiltInWallpaperPreview(
+                                    resourceId = option.resourceId,
+                                    label = option.label
                                 )
                                 Column(
                                     modifier = Modifier.weight(1f),
@@ -453,6 +457,37 @@ internal fun NekOSSettingsDialog(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun BuiltInWallpaperPreview(
+    resourceId: Int,
+    label: String
+) {
+    val context = LocalContext.current
+    val preview = produceState<ImageBitmap?>(initialValue = null, resourceId) {
+        value = withContext(Dispatchers.IO) {
+            loadBuiltInHomeWallpaper(context, resourceId, maxDimension = 480)
+        }
+    }.value
+
+    if (preview != null) {
+        Image(
+            bitmap = preview,
+            contentDescription = label,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .size(width = 92.dp, height = 112.dp)
+                .clip(RoundedCornerShape(10.dp))
+        )
+    } else {
+        Box(
+            modifier = Modifier
+                .size(width = 92.dp, height = 112.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(SettingsInk.copy(alpha = 0.08f))
+        )
     }
 }
 
