@@ -105,7 +105,7 @@ fun TagAppsDialog(
         titleContentColor = Color(0xFF34332F),
         textContentColor = Color(0xFF34332F),
         title = {
-            DialogTitleWithFrame(launcherUiColorArgb) {
+            
                 Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -120,7 +120,6 @@ fun TagAppsDialog(
                     style = MaterialTheme.typography.titleLarge
                 )
                 }
-            }
         },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -183,7 +182,6 @@ fun TagAppsDialog(
                         }
                     }
                 }
-            }
         },
         confirmButton = { TextButton(onClick = onEdit) { Text("Edit tag") } },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Close") } }
@@ -208,7 +206,7 @@ fun TagActionsDialog(
         containerColor = launcherSurface,
         titleContentColor = Color(0xFF34332F),
         textContentColor = Color(0xFF34332F),
-        title = { DialogTitleWithFrame(launcherUiColorArgb) { Text(tag.name) } },
+        title = {  Text(tag.name) } },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 TextButton(onClick = onEdit, modifier = Modifier.fillMaxWidth()) {
@@ -222,7 +220,6 @@ fun TagActionsDialog(
                 TextButton(onClick = onDelete, modifier = Modifier.fillMaxWidth()) {
                     Text("Delete tag", color = Color(0xFFB3261E))
                 }
-            }
         },
         confirmButton = { TextButton(onClick = onDismiss) { Text("Close") } }
     )
@@ -281,7 +278,7 @@ fun TagManagementDialog(
         containerColor = launcherSurface,
         titleContentColor = Color(0xFF34332F),
         textContentColor = Color(0xFF34332F),
-        title = { DialogTitleWithFrame(launcherUiColorArgb) { Text(if (tag == null) "Create tag" else "Edit tag") } },
+        title = {  Text(if (tag == null) "Create tag" else "Edit tag") } },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 TextField(
@@ -411,7 +408,6 @@ fun TagManagementDialog(
                         }
                     }
                 }
-            }
         },
         confirmButton = {
             TextButton(
@@ -445,7 +441,7 @@ fun TagManagementDialog(
             containerColor = launcherSurface,
             titleContentColor = Color(0xFF34332F),
             textContentColor = Color(0xFF34332F),
-            title = { DialogTitleWithFrame(launcherUiColorArgb) { Text("Choose tag icon") } },
+            title = {  Text("Choose tag icon") } },
             text = {
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(5),
@@ -477,7 +473,6 @@ fun TagManagementDialog(
                             else Text(icon.id.toString(), style = MaterialTheme.typography.labelSmall)
                         }
                     }
-                }
             },
             confirmButton = { TextButton(onClick = { showIconPicker = false }) { Text("Done") } }
         )
@@ -490,7 +485,7 @@ fun TagManagementDialog(
             containerColor = launcherSurface,
             titleContentColor = Color(0xFF34332F),
             textContentColor = Color(0xFF34332F),
-            title = { DialogTitleWithFrame(launcherUiColorArgb) { Text("Icon Color") } },
+            title = {  Text("Icon Color") } },
             text = {
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(3),
@@ -531,7 +526,6 @@ fun TagManagementDialog(
                             )
                         }
                     }
-                }
             },
             confirmButton = {
                 TextButton(onClick = { showIconColorPicker = false }) { Text("Done") }
