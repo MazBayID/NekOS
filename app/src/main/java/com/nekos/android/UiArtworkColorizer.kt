@@ -10,6 +10,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.ui.layout.layout
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
@@ -184,7 +185,24 @@ internal fun DialogFrameTop(colorArgb: Long, modifier: Modifier = Modifier) {
         maxDimensionPx = 512
     )
     if (bitmap != null) {
-        Canvas(modifier = modifier.fillMaxWidth().height(48.dp)) {
+        Canvas(
+            modifier = modifier
+                .fillMaxWidth()
+                .height(48.dp)
+                .layout { measurable, constraints ->
+                    val extraWidth = 20.dp.roundToPx()
+                    val expandedWidth = constraints.maxWidth + extraWidth
+                    val placeable = measurable.measure(
+                        constraints.copy(
+                            minWidth = expandedWidth,
+                            maxWidth = expandedWidth
+                        )
+                    )
+                    layout(constraints.maxWidth, placeable.height) {
+                        placeable.placeRelative(-extraWidth / 2, 0)
+                    }
+                }
+        ) {
             val scale = size.height / 64f
             val endWidth = 64f * scale
             val crestWidth = 96f * scale
