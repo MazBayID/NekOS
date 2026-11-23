@@ -35,16 +35,56 @@
     "height_1x": 64,
     "transparent_gap_px_1x": 2,
     "frames_1x": {
-      "left_cap": { "x": 0, "y": 0, "width": 32, "height": 64 },
-      "bar_tile": { "x": 34, "y": 0, "width": 4, "height": 64 },
-      "head": { "x": 40, "y": 0, "width": 60, "height": 64 },
-      "right_cap": { "x": 102, "y": 0, "width": 32, "height": 64 }
+      "left_cap": {
+        "x": 0,
+        "y": 0,
+        "width": 32,
+        "height": 64
+      },
+      "bar_tile": {
+        "x": 34,
+        "y": 0,
+        "width": 4,
+        "height": 64
+      },
+      "head": {
+        "x": 40,
+        "y": 0,
+        "width": 60,
+        "height": 64
+      },
+      "right_cap": {
+        "x": 102,
+        "y": 0,
+        "width": 32,
+        "height": 64
+      }
     },
     "frames_4x": {
-      "left_cap": { "x": 0, "y": 0, "width": 128, "height": 256 },
-      "bar_tile": { "x": 136, "y": 0, "width": 16, "height": 256 },
-      "head": { "x": 160, "y": 0, "width": 240, "height": 256 },
-      "right_cap": { "x": 408, "y": 0, "width": 128, "height": 256 }
+      "left_cap": {
+        "x": 0,
+        "y": 0,
+        "width": 128,
+        "height": 256
+      },
+      "bar_tile": {
+        "x": 136,
+        "y": 0,
+        "width": 16,
+        "height": 256
+      },
+      "head": {
+        "x": 160,
+        "y": 0,
+        "width": 240,
+        "height": 256
+      },
+      "right_cap": {
+        "x": 408,
+        "y": 0,
+        "width": 128,
+        "height": 256
+      }
     },
     "runtime_source": "topframe_spritesheet@4x.png",
     "runtime_crop_rule": "Koordinat dan ukuran crop 1x dikalikan 4 saat mengambil gambar dari spritesheet 4x. Jangan membagi spritesheet menjadi empat bagian sama besar; gunakan koordinat atlas setiap frame."
@@ -55,14 +95,11 @@
       "above_dialog": 32,
       "inside_dialog": 32
     },
-    "known_instance_offsets_dp": {
-      "launcher_settings": -1,
-      "app_action": -2
-    },
-    "offset_note": "Offset adalah penyesuaian posisi instance terhadap anchor dasar, bukan perubahan geometri sprite."
+    "known_instance_offsets_dp": {},
+    "offset_note": "Tidak ada offset khusus pada dialog. Garis tengah artwork (Y=32 dp) tepat sejajar dengan sisi atas Surface dialog."
   },
   "rendering": {
-    "width": "Mengisi lebar parent (fillMaxWidth).",
+    "width": "Mengisi lebar parent dialog yang sudah dibatasi (maksimal 360 dp pada dialog standar dan Settings).",
     "height": "64 dp.",
     "content_scale": "FillBounds untuk setiap bagian sprite.",
     "color": "Spritesheet di-recolor menggunakan UiArtworkColorizer.recolorBitmap dengan warna Shared UI Color sebelum di-crop.",
