@@ -754,7 +754,10 @@ internal fun NekOSRoot(
                             uiColorArgb = launcherUiColorArgb
                         )
                     }
-                    TopFrame(Modifier.align(Alignment.TopCenter).offset(y = (-5).dp))
+                    TopFrame(
+                        colorArgb = launcherUiColorArgb,
+                        modifier = Modifier.align(Alignment.TopCenter).offset(y = (-5).dp)
+                    )
                     }
                 }
             }
@@ -805,6 +808,7 @@ internal fun NekOSRoot(
             NekOSSettingsDialog(
                 backgroundPreset = backgroundPreset,
                 launcherThemeKey = launcherThemeKey,
+                launcherUiColor = launcherUiColorArgb,
                 onLauncherThemeChange = { key ->
                     launcherThemeKey = normalizeLauncherTheme(key)
                     preferences.edit().putString("launcher_theme", launcherThemeKey).apply()
