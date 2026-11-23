@@ -16,17 +16,19 @@ One repair at a time: inspect current source -> make the smallest targeted chang
 
 | # | Task | Status | Completion evidence | Next |
 |---|---|---|---|---|
-| 1 | Optimize Tag icon decoding (decode near rendered size; retain a larger size only where preview quality requires it) | IMPLEMENTED — build/unit tests passed; lint blocked by existing issue | Commit `2a62f586` downsamples Tag icons to max 128 px before recoloring. CI run #500 completed: `assembleDebug` and `testDebugUnitTest` passed; `lintDebug` failed only on existing `NekOSRoot.kt:1214` `fillMaxWidth(1.02f)` Range lint. | Keep lint issue tracked separately; continue with UI artwork decoding/recoloring |
-| 2 | Optimize UI artwork decoding/recoloring | IMPLEMENTED — APK build/unit tests passed; lint blocked by existing issue | CI run #505 compiled the APK and passed unit tests; lint failed only on the existing `fillMaxWidth(1.02f)` Range lint. Small UI icons target 128 px; title artwork and coordinate-based frames retain up to 512 px. | Visual verification on device remains outstanding |
-| 3 | Right-size startup logo bitmap | IMPLEMENTED — APK build/unit tests passed; lint blocked by existing issue | CI run #508 compiled `StartupLogo.kt`, assembled the debug APK, and passed `testDebugUnitTest`; `lintDebug` failed only on the existing `fillMaxWidth(1.02f)` Range lint. Original PNG remains untouched; decoding is off the main thread with a 1280 px maximum dimension. | Visual verification on device remains outstanding |
-| 4 | Harden background lifecycle cleanup for transient gestures/overlays | IMPLEMENTED — CI pending | On `backgroundSignal`, drawer animation/state is forced to its closed baseline, active app drag is cancelled, incomplete favorite/Tag reorder operations are rolled back from snapshots, and temporary app action overlays are cleared. `pointerInput` is keyed by `backgroundSignal` so an in-flight Home swipe handler is cancelled when the Activity stops. Settings and other user-facing dialogs are preserved. | Verify compile/tests and inspect behavior after background/resume on device |
-| 5 | Harden icon cache/catalog validation | QUEUED | Pending | Validate disk bitmap dimensions and include density in catalog comparison |
-| 6 | Repair CI lint issue and run full relevant checks | QUEUED | Existing lint failure is `fillMaxWidth(1.02f)` at `NekOSRoot.kt:1217`; fix separately without mixing it into image changes. | Confirm debug/release lint and available tests pass |
-| 7 | Add build-time resource asset optimization pipeline (keep assets file-backed; no hardcoded bitmap arrays; safe format optimization) | QUEUED — added to Stage 1 | Scope recorded above; implementation not started. | Audit current drawable resources and Gradle setup; preserve originals and convert only assets that benefit from WebP/vector formats |
+| 1 | Optimize Tag icon decoding | IMPLEMENTED — build, unit tests, and lint pass | Commit `2a62f586`; CI #520 passed APK build, unit tests, and lint with the current source. | Visual verification on device remains outstanding |
+| 2 | Optimize UI artwork decoding/recoloring | IMPLEMENTED — build, unit tests, and lint pass | CI #520 passed APK build, unit tests, and lint with the current source. Small UI icons target 128 px; title artwork and coordinate-based frames retain up to 512 px. | Visual verification on device remains outstanding |
+| 3 | Right-size startup logo bitmap | IMPLEMENTED — build, unit tests, and lint pass | CI #520 passed APK build, unit tests, and lint with the current source. Original PNG remains untouched; decoding is off the main thread with a 1280 px maximum dimension. | Visual verification on device remains outstanding |
+| 4 | Harden background lifecycle cleanup for transient gestures/overlays | IMPLEMENTED — build, unit tests, and lint pass; emulator UI tests running | Commit `173176ab` resets drawer state, cancels active drags, rolls back incomplete Favorite/Tag reorder operations, clears temporary action overlays, and keys Home `pointerInput` to `backgroundSignal`. The missing parameter forwarding was fixed in `40ccee0`. CI #520 passed APK build, unit tests, and lint. | Await emulator UI tests; then verify the reported background/resume symptom on a physical device |
+| 5 | Harden icon cache/catalog validation | IMPLEMENTED — build and unit tests pass; emulator verification running | Commits `57d36c6`, `f893865`, `ba9899c`, `c56eefe`, `39d636f`, and `87b8c6e`. Disk icon dimensions are checked before and after decode; catalog equality includes density; entries and asset paths are validated for completeness and uniqueness. Current 100-entry JSON index has no invalid entries or duplicate IDs/paths. | Await emulator tests, especially density invalidation and catalog/cache instrumentation |
+| 6 | Repair CI lint issue | IMPLEMENTED — lint passed | Commit `6209c78` replaces the invalid `fillMaxWidth(1.02f)` with full width plus a 1.02x graphics-layer scale anchored at the start, preserving the intentional visual bleed. CI #520 `lintDebug` passed. | Keep lint in CI |
+| 7 | Build-time resource asset optimization | REVIEWED — native pipeline retained; raw catalog asset conversion deferred pending benchmark | AAPT2 already compiles and crunches PNG resources; release PNG crunching is enabled by default. The 100 icon PNGs under `src/main/assets` total about 12.44 MiB and are not AAPT2 drawable resources. WebP lossless is a possible candidate, but conversion is deferred until file-by-file pixel/alpha and size comparisons can prove a benefit without visual regression. | Benchmark lossless WebP against the original catalog icons before any conversion; keep originals unchanged |
 
 ## Completed
 - Initial source-level audit and prioritization: completed 2026-11-23.
-- Tag icon decoding and UI artwork bounded decoding are implemented. CI for the UI artwork change compiled the APK and passed unit tests; lint remains blocked by the pre-existing `fillMaxWidth(1.02f)` error. Startup logo downsampling is now implemented and awaits CI verification.
+- Repairs 1–3: bounded icon/artwork decoding and startup logo downsampling are implemented; CI #520 passed APK build, unit tests, and lint. Physical-device visual verification remains outstanding.
+- Repair 6: the existing width-range lint error is fixed without removing the intentional logo bleed; CI #520 lint passed.
+- Stage 7 review: confirmed AAPT2 is already the build-time PNG resource compiler/cruncher for `res` assets. No duplicate custom crunch task was added. The 100 raw icon assets need a separate lossless WebP benchmark before conversion.
 
 ## References
 - Android Developers, Optimize bitmap images in Jetpack Compose: https://developer.android.com/develop/ui/compose/graphics/images/optimization
@@ -34,6 +36,11 @@ One repair at a time: inspect current source -> make the smallest targeted chang
 - Android Developers, BitmapFactory.Options / inSampleSize: https://developer.android.com/reference/android/graphics/BitmapFactory.Options
 - Android Developers, Modifier.pointerInput: https://developer.android.com/reference/kotlin/androidx/compose/ui/input/pointer/pointerInput.modifier
 
+
+- Android Developers, AAPT2 resource compilation and PNG crunching: https://developer.android.com/tools/aapt2
+- Android Developers, Convert images to WebP (lossless support and alpha-channel considerations): https://developer.android.com/studio/write/convert-webp
+- Android Developers, Optimize build speed / WebP trade-offs: https://developer.android.com/build/optimize-your-build
+- Android Developers, optimized resource shrinking (AGP 8.12+): https://developer.android.com/topic/performance/app-optimization/enable-app-optimization
 
 ## CI efficiency pass — 2026-11-23
 - [x] Android CI: use `gradle/actions/setup-gradle@v6` enhanced cache (the default) instead of basic cache. NekOS is a public repository, so the enhanced cache is available without a paid private-repository entitlement.
@@ -43,5 +50,5 @@ One repair at a time: inspect current source -> make the smallest targeted chang
 - [x] Android CI: remove `--no-daemon` from both Gradle invocations so the job can reuse its Gradle daemon between build/test and emulator test steps.
 - [x] Release: switch to enhanced Gradle cache, reduce timeout to 35 minutes, and restore default shallow checkout because release validation only compares the tag name with app version; no git history is used.
 - [x] Keep build, unit tests, and lint in one runner/job. Splitting them into parallel runners would duplicate JDK/SDK setup and Gradle configuration/cache work, increasing total billed minutes. No matrix is used, so `fail-fast` is not applicable.
-- [ ] Verify workflow syntax and observe the next CI/release workflow runs.
+- [x] Workflow syntax and cache setup were exercised by CI #520; APK build, unit tests, and lint passed. Emulator UI tests are still running at the time of this update.
 - References: GitHub Actions dependency caching and workflow syntax; Gradle Actions setup-gradle v6 documentation.
