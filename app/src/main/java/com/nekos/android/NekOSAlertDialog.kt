@@ -100,7 +100,10 @@ internal fun NekOSAlertDialog(
                         }
                     }
                 }
-                TopFrame(Modifier.align(Alignment.TopCenter).padding(horizontal = 10.dp))
+                TopFrame(
+                    colorArgb = DEFAULT_LAUNCHER_UI_COLOR,
+                    modifier = Modifier.align(Alignment.TopCenter).padding(horizontal = 10.dp)
+                )
             }
         }
     }
