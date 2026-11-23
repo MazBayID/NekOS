@@ -235,7 +235,7 @@ internal fun NekOSRoot(
     val gestureTargetApp = remember(gestureNavContract, apps) {
         gestureNavContract?.let { contract ->
             apps.firstOrNull {
-                it.componentName == contract.componentName && it.user == contract.user
+                it.packageName == contract.componentName.packageName && it.user == contract.user
             }
         }
     }
