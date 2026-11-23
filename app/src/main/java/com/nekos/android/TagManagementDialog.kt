@@ -33,6 +33,18 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
+private val TagColorOptions = listOf(
+    "Sand" to 0xFFE7E1D6L,
+    "Blue" to 0xFFDCE8F8L,
+    "Lavender" to 0xFFE8DFF5L,
+    "Rose" to 0xFFF5DDE3L,
+    "Peach" to 0xFFF6E1D2L,
+    "Amber" to 0xFFF4E8C9L,
+    "Mint" to 0xFFD9EEE6L,
+    "Sage" to 0xFFE0E9D8L,
+    "Slate" to 0xFFE1E5E9L
+)
+
 private val TagIconFrameColors = listOf(
     "Ocean" to 0xFF114B56L,
     "Blue" to 0xFF2563EBL,
@@ -223,6 +235,7 @@ fun TagManagementDialog(
     }
     var selectedPackages by remember(tag?.id) { mutableStateOf(tag?.appPackages?.toSet().orEmpty()) }
     var showIconColorPicker by remember { mutableStateOf(false) }
+    var showTagColorPicker by remember { mutableStateOf(false) }
     var appSearch by remember(tag?.id) { mutableStateOf("") }
     val iconCarouselState = androidx.compose.foundation.lazy.rememberLazyListState()
     LaunchedEffect(selectedIcon, catalog) {
@@ -248,23 +261,56 @@ fun TagManagementDialog(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text("Tag Name", color = Color(0xFF34332F), style = MaterialTheme.typography.labelMedium)
-                    TextField(
-                        value = name,
-                        onValueChange = { name = it.take(24) },
-                        singleLine = true,
-                        colors = TextFieldDefaults.colors(
-                            focusedTextColor = Color(0xFF34332F),
-                            unfocusedTextColor = Color(0xFF34332F),
-                            focusedContainerColor = Color(0xFFF4F1EA),
-                            unfocusedContainerColor = Color(0xFFF4F1EA),
-                            focusedIndicatorColor = Color(0xFF746657),
-                            unfocusedIndicatorColor = Color(0xFF8B8982).copy(alpha = 0.28f),
-                            cursorColor = Color(0xFF746657)
-                        ),
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text("Tag Name", color = Color(0xFF34332F), style = MaterialTheme.typography.labelMedium)
+                        TextField(
+                            value = name,
+                            onValueChange = { name = it.take(24) },
+                            singleLine = true,
+                            colors = TextFieldDefaults.colors(
+                                focusedTextColor = Color(0xFF34332F),
+                                unfocusedTextColor = Color(0xFF34332F),
+                                focusedContainerColor = Color(0xFFF4F1EA),
+                                unfocusedContainerColor = Color(0xFFF4F1EA),
+                                focusedIndicatorColor = Color(0xFF746657),
+                                unfocusedIndicatorColor = Color(0xFF8B8982).copy(alpha = 0.28f),
+                                cursorColor = Color(0xFF746657)
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text("Tag Color", color = Color(0xFF34332F), style = MaterialTheme.typography.labelMedium)
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(Color(0xFFF4F1EA))
+                                .clickable { showTagColorPicker = true }
+                                .padding(horizontal = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Box(
+                                Modifier.size(28.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(Color(selectedColor.toInt()))
+                                    .border(1.dp, Color(0xFF34332F).copy(alpha = 0.16f), RoundedCornerShape(8.dp))
+                            )
+                            Text("Choose", color = Color(0xFF34332F), style = MaterialTheme.typography.bodyMedium)
+                        }
+                    }
                 }
 
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -398,6 +444,59 @@ fun TagManagementDialog(
             }
         }
     )
+
+    if (showTagColorPicker) {
+        NekOSAlertDialog(
+            frameColorArgb = launcherUiColorArgb,
+            onDismissRequest = { showTagColorPicker = false },
+            shape = RoundedCornerShape(28.dp),
+            containerColor = launcherSurface,
+            titleContentColor = Color(0xFF34332F),
+            textContentColor = Color(0xFF34332F),
+            title = { DialogTitleWithFrame(launcherUiColorArgb) { Text("Tag Color") } },
+            text = {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(3),
+                    modifier = Modifier.heightIn(max = 300.dp),
+                    contentPadding = PaddingValues(4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(TagColorOptions) { (name, colorValue) ->
+                        val selected = selectedColor == colorValue
+                        Column(
+                            Modifier.fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(Color(0xFFF4F1EA))
+                                .clickable {
+                                    selectedColor = colorValue
+                                    showTagColorPicker = false
+                                }
+                                .padding(10.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Box(
+                                Modifier.fillMaxWidth()
+                                    .height(42.dp)
+                                    .clip(RoundedCornerShape(9.dp))
+                                    .background(Color(colorValue.toInt()))
+                                    .border(
+                                        width = if (selected) 2.dp else 1.dp,
+                                        color = if (selected) Color(0xFF746657) else Color(0xFF34332F).copy(alpha = 0.16f),
+                                        shape = RoundedCornerShape(9.dp)
+                                    )
+                            )
+                            Text(name, color = Color(0xFF34332F), style = MaterialTheme.typography.labelMedium)
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showTagColorPicker = false }) { Text("Done") }
+            }
+        )
+    }
 
     if (showIconColorPicker) {
         NekOSAlertDialog(
