@@ -663,10 +663,6 @@ internal fun NekOSRoot(
         ) {
             popupApp?.let { app ->
                 val isInteractive = actionMenuApp != null
-                var popupContentWidth by remember(app.id) { mutableIntStateOf(0) }
-                val popupContentWidthDp = with(LocalDensity.current) {
-                    popupContentWidth.toDp()
-                }
                 val popupMaxWidth = maxWidth
                 val popupMaxHeight = with(LocalDensity.current) {
                     (constraints.maxHeight - popupNavigationBarInsetPx).coerceAtLeast(0).toDp()
@@ -688,8 +684,7 @@ internal fun NekOSRoot(
                 ) {
                     Column(
                         modifier = Modifier
-                            .onSizeChanged { popupContentWidth = it.width }
-                            .widthIn(max = minOf(210.dp, popupMaxWidth))
+                                .widthIn(max = minOf(210.dp, popupMaxWidth))
                             .heightIn(max = popupMaxHeight)
                             .verticalScroll(rememberScrollState())
                             .border(
