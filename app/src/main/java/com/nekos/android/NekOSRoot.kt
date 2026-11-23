@@ -710,7 +710,7 @@ fun NekOSRoot(
                             modifier = Modifier
                                 .align(Alignment.TopCenter)
                                 .width(popupContentWidthDp)
-                                .offset(x = (-20).dp, y = (-24).dp)
+                                .offset(y = (-24).dp)
                                 .zIndex(1f),
                             fitWidth = true
                         )
