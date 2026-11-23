@@ -100,7 +100,7 @@ internal fun NekOSAlertDialog(
                         }
                     }
                 }
-                TopFrame(Modifier.align(Alignment.TopCenter))
+                TopFrame(Modifier.align(Alignment.TopCenter).padding(horizontal = 10.dp))
             }
         }
     }
