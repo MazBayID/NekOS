@@ -980,7 +980,7 @@ internal fun NekOSRoot(
             NekOSAlertDialog(
                 topFrameColorArgb = launcherUiColorArgb,
                 onDismissRequest = { tagPendingDelete = null },
-                shape = RoundedCornerShape(28.dp),
+                shape = RoundedCornerShape(18.dp),
                 containerColor = launcherSurface,
                 titleContentColor = Ink,
                 textContentColor = Ink,
