@@ -250,7 +250,6 @@ fun TagManagementDialog(
 
     NekOSAlertDialog(
         frameColorArgb = launcherUiColorArgb,
-        frameHorizontalExpansion = 48.dp,
         onDismissRequest = onDismiss,
         shape = RoundedCornerShape(28.dp),
         containerColor = launcherSurface,
