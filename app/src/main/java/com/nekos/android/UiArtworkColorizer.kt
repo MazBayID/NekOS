@@ -7,25 +7,16 @@ import android.graphics.Color as AndroidColor
 import android.util.LruCache
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.requiredWidth
-import androidx.compose.foundation.layout.offset
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.IntSize
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlin.math.abs
-import kotlin.math.roundToInt
 
 internal data class LauncherUiColorOption(val name: String, val argb: Long)
 
@@ -177,92 +168,3 @@ internal fun ThemedUiArtworkImage(
     }
 }
 
-
-/**
- * Central calibration profiles for dialog frames.
- *
- * Add or tune profiles here; dialog layouts only select a profile.
- * Overhang is applied equally to the left and right sides.
- */
-internal object DialogFrameCalibration {
-    enum class Profile {
-        STANDARD,
-        TAG_TUTORIAL,
-        APP_ACTION
-    }
-
-    private fun overhangPerSide(profile: Profile): Dp = when (profile) {
-        Profile.STANDARD -> 20.dp
-        Profile.TAG_TUTORIAL -> 19.dp
-        Profile.APP_ACTION -> 10.dp
-    }
-
-    fun frameWidth(containerWidth: Dp, profile: Profile): Dp =
-        containerWidth + overhangPerSide(profile) * 2
-
-    fun frameHeight(frameWidth: Dp): Dp =
-        minOf(48.dp, frameWidth / 8f)
-}
-
-@Composable
-internal fun DialogFrameTop(
-    colorArgb: Long,
-    containerWidth: Dp,
-    modifier: Modifier = Modifier,
-    profile: DialogFrameCalibration.Profile = DialogFrameCalibration.Profile.STANDARD
-) {
-    val bitmap = rememberThemedUiArtwork(
-        R.drawable.dialog_frame_top,
-        colorArgb,
-        maxDimensionPx = 512
-    )
-    if (bitmap != null && containerWidth > 0.dp) {
-        val frameWidth = DialogFrameCalibration.frameWidth(containerWidth, profile)
-        val frameHeight = DialogFrameCalibration.frameHeight(frameWidth)
-        Canvas(
-            modifier = modifier
-                .requiredWidth(frameWidth)
-                .height(frameHeight)
-                .offset(y = -frameHeight / 2f)
-        ) {
-            val scale = size.height / 64f
-            val endWidth = 64f * scale
-            val crestWidth = 96f * scale
-            val lineBaseWidth = 144f * scale
-            val extraLineWidth = (
-                (size.width - endWidth * 2f - crestWidth - lineBaseWidth * 2f) / 2f
-            ).coerceAtLeast(0f)
-            val leftLineWidth = lineBaseWidth + extraLineWidth
-            val rightLineWidth = lineBaseWidth + extraLineWidth
-            var destinationX = 0f
-
-            fun drawSlice(sourceX: Int, sourceWidth: Int, destinationWidth: Float) {
-                val width = destinationWidth.roundToInt().coerceAtLeast(1)
-                drawImage(
-                    image = bitmap,
-                    srcOffset = IntOffset(sourceX, 0),
-                    srcSize = IntSize(sourceWidth, 64),
-                    dstOffset = IntOffset(destinationX.roundToInt(), 0),
-                    dstSize = IntSize(width, size.height.roundToInt().coerceAtLeast(1))
-                )
-                destinationX += destinationWidth
-            }
-
-            drawSlice(0, 64, endWidth)
-            drawSlice(64, 144, leftLineWidth)
-            drawSlice(208, 96, crestWidth)
-            drawSlice(304, 144, rightLineWidth)
-            drawSlice(448, 64, endWidth)
-        }
-    }
-}
-
-
-
-@Composable
-internal fun DialogTitleWithFrame(
-    colorArgb: Long,
-    content: @Composable () -> Unit
-) {
-    content()
-}
