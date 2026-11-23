@@ -178,11 +178,26 @@ internal fun ThemedUiArtworkImage(
 }
 
 
+/**
+ * Central calibration for every dialog frame.
+ *
+ * Adjust this single value after checking the frame against the actual UI.
+ * The overhang is applied equally to the left and right sides.
+ */
+internal object DialogFrameCalibration {
+    private val overhangPerSide = 16.dp
+
+    fun frameWidth(containerWidth: Dp): Dp =
+        containerWidth + overhangPerSide * 2
+
+    fun frameHeight(frameWidth: Dp): Dp =
+        minOf(48.dp, frameWidth / 8f)
+}
+
 @Composable
 internal fun DialogFrameTop(
     colorArgb: Long,
     containerWidth: Dp,
-    horizontalExpansion: Dp = 32.dp,
     modifier: Modifier = Modifier
 ) {
     val bitmap = rememberThemedUiArtwork(
@@ -191,8 +206,8 @@ internal fun DialogFrameTop(
         maxDimensionPx = 512
     )
     if (bitmap != null && containerWidth > 0.dp) {
-        val frameWidth = containerWidth + horizontalExpansion
-        val frameHeight = minOf(48.dp, frameWidth / 8f)
+        val frameWidth = DialogFrameCalibration.frameWidth(containerWidth)
+        val frameHeight = DialogFrameCalibration.frameHeight(frameWidth)
         Canvas(
             modifier = modifier
                 .requiredWidth(frameWidth)
