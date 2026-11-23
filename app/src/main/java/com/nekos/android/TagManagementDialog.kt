@@ -272,6 +272,7 @@ fun TagManagementDialog(
                             value = name,
                             onValueChange = { name = it.take(24) },
                             singleLine = true,
+                            textStyle = MaterialTheme.typography.bodySmall,
                             colors = TextFieldDefaults.colors(
                                 focusedTextColor = Color(0xFF34332F),
                                 unfocusedTextColor = Color(0xFF34332F),
@@ -364,6 +365,7 @@ fun TagManagementDialog(
                         onValueChange = { appSearch = it },
                         placeholder = { Text("Search apps or package") },
                         singleLine = true,
+                        textStyle = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.fillMaxWidth(),
                         colors = TextFieldDefaults.colors(
                             focusedTextColor = Color(0xFF34332F),
