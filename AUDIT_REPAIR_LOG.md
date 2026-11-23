@@ -22,6 +22,7 @@ One repair at a time: inspect current source -> make the smallest targeted chang
 | 4 | Harden background lifecycle cleanup for transient gestures/overlays | QUEUED | Pending | Reset only transient interaction state; preserve dialogs that should survive |
 | 5 | Harden icon cache/catalog validation | QUEUED | Pending | Validate disk bitmap dimensions and include density in catalog comparison |
 | 6 | Repair CI lint issue and run full relevant checks | QUEUED | Existing lint failure is `fillMaxWidth(1.02f)` at `NekOSRoot.kt:1217`; fix separately without mixing it into image changes. | Confirm debug/release lint and available tests pass |
+| 7 | Add build-time resource asset optimization pipeline (keep assets file-backed; no hardcoded bitmap arrays; safe format optimization) | QUEUED — added to Stage 1 | Scope recorded above; implementation not started. | Audit current drawable resources and Gradle setup; preserve originals and convert only assets that benefit from WebP/vector formats |
 
 ## Completed
 - Initial source-level audit and prioritization: completed 2026-11-23.
