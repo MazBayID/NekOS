@@ -463,6 +463,7 @@ fun NekOSRoot(
             iconCatalogRepository = iconCatalogRepository,
             iconBitmapCache = iconBitmapCache,
             homeSwipeThresholdPx = homeSwipeThresholdPx,
+            backgroundSignal = backgroundSignal,
             drawerProgress = drawerProgress,
             onDrawerDrag = { totalDrag ->
                 isDrawerDragging = true
@@ -954,6 +955,7 @@ private fun HomeScreen(
     iconCatalogRepository: IconCatalogRepository,
     iconBitmapCache: AppIconBitmapCache,
     homeSwipeThresholdPx: Float,
+    backgroundSignal: Int,
     drawerProgress: State<Float>,
     onDrawerDrag: (Float) -> Unit,
     onDrawerDragEnd: (totalDrag: Float, velocityY: Float, cancelled: Boolean) -> Unit,
