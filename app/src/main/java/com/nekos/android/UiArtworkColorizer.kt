@@ -182,6 +182,7 @@ internal fun ThemedUiArtworkImage(
 internal fun DialogFrameTop(
     colorArgb: Long,
     containerWidth: Dp,
+    horizontalExpansion: Dp = 32.dp,
     modifier: Modifier = Modifier
 ) {
     val bitmap = rememberThemedUiArtwork(
@@ -190,7 +191,7 @@ internal fun DialogFrameTop(
         maxDimensionPx = 512
     )
     if (bitmap != null && containerWidth > 0.dp) {
-        val frameWidth = containerWidth + 32.dp
+        val frameWidth = containerWidth + horizontalExpansion
         val frameHeight = minOf(48.dp, frameWidth / 8f)
         Canvas(
             modifier = modifier

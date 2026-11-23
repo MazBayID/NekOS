@@ -421,6 +421,7 @@ internal fun NekOSSettingsDialog(
                     DialogFrameTop(
                         colorArgb = launcherUiColor,
                         containerWidth = surfaceWidth,
+                        horizontalExpansion = 52.dp,
                         modifier = Modifier
                             .align(Alignment.TopCenter)
                             .zIndex(1f)
