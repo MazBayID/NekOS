@@ -251,7 +251,7 @@ internal fun NekOSSettingsDialog(
                             "sage" to "Soft sage",
                             "mist" to "Cool mist"
                         ).forEach { (key, label) ->
-                            val selected = backgroundPreset == key
+                            val selected = selectedBuiltInWallpaper == null && !hasWallpaper && backgroundPreset == key
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -334,7 +334,7 @@ internal fun NekOSSettingsDialog(
                         if (hasWallpaper) {
                             SettingsActionCard(
                                 title = "Remove photo",
-                                description = "Return to the selected background color.",
+                                description = "Return to your selected built-in wallpaper or background color.",
                                 action = "Remove",
                                 onClick = onClearWallpaper
                             )
