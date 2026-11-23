@@ -126,16 +126,16 @@ internal fun NekOSSettingsDialog(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .widthIn(max = 420.dp)
-                    .padding(horizontal = 14.dp)
+                    .widthIn(max = 392.dp)
+                    .padding(horizontal = 18.dp)
                     .padding(top = 10.dp)
             ) {
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 6.dp)
+                        .padding(horizontal = 8.dp)
                         .padding(top = 32.dp)
-                        .heightIn(max = availableDialogHeight * 0.84f - 12.dp),
+                        .heightIn(max = availableDialogHeight * 0.78f - 10.dp),
                     shape = RoundedCornerShape(22.dp),
                     color = surfaceColor,
                     tonalElevation = 6.dp,
@@ -144,8 +144,8 @@ internal fun NekOSSettingsDialog(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(start = 16.dp, end = 16.dp, top = 30.dp, bottom = 8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                            .padding(start = 13.dp, end = 13.dp, top = 28.dp, bottom = 6.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -167,13 +167,13 @@ internal fun NekOSSettingsDialog(
                                     SettingsPage.LAUNCHER_THEME -> "Launcher theme"
                                 },
                                 color = SettingsInk,
-                                fontSize = 20.sp,
+                                fontSize = 18.sp,
                                 fontWeight = FontWeight.SemiBold
                             )
                         }
         Column(
                 modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 when (page) {
                     SettingsPage.MAIN -> {
@@ -235,7 +235,7 @@ internal fun NekOSSettingsDialog(
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .defaultMinSize(minHeight = 48.dp)
+                                    .defaultMinSize(minHeight = 40.dp)
                                     .clip(SettingsCardShape)
                                     .background(nekosBackgroundColor(key))
                                     .border(
@@ -248,11 +248,11 @@ internal fun NekOSSettingsDialog(
                                         role = Role.RadioButton,
                                         onClick = { onBackgroundPresetChange(key) }
                                     )
-                                    .padding(horizontal = 14.dp, vertical = 11.dp),
+                                    .padding(horizontal = 11.dp, vertical = 8.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text(label, color = SettingsInk, fontSize = 14.sp,
+                                Text(label, color = SettingsInk, fontSize = 13.sp,
                                     fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal)
                                 if (selected) Text("✓", color = SettingsAccent, fontSize = 17.sp, fontWeight = FontWeight.Bold)
                             }
@@ -275,7 +275,7 @@ internal fun NekOSSettingsDialog(
                                         role = Role.RadioButton,
                                         onClick = { onBuiltInWallpaperChange(option.key) }
                                     )
-                                    .padding(9.dp),
+                                    .padding(7.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
@@ -336,7 +336,7 @@ internal fun NekOSSettingsDialog(
                                                 role = Role.RadioButton,
                                                 onClick = { onLauncherThemeChange(option.key) }
                                             )
-                                            .padding(horizontal = 11.dp, vertical = 10.dp),
+                                            .padding(horizontal = 9.dp, vertical = 7.dp),
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
@@ -370,13 +370,13 @@ internal fun NekOSSettingsDialog(
                                                 role = Role.RadioButton,
                                                 onClick = { onLauncherUiColorChange(option.argb) }
                                             )
-                                            .padding(horizontal = 7.dp, vertical = 8.dp),
+                                            .padding(horizontal = 6.dp, vertical = 6.dp),
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                                     ) {
                                         Box(
                                             Modifier
-                                                .size(20.dp)
+                                                .size(17.dp)
                                                 .clip(RoundedCornerShape(50))
                                                 .background(Color(option.argb))
                                                 .border(1.dp, SettingsInk.copy(alpha = 0.12f), RoundedCornerShape(50))
@@ -414,7 +414,7 @@ internal fun NekOSSettingsDialog(
                 }
                 TopFrame(
                     colorArgb = launcherUiColor,
-                    modifier = Modifier.align(Alignment.TopCenter).offset(y = (-2).dp).padding(horizontal = 6.dp)
+                    modifier = Modifier.align(Alignment.TopCenter).offset(y = (-1).dp).padding(horizontal = 8.dp)
                 )
             }
         }
@@ -439,13 +439,13 @@ private fun BuiltInWallpaperPreview(
             contentDescription = label,
             contentScale = ContentScale.Crop,
             modifier = Modifier
-                .size(width = 72.dp, height = 88.dp)
+                .size(width = 60.dp, height = 72.dp)
                 .clip(RoundedCornerShape(10.dp))
         )
     } else {
         Box(
             modifier = Modifier
-                .size(width = 92.dp, height = 112.dp)
+                .size(width = 60.dp, height = 72.dp)
                 .clip(RoundedCornerShape(10.dp))
                 .background(SettingsInk.copy(alpha = 0.08f))
         )
@@ -462,12 +462,12 @@ private fun SettingsNavigationCard(
 ) {
     Row(
         modifier = modifier
-            .defaultMinSize(minHeight = 60.dp)
+            .defaultMinSize(minHeight = 50.dp)
             .clip(SettingsCardShape)
             .background(SettingsInk.copy(alpha = 0.025f))
             .border(1.dp, SettingsBorder, SettingsCardShape)
             .clickable(onClick = onClick)
-            .padding(horizontal = 10.dp, vertical = 9.dp),
+            .padding(horizontal = 8.dp, vertical = 7.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(9.dp)
     ) {
@@ -493,7 +493,7 @@ private fun SettingsActionCard(
             .background(SettingsInk.copy(alpha = 0.025f))
             .border(1.dp, SettingsBorder, SettingsCardShape)
             .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 10.dp),
+            .padding(horizontal = 10.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
