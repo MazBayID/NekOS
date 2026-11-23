@@ -411,7 +411,7 @@ internal fun NekOSSettingsDialog(
                         }
                     }
                 }
-                TopFrame(Modifier.align(Alignment.TopCenter))
+                TopFrame(Modifier.align(Alignment.TopCenter).padding(horizontal = 6.dp))
             }
         }
     }
