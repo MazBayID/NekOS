@@ -228,5 +228,6 @@ internal fun hasSameAppCatalog(current: List<InstalledApp>, refreshed: List<Inst
         old.id == new.id &&
             old.label == new.label &&
             old.componentName == new.componentName &&
-            old.iconVersion == new.iconVersion
+            old.iconVersion == new.iconVersion &&
+            old.iconDensityDpi == new.iconDensityDpi
     }
