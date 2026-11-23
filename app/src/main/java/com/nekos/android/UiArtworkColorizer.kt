@@ -237,7 +237,7 @@ internal fun DialogTitleWithFrame(
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .requiredWidth(maxWidth + 48.dp)
-                .offset(y = (-24).dp)
+                .offset(y = (-48).dp)
                 .zIndex(1f)
         )
     }
