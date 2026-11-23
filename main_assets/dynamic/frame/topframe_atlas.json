@@ -1,0 +1,99 @@
+{
+ "height_1x": 64,
+ "fixed_widths_1x": {
+  "cap": 32,
+  "head": 60
+ },
+ "stretch_part": "bar_tile (diulang/di-stretch horizontal)",
+ "layout": "left_cap | bar(stretch) | head | bar(stretch) | right_cap",
+ "formula": "bar_width = (total_width - 2*cap - head) / 2",
+ "sheets": {
+  "1x": {
+   "file": "topframe_spritesheet.png",
+   "frames": {
+    "left_cap": {
+     "x": 0,
+     "y": 0,
+     "w": 32,
+     "h": 64
+    },
+    "bar_tile": {
+     "x": 34,
+     "y": 0,
+     "w": 4,
+     "h": 64
+    },
+    "head": {
+     "x": 40,
+     "y": 0,
+     "w": 60,
+     "h": 64
+    },
+    "right_cap": {
+     "x": 102,
+     "y": 0,
+     "w": 32,
+     "h": 64
+    }
+   }
+  },
+  "2x": {
+   "file": "topframe_spritesheet@2x.png",
+   "frames": {
+    "left_cap": {
+     "x": 0,
+     "y": 0,
+     "w": 64,
+     "h": 128
+    },
+    "bar_tile": {
+     "x": 68,
+     "y": 0,
+     "w": 8,
+     "h": 128
+    },
+    "head": {
+     "x": 80,
+     "y": 0,
+     "w": 120,
+     "h": 128
+    },
+    "right_cap": {
+     "x": 204,
+     "y": 0,
+     "w": 64,
+     "h": 128
+    }
+   }
+  },
+  "4x": {
+   "file": "topframe_spritesheet@4x.png",
+   "frames": {
+    "left_cap": {
+     "x": 0,
+     "y": 0,
+     "w": 128,
+     "h": 256
+    },
+    "bar_tile": {
+     "x": 136,
+     "y": 0,
+     "w": 16,
+     "h": 256
+    },
+    "head": {
+     "x": 160,
+     "y": 0,
+     "w": 240,
+     "h": 256
+    },
+    "right_cap": {
+     "x": 408,
+     "y": 0,
+     "w": 128,
+     "h": 256
+    }
+   }
+  }
+ }
+}
