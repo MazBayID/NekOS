@@ -11,21 +11,14 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.zIndex
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.window.Dialog
@@ -37,8 +30,6 @@ import androidx.compose.ui.unit.dp
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 internal fun NekOSAlertDialog(
-    frameColorArgb: Long = DEFAULT_LAUNCHER_UI_COLOR,
-    frameProfile: DialogFrameCalibration.Profile = DialogFrameCalibration.Profile.STANDARD,
     onDismissRequest: () -> Unit,
     shape: Shape = RoundedCornerShape(28.dp),
     containerColor: Color = Color(0xFFFFFBFE),
@@ -61,8 +52,6 @@ internal fun NekOSAlertDialog(
             contentAlignment = Alignment.Center
         ) {
             val availableDialogHeight = maxHeight
-            var surfaceWidthPx by remember { mutableIntStateOf(0) }
-            val surfaceWidth = with(LocalDensity.current) { surfaceWidthPx.toDp() }
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -75,7 +64,7 @@ internal fun NekOSAlertDialog(
                         .fillMaxWidth()
                         .padding(horizontal = 10.dp)
                         .heightIn(max = availableDialogHeight * 0.88f - 16.dp)
-                        .onSizeChanged { surfaceWidthPx = it.width },
+,
                     shape = shape,
                     color = containerColor,
                     tonalElevation = 6.dp,
@@ -110,16 +99,6 @@ internal fun NekOSAlertDialog(
                             confirmButton()
                         }
                     }
-                }
-                if (surfaceWidthPx > 0) {
-                    DialogFrameTop(
-                        colorArgb = frameColorArgb,
-                        containerWidth = surfaceWidth,
-                        profile = frameProfile,
-                        modifier = Modifier
-                            .align(Alignment.TopCenter)
-                            .zIndex(1f)
-                    )
                 }
             }
         }
