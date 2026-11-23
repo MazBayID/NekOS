@@ -28,7 +28,7 @@ One repair at a time: inspect current source -> make the smallest targeted chang
 - Initial source-level audit and prioritization: completed 2026-11-23.
 - Repairs 1–3: bounded icon/artwork decoding and startup logo downsampling are implemented; CI #520 passed APK build, unit tests, lint, and emulator UI tests. Physical-device visual verification remains outstanding.
 - Repair 6: the existing width-range lint error is fixed without removing the intentional logo bleed; CI #520 lint passed.
-- Stage 7 review: confirmed AAPT2 is already the build-time PNG resource compiler/cruncher for `res` assets. No duplicate custom crunch task was added. The 100 raw icon assets need a separate lossless WebP benchmark before conversion.
+- Stage 7 review: confirmed AAPT2 is already the build-time PNG resource compiler/cruncher for `res` assets. No duplicate custom crunch task was added. A local lossless WebP benchmark script is now available; no icon source assets have been changed.
 
 ## References
 - Android Developers, Optimize bitmap images in Jetpack Compose: https://developer.android.com/develop/ui/compose/graphics/images/optimization
@@ -50,5 +50,5 @@ One repair at a time: inspect current source -> make the smallest targeted chang
 - [x] Android CI: remove `--no-daemon` from both Gradle invocations so the job can reuse its Gradle daemon between build/test and emulator test steps.
 - [x] Release: switch to enhanced Gradle cache, reduce timeout to 35 minutes, and restore default shallow checkout because release validation only compares the tag name with app version; no git history is used.
 - [x] Keep build, unit tests, and lint in one runner/job. Splitting them into parallel runners would duplicate JDK/SDK setup and Gradle configuration/cache work, increasing total billed minutes. No matrix is used, so `fail-fast` is not applicable.
-- [x] Workflow syntax and cache setup were exercised by CI #520; APK build, unit tests, and lint passed. Emulator UI tests are still running at the time of this update.
+- [x] CI #520 completed successfully: APK build, unit tests, lint, Compose UI tests on Android emulator, and debug APK artifact upload all passed.
 - References: GitHub Actions dependency caching and workflow syntax; Gradle Actions setup-gradle v6 documentation.
