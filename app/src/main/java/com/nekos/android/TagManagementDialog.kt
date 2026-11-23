@@ -293,7 +293,7 @@ fun TagManagementDialog(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(38.dp)
+                                .height(44.dp)
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(Color(0xFFF4F1EA))
                                 .clickable { showTagColorPicker = true }
@@ -341,7 +341,7 @@ fun TagManagementDialog(
                             }
                             val selected = selectedIcon == icon.id
                             Box(
-                                Modifier.size(38.dp).clip(RoundedCornerShape(10.dp))
+                                Modifier.size(44.dp).clip(RoundedCornerShape(12.dp))
                                     .background(if (selected) Color(0xFFE7E1D6) else Color(0xFFF4F1EA))
                                     .border(
                                         if (selected) 2.dp else 1.dp,
