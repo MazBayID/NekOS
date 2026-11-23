@@ -104,7 +104,7 @@ fun TagAppsDialog(
     NekOSAlertDialog(
         topFrameColorArgb = launcherUiColorArgb,
         onDismissRequest = onDismiss,
-        shape = RoundedCornerShape(28.dp),
+        shape = RoundedCornerShape(22.dp),
         containerColor = launcherSurface,
         titleContentColor = Color(0xFF34332F),
         textContentColor = Color(0xFF34332F),
@@ -112,7 +112,7 @@ fun TagAppsDialog(
             Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Box(Modifier.size(12.dp).clip(CircleShape).background(tagColor))
                     Text(
@@ -123,7 +123,7 @@ fun TagAppsDialog(
                 }
         },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
                     text = "${assignedApps.size} ${if (assignedApps.size == 1) "app" else "apps"}",
                     style = MaterialTheme.typography.labelMedium,
@@ -134,7 +134,7 @@ fun TagAppsDialog(
                         modifier = Modifier.fillMaxWidth()
                             .clip(RoundedCornerShape(18.dp))
                             .background(Color(0xFFF4F1EA))
-                            .padding(horizontal = 20.dp, vertical = 28.dp),
+                            .padding(horizontal = 14.dp, vertical = 18.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
@@ -146,7 +146,7 @@ fun TagAppsDialog(
                         )
                     }
                 } else {
-                    LazyColumn(Modifier.heightIn(max = 300.dp)) {
+                    LazyColumn(Modifier.heightIn(max = 240.dp)) {
                         items(assignedApps, key = { it.id }) { app ->
                             Row(
                                 modifier = Modifier.fillMaxWidth()
@@ -292,7 +292,7 @@ fun TagManagementDialog(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(56.dp)
+                                .height(44.dp)
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(Color(0xFFF4F1EA))
                                 .clickable { showTagColorPicker = true }
@@ -301,7 +301,7 @@ fun TagManagementDialog(
                             horizontalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
                             Box(
-                                Modifier.size(28.dp)
+                                Modifier.size(24.dp)
                                     .clip(RoundedCornerShape(8.dp))
                                     .background(Color(selectedColor.toInt()))
                                     .border(1.dp, Color(0xFF34332F).copy(alpha = 0.16f), RoundedCornerShape(8.dp))
@@ -340,7 +340,7 @@ fun TagManagementDialog(
                             }
                             val selected = selectedIcon == icon.id
                             Box(
-                                Modifier.size(52.dp).clip(RoundedCornerShape(12.dp))
+                                Modifier.size(44.dp).clip(RoundedCornerShape(12.dp))
                                     .background(if (selected) Color(0xFFE7E1D6) else Color(0xFFF4F1EA))
                                     .border(
                                         if (selected) 2.dp else 1.dp,
@@ -382,13 +382,13 @@ fun TagManagementDialog(
                             modifier = Modifier.padding(vertical = 12.dp)
                         )
                     } else {
-                        LazyColumn(Modifier.heightIn(max = 180.dp)) {
+                        LazyColumn(Modifier.heightIn(max = 150.dp)) {
                             items(filteredApps, key = { it.id }) { app ->
                                 Row(
                                     Modifier.fillMaxWidth().clickable {
                                         selectedPackages = if (app.id in selectedPackages) selectedPackages - app.id
                                         else selectedPackages + app.id
-                                    }.padding(vertical = 6.dp),
+                                    }.padding(vertical = 4.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Checkbox(
@@ -456,9 +456,9 @@ fun TagManagementDialog(
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(3),
                     modifier = Modifier.heightIn(max = 300.dp),
-                    contentPadding = PaddingValues(4.dp),
+                    contentPadding = PaddingValues(2.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     items(TagColorOptions) { (name, colorValue) ->
                         val selected = selectedColor == colorValue
@@ -470,13 +470,13 @@ fun TagManagementDialog(
                                     selectedColor = colorValue
                                     showTagColorPicker = false
                                 }
-                                .padding(10.dp),
+                                .padding(6.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             Box(
                                 Modifier.fillMaxWidth()
-                                    .height(42.dp)
+                                    .height(34.dp)
                                     .clip(RoundedCornerShape(9.dp))
                                     .background(Color(colorValue.toInt()))
                                     .border(
@@ -528,7 +528,7 @@ fun TagManagementDialog(
                             horizontalArrangement = Arrangement.spacedBy(7.dp)
                         ) {
                             Box(
-                                Modifier.size(22.dp)
+                                Modifier.size(18.dp)
                                     .clip(CircleShape)
                                     .background(Color(colorValue.toInt()))
                                     .border(
