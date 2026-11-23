@@ -8,6 +8,7 @@ import android.graphics.PorterDuff
 import android.graphics.Rect
 import android.graphics.RectF
 import android.os.Bundle
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.Message
@@ -16,6 +17,7 @@ import java.lang.ref.WeakReference
 import android.os.RemoteException
 import android.view.SurfaceHolder
 import android.view.SurfaceView
+import androidx.annotation.RequiresApi
 
 /**
  * Supplies the icon surface expected by Android's gesture-to-Home contract.
@@ -23,6 +25,7 @@ import android.view.SurfaceView
  * The view is placed over the Favorite icon in Compose coordinates. System UI
  * receives the same destination rectangle plus this SurfaceView's SurfaceControl.
  */
+@RequiresApi(Build.VERSION_CODES.Q)
 internal class GestureNavSurfaceView(context: Context) : SurfaceView(context), SurfaceHolder.Callback {
     private var iconBitmap: Bitmap? = null
     private var destination: RectF? = null
