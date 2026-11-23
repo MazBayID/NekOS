@@ -93,7 +93,6 @@ internal fun NekOSSettingsDialog(
     launcherThemeKey: String,
     launcherUiColor: Long,
     onLauncherThemeChange: (String) -> Unit,
-    launcherUiColor: Long,
     onLauncherUiColorChange: (Long) -> Unit,
     hasWallpaper: Boolean,
     selectedBuiltInWallpaper: String?,
