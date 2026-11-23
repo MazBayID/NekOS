@@ -108,162 +108,63 @@ fun TagAppsDialog(
         title = {
             DialogTitleWithFrame(launcherUiColorArgb) {
                 Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Box(
-                    Modifier.size(12.dp).clip(CircleShape).background(tagColor)
-                )
-                Text(
-                    text = tag.name,
-                    modifier = Modifier.weight(1f),
-                    style = MaterialTheme.typography.titleLarge
-                )
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Box(Modifier.size(12.dp).clip(CircleShape).background(tagColor))
+                    Text(
+                        text = tag.name,
+                        modifier = Modifier.weight(1f),
+                        style = MaterialTheme.typography.titleLarge
+                    )
                 }
             }
         },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                TagEditorSection(title = "TAG IDENTITY", description = "Give this group a clear name.") {
-                    TextField(
-                        value = name,
-                        onValueChange = { name = it.take(24) },
-                        label = { Text("Tag name") },
-                        singleLine = true,
-                        colors = TextFieldDefaults.colors(
-                            focusedTextColor = Color(0xFF34332F),
-                            unfocusedTextColor = Color(0xFF34332F),
-                            focusedContainerColor = Color(0xFFF4F1EA),
-                            unfocusedContainerColor = Color(0xFFF4F1EA),
-                            focusedIndicatorColor = Color(0xFF746657),
-                            unfocusedIndicatorColor = Color(0xFF8B8982).copy(alpha = 0.28f),
-                            focusedLabelColor = Color(0xFF746657),
-                            unfocusedLabelColor = Color(0xFF8B8982),
-                            cursorColor = Color(0xFF746657)
-                        ),
+                Text(
+                    text = "${assignedApps.size} ${if (assignedApps.size == 1) "app" else "apps"}",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = Color(0xFF8B8982)
+                )
+                if (assignedApps.isEmpty()) {
+                    Column(
                         modifier = Modifier.fillMaxWidth()
-                    )
-                }
-
-                TagEditorSection(title = "APPEARANCE", description = "Choose a tag color and icon.") {
-                    Text("Tag color", color = Color(0xFF706B63), style = MaterialTheme.typography.labelMedium)
-                    Row(
-                        modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                            .clip(RoundedCornerShape(18.dp))
+                            .background(Color(0xFFF4F1EA))
+                            .padding(horizontal = 20.dp, vertical = 28.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        TagColors.forEach { color ->
-                            val colorValue = color.toArgb().toLong() and 0xFFFFFFFFL
-                            val selected = selectedColor == colorValue
-                            Box(
-                                Modifier.size(44.dp).clip(CircleShape)
-                                    .clickable { selectedColor = colorValue },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Box(
-                                    Modifier.size(30.dp).clip(CircleShape).background(color)
-                                        .border(
-                                            width = if (selected) 2.dp else 1.dp,
-                                            color = if (selected) Color(0xFF746657) else Color(0xFF34332F).copy(alpha = 0.16f),
-                                            shape = CircleShape
-                                        ),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    if (selected) Text("✓", color = Color(0xFF34332F))
-                                }
-                            }
-                        }
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            Modifier.size(40.dp).clip(RoundedCornerShape(11.dp))
-                                .background(Color(0xFFF0EEE8))
-                                .clickable { showIconPicker = true }
-                                .semantics {
-                                    contentDescription = "Choose tag icon"
-                                    role = Role.Button
-                                },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            if (selectedIconBitmap != null) {
-                                Image(selectedIconBitmap!!, contentDescription = selectedIconEntry?.name,
-                                    modifier = Modifier.fillMaxSize().padding(5.dp))
-                            } else {
-                                Text("＋", color = Color(0xFF746657))
-                            }
-                        }
-                        Column(Modifier.weight(1f).padding(start = 10.dp)) {
-                            Text(selectedIconEntry?.name ?: "No icon selected",
-                                color = Color(0xFF34332F), style = MaterialTheme.typography.bodyMedium)
-                            Text("Tag icon", color = Color(0xFF8B8982), style = MaterialTheme.typography.labelSmall)
-                        }
-                        TextButton(onClick = { showIconColorPicker = true }) { Text("Icon color") }
-                        TextButton(onClick = { selectedIcon = null }) { Text("Clear") }
-                    }
-                }
-
-                TagEditorSection(
-                    title = "APP ASSIGNMENT",
-                    description = "${selectedPackages.size} selected · ${apps.size} available"
-                ) {
-                    TextField(
-                        value = appSearch,
-                        onValueChange = { appSearch = it },
-                        placeholder = { Text("Search apps or package") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = TextFieldDefaults.colors(
-                            focusedTextColor = Color(0xFF34332F),
-                            unfocusedTextColor = Color(0xFF34332F),
-                            focusedContainerColor = Color(0xFFF4F1EA),
-                            unfocusedContainerColor = Color(0xFFF4F1EA),
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent,
-                            cursorColor = Color(0xFF746657)
+                        Text("No apps in this tag", color = Color(0xFF34332F))
+                        Text(
+                            "Edit this tag to add applications.",
+                            color = Color(0xFF8B8982),
+                            style = MaterialTheme.typography.bodySmall
                         )
-                    )
-                    if (filteredApps.isEmpty()) {
-                        Text("No matching apps", color = Color(0xFF8B8982),
-                            modifier = Modifier.padding(vertical = 12.dp))
-                    } else {
-                        LazyColumn(Modifier.heightIn(max = 180.dp)) {
-                            items(filteredApps, key = { it.id }) { app ->
-                                Row(
-                                    Modifier.fillMaxWidth().clickable {
-                                        selectedPackages = if (app.id in selectedPackages) selectedPackages - app.id
-                                        else selectedPackages + app.id
-                                    }.padding(vertical = 6.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Checkbox(
-                                        checked = app.id in selectedPackages,
-                                        onCheckedChange = { checked ->
-                                            selectedPackages = if (checked) selectedPackages + app.id
-                                            else selectedPackages - app.id
-                                        },
-                                        colors = CheckboxDefaults.colors(
-                                            checkedColor = Color(0xFF746657),
-                                            uncheckedColor = Color(0xFF8B8982),
-                                            checkmarkColor = Color.White
-                                        )
-                                    )
-                                    TagAppIcon(app, iconBitmapCache)
-                                    Column(Modifier.weight(1f).padding(start = 10.dp)) {
-                                        Text(app.label, color = Color(0xFF34332F), maxLines = 1)
-                                        Text(
-                                            if (app.isInCurrentProfile) "Personal profile" else "Work profile",
-                                            color = Color(0xFF8B8982),
-                                            style = MaterialTheme.typography.labelSmall
-                                        )
-                                    }
-                                }
+                    }
+                } else {
+                    LazyColumn(Modifier.heightIn(max = 300.dp)) {
+                        items(assignedApps, key = { it.id }) { app ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth()
+                                    .clickable { onLaunch(app) }
+                                    .padding(vertical = 7.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                TagAppIcon(app, iconBitmapCache)
+                                Text(
+                                    app.label,
+                                    color = Color(0xFF34332F),
+                                    modifier = Modifier.weight(1f).padding(start = 10.dp),
+                                    maxLines = 1
+                                )
                             }
                         }
                     }
                 }
             }
-        }
         },
         confirmButton = { TextButton(onClick = onEdit) { Text("Edit tag") } },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Close") } }
@@ -364,128 +265,147 @@ fun TagManagementDialog(
         title = { DialogTitleWithFrame(launcherUiColorArgb) { Text(if (tag == null) "Create tag" else "Edit tag") } },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                TextField(
-                    value = name,
-                    onValueChange = { name = it.take(24) },
-                    label = { Text("Tag name") },
-                    singleLine = true,
-                    colors = TextFieldDefaults.colors(
-                        focusedTextColor = Color(0xFF34332F),
-                        unfocusedTextColor = Color(0xFF34332F),
-                        focusedContainerColor = Color(0xFFF4F1EA),
-                        unfocusedContainerColor = Color(0xFFF4F1EA),
-                        focusedIndicatorColor = Color(0xFF746657),
-                        unfocusedIndicatorColor = Color(0xFF8B8982).copy(alpha = 0.28f),
-                        focusedLabelColor = Color(0xFF746657),
-                        unfocusedLabelColor = Color(0xFF8B8982),
-                        cursorColor = Color(0xFF746657)
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Text("Color", style = MaterialTheme.typography.labelMedium)
-                Row(
-                    modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    TagColors.forEach { color ->
-                        val colorValue = color.toArgb().toLong() and 0xFFFFFFFFL
-                        val selected = selectedColor == colorValue
-                        Box(
-                            Modifier.size(48.dp)
-                                .clip(CircleShape)
-                                .clickable { selectedColor = colorValue },
-                            contentAlignment = Alignment.Center
-                        ) {
+                TagEditorSection(title = "TAG IDENTITY", description = "Give this group a clear name.") {
+                    TextField(
+                        value = name,
+                        onValueChange = { name = it.take(24) },
+                        label = { Text("Tag name") },
+                        singleLine = true,
+                        colors = TextFieldDefaults.colors(
+                            focusedTextColor = Color(0xFF34332F),
+                            unfocusedTextColor = Color(0xFF34332F),
+                            focusedContainerColor = Color(0xFFF4F1EA),
+                            unfocusedContainerColor = Color(0xFFF4F1EA),
+                            focusedIndicatorColor = Color(0xFF746657),
+                            unfocusedIndicatorColor = Color(0xFF8B8982).copy(alpha = 0.28f),
+                            focusedLabelColor = Color(0xFF746657),
+                            unfocusedLabelColor = Color(0xFF8B8982),
+                            cursorColor = Color(0xFF746657)
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
+                TagEditorSection(title = "APPEARANCE", description = "Choose a tag color and icon.") {
+                    Text("Tag color", color = Color(0xFF706B63), style = MaterialTheme.typography.labelMedium)
+                    Row(
+                        modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        TagColors.forEach { color ->
+                            val colorValue = color.toArgb().toLong() and 0xFFFFFFFFL
+                            val selected = selectedColor == colorValue
                             Box(
-                                Modifier.size(32.dp)
-                                    .clip(CircleShape)
-                                    .background(color)
-                                    .border(
-                                        width = if (selected) 2.dp else 1.dp,
-                                        color = if (selected) Color(0xFF746657) else Color(0xFF34332F).copy(alpha = 0.16f),
-                                        shape = CircleShape
-                                    ),
+                                Modifier.size(44.dp).clip(CircleShape)
+                                    .clickable { selectedColor = colorValue },
                                 contentAlignment = Alignment.Center
                             ) {
-                                if (selected) Text("✓", color = Color(0xFF34332F))
+                                Box(
+                                    Modifier.size(30.dp).clip(CircleShape).background(color)
+                                        .border(
+                                            width = if (selected) 2.dp else 1.dp,
+                                            color = if (selected) Color(0xFF746657) else Color(0xFF34332F).copy(alpha = 0.16f),
+                                            shape = CircleShape
+                                        ),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    if (selected) Text("✓", color = Color(0xFF34332F))
+                                }
                             }
                         }
                     }
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        Modifier.size(38.dp).clip(RoundedCornerShape(11.dp))
-                            .background(Color(0xFFF0EEE8))
-                            .clickable { showIconPicker = true }
-                            .semantics {
-                                contentDescription = "Choose tag icon"
-                                role = Role.Button
-                            },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (selectedIconBitmap != null) {
-                            Image(selectedIconBitmap!!, contentDescription = selectedIconEntry?.name, modifier = Modifier.fillMaxSize().padding(5.dp))
-                        } else {
-                            Text("＋", color = Color(0xFF746657))
-                        }
-                    }
-                    Column(Modifier.weight(1f).padding(start = 9.dp)) {
-                        Text(selectedIconEntry?.name ?: "No icon selected", color = Color(0xFF34332F), style = MaterialTheme.typography.bodyMedium)
-                        Text("Tag icon", color = Color(0xFF8B8982), style = MaterialTheme.typography.labelSmall)
-                    }
-                    TextButton(onClick = { showIconColorPicker = true }) { Text("Icon Color") }
-                    TextButton(onClick = { selectedIcon = null }) { Text("Clear") }
-                }
-                Text("Apps (${selectedPackages.size} selected)", style = MaterialTheme.typography.labelMedium)
-                TextField(
-                    value = appSearch,
-                    onValueChange = { appSearch = it },
-                    placeholder = { Text("Search apps or package") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = TextFieldDefaults.colors(
-                        focusedTextColor = Color(0xFF34332F),
-                        unfocusedTextColor = Color(0xFF34332F),
-                        focusedContainerColor = Color(0xFFF4F1EA),
-                        unfocusedContainerColor = Color(0xFFF4F1EA),
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                        cursorColor = Color(0xFF746657)
-                    )
-                )
-                if (filteredApps.isEmpty()) {
-                    Text("No matching apps", color = Color(0xFF8B8982), modifier = Modifier.padding(vertical = 12.dp))
-                } else {
-                    LazyColumn(Modifier.heightIn(max = 160.dp)) {
-                        items(filteredApps, key = { it.id }) { app ->
-                            Row(
-                                Modifier.fillMaxWidth().clickable {
-                                    selectedPackages = if (app.id in selectedPackages) selectedPackages - app.id
-                                    else selectedPackages + app.id
-                                }.padding(vertical = 5.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Checkbox(
-                                    checked = app.id in selectedPackages,
-                                    onCheckedChange = { checked ->
-                                        selectedPackages = if (checked) selectedPackages + app.id
-                                        else selectedPackages - app.id
-                                    },
-                                    colors = CheckboxDefaults.colors(
-                                        checkedColor = Color(0xFF746657),
-                                        uncheckedColor = Color(0xFF8B8982),
-                                        checkmarkColor = Color.White
-                                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            Modifier.size(40.dp).clip(RoundedCornerShape(11.dp))
+                                .background(Color(0xFFF0EEE8))
+                                .clickable { showIconPicker = true }
+                                .semantics {
+                                    contentDescription = "Choose tag icon"
+                                    role = Role.Button
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (selectedIconBitmap != null) {
+                                Image(
+                                    selectedIconBitmap!!,
+                                    contentDescription = selectedIconEntry?.name,
+                                    modifier = Modifier.fillMaxSize().padding(5.dp)
                                 )
-                                TagAppIcon(app, iconBitmapCache)
-                                Column(Modifier.weight(1f).padding(start = 9.dp)) {
-                                    Text(app.label, color = Color(0xFF34332F), maxLines = 1)
-                                    Text(
-                                        if (app.isInCurrentProfile) "Personal profile" else "Work profile",
-                                        color = Color(0xFF8B8982),
-                                        style = MaterialTheme.typography.labelSmall
+                            } else {
+                                Text("＋", color = Color(0xFF746657))
+                            }
+                        }
+                        Column(Modifier.weight(1f).padding(start = 10.dp)) {
+                            Text(
+                                selectedIconEntry?.name ?: "No icon selected",
+                                color = Color(0xFF34332F),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Text("Tag icon", color = Color(0xFF8B8982), style = MaterialTheme.typography.labelSmall)
+                        }
+                        TextButton(onClick = { showIconColorPicker = true }) { Text("Icon color") }
+                        TextButton(onClick = { selectedIcon = null }) { Text("Clear") }
+                    }
+                }
+
+                TagEditorSection(
+                    title = "APP ASSIGNMENT",
+                    description = "${selectedPackages.size} selected · ${apps.size} available"
+                ) {
+                    TextField(
+                        value = appSearch,
+                        onValueChange = { appSearch = it },
+                        placeholder = { Text("Search apps or package") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = TextFieldDefaults.colors(
+                            focusedTextColor = Color(0xFF34332F),
+                            unfocusedTextColor = Color(0xFF34332F),
+                            focusedContainerColor = Color(0xFFF4F1EA),
+                            unfocusedContainerColor = Color(0xFFF4F1EA),
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent,
+                            cursorColor = Color(0xFF746657)
+                        )
+                    )
+                    if (filteredApps.isEmpty()) {
+                        Text(
+                            "No matching apps",
+                            color = Color(0xFF8B8982),
+                            modifier = Modifier.padding(vertical = 12.dp)
+                        )
+                    } else {
+                        LazyColumn(Modifier.heightIn(max = 180.dp)) {
+                            items(filteredApps, key = { it.id }) { app ->
+                                Row(
+                                    Modifier.fillMaxWidth().clickable {
+                                        selectedPackages = if (app.id in selectedPackages) selectedPackages - app.id
+                                        else selectedPackages + app.id
+                                    }.padding(vertical = 6.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Checkbox(
+                                        checked = app.id in selectedPackages,
+                                        onCheckedChange = { checked ->
+                                            selectedPackages = if (checked) selectedPackages + app.id
+                                            else selectedPackages - app.id
+                                        },
+                                        colors = CheckboxDefaults.colors(
+                                            checkedColor = Color(0xFF746657),
+                                            uncheckedColor = Color(0xFF8B8982),
+                                            checkmarkColor = Color.White
+                                        )
                                     )
+                                    TagAppIcon(app, iconBitmapCache)
+                                    Column(Modifier.weight(1f).padding(start = 10.dp)) {
+                                        Text(app.label, color = Color(0xFF34332F), maxLines = 1)
+                                        Text(
+                                            if (app.isInCurrentProfile) "Personal profile" else "Work profile",
+                                            color = Color(0xFF8B8982),
+                                            style = MaterialTheme.typography.labelSmall
+                                        )
+                                    }
                                 }
                             }
                         }
