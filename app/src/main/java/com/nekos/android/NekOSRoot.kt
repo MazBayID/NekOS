@@ -682,8 +682,10 @@ internal fun NekOSRoot(
                         }
                         .widthIn(max = minOf(210.dp, popupMaxWidth))
                 ) {
+                    Box(modifier = Modifier.fillMaxWidth()) {
                     Column(
                         modifier = Modifier
+                                .padding(top = 32.dp)
                                 .widthIn(max = minOf(210.dp, popupMaxWidth))
                             .heightIn(max = popupMaxHeight)
                             .verticalScroll(rememberScrollState())
@@ -720,6 +722,8 @@ internal fun NekOSRoot(
                             launcherSurface = launcherSurface,
                             uiColorArgb = launcherUiColorArgb
                         )
+                    }
+                    TopFrame(Modifier.align(Alignment.TopCenter))
                     }
                 }
             }
