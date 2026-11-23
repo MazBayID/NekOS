@@ -129,14 +129,14 @@ internal fun NekOSSettingsDialog(
                     .fillMaxWidth()
                     .widthIn(max = 420.dp)
                     .padding(horizontal = 14.dp)
-                    .padding(top = 16.dp)
+                    .padding(top = 10.dp)
             ) {
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 10.dp)
-                        .heightIn(max = availableDialogHeight * 0.88f - 16.dp),
-                    shape = RoundedCornerShape(28.dp),
+                        .padding(horizontal = 6.dp)
+                        .heightIn(max = availableDialogHeight * 0.84f - 12.dp),
+                    shape = RoundedCornerShape(22.dp),
                     color = surfaceColor,
                     tonalElevation = 6.dp,
                     shadowElevation = 12.dp
@@ -144,8 +144,8 @@ internal fun NekOSSettingsDialog(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(start = 22.dp, end = 22.dp, top = 38.dp, bottom = 12.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                            .padding(start = 16.dp, end = 16.dp, top = 30.dp, bottom = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -173,7 +173,7 @@ internal fun NekOSSettingsDialog(
                         }
         Column(
                 modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(13.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 when (page) {
                     SettingsPage.MAIN -> {
@@ -183,11 +183,6 @@ internal fun NekOSSettingsDialog(
                                 iconRes = R.drawable.nekos_ui_wallpaper,
                                 iconColorArgb = launcherUiColor,
                                 title = "Wallpaper",
-                                description = when {
-                                    hasWallpaper -> "Custom image"
-                                    selectedBuiltInWallpaper != null -> "Built-in wallpaper"
-                                    else -> "Color or photo"
-                                },
                                 onClick = { page = SettingsPage.WALLPAPER }
                             )
                             SettingsNavigationCard(
@@ -195,7 +190,6 @@ internal fun NekOSSettingsDialog(
                                 iconRes = R.drawable.nekos_ui_palette,
                                 iconColorArgb = launcherUiColor,
                                 title = "Launcher theme",
-                                description = LauncherThemeOptions.first { it.key == launcherThemeKey }.label,
                                 onClick = { page = SettingsPage.LAUNCHER_THEME }
                             )
                         }
@@ -203,17 +197,11 @@ internal fun NekOSSettingsDialog(
                         SettingsSectionTitle("HOME BEHAVIOR")
                         SettingsActionCard(
                             title = "Default launcher",
-                            description = if (isDefaultLauncher) {
-                                "NekOS is your default Home app. You can choose another launcher."
-                            } else {
-                                "Choose which app opens when you press the Home button."
-                            },
-                            action = "Choose",
+                            action = if (isDefaultLauncher) "Active" else "Choose",
                             onClick = onSetAsHome
                         )
                         SettingsActionCard(
                             title = "Gesture hints",
-                            description = "Review the gesture that opens the App Drawer.",
                             action = "View",
                             onClick = onShowDrawerHint
                         )
@@ -230,8 +218,6 @@ internal fun NekOSSettingsDialog(
                         ) {
                             Text("NekOS", color = SettingsInk, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                             Text("Version $appVersion", color = SettingsMuted, fontSize = 12.sp)
-                            Text("Licensed under the MIT License.", color = SettingsMuted, fontSize = 12.sp)
-                            Text("Copyright © 2026 MazBayID (Bayu Dirgantara)", color = SettingsMuted, fontSize = 12.sp)
                             TextButton(onClick = onOpenRepository) {
                                 Text("GitHub repository", color = SettingsAccent, fontWeight = FontWeight.SemiBold)
                             }
@@ -239,12 +225,6 @@ internal fun NekOSSettingsDialog(
                     }
 
                     SettingsPage.WALLPAPER -> {
-                        Text(
-                            "Preview and apply a built-in wallpaper, choose a background color, or use your own photo.",
-                            color = SettingsMuted,
-                            fontSize = 12.sp,
-                            lineHeight = 17.sp
-                        )
                         SettingsSectionTitle("BACKGROUND COLOR")
                         listOf(
                             "warm" to "Warm paper",
@@ -313,11 +293,6 @@ internal fun NekOSSettingsDialog(
                                         fontSize = 14.sp,
                                         fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium
                                     )
-                                    Text(
-                                        if (selected) "Currently selected" else "Tap to preview and apply",
-                                        color = SettingsMuted,
-                                        fontSize = 11.sp
-                                    )
                                 }
                                 if (selected) {
                                     Text("✓", color = SettingsAccent, fontSize = 20.sp, fontWeight = FontWeight.Bold)
@@ -327,14 +302,12 @@ internal fun NekOSSettingsDialog(
                         SettingsSectionTitle("YOUR PHOTO")
                         SettingsActionCard(
                             title = if (hasWallpaper) "Change wallpaper" else "Choose from gallery",
-                            description = if (hasWallpaper) "Select another image for your Home screen." else "Use one of your photos as the Home background.",
                             action = "Choose",
                             onClick = onChooseWallpaper
                         )
                         if (hasWallpaper) {
                             SettingsActionCard(
                                 title = "Remove photo",
-                                description = "Return to your selected built-in wallpaper or background color.",
                                 action = "Remove",
                                 onClick = onClearWallpaper
                             )
@@ -342,12 +315,6 @@ internal fun NekOSSettingsDialog(
                     }
 
                     SettingsPage.LAUNCHER_THEME -> {
-                        Text(
-                            "Choose the launcher surface palette and the shared color for UI icons, the tag frame, and the NekOS logo.",
-                            color = SettingsMuted,
-                            fontSize = 12.sp,
-                            lineHeight = 17.sp
-                        )
                         SettingsSectionTitle("COLOR PALETTE")
                         LauncherThemeOptions.chunked(2).forEach { pair ->
                             Row(horizontalArrangement = Arrangement.spacedBy(9.dp)) {
@@ -383,12 +350,6 @@ internal fun NekOSSettingsDialog(
                         }
 
                         SettingsSectionTitle("SHARED UI COLOR")
-                        Text(
-                            "One color is applied to every UI icon, the tag frame, and text_logo_sec. Tag icons keep their own color setting.",
-                            color = SettingsMuted,
-                            fontSize = 12.sp,
-                            lineHeight = 17.sp
-                        )
                         LauncherUiColorOptions.chunked(3).forEach { pair ->
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 pair.forEach { option ->
@@ -500,33 +461,31 @@ private fun SettingsNavigationCard(
     iconRes: Int,
     iconColorArgb: Long,
     title: String,
-    description: String,
     onClick: () -> Unit
 ) {
-    Column(
+    Row(
         modifier = modifier
-            .defaultMinSize(minHeight = 104.dp)
+            .defaultMinSize(minHeight = 60.dp)
             .clip(SettingsCardShape)
             .background(SettingsInk.copy(alpha = 0.025f))
             .border(1.dp, SettingsBorder, SettingsCardShape)
             .clickable(onClick = onClick)
-            .padding(12.dp),
-        verticalArrangement = Arrangement.spacedBy(7.dp)
+            .padding(horizontal = 10.dp, vertical = 9.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(9.dp)
     ) {
         ThemedUiArtworkImage(
             resourceId = iconRes,
             colorArgb = iconColorArgb,
-            modifier = Modifier.size(28.dp)
+            modifier = Modifier.size(23.dp)
         )
-        Text(title, color = SettingsInk, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
-        Text(description, color = SettingsMuted, fontSize = 11.sp, lineHeight = 14.sp)
+        Text(title, color = SettingsInk, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, maxLines = 2)
     }
 }
 
 @Composable
 private fun SettingsActionCard(
     title: String,
-    description: String,
     action: String,
     onClick: () -> Unit
 ) {
@@ -537,14 +496,12 @@ private fun SettingsActionCard(
             .background(SettingsInk.copy(alpha = 0.025f))
             .border(1.dp, SettingsBorder, SettingsCardShape)
             .clickable(onClick = onClick)
-            .padding(horizontal = 13.dp, vertical = 13.dp),
+            .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-            Text(title, color = SettingsInk, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-            Text(description, color = SettingsMuted, fontSize = 11.sp, lineHeight = 15.sp)
-        }
+        Text(title, color = SettingsInk, fontWeight = FontWeight.SemiBold, fontSize = 13.sp,
+            modifier = Modifier.weight(1f))
         Text(action, color = SettingsAccent, fontWeight = FontWeight.SemiBold, fontSize = 12.sp)
     }
 }
