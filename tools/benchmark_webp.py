@@ -4,7 +4,12 @@
 Run from the repository root:
     python tools/benchmark_webp.py
 
-Requires Pillow with WebP support:
+Requires Pillow with WebP support.
+
+On Termux, prefer the native package to avoid a slow source build:
+    pkg install python-pillow
+
+On desktop Python:
     python -m pip install --user Pillow
 """
 
@@ -19,7 +24,11 @@ from pathlib import Path
 try:
     from PIL import Image, features
 except ImportError:
-    print("Pillow is required. Install it with: python -m pip install --user Pillow", file=sys.stderr)
+    print("Pillow is required.", file=sys.stderr)
+    if "/com.termux/" in str(Path.home()):
+        print("On Termux, install the native package with: pkg install python-pillow", file=sys.stderr)
+    else:
+        print("Install it with: python -m pip install --user Pillow", file=sys.stderr)
     raise SystemExit(2)
 
 
