@@ -978,6 +978,7 @@ internal fun NekOSRoot(
 
         tagPendingDelete?.let { tag ->
             NekOSAlertDialog(
+                topFrameColorArgb = launcherUiColorArgb,
                 onDismissRequest = { tagPendingDelete = null },
                 shape = RoundedCornerShape(28.dp),
                 containerColor = launcherSurface,
@@ -1001,6 +1002,7 @@ internal fun NekOSRoot(
 
         if (showFirstLaunchTip) {
             NekOSAlertDialog(
+                topFrameColorArgb = launcherUiColorArgb,
                 onDismissRequest = {
                     preferences.edit().putBoolean("has_seen_drawer_tip", true).apply()
                     showFirstLaunchTip = false
