@@ -102,6 +102,7 @@ fun TagAppsDialog(
     val tagColor = Color(tag.colorArgb.toInt())
 
     NekOSAlertDialog(
+        topFrameColorArgb = launcherUiColorArgb,
         onDismissRequest = onDismiss,
         shape = RoundedCornerShape(28.dp),
         containerColor = launcherSurface,
@@ -183,6 +184,7 @@ fun TagActionsDialog(
     onDismiss: () -> Unit
 ) {
     NekOSAlertDialog(
+        topFrameColorArgb = launcherUiColorArgb,
         onDismissRequest = onDismiss,
         shape = RoundedCornerShape(28.dp),
         containerColor = launcherSurface,
@@ -245,6 +247,7 @@ fun TagManagementDialog(
     }
 
     NekOSAlertDialog(
+        topFrameColorArgb = launcherUiColorArgb,
         onDismissRequest = onDismiss,
         shape = RoundedCornerShape(28.dp),
         containerColor = launcherSurface,
@@ -442,6 +445,7 @@ fun TagManagementDialog(
 
     if (showTagColorPicker) {
         NekOSAlertDialog(
+            topFrameColorArgb = launcherUiColorArgb,
             onDismissRequest = { showTagColorPicker = false },
             shape = RoundedCornerShape(28.dp),
             containerColor = launcherSurface,
@@ -494,6 +498,7 @@ fun TagManagementDialog(
 
     if (showIconColorPicker) {
         NekOSAlertDialog(
+            topFrameColorArgb = launcherUiColorArgb,
             onDismissRequest = { showIconColorPicker = false },
             shape = RoundedCornerShape(28.dp),
             containerColor = launcherSurface,
