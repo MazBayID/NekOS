@@ -124,66 +124,145 @@ fun TagAppsDialog(
         },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(
-                    text = "${assignedApps.size} ${if (assignedApps.size == 1) "app" else "apps"}",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = Color(0xFF8B8982)
-                )
-
-                if (assignedApps.isEmpty()) {
-                    Column(
+                TagEditorSection(title = "TAG IDENTITY", description = "Give this group a clear name.") {
+                    TextField(
+                        value = name,
+                        onValueChange = { name = it.take(24) },
+                        label = { Text("Tag name") },
+                        singleLine = true,
+                        colors = TextFieldDefaults.colors(
+                            focusedTextColor = Color(0xFF34332F),
+                            unfocusedTextColor = Color(0xFF34332F),
+                            focusedContainerColor = Color(0xFFF4F1EA),
+                            unfocusedContainerColor = Color(0xFFF4F1EA),
+                            focusedIndicatorColor = Color(0xFF746657),
+                            unfocusedIndicatorColor = Color(0xFF8B8982).copy(alpha = 0.28f),
+                            focusedLabelColor = Color(0xFF746657),
+                            unfocusedLabelColor = Color(0xFF8B8982),
+                            cursorColor = Color(0xFF746657)
+                        ),
                         modifier = Modifier.fillMaxWidth()
-                            .clip(RoundedCornerShape(18.dp))
-                            .background(Color(0xFFF4F1EA))
-                            .padding(horizontal = 20.dp, vertical = 28.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    )
+                }
+
+                TagEditorSection(title = "APPEARANCE", description = "Choose a tag color and icon.") {
+                    Text("Tag color", color = Color(0xFF706B63), style = MaterialTheme.typography.labelMedium)
+                    Row(
+                        modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
+                        TagColors.forEach { color ->
+                            val colorValue = color.toArgb().toLong() and 0xFFFFFFFFL
+                            val selected = selectedColor == colorValue
+                            Box(
+                                Modifier.size(44.dp).clip(CircleShape)
+                                    .clickable { selectedColor = colorValue },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Box(
+                                    Modifier.size(30.dp).clip(CircleShape).background(color)
+                                        .border(
+                                            width = if (selected) 2.dp else 1.dp,
+                                            color = if (selected) Color(0xFF746657) else Color(0xFF34332F).copy(alpha = 0.16f),
+                                            shape = CircleShape
+                                        ),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    if (selected) Text("✓", color = Color(0xFF34332F))
+                                }
+                            }
+                        }
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(
-                            Modifier.size(42.dp).clip(CircleShape).background(tagColor),
+                            Modifier.size(40.dp).clip(RoundedCornerShape(11.dp))
+                                .background(Color(0xFFF0EEE8))
+                                .clickable { showIconPicker = true }
+                                .semantics {
+                                    contentDescription = "Choose tag icon"
+                                    role = Role.Button
+                                },
                             contentAlignment = Alignment.Center
                         ) {
-                            Text("＋", color = Color(0xFF34332F), style = MaterialTheme.typography.titleLarge)
+                            if (selectedIconBitmap != null) {
+                                Image(selectedIconBitmap!!, contentDescription = selectedIconEntry?.name,
+                                    modifier = Modifier.fillMaxSize().padding(5.dp))
+                            } else {
+                                Text("＋", color = Color(0xFF746657))
+                            }
                         }
-                        Text(
-                            "No apps in this tag yet",
-                            style = MaterialTheme.typography.titleSmall,
-                            color = Color(0xFF34332F)
-                        )
-                        Text(
-                            "Edit this tag to add your apps.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color(0xFF8B8982)
-                        )
+                        Column(Modifier.weight(1f).padding(start = 10.dp)) {
+                            Text(selectedIconEntry?.name ?: "No icon selected",
+                                color = Color(0xFF34332F), style = MaterialTheme.typography.bodyMedium)
+                            Text("Tag icon", color = Color(0xFF8B8982), style = MaterialTheme.typography.labelSmall)
+                        }
+                        TextButton(onClick = { showIconColorPicker = true }) { Text("Icon color") }
+                        TextButton(onClick = { selectedIcon = null }) { Text("Clear") }
                     }
-                } else {
-                    LazyColumn(
-                        modifier = Modifier.heightIn(max = 360.dp),
-                        verticalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        items(assignedApps, key = { it.id }) { app ->
-                            Row(
-                                modifier = Modifier.fillMaxWidth()
-                                    .clip(RoundedCornerShape(14.dp))
-                                    .background(Color(0xFFF7F5F0))
-                                    .clickable { onLaunch(app) }
-                                    .padding(horizontal = 12.dp, vertical = 10.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                TagAppIcon(app = app, iconBitmapCache = iconBitmapCache)
-                                Text(
-                                    text = app.label,
-                                    modifier = Modifier.weight(1f),
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = Color(0xFF34332F),
-                                    maxLines = 1
-                                )
+                }
+
+                TagEditorSection(
+                    title = "APP ASSIGNMENT",
+                    description = "${selectedPackages.size} selected · ${apps.size} available"
+                ) {
+                    TextField(
+                        value = appSearch,
+                        onValueChange = { appSearch = it },
+                        placeholder = { Text("Search apps or package") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = TextFieldDefaults.colors(
+                            focusedTextColor = Color(0xFF34332F),
+                            unfocusedTextColor = Color(0xFF34332F),
+                            focusedContainerColor = Color(0xFFF4F1EA),
+                            unfocusedContainerColor = Color(0xFFF4F1EA),
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent,
+                            cursorColor = Color(0xFF746657)
+                        )
+                    )
+                    if (filteredApps.isEmpty()) {
+                        Text("No matching apps", color = Color(0xFF8B8982),
+                            modifier = Modifier.padding(vertical = 12.dp))
+                    } else {
+                        LazyColumn(Modifier.heightIn(max = 180.dp)) {
+                            items(filteredApps, key = { it.id }) { app ->
+                                Row(
+                                    Modifier.fillMaxWidth().clickable {
+                                        selectedPackages = if (app.id in selectedPackages) selectedPackages - app.id
+                                        else selectedPackages + app.id
+                                    }.padding(vertical = 6.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Checkbox(
+                                        checked = app.id in selectedPackages,
+                                        onCheckedChange = { checked ->
+                                            selectedPackages = if (checked) selectedPackages + app.id
+                                            else selectedPackages - app.id
+                                        },
+                                        colors = CheckboxDefaults.colors(
+                                            checkedColor = Color(0xFF746657),
+                                            uncheckedColor = Color(0xFF8B8982),
+                                            checkmarkColor = Color.White
+                                        )
+                                    )
+                                    TagAppIcon(app, iconBitmapCache)
+                                    Column(Modifier.weight(1f).padding(start = 10.dp)) {
+                                        Text(app.label, color = Color(0xFF34332F), maxLines = 1)
+                                        Text(
+                                            if (app.isInCurrentProfile) "Personal profile" else "Work profile",
+                                            color = Color(0xFF8B8982),
+                                            style = MaterialTheme.typography.labelSmall
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
                 }
             }
+        }
         },
         confirmButton = { TextButton(onClick = onEdit) { Text("Edit tag") } },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Close") } }
@@ -539,4 +618,27 @@ fun TagManagementDialog(
         )
     }
 
+}
+
+@Composable
+private fun TagEditorSection(
+    title: String,
+    description: String,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(Color(0xFFF9F7F2))
+            .border(1.dp, Color(0xFF34332F).copy(alpha = 0.10f), RoundedCornerShape(16.dp))
+            .padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(9.dp)
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(title, color = Color(0xFF706B63), style = MaterialTheme.typography.labelSmall,
+                letterSpacing = 1.1.sp)
+            Text(description, color = Color(0xFF8B8982), style = MaterialTheme.typography.bodySmall)
+        }
+        content()
+    }
 }
