@@ -40,6 +40,20 @@ internal fun isValidCatalogIconPath(path: String): Boolean {
         }
 }
 
+/** Rejects incomplete or malformed entries before they enter the icon picker. */
+internal fun isValidCatalogIconEntry(
+    id: Int,
+    file: String,
+    name: String,
+    row: Int,
+    column: Int
+): Boolean =
+    id > 0 &&
+        isValidCatalogIconPath(file) &&
+        name.isNotBlank() &&
+        row > 0 &&
+        column > 0
+
 /**
  * Reads the tag-icon catalog bundled under assets/ikon.
  * The JSON index is the source of truth; images are decoded only when requested.
@@ -75,18 +89,22 @@ class IconCatalogRepository(context: Context) {
             for (index in 0 until items.length()) {
                 val item = items.getJSONObject(index)
                 val file = item.getString("file")
-                require(isValidCatalogIconPath(file)) {
-                    "Invalid catalog asset path: $file"
+                val id = item.getInt("id")
+                val name = item.getString("name")
+                val row = item.optInt("row")
+                val column = item.optInt("column")
+                require(isValidCatalogIconEntry(id, file, name, row, column)) {
+                    "Invalid catalog icon entry: id=$id, file=$file, name=$name, row=$row, column=$column"
                 }
                 add(
                     CatalogIcon(
-                        id = item.getInt("id"),
+                        id = id,
                         file = file,
-                        name = item.getString("name"),
+                        name = name,
                         visual = item.optString("visual"),
                         description = item.optString("description"),
-                        row = item.optInt("row"),
-                        column = item.optInt("column")
+                        row = row,
+                        column = column
                     )
                 )
             }
@@ -94,6 +112,9 @@ class IconCatalogRepository(context: Context) {
 
         require(icons.map { it.id }.distinct().size == icons.size) {
             "Catalog icon IDs must be unique"
+        }
+        require(icons.map { it.file }.distinct().size == icons.size) {
+            "Catalog icon asset paths must be unique"
         }
         cachedIcons = icons
         return icons
