@@ -57,12 +57,6 @@ android {
         }
     }
 
-    sourceSets {
-        getByName("main") {
-            assets.srcDir("../main_assets/dynamic/top_frame")
-        }
-    }
-
     buildFeatures {
         compose = true
     }
