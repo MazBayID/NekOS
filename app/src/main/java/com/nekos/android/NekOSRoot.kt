@@ -1828,7 +1828,11 @@ private fun TagFrame(
     colorArgb: Long,
     modifier: Modifier = Modifier
 ) {
-    val frameBitmap = rememberThemedUiArtwork(R.drawable.tag_frame_spritesheet, colorArgb)
+    val frameBitmap = rememberThemedUiArtwork(
+        R.drawable.tag_frame_spritesheet,
+        colorArgb,
+        maxDimensionPx = 512
+    )
     if (frameBitmap != null) Canvas(modifier = modifier) {
         val widthPx = size.width
         val scale = widthPx / 512f
