@@ -1,7 +1,7 @@
 # NekOS
 
 <p align="center">
-  <img src="main_assets/NekOS_text_logo.webp" alt="NekOS" width="260">
+  <img src="docs/NekOS.png" alt="NekOS" width="260">
 </p>
 
 <p align="center">
