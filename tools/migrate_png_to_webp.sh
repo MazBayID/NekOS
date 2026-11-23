@@ -57,8 +57,16 @@ for source in "${PNG_FILES[@]}"; do
     exit 1
   fi
 
-  TOTAL_PNG=$((TOTAL_PNG + $(stat -c '%s' "$source")))
-  TOTAL_WEBP=$((TOTAL_WEBP + $(stat -c '%s' "$output")))
+  source_size=$(wc -c < "$source")
+  output_size=$(wc -c < "$output")
+  if ((output_size >= source_size)); then
+    echo "GAGAL: WebP tidak lebih kecil dari PNG: $relative ($source_size -> $output_size bytes)" >&2
+    echo "Tidak ada file sumber yang diubah atau dihapus." >&2
+    exit 1
+  fi
+
+  TOTAL_PNG=$((TOTAL_PNG + source_size))
+  TOTAL_WEBP=$((TOTAL_WEBP + output_size))
 done
 
 echo "Semua ${#PNG_FILES[@]} gambar lolos verifikasi piksel."
