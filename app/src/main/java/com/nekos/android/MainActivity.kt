@@ -1,5 +1,6 @@
 package com.nekos.android
 
+import android.app.ActivityManager
 import android.content.BroadcastReceiver
 import android.content.Intent
 import android.content.IntentFilter
@@ -8,8 +9,10 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.os.Process
 import android.os.SystemClock
 import android.os.UserHandle
+import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
@@ -21,7 +24,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 
@@ -34,11 +36,7 @@ class MainActivity : ComponentActivity() {
     private var homeSignal by mutableIntStateOf(0)
     /** Bumped when the launcher stops being visible so transient drawer UI can reset. */
     private var backgroundSignal by mutableIntStateOf(0)
-    /** Bumped when NekOS returns to the foreground after another activity was shown. */
-    private var homeReturnSignal by mutableIntStateOf(0)
-    /** Parsed once from the system's gesture-to-Home intent; consumed by the next stage. */
-    private var pendingGestureNavContract by mutableStateOf<GestureNavContractData?>(null)
-    private var isForcedRefreshPending = false
+remove activity state    private var isForcedRefreshPending = false
     private var stoppedAtElapsedMillis = 0L
     private val mainHandler = Handler(Looper.getMainLooper())
     private val refreshInstalledAppsRunnable = Runnable {
@@ -101,8 +99,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onStart() {
         super.onStart()
-        // Prepare the Home return animation as soon as the launcher becomes visible.
-        if (stoppedAtElapsedMillis != 0L) homeReturnSignal++
         if (!isPackageCallbackRegistered) {
             launcherApps.registerCallback(packageCallback, Handler(Looper.getMainLooper()))
             isPackageCallbackRegistered = true
@@ -138,6 +134,7 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onStop() {
+        Log.i(LIFECYCLE_TAG, "onStop pid=${Process.myPid()}")
         stoppedAtElapsedMillis = SystemClock.elapsedRealtime()
         backgroundSignal++
         mainHandler.removeCallbacks(refreshInstalledAppsRunnable)
@@ -173,7 +170,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        pendingGestureNavContract = GestureNavContractData.fromIntent(intent)
         // Pressing Home while NekOS is open returns to a clean Home screen.
         if (intent.hasCategory(Intent.CATEGORY_HOME)) {
             homeSignal++
@@ -186,7 +182,7 @@ class MainActivity : ComponentActivity() {
         val isRestoredActivity = savedInstanceState != null
         installSplashScreen()
         super.onCreate(savedInstanceState)
-        pendingGestureNavContract = GestureNavContractData.fromIntent(intent)
+        logProcessDiagnostics(savedInstanceState != null)
         WindowCompat.setDecorFitsSystemWindows(window, false)
         window.statusBarColor = android.graphics.Color.TRANSPARENT
         window.navigationBarColor = android.graphics.Color.TRANSPARENT
@@ -202,13 +198,6 @@ class MainActivity : ComponentActivity() {
                         resumeToken = resumeRefreshToken,
                         homeSignal = homeSignal,
                         backgroundSignal = backgroundSignal,
-                        homeReturnSignal = homeReturnSignal,
-                        gestureNavContract = pendingGestureNavContract,
-                        onGestureNavContractFinished = { finishedContract ->
-                            if (pendingGestureNavContract == finishedContract) {
-                                pendingGestureNavContract = null
-                            }
-                        },
                         skipStartupSplash = isRestoredActivity
                     )
                 }
@@ -216,7 +205,37 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onDestroy() {
+        Log.i(
+            LIFECYCLE_TAG,
+            "onDestroy pid=${Process.myPid()} finishing=$isFinishing changingConfigurations=$isChangingConfigurations"
+        )
+        super.onDestroy()
+    }
+
+    private fun logProcessDiagnostics(isRestoredActivity: Boolean) {
+        Log.i(LIFECYCLE_TAG, "onCreate pid=${Process.myPid()} restored=$isRestoredActivity")
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val activityManager = getSystemService(ActivityManager::class.java)
+            runCatching {
+                activityManager.getHistoricalProcessExitReasons(packageName, 0, 5)
+            }.onSuccess { exits ->
+                exits.forEach { exit ->
+                    Log.i(
+                        LIFECYCLE_TAG,
+                        "previousExit pid=${exit.pid} reason=${exit.reason} " +
+                            "importance=${exit.importance} timestamp=${exit.timestamp} " +
+                            "pssKb=${exit.pss} description=${exit.description}"
+                    )
+                }
+            }.onFailure { error ->
+                Log.w(LIFECYCLE_TAG, "Unable to read process exit history", error)
+            }
+        }
+    }
+
     private companion object {
         const val LONG_ABSENCE_MILLIS = 30_000L
+        const val LIFECYCLE_TAG = "NekOSLifecycle"
     }
 }

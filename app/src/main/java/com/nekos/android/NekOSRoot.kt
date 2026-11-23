@@ -17,7 +17,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
@@ -93,8 +92,6 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.asAndroidBitmap
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -135,10 +132,7 @@ internal fun NekOSRoot(
     resumeToken: Int = 0,
     homeSignal: Int = 0,
     backgroundSignal: Int = 0,
-    homeReturnSignal: Int = 0,
-    gestureNavContract: GestureNavContractData? = null,
-    onGestureNavContractFinished: (GestureNavContractData) -> Unit = {},
-    skipStartupSplash: Boolean = false
+remove root contract parameters    skipStartupSplash: Boolean = false
 ) {
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
@@ -163,7 +157,7 @@ internal fun NekOSRoot(
 
     // Discover launchable apps while the brand splash is visible instead of
     // waiting for an artificial timer before starting initialization.
-    LaunchedEffect(refreshToken, resumeToken) {
+    LaunchedEffect(refreshToken) {
         val refreshedCatalog = try {
             withContext(Dispatchers.IO) {
                 loadLaunchableApps(context)
@@ -178,8 +172,7 @@ internal fun NekOSRoot(
             return@LaunchedEffect
         }
         val refreshedApps = refreshedCatalog.apps
-        // A resume-only refresh that found the same apps keeps the current list, so decoded
-        // icons are reused and Favorite icons do not re-animate every time Home is shown.
+        // This effect runs only for initial load or a real package/profile refresh.
         if (refreshToken != lastAppliedRefreshToken || !hasSameAppCatalog(apps, refreshedApps)) {
             apps = refreshedApps
         }
@@ -235,37 +228,6 @@ internal fun NekOSRoot(
     val interactionController = remember { LauncherInteractionController() }
     var favoriteDrag by remember { mutableStateOf<LauncherDragSession?>(null) }
     val favoriteSlotBounds = remember { mutableStateMapOf<Int, Rect>() }
-    val gestureTargetApp = remember(gestureNavContract, apps) {
-        gestureNavContract?.let { request ->
-            apps.firstOrNull { app ->
-                app.componentName == request.componentName && app.user == request.user
-            }
-        }
-    }
-    val gestureFavoriteIndex = remember(gestureTargetApp, favoritePackages) {
-        gestureTargetApp?.let { favoritePackages.indexOf(it.id) } ?: -1
-    }
-    var gestureIconBitmap by remember { mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null) }
-    val currentOnGestureNavContractFinished by rememberUpdatedState(onGestureNavContractFinished)
-    LaunchedEffect(gestureNavContract, gestureTargetApp, gestureFavoriteIndex) {
-        gestureIconBitmap = null
-        val request = gestureNavContract ?: return@LaunchedEffect
-        val targetApp = gestureTargetApp
-        if (
-            targetApp == null ||
-            gestureFavoriteIndex !in favoritePackages.indices ||
-            favoritePackages[gestureFavoriteIndex] != targetApp.id
-        ) {
-            currentOnGestureNavContractFinished(request)
-            return@LaunchedEffect
-        }
-        val bitmap = iconBitmapCache.getOrLoad(targetApp)
-        if (bitmap == null) {
-            currentOnGestureNavContractFinished(request)
-        } else {
-            gestureIconBitmap = bitmap
-        }
-    }
     var cancelDropBounds by remember { mutableStateOf<Rect?>(null) }
     var tagEditorTarget by remember { mutableStateOf<NekTag?>(null) }
     var viewingTag by remember { mutableStateOf<NekTag?>(null) }
@@ -514,7 +476,6 @@ internal fun NekOSRoot(
             iconBitmapCache = iconBitmapCache,
             homeSwipeThresholdPx = homeSwipeThresholdPx,
             backgroundSignal = backgroundSignal,
-            homeReturnSignal = homeReturnSignal,
             drawerProgress = drawerProgress,
             onDrawerDrag = { totalDrag ->
                 isDrawerDragging = true
@@ -593,65 +554,6 @@ internal fun NekOSRoot(
                 }
             }
         )
-
-        val activeGestureContract = gestureNavContract
-        val activeGestureBitmap = gestureIconBitmap
-        val favoriteBounds = favoriteSlotBounds[gestureFavoriteIndex]
-        val gestureIconBounds = favoriteBounds?.let { bounds ->
-            val halfIconSize = with(LocalDensity.current) { 25.dp.toPx() }
-            Rect(
-                left = bounds.center.x - halfIconSize,
-                top = bounds.center.y - halfIconSize,
-                right = bounds.center.x + halfIconSize,
-                bottom = bounds.center.y + halfIconSize
-            )
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && activeGestureContract != null && activeGestureBitmap != null && gestureIconBounds != null) {
-            key(activeGestureContract) {
-                AndroidView(
-                    factory = { viewContext ->
-                        GestureNavSurfaceView(viewContext).apply {
-                            configure(
-                                bitmap = activeGestureBitmap.asAndroidBitmap(),
-                                destination = android.graphics.RectF(
-                                    gestureIconBounds.left,
-                                    gestureIconBounds.top,
-                                    gestureIconBounds.right,
-                                    gestureIconBounds.bottom
-                                ),
-                                contract = activeGestureContract,
-                                onFinished = {
-                                    currentOnGestureNavContractFinished(activeGestureContract)
-                                }
-                            )
-                        }
-                    },
-                    update = { surfaceView ->
-                        surfaceView.configure(
-                            bitmap = activeGestureBitmap.asAndroidBitmap(),
-                            destination = android.graphics.RectF(
-                                gestureIconBounds.left,
-                                gestureIconBounds.top,
-                                gestureIconBounds.right,
-                                gestureIconBounds.bottom
-                            ),
-                            contract = activeGestureContract,
-                            onFinished = {
-                                currentOnGestureNavContractFinished(activeGestureContract)
-                            }
-                        )
-                    },
-                    modifier = Modifier
-                        .offset {
-                            IntOffset(
-                                gestureIconBounds.left.roundToInt(),
-                                gestureIconBounds.top.roundToInt()
-                            )
-                        }
-                        .size(50.dp)
-                )
-            }
-        }
 
         if (drawerVisible) {
             // A lightweight dark scrim separates the drawer from Home without
@@ -1111,7 +1013,6 @@ private fun HomeScreen(
     iconBitmapCache: AppIconBitmapCache,
     homeSwipeThresholdPx: Float,
     backgroundSignal: Int,
-    homeReturnSignal: Int,
     drawerProgress: State<Float>,
     onDrawerDrag: (Float) -> Unit,
     onDrawerDragEnd: (totalDrag: Float, velocityY: Float, cancelled: Boolean) -> Unit,
@@ -1134,19 +1035,6 @@ private fun HomeScreen(
     val appById = remember(apps) { apps.associateBy { it.id } }
     val currentOnDrawerDrag by rememberUpdatedState(onDrawerDrag)
     val currentOnDrawerDragEnd by rememberUpdatedState(onDrawerDragEnd)
-    val homeContentProgress = remember { Animatable(1f) }
-    LaunchedEffect(homeReturnSignal) {
-        if (homeReturnSignal > 0) {
-            homeContentProgress.snapTo(0f)
-            homeContentProgress.animateTo(
-                targetValue = 1f,
-                animationSpec = tween(
-                    durationMillis = 320,
-                    easing = FastOutSlowInEasing
-                )
-            )
-        }
-    }
     Box(
         Modifier
             .fillMaxSize()
@@ -1178,14 +1066,6 @@ private fun HomeScreen(
                 .fillMaxSize()
                 .statusBarsPadding()
                 .navigationBarsPadding()
-                .graphicsLayer {
-                    val progress = homeContentProgress.value
-                    alpha = 0.68f + 0.32f * progress
-                    val scale = 0.97f + 0.03f * progress
-                    scaleX = scale
-                    scaleY = scale
-                    translationY = 18.dp.toPx() * (1f - progress)
-                }
                 // Keep launcher controls sharp above the static wallpaper.
                 .pointerInput(homeSwipeThresholdPx, backgroundSignal) {
                     var totalDrag = 0f
