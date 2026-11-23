@@ -813,7 +813,6 @@ internal fun NekOSRoot(
                     launcherThemeKey = normalizeLauncherTheme(key)
                     preferences.edit().putString("launcher_theme", launcherThemeKey).apply()
                 },
-                launcherUiColor = launcherUiColorArgb,
                 onLauncherUiColorChange = { color ->
                     launcherUiColorArgb = normalizeLauncherUiColor(color)
                     preferences.edit().putLong("launcher_ui_color", launcherUiColorArgb).apply()
