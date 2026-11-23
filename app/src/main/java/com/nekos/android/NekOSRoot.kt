@@ -528,9 +528,13 @@ internal fun NekOSRoot(
                 launchApp(context, app, launchSourceView, bounds.left.roundToInt(), bounds.top.roundToInt(), bounds.width.roundToInt(), bounds.height.roundToInt())
             },
             onFavoriteLongPress = { index, position ->
-                favoritePackages.getOrNull(index)?.let { packageName ->
-                    apps.firstOrNull { it.id == packageName }?.let { app ->
-                        actionMenuPreviewApp = app
+                favoritePackages.getOrNull(index)?.let { favoriteId ->
+                    val app = apps.firstOrNull { it.id == favoriteId }
+                        ?: apps.firstOrNull {
+                            it.isInCurrentProfile && it.packageName == favoriteId
+                        }
+                    app?.let {
+                        actionMenuPreviewApp = it
                         actionMenuPreviewPosition = position
                     }
                 }
@@ -1059,7 +1063,16 @@ private fun HomeScreen(
     onTagReorderEnd: (cancelled: Boolean) -> Unit,
     onAddTag: () -> Unit
 ) {
-    val appById = remember(apps) { apps.associateBy { it.id } }
+    // Resolve current-profile legacy package-only favorites as well as profile-aware IDs.
+    // Older NekOS versions stored package names, while current IDs include the profile serial.
+    val appById = remember(apps) {
+        buildMap {
+            apps.forEach { app ->
+                put(app.id, app)
+                if (app.isInCurrentProfile) putIfAbsent(app.packageName, app)
+            }
+        }
+    }
     val currentOnDrawerDrag by rememberUpdatedState(onDrawerDrag)
     val currentOnDrawerDragEnd by rememberUpdatedState(onDrawerDragEnd)
     Box(
