@@ -103,7 +103,7 @@ internal fun NekOSAlertDialog(
                 }
                 TopFrame(
                     colorArgb = topFrameColorArgb,
-                    modifier = Modifier.align(Alignment.TopCenter).offset(y = (-1).dp)
+                    modifier = Modifier.align(Alignment.TopCenter).offset(y = (-6).dp)
                 )
             }
         }
