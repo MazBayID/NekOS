@@ -27,9 +27,12 @@ private data class TopFrameImages(
 )
 
 @Composable
-internal fun TopFrame(modifier: Modifier = Modifier) {
+internal fun TopFrame(
+    colorArgb: Long,
+    modifier: Modifier = Modifier
+) {
     val context = LocalContext.current
-    val images by produceState<TopFrameImages?>(initialValue = null, context) {
+    val images by produceState<TopFrameImages?>(initialValue = null, context, colorArgb) {
         value = withContext(Dispatchers.IO) {
             runCatching {
                 val sheet = context.assets.open(
@@ -37,10 +40,12 @@ internal fun TopFrame(modifier: Modifier = Modifier) {
                 ).use { stream ->
                     BitmapFactory.decodeStream(stream)
                 } ?: error("Unable to decode topframe spritesheet")
+                val themedSheet = UiArtworkColorizer.recolorBitmap(sheet, colorArgb)
+                if (themedSheet !== sheet) sheet.recycle()
 
                 try {
                     fun crop(x: Int, width: Int): ImageBitmap =
-                        Bitmap.createBitmap(sheet, x * 4, 0, width * 4, 64 * 4)
+                        Bitmap.createBitmap(themedSheet, x * 4, 0, width * 4, 64 * 4)
                             .asImageBitmap()
 
                     TopFrameImages(
@@ -50,7 +55,7 @@ internal fun TopFrame(modifier: Modifier = Modifier) {
                         rightCap = crop(102, 32)
                     )
                 } finally {
-                    sheet.recycle()
+                    themedSheet.recycle()
                 }
             }.getOrNull()
         }
