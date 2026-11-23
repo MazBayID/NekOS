@@ -114,7 +114,7 @@ internal class GestureNavSurfaceView(context: Context) : SurfaceView(context), S
             putParcelable(GestureNavContractData.EXTRA_ICON_SURFACE, surfaceControl)
             putParcelable(
                 GestureNavContractData.EXTRA_ON_FINISH_CALLBACK,
-                FinishCallbackReceiver.messageFor(this)
+                FinishCallbackReceiver.messageFor(this@GestureNavSurfaceView)
             )
         }
         val response = Message.obtain().apply {

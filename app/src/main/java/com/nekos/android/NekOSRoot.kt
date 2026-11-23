@@ -130,7 +130,7 @@ private val Muted = Color(0xFF8B8982)
 private val TagSurface = Color(0xFFE7E1D6)
 
 @Composable
-fun NekOSRoot(
+internal fun NekOSRoot(
     refreshToken: Int,
     resumeToken: Int = 0,
     homeSignal: Int = 0,
