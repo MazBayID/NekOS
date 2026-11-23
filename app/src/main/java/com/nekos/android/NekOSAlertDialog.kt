@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.LocalContentColor
@@ -102,7 +103,7 @@ internal fun NekOSAlertDialog(
                 }
                 TopFrame(
                     colorArgb = topFrameColorArgb,
-                    modifier = Modifier.align(Alignment.TopCenter).padding(horizontal = 8.dp)
+                    modifier = Modifier.align(Alignment.TopCenter).offset(y = (-1).dp)
                 )
             }
         }
