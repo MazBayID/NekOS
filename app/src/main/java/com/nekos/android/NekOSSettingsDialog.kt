@@ -167,7 +167,7 @@ internal fun NekOSSettingsDialog(
                                     SettingsPage.LAUNCHER_THEME -> "Launcher theme"
                                 },
                                 color = SettingsInk,
-                                fontSize = 22.sp,
+                                fontSize = 20.sp,
                                 fontWeight = FontWeight.SemiBold
                             )
                         }
@@ -481,7 +481,7 @@ private fun BuiltInWallpaperPreview(
             contentDescription = label,
             contentScale = ContentScale.Crop,
             modifier = Modifier
-                .size(width = 92.dp, height = 112.dp)
+                .size(width = 72.dp, height = 88.dp)
                 .clip(RoundedCornerShape(10.dp))
         )
     } else {
@@ -557,6 +557,6 @@ private fun SettingsSectionTitle(label: String) {
         fontSize = 10.sp,
         letterSpacing = 1.2.sp,
         fontWeight = FontWeight.Bold,
-        modifier = Modifier.padding(top = 5.dp, bottom = 1.dp)
+        modifier = Modifier.padding(top = 3.dp, bottom = 0.dp)
     )
 }
