@@ -91,6 +91,7 @@ private enum class SettingsPage { MAIN, WALLPAPER, LAUNCHER_THEME }
 internal fun NekOSSettingsDialog(
     backgroundPreset: String,
     launcherThemeKey: String,
+    launcherUiColor: Long,
     onLauncherThemeChange: (String) -> Unit,
     launcherUiColor: Long,
     onLauncherUiColorChange: (Long) -> Unit,
@@ -412,7 +413,10 @@ internal fun NekOSSettingsDialog(
                         }
                     }
                 }
-                TopFrame(Modifier.align(Alignment.TopCenter).offset(y = (-2).dp).padding(horizontal = 6.dp))
+                TopFrame(
+                    colorArgb = launcherUiColor,
+                    modifier = Modifier.align(Alignment.TopCenter).offset(y = (-2).dp).padding(horizontal = 6.dp)
+                )
             }
         }
     }
