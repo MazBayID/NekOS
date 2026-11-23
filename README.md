@@ -108,3 +108,9 @@ Adjust the path only if AAPT2 is installed elsewhere. See [Building NekOS](docs/
 ## License
 
 NekOS is released under the [MIT License](LICENSE). Third-party dependencies retain their respective licenses; see [Third-Party Notices](THIRD_PARTY_NOTICES.md).
+
+## Support
+
+To keep the fuel running this little car,
+I need a little Ko-fi. 😁
+You can support me on ☕[Ko-fi](https://ko-fi.com/mazbayid)
