@@ -372,6 +372,7 @@ fun NekOSRoot(
 
     BoxWithConstraints(Modifier.fillMaxSize().background(WarmBackground)) {
         val drawerHeightPx = constraints.maxHeight.toFloat().coerceAtLeast(1f)
+        val popupNavigationBarInsetPx = WindowInsets.navigationBars.getBottom(LocalDensity.current)
         val homeSwipeThresholdPx = with(androidx.compose.ui.platform.LocalDensity.current) { 48.dp.toPx() }
         val drawerCloseThresholdPx = with(androidx.compose.ui.platform.LocalDensity.current) { 72.dp.toPx() }
         val drawerProgress = remember { mutableFloatStateOf(1f) }
@@ -651,7 +652,9 @@ fun NekOSRoot(
                     popupContentWidth.toDp()
                 }
                 val popupMaxWidth = maxWidth
-                val popupMaxHeight = maxHeight
+                val popupMaxHeight = with(LocalDensity.current) {
+                    (constraints.maxHeight - popupNavigationBarInsetPx).coerceAtLeast(0).toDp()
+                }
                 Box(
                     modifier = Modifier
                         .onSizeChanged { actionMenuPopupSize = it }
@@ -659,7 +662,10 @@ fun NekOSRoot(
                             calculateLauncherPopupOffset(
                                 anchorPosition = actionMenuPreviewPosition,
                                 popupSize = actionMenuPopupSize,
-                                containerSize = IntSize(constraints.maxWidth, constraints.maxHeight)
+                                containerSize = IntSize(
+                                    constraints.maxWidth,
+                                    (constraints.maxHeight - popupNavigationBarInsetPx).coerceAtLeast(0)
+                                )
                             )
                         }
                         .widthIn(max = minOf(210.dp, popupMaxWidth))
