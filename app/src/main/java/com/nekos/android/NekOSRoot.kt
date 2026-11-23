@@ -730,7 +730,6 @@ internal fun NekOSRoot(
                         DialogFrameTop(
                             colorArgb = launcherUiColorArgb,
                             containerWidth = popupContentWidthDp,
-                            horizontalExpansion = 32.dp,
                             modifier = Modifier
                                 .align(Alignment.TopCenter)
                                 .zIndex(1f)
