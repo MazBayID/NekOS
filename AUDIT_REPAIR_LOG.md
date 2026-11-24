@@ -1,6 +1,6 @@
 # NekOS Repair Log
 
-Last updated: 2026-11-23
+Last updated: 2026-11-24
 
 ## Workflow
 One repair at a time: inspect current source -> make the smallest targeted change -> build and run relevant tests -> record commit and result -> proceed only after verification.
@@ -23,24 +23,30 @@ One repair at a time: inspect current source -> make the smallest targeted chang
 | 5 | Harden icon cache/catalog validation | IMPLEMENTED — build, unit tests, and emulator instrumentation pass | Commits `57d36c6`, `f893865`, `ba9899c`, `c56eefe`, `39d636f`, and `87b8c6e`. Disk icon dimensions are checked before and after decode; catalog equality includes density; entries and asset paths are validated for completeness and uniqueness. Current 100-entry JSON index has no invalid entries or duplicate IDs/paths. | Physical-device cache/catalog behavior remains unverified |
 | 6 | Repair CI lint issue | IMPLEMENTED — lint passed | Commit `6209c78` replaces the invalid `fillMaxWidth(1.02f)` with full width plus a 1.02x graphics-layer scale anchored at the start, preserving the intentional visual bleed. CI #520 `lintDebug` passed. | Keep lint in CI |
 | 7 | Build-time resource asset optimization | REVIEWED — native pipeline retained; raw catalog asset conversion deferred pending benchmark | AAPT2 already compiles and crunches PNG resources; release PNG crunching is enabled by default. The 100 icon PNGs under `src/main/assets` total about 12.44 MiB and are not AAPT2 drawable resources. WebP lossless is a possible candidate, but conversion is deferred until file-by-file pixel/alpha and size comparisons can prove a benefit without visual regression. | Benchmark lossless WebP against the original catalog icons before any conversion; keep originals unchanged |
+| 8 | Android app archiving lifecycle | REVIEWED — Android 15+ path already supported by LauncherApps catalog; no safe code change indicated | Current `loadLaunchableApps()` uses `LauncherApps.getActivityList()`; Android's archived apps are exposed as displayable launcher entries through LauncherApps. Those entries therefore remain in `installedAppIds`, so Favorite/Tag cleanup retains them. Tapping the archived launcher entry follows Android's unarchive flow. Android 14 Play auto-archive is store/device dependent and needs physical-device validation; it is not equivalent to the Android 15 platform archive API. | Verify archive → visible in NekOS → tap to restore → Favorite/Tag retained on an Android 15 device; separately test Play auto-archive on Android 14 if available |
 
 ## Completed
 - Initial source-level audit and prioritization: completed 2026-11-23.
 - Repairs 1–3: bounded icon/artwork decoding and startup logo downsampling are implemented; CI #520 passed APK build, unit tests, lint, and emulator UI tests. Physical-device visual verification remains outstanding.
 - Repair 6: the existing width-range lint error is fixed without removing the intentional logo bleed; CI #520 lint passed.
 - Stage 7 review: confirmed AAPT2 is already the build-time PNG resource compiler/cruncher for `res` assets. No duplicate custom crunch task was added. A local lossless WebP benchmark script is available; no icon source assets have been changed. Commit `5014446` documents Termux's native `python-pillow` package so the benchmark setup does not unnecessarily attempt a slow Pillow source build.
+- Stage 2 lifecycle audit — Android app archiving: source review completed 2026-11-24. No production code change was made because the Android 15+ platform path is already handled by the existing LauncherApps catalog flow. This is a source/API compatibility finding, not a physical-device test result.
 
 ## References
 - Android Developers, Optimize bitmap images in Jetpack Compose: https://developer.android.com/develop/ui/compose/graphics/images/optimization
 - Android Developers, Loading Large Bitmaps Efficiently: https://developer.android.com/topic/performance/graphics/load-bitmap.html
 - Android Developers, BitmapFactory.Options / inSampleSize: https://developer.android.com/reference/android/graphics/BitmapFactory.Options
 - Android Developers, Modifier.pointerInput: https://developer.android.com/reference/kotlin/androidx/compose/ui/input/pointer/pointerInput.modifier
-
-
 - Android Developers, AAPT2 resource compilation and PNG crunching: https://developer.android.com/tools/aapt2
 - Android Developers, Convert images to WebP (lossless support and alpha-channel considerations): https://developer.android.com/studio/write/convert-webp
 - Android Developers, Optimize build speed / WebP trade-offs: https://developer.android.com/build/optimize-your-build
 - Android Developers, optimized resource shrinking (AGP 8.12+): https://developer.android.com/topic/performance/app-optimization/enable-app-optimization
+- Android Developers, PackageInstaller.requestArchive / requestUnarchive: https://developer.android.com/reference/android/content/pm/PackageInstaller
+- Android Developers, LauncherApps.getActivityList: https://developer.android.com/reference/android/content/pm/LauncherApps
+- Android Developers, LauncherApps.Callback: https://developer.android.com/reference/android/content/pm/LauncherApps.Callback
+- Android Developers, PackageManager.MATCH_ARCHIVED_PACKAGES: https://developer.android.com/reference/android/content/pm/PackageManager#MATCH_ARCHIVED_PACKAGES
+- Google Play Help, Archive unused apps on Android: https://support.google.com/android/answer/15523443
+- Android Developers Blog, Reduce uninstalls for your app with auto-archive: https://android-developers.googleblog.com/2023/04/reduce-uninstalls-for-your-app-with-auto-archive.html
 
 ## CI efficiency pass — 2026-11-23
 - [x] Android CI: use `gradle/actions/setup-gradle@v6` enhanced cache (the default) instead of basic cache. NekOS is a public repository, so the enhanced cache is available without a paid private-repository entitlement.
