@@ -135,6 +135,7 @@ internal fun NekOSRoot(
     resumeToken: Int = 0,
     homeSignal: Int = 0,
     backgroundSignal: Int = 0,
+    temporarilyUnavailableAppIds: Set<String> = emptySet(),
     skipStartupSplash: Boolean = false
 ) {
     val context = LocalContext.current
@@ -219,7 +220,8 @@ internal fun NekOSRoot(
             favorites = migratedReferences.favorites,
             tags = migratedReferences.tags,
             installedAppIds = installedAppIds,
-            unavailableProfileSerialNumbers = refreshedCatalog.unavailableProfileSerialNumbers
+            unavailableProfileSerialNumbers = refreshedCatalog.unavailableProfileSerialNumbers,
+            temporarilyUnavailableAppIds = temporarilyUnavailableAppIds
         )
         val activeFavoriteIds = cleanedReferences.favorites.filterNotNull().toSet()
         val retainedSnapshots = favoriteAppSnapshots.filterKeys { it in activeFavoriteIds }
