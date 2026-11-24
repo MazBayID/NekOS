@@ -14,7 +14,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.produceState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,12 +35,13 @@ internal fun BuiltInWallpaperPreview(
     label: String
 ) {
     val context = LocalContext.current
-    val preview = produceState<ImageBitmap?>(initialValue = null, resourceId) {
+    val preview = remember { mutableStateOf<ImageBitmap?>(null) }
+    LaunchedEffect(resourceId) {
         val loadedPreview = withContext(Dispatchers.IO) {
             loadBuiltInHomeWallpaper(context, resourceId, maxDimension = 480)
         }
-        this.value = loadedPreview
-    }.value
+        preview.value = loadedPreview
+    }
 
     if (preview != null) {
         Image(
