@@ -1077,6 +1077,7 @@ private fun HomeScreen(
     onTagReorderEnd: (cancelled: Boolean) -> Unit,
     onAddTag: () -> Unit
 ) {
+    val gestureDiagnosticContext = LocalContext.current
     // Resolve current-profile legacy package-only favorites as well as profile-aware IDs.
     // Older NekOS versions stored package names, while current IDs include the profile serial.
     val appById = remember(apps) {
@@ -1130,6 +1131,10 @@ private fun HomeScreen(
                         onDragStart = { position ->
                             totalDrag = 0f
                             drawerDragStarted = false
+                            FavoriteGestureDiagnostics.log(
+                                gestureDiagnosticContext,
+                                "home-pointer-start position=$position"
+                            )
                             // The swipe can start in the main Home canvas or the
                             // Favorite band; the scrolling Tag rail stays free.
                             gestureEligible = isHomeDrawerGestureEligible(
@@ -1146,6 +1151,12 @@ private fun HomeScreen(
                             if (gestureEligible) {
                                 totalDrag += dragAmount
                                 if (totalDrag < 0f) {
+                                    if (!drawerDragStarted) {
+                                        FavoriteGestureDiagnostics.log(
+                                            gestureDiagnosticContext,
+                                            "home-swipe-captured totalDrag=$totalDrag startEligible=$gestureEligible"
+                                        )
+                                    }
                                     drawerDragStarted = true
                                     currentOnDrawerDrag(totalDrag)
                                     change.consume()
@@ -1154,6 +1165,10 @@ private fun HomeScreen(
                         },
                         onDragEnd = {
                             if (drawerDragStarted) {
+                                FavoriteGestureDiagnostics.log(
+                                    gestureDiagnosticContext,
+                                    "home-swipe-end totalDrag=$totalDrag"
+                                )
                                 currentOnDrawerDragEnd(totalDrag, velocityTracker.calculateVelocity().y, false)
                             }
                             totalDrag = 0f
@@ -1161,7 +1176,13 @@ private fun HomeScreen(
                             gestureEligible = false
                         },
                         onDragCancel = {
-                            if (drawerDragStarted) currentOnDrawerDragEnd(totalDrag, 0f, true)
+                            if (drawerDragStarted) {
+                                FavoriteGestureDiagnostics.log(
+                                    gestureDiagnosticContext,
+                                    "home-swipe-cancel totalDrag=$totalDrag"
+                                )
+                                currentOnDrawerDragEnd(totalDrag, 0f, true)
+                            }
                             totalDrag = 0f
                             drawerDragStarted = false
                             velocityTracker.resetTracking()
