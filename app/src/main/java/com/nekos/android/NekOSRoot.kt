@@ -145,7 +145,9 @@ internal fun NekOSRoot(
     }
     val iconCatalogRepository = remember(context) { IconCatalogRepository(context) }
     var apps by remember { mutableStateOf(emptyList<InstalledApp>()) }
-    var favoritePackages by remember { mutableStateOf(loadFavoritePackages(context)) }
+    val initialFavoriteLoad = remember(context) { loadFavoritePackagesResult(context) }
+    var favoritePackages by remember { mutableStateOf(initialFavoriteLoad.packages) }
+    var favoriteStorageWritable by remember { mutableStateOf(initialFavoriteLoad.isValid) }
     var favoriteAppSnapshots by remember {
         mutableStateOf(FavoriteAppSnapshotStore.load(context))
     }
@@ -228,9 +230,20 @@ internal fun NekOSRoot(
             }
         favoriteAppSnapshots = retainedSnapshots + refreshedSnapshots
         FavoriteAppSnapshotStore.save(context, favoriteAppSnapshots.values)
-        if (cleanedReferences.favorites != latestFavoritePackages) {
-            favoritePackages = cleanedReferences.favorites
-            saveFavoritePackages(context, cleanedReferences.favorites)
+        if (
+            favoriteStorageWritable &&
+            cleanedReferences.favorites != latestFavoritePackages
+        ) {
+            if (saveFavoritePackages(context, cleanedReferences.favorites)) {
+                favoritePackages = cleanedReferences.favorites
+            } else {
+                favoriteStorageWritable = false
+                Toast.makeText(
+                    context,
+                    "Favorites could not be saved. Existing data was preserved.",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
         }
         if (tagStorageWritable && cleanedReferences.tags != latestTags) {
             if (TagStore.save(context, cleanedReferences.tags)) {
@@ -420,8 +433,24 @@ internal fun NekOSRoot(
     }
 
     fun updateFavorites(updated: List<String?>) {
+        if (!favoriteStorageWritable) {
+            Toast.makeText(
+                context,
+                "Favorites could not be loaded. Existing data was preserved.",
+                Toast.LENGTH_LONG
+            ).show()
+            return
+        }
+        if (!saveFavoritePackages(context, updated)) {
+            favoriteStorageWritable = false
+            Toast.makeText(
+                context,
+                "Favorites could not be saved. Existing data was preserved.",
+                Toast.LENGTH_LONG
+            ).show()
+            return
+        }
         favoritePackages = updated
-        saveFavoritePackages(context, updated)
         val activeFavoriteIds = updated.filterNotNull().toSet()
         val retainedSnapshots = favoriteAppSnapshots.filterKeys { it in activeFavoriteIds }
         val refreshedSnapshots = apps
