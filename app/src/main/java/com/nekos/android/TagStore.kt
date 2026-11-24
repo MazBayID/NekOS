@@ -61,11 +61,25 @@ object TagStore {
             val parsed = buildList {
                 for (i in 0 until array.length()) {
                     val item = array.getJSONObject(i)
-                    val packages = item.optJSONArray("apps") ?: JSONArray()
+                    val rawPackages = item.opt("apps")
+                    val packages = when (rawPackages) {
+                        null, JSONObject.NULL -> JSONArray()
+                        is JSONArray -> rawPackages
+                        else -> error("Invalid Tag apps field")
+                    }
+                    for (j in 0 until packages.length()) {
+                        require(packages.opt(j) is String) {
+                            "Invalid Tag app reference"
+                        }
+                    }
+                    val rawId = item.opt("id")
+                    val rawName = item.opt("name")
+                    require(rawId == null || rawId is String) { "Invalid Tag id field" }
+                    require(rawName is String) { "Invalid Tag name field" }
                     add(
                         NekTag(
-                            id = item.optString("id").ifBlank { UUID.randomUUID().toString() },
-                            name = item.optString("name").trim().take(24),
+                            id = (rawId as? String).orEmpty().ifBlank { UUID.randomUUID().toString() },
+                            name = (rawName as String).trim().take(24),
                             iconId = if (item.isNull("iconId")) null else item.optInt("iconId"),
                             colorArgb = item.optLong("colorArgb", 0xFFE7E1D6),
                             appPackages = buildList {
