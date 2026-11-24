@@ -14,7 +14,7 @@ internal object FavoriteGestureDiagnostics {
     private const val TAG = "NekOS-Favorite"
 
     fun log(context: Context, message: String) {
-        val isDebuggable = context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
+        val isDebuggable = (context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
         if (isDebuggable) {
             Log.d(TAG, message)
         }
