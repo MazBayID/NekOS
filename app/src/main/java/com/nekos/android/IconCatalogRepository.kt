@@ -13,6 +13,8 @@ import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
 import java.security.MessageDigest
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 
 data class CatalogIcon(
     val id: Int,
@@ -85,6 +87,7 @@ class IconCatalogRepository(context: Context) {
             (bitmap.allocationByteCount / 1024).coerceAtLeast(1)
     }
     private val memoryState = CacheMemoryState()
+    private val pickerLoadSemaphore = Semaphore(2)
 
     /** Invalidates TagPill bitmap references after a memory trim or resume. */
     var generation by mutableIntStateOf(0)
@@ -153,25 +156,27 @@ class IconCatalogRepository(context: Context) {
      * 28 dp, so a 96 px thumbnail is sufficient for high-density displays.
      * The original asset is decoded near the target size, then scaled exactly.
      */
-    fun loadPickerBitmap(
+    suspend fun loadPickerBitmap(
         icon: CatalogIcon,
         frameColorArgb: Long = DEFAULT_TAG_ICON_FRAME_COLOR,
         maxDimensionPx: Int = 96
-    ): Bitmap? {
+    ): Bitmap? = pickerLoadSemaphore.withPermit {
         require(isValidCatalogIconPath(icon.file)) {
             "Invalid catalog asset path: ${icon.file}"
         }
         val normalizedColor = frameColorArgb and 0xFFFFFFFFL
         val targetSize = maxDimensionPx.coerceAtLeast(1)
         val cacheKey = "${icon.file}:${normalizedColor.toString(16)}:picker:$targetSize"
-        memoryState.ifEnabled { pickerBitmapCache.get(cacheKey) }?.let { return it }
-        val loadEpoch = memoryState.beginLoad() ?: return null
+        memoryState.ifEnabled { pickerBitmapCache.get(cacheKey) }?.let {
+            return@withPermit it
+        }
+        val loadEpoch = memoryState.beginLoad() ?: return@withPermit null
 
         val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
         appContext.assets.open("ikon/${icon.file}").use {
             BitmapFactory.decodeStream(it, null, bounds)
         }
-        if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null
+        if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return@withPermit null
 
         var sampleSize = 1
         while (maxOf(bounds.outWidth, bounds.outHeight) / (sampleSize * 2) >= targetSize) {
@@ -183,7 +188,7 @@ class IconCatalogRepository(context: Context) {
         }
         val source = appContext.assets.open("ikon/${icon.file}").use {
             BitmapFactory.decodeStream(it, null, decodeOptions)
-        } ?: return null
+        } ?: return@withPermit null
         val scale = minOf(
             1f,
             targetSize.toFloat() / maxOf(source.width, source.height)
@@ -200,7 +205,7 @@ class IconCatalogRepository(context: Context) {
         }
         val bitmap = recolorIconFrame(thumbnail, normalizedColor)
 
-        return memoryState.storeIfCurrent(loadEpoch) {
+        memoryState.storeIfCurrent(loadEpoch) {
             pickerBitmapCache.put(cacheKey, bitmap)
             bitmap
         }
