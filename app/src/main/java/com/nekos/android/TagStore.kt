@@ -23,17 +23,37 @@ data class NekTag(
     )
 }
 
+internal data class TagLoadResult(
+    val tags: List<NekTag>,
+    val isValid: Boolean
+)
+
 /** Small local persistence boundary for user-created tag collections. */
 object TagStore {
-    fun load(context: Context): List<NekTag> {
-        val raw = runCatching {
+    fun load(context: Context): List<NekTag> = loadResult(context).tags
+
+    /**
+     * Keeps malformed or unreadable persisted data distinguishable from a genuinely
+     * empty collection, so callers can avoid overwriting data that could not be read.
+     */
+    internal fun loadResult(context: Context): TagLoadResult {
+        val preferences = runCatching {
             context.getSharedPreferences(TAGS_PREFS, Context.MODE_PRIVATE)
-                .getString(TAGS_KEY, null)
-        }.getOrNull() ?: return emptyList()
+        }.getOrNull() ?: return TagLoadResult(emptyList(), false)
+
+        if (!preferences.contains(TAGS_KEY)) {
+            return TagLoadResult(emptyList(), true)
+        }
+
+        val raw = try {
+            preferences.getString(TAGS_KEY, null)
+        } catch (_: ClassCastException) {
+            return TagLoadResult(emptyList(), false)
+        } ?: return TagLoadResult(emptyList(), false)
 
         return runCatching {
             val array = JSONArray(raw)
-            buildList {
+            val parsed = buildList {
                 for (i in 0 until array.length()) {
                     val item = array.getJSONObject(i)
                     val packages = item.optJSONArray("apps") ?: JSONArray()
@@ -56,10 +76,19 @@ object TagStore {
                     )
                 }
             }.filter { it.name.isNotBlank() }.distinctBy { it.id }
-        }.getOrDefault(emptyList())
+            TagLoadResult(parsed, true)
+        }.getOrElse {
+            TagLoadResult(emptyList(), false)
+        }
     }
 
-    fun save(context: Context, tags: List<NekTag>) {
+    /**
+     * Refuses to replace persisted content when the current value cannot be read.
+     * Returns false so the UI can keep the in-memory state unchanged and notify the user.
+     */
+    fun save(context: Context, tags: List<NekTag>): Boolean {
+        if (!loadResult(context).isValid) return false
+
         val array = JSONArray()
         tags.distinctBy { it.id }.forEach { tag ->
             val normalized = tag.normalized()
@@ -74,10 +103,13 @@ object TagStore {
                     .put("apps", JSONArray(normalized.appPackages))
             )
         }
-        context.getSharedPreferences(TAGS_PREFS, Context.MODE_PRIVATE)
-            .edit()
-            .putString(TAGS_KEY, array.toString())
-            .apply()
+        return runCatching {
+            context.getSharedPreferences(TAGS_PREFS, Context.MODE_PRIVATE)
+                .edit()
+                .putString(TAGS_KEY, array.toString())
+                .apply()
+            true
+        }.getOrDefault(false)
     }
 }
 
