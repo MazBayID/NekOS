@@ -149,10 +149,10 @@ fun TagManagementDialog(
                         contentPadding = PaddingValues(horizontal = 2.dp)
                     ) {
                         items(catalog, key = { it.id }) { icon ->
-                            var bitmap by remember(icon.id, selectedIconFrameColor) {
+                            var bitmap by remember(icon.id, selectedIconFrameColor, iconCatalogRepository.generation) {
                                 mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null)
                             }
-                            LaunchedEffect(icon.id, selectedIconFrameColor) {
+                            LaunchedEffect(icon.id, selectedIconFrameColor, iconCatalogRepository.generation) {
                                 bitmap = withContext(Dispatchers.IO) {
                                     runCatching {
                                         iconCatalogRepository.loadPickerBitmap(icon, selectedIconFrameColor)?.asImageBitmap()
