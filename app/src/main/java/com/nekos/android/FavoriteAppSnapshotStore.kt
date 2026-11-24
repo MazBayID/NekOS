@@ -16,6 +16,15 @@ internal data class FavoriteAppSnapshot(
     val iconCacheKey: String
 )
 
+/**
+ * Snapshot metadata may only follow the persisted Favorite list. If Favorite
+ * references changed but their save failed, keep the previous snapshots intact.
+ */
+internal fun shouldPersistFavoriteSnapshots(
+    favoritesChanged: Boolean,
+    favoriteSaveSucceeded: Boolean
+): Boolean = !favoritesChanged || favoriteSaveSucceeded
+
 internal object FavoriteAppSnapshotStore {
     private const val PREFS_NAME = "nekos_favorite_snapshots"
     private const val KEY_SNAPSHOTS = "favorite_app_snapshots_v1"
