@@ -33,7 +33,7 @@ internal fun TopFrame(
 ) {
     val context = LocalContext.current
     val images by produceState<TopFrameImages?>(initialValue = null, context, colorArgb) {
-        value = withContext(Dispatchers.IO) {
+        val loadedImages = withContext(Dispatchers.IO) {
             runCatching {
                 val sheet = context.assets.open(
                     "topframe_spritesheet@4x.png"
@@ -59,6 +59,7 @@ internal fun TopFrame(
                 }
             }.getOrNull()
         }
+        value = loadedImages
     }
 
     val frame = images ?: return
