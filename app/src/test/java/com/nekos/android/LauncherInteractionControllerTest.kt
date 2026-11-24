@@ -184,6 +184,18 @@ class LauncherInteractionControllerTest {
     }
 
     @Test
+    fun upwardUserScrollInvalidatesDrawerCloseGesture() {
+        assertTrue(shouldInvalidateDrawerCloseGesture(availableY = -1f, isUserInput = true))
+    }
+
+    @Test
+    fun downwardOrNonUserScrollDoesNotInvalidateDrawerCloseGesture() {
+        assertFalse(shouldInvalidateDrawerCloseGesture(availableY = 1f, isUserInput = true))
+        assertFalse(shouldInvalidateDrawerCloseGesture(availableY = -1f, isUserInput = false))
+        assertFalse(shouldInvalidateDrawerCloseGesture(availableY = 0f, isUserInput = true))
+    }
+
+    @Test
     fun drawerCloseUsesReleaseDirectionBeforeDistance() {
         assertFalse(
             shouldCloseDrawerAfterDrag(
