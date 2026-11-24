@@ -12,6 +12,7 @@ import android.os.Looper
 import android.os.Process
 import android.os.SystemClock
 import android.os.UserHandle
+import android.os.UserManager
 import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
@@ -37,6 +38,8 @@ class MainActivity : ComponentActivity() {
     private var homeSignal by mutableIntStateOf(0)
     /** Bumped when the launcher stops being visible so transient drawer UI can reset. */
     private var backgroundSignal by mutableIntStateOf(0)
+    /** Package IDs temporarily unavailable according to LauncherApps callbacks. */
+    private var temporarilyUnavailableAppIds by mutableStateOf<Set<String>>(emptySet())
     private var isForcedRefreshPending = false
     private var stoppedAtElapsedMillis = 0L
     private val mainHandler = Handler(Looper.getMainLooper())
@@ -47,14 +50,17 @@ class MainActivity : ComponentActivity() {
     private val launcherApps by lazy { getSystemService(LauncherApps::class.java) }
     private val packageCallback = object : LauncherApps.Callback() {
         override fun onPackageAdded(packageName: String, user: UserHandle) {
+            updateTemporarilyUnavailableApps(listOf(packageName), user, unavailable = false)
             refreshInstalledApps()
         }
 
         override fun onPackageRemoved(packageName: String, user: UserHandle) {
+            updateTemporarilyUnavailableApps(listOf(packageName), user, unavailable = false)
             refreshInstalledApps()
         }
 
         override fun onPackageChanged(packageName: String, user: UserHandle) {
+            updateTemporarilyUnavailableApps(listOf(packageName), user, unavailable = false)
             refreshInstalledApps()
         }
 
@@ -63,6 +69,7 @@ class MainActivity : ComponentActivity() {
             user: UserHandle,
             replacing: Boolean
         ) {
+            updateTemporarilyUnavailableApps(packageNames.toList(), user, unavailable = false)
             refreshInstalledApps()
         }
 
@@ -71,6 +78,7 @@ class MainActivity : ComponentActivity() {
             user: UserHandle,
             replacing: Boolean
         ) {
+            updateTemporarilyUnavailableApps(packageNames.toList(), user, unavailable = true)
             refreshInstalledApps()
         }
 
@@ -86,9 +94,49 @@ class MainActivity : ComponentActivity() {
     private var isProfileReceiverRegistered = false
     private val profileReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: android.content.Context?, intent: Intent?) {
+            val action = intent?.action
+            if (
+                action == Intent.ACTION_MANAGED_PROFILE_REMOVED ||
+                (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE &&
+                    action == Intent.ACTION_PROFILE_REMOVED)
+            ) {
+                intent?.let(::profileUserFromIntent)?.let(::clearTemporarilyUnavailableAppsForProfile)
+            }
             refreshInstalledApps()
         }
     }
+
+    private fun updateTemporarilyUnavailableApps(
+        packageNames: List<String>,
+        user: UserHandle,
+        unavailable: Boolean
+    ) {
+        val profileSerial = getSystemService(UserManager::class.java).getSerialNumberForUser(user)
+        if (profileSerial < 0L || packageNames.isEmpty()) return
+        val appIds = packageNames.mapTo(mutableSetOf()) { launcherAppId(it, profileSerial) }
+        temporarilyUnavailableAppIds = if (unavailable) {
+            temporarilyUnavailableAppIds + appIds
+        } else {
+            temporarilyUnavailableAppIds - appIds
+        }
+    }
+
+    private fun clearTemporarilyUnavailableAppsForProfile(user: UserHandle) {
+        val profileSerial = getSystemService(UserManager::class.java).getSerialNumberForUser(user)
+        if (profileSerial < 0L) return
+        val prefix = "$profileSerial$LAUNCHER_APP_ID_SEPARATOR"
+        temporarilyUnavailableAppIds = temporarilyUnavailableAppIds
+            .filterNot { it.startsWith(prefix) }
+            .toSet()
+    }
+
+    @Suppress("DEPRECATION")
+    private fun profileUserFromIntent(intent: Intent): UserHandle? =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            intent.getParcelableExtra(Intent.EXTRA_USER, UserHandle::class.java)
+        } else {
+            intent.getParcelableExtra(Intent.EXTRA_USER) as? UserHandle
+        }
 
     private fun refreshInstalledApps() {
         // Package updates can emit several callbacks in quick succession.
@@ -205,6 +253,7 @@ class MainActivity : ComponentActivity() {
                         resumeToken = resumeRefreshToken,
                         homeSignal = homeSignal,
                         backgroundSignal = backgroundSignal,
+                        temporarilyUnavailableAppIds = temporarilyUnavailableAppIds,
                         skipStartupSplash = isRestoredActivity
                     )
                 }
