@@ -85,6 +85,21 @@ internal object SuspendedAppStore {
 internal fun launcherAppId(packageName: String, profileSerialNumber: Long): String =
     "$profileSerialNumber$LAUNCHER_APP_ID_SEPARATOR$packageName"
 
+/** Keeps persisted package markers only while their owning Android profile still exists. */
+internal fun retainAppIdsForExistingProfiles(
+    appIds: Set<String>,
+    profileExists: (Long) -> Boolean
+): Set<String> =
+    appIds.filterTo(mutableSetOf()) { appId ->
+        val separator = appId.indexOf(LAUNCHER_APP_ID_SEPARATOR)
+        if (separator <= 0) {
+            false
+        } else {
+            val profileSerial = appId.substring(0, separator).toLongOrNull()
+            profileSerial != null && profileSerial >= 0L && profileExists(profileSerial)
+        }
+    }
+
 fun loadLaunchableApps(context: Context): LauncherAppScanResult {
     val launcherApps = context.getSystemService(LauncherApps::class.java)
     val userManager = context.getSystemService(UserManager::class.java)
