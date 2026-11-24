@@ -150,11 +150,24 @@ class MainActivity : ComponentActivity() {
         } catch (_: IllegalStateException) {
             return
         }
+        val profileSerial = getSystemService(UserManager::class.java).getSerialNumberForUser(user)
+        if (profileSerial < 0L) return
+        val appId = launcherAppId(packageName, profileSerial)
+        if (!hasLaunchableActivities && appId !in temporarilyUnavailableAppIds &&
+            !hasSavedLauncherReference(appId)
+        ) {
+            return
+        }
         updateTemporarilyUnavailableApps(
             listOf(packageName),
             user,
             unavailable = !hasLaunchableActivities
         )
+    }
+
+    private fun hasSavedLauncherReference(appId: String): Boolean {
+        if (appId in loadFavoritePackagesResult(this).packages) return true
+        return TagStore.loadResult(this).tags.any { appId in it.appPackages }
     }
 
     private fun updateSuspendedApps(
