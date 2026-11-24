@@ -276,10 +276,15 @@ internal fun NekOSRoot(
     }
     var wallpaperBitmap by remember { mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null) }
     var wallpaperLoadGeneration by remember { mutableIntStateOf(0) }
+    var isWallpaperTrimmed by remember { mutableStateOf(false) }
     // The wallpaper is always saved to the same file, so the path alone cannot signal a new
     // image. The revision makes choosing a second wallpaper reload it immediately.
     var wallpaperRevision by remember { mutableIntStateOf(0) }
-    LaunchedEffect(wallpaperPath, builtInWallpaperKey, wallpaperRevision, wallpaperLoadGeneration) {
+    LaunchedEffect(wallpaperPath, builtInWallpaperKey, wallpaperRevision, wallpaperLoadGeneration, isWallpaperTrimmed) {
+        if (isWallpaperTrimmed) {
+            wallpaperBitmap = null
+            return@LaunchedEffect
+        }
         val loadGeneration = wallpaperLoadGeneration
         val loadedWallpaper = withContext(Dispatchers.IO) {
             when {
@@ -303,6 +308,7 @@ internal fun NekOSRoot(
                 if (level >= ComponentCallbacks2.TRIM_MEMORY_BACKGROUND) {
                     iconBitmapCache.trimMemory()
                     iconCatalogRepository.trimMemory()
+                    isWallpaperTrimmed = true
                     wallpaperLoadGeneration++
                     wallpaperBitmap = null
                 }
@@ -314,6 +320,7 @@ internal fun NekOSRoot(
             override fun onLowMemory() {
                 iconBitmapCache.trimMemory()
                 iconCatalogRepository.trimMemory()
+                isWallpaperTrimmed = true
                 wallpaperLoadGeneration++
                 wallpaperBitmap = null
             }
@@ -322,6 +329,7 @@ internal fun NekOSRoot(
         onDispose { context.unregisterComponentCallbacks(memoryCallbacks) }
     }
     LaunchedEffect(resumeToken) {
+        isWallpaperTrimmed = false
         // Re-enable caches only when a critical memory trim actually disabled them.
         iconBitmapCache.resumeAfterBackground()
         iconCatalogRepository.resumeAfterBackground()
