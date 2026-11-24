@@ -72,6 +72,29 @@ class LauncherReferenceCleanupTest {
     }
 
     @Test
+    fun removesMissingWorkProfileAppsAfterProfileBecomesAvailableAgain() {
+        val appId = "42::com.example.work"
+        val tag = NekTag(
+            id = "work-tools",
+            name = "Work tools",
+            appPackages = listOf(appId, "10::com.example.personal")
+        )
+
+        val result = cleanupLauncherReferences(
+            favorites = listOf(appId),
+            tags = listOf(tag),
+            installedAppIds = setOf("10::com.example.personal"),
+            unavailableProfileSerialNumbers = emptySet()
+        )
+
+        assertEquals(listOf(null), result.favorites)
+        assertEquals(
+            tag.copy(appPackages = listOf("10::com.example.personal")),
+            result.tags.single()
+        )
+    }
+
+    @Test
     fun migratesLegacyFavoritesAndTagsToCurrentProfileIds() {
         val favorites = listOf("com.example.alpha", null, "42::com.example.work")
         val tags = listOf(
