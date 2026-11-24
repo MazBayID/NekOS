@@ -114,20 +114,28 @@ class MainActivity : ComponentActivity() {
         val profileSerial = getSystemService(UserManager::class.java).getSerialNumberForUser(user)
         if (profileSerial < 0L || packageNames.isEmpty()) return
         val appIds = packageNames.mapTo(mutableSetOf()) { launcherAppId(it, profileSerial) }
-        temporarilyUnavailableAppIds = if (unavailable) {
+        val updatedAppIds = if (unavailable) {
             temporarilyUnavailableAppIds + appIds
         } else {
             temporarilyUnavailableAppIds - appIds
         }
+        setTemporarilyUnavailableAppIds(updatedAppIds)
     }
 
     private fun clearTemporarilyUnavailableAppsForProfile(user: UserHandle) {
         val profileSerial = getSystemService(UserManager::class.java).getSerialNumberForUser(user)
         if (profileSerial < 0L) return
         val prefix = "$profileSerial$LAUNCHER_APP_ID_SEPARATOR"
-        temporarilyUnavailableAppIds = temporarilyUnavailableAppIds
+        val updatedAppIds = temporarilyUnavailableAppIds
             .filterNot { it.startsWith(prefix) }
             .toSet()
+        setTemporarilyUnavailableAppIds(updatedAppIds)
+    }
+
+    private fun setTemporarilyUnavailableAppIds(appIds: Set<String>) {
+        if (appIds == temporarilyUnavailableAppIds) return
+        temporarilyUnavailableAppIds = appIds
+        TemporarilyUnavailableAppStore.save(this, appIds)
     }
 
     @Suppress("DEPRECATION")
@@ -237,6 +245,7 @@ class MainActivity : ComponentActivity() {
         installSplashScreen()
         super.onCreate(savedInstanceState)
         logProcessDiagnostics(savedInstanceState != null)
+        temporarilyUnavailableAppIds = TemporarilyUnavailableAppStore.load(this)
         registerAppChangeObservers()
         WindowCompat.setDecorFitsSystemWindows(window, false)
         window.statusBarColor = android.graphics.Color.TRANSPARENT
