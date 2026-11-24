@@ -1,6 +1,6 @@
 # NekOS — Feature Inventory
 
-> Snapshot: 2026-11-22 (after the interaction polish pass)  
+> Snapshot: 2026-11-24 (after the package/profile lifecycle audit and UI file extraction)  
 > Scope: what the source code on `main` does today, compared with `PRODUCT_DIRECTION.md`.
 
 A feature is marked **implemented** only when matching source code exists. This is not a claim that every edge case has been verified on every Android version or on physical devices.
@@ -10,6 +10,7 @@ A feature is marked **implemented** only when matching source code exists. This 
 ### Launcher foundation
 - Manifest exposes the launcher entry (`MAIN` + `HOME` + `DEFAULT`) and a normal app entry (`MAIN` + `LAUNCHER`).
 - Single Activity, Kotlin + Jetpack Compose.
+- Home layout orchestration lives in `HomeScreen.kt`; Favorite Slot, Tag Pill, and Tag Frame components live in `HomeComponents.kt`; App Drawer UI and app grid items live in `AppDrawer.kt`; reusable settings preview and card components live in `SettingsComponents.kt`.
 - Launchable apps come from `LauncherApps`, deduplicated per profile, sorted alphabetically by label using the device locale.
 - App launch uses `LauncherApps`; App info and uninstall are handed to Android system screens.
 - The app list refreshes automatically on package added, removed, changed, and available/unavailable events, plus profile changes. Bursts of events are coalesced into one refresh. On resume the list is re-checked; it is kept as-is (so decoded icons are reused and Favorite icons do not re-animate) when nothing changed, and fully reloaded after a pending package event or an absence longer than 30 seconds.
@@ -35,7 +36,7 @@ A feature is marked **implemented** only when matching source code exists. This 
 
 ### Tag System
 - Create, edit, and delete tags; names are trimmed and limited to 24 characters.
-- Six preset colors and an optional icon from the bundled 100-icon catalog.
+- Nine preset tag colors and an optional icon from the bundled 100-icon catalog.
 - Assign and unassign installed apps; tapping a tag opens its collection and tapping an app launches it.
 - The tag body has no long-press action. The six-dot handle at the right edge of each tag opens Edit/Delete, and long-press plus drag on the handle reorders tags. Order is persisted.
 - Deleting a tag, from either the options menu or the editor, asks for confirmation first.

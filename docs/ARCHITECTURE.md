@@ -6,9 +6,9 @@ NekOS uses a single Activity with Jetpack Compose. Keep the Activity responsible
 
 ## Core layers
 
-- **Presentation:** Compose screens, dialogs, gestures, and visual state. UI components should not directly own package-management or persistence rules.
+- **Presentation:** Compose screens, dialogs, gestures, and visual state. Keep screen-level orchestration in `NekOSRoot.kt`; Home layout orchestration lives in `HomeScreen.kt`; reusable Favorite Slot, Tag Pill, and Tag Frame composables live in `HomeComponents.kt`. App Drawer rendering and grid items live in `AppDrawer.kt`. Settings dialog orchestration lives in `NekOSSettingsDialog.kt`, with reusable preview and card composables in `SettingsComponents.kt`. Tag editor UI lives in `TagManagementDialog.kt`; tag viewing and action dialogs live in `TagDialogs.kt`, and tag color selection dialogs live in `TagColorPickerDialogs.kt`. UI components should not directly own package-management or persistence rules.
 - **Domain:** launcher operations such as loading launchable apps, adding/removing/reordering favorites, and resolving app actions.
-- **Data:** local persistence for favorites and user-defined collections, plus Android PackageManager / LauncherApps access for installed applications.
+- **Data:** local persistence for favorites and user-defined collections; app availability markers are isolated in `AppAvailabilityStore.kt`. Android PackageManager / LauncherApps access and launch operations remain in `InstalledApp.kt`.
 - **Assets:** catalog metadata remains the source of truth for UI/tag icon names and paths. App icons in the drawer and favorites always come from Android.
 
 ## State and persistence rules
@@ -34,16 +34,16 @@ NekOS uses a single Activity with Jetpack Compose. Keep the Activity responsible
 
 ## Asset integration
 
-- `main_assets/ikon/icons_index.json` and `main_assets/ikon/ui_index.json` are the machine-readable catalogs.
+- `main_assets/icons/app/icons_index.json` and `main_assets/icons/ui/ui_index.json` are the machine-readable source catalogs.
 - The matching Markdown files are human-readable references only.
-- Tag icon filenames in `icons_index.json` are relative to the `icons/` directory; UI icon paths in `ui_index.json` are relative to `main_assets/ikon/` and begin with `ui/`.
-- The runtime tag catalog is bundled under `app/src/main/assets/ikon/`; its copied JSON paths are normalized to begin with `icons/` so they resolve relative to the bundled index.
-- Keep source PNGs untouched. The catalog index and icon files are bundled as runtime assets for the tag icon picker.
-- Keep source icon IDs and filenames intact when mapping them into app resources.
+- App icon filenames are relative to `main_assets/icons/app/`; UI icon paths are relative to `main_assets/icons/` and begin with `ui/`.
+- The runtime Tag icon catalog is bundled under `app/src/main/assets/ikon/`; its JSON paths are normalized to begin with `icons/` so they resolve relative to the bundled index.
+- The 100 source app-icon WebP files and their 100 runtime copies currently have identical Git blobs. Keep the runtime copies unless the asset pipeline is deliberately changed and verified.
+- Keep source artwork and icon IDs intact when mapping them into runtime assets.
 
 ## Current priorities
 
 1. Verify gestures, drag-and-drop, and app-list refresh on physical devices.
 2. Handle disabled or unavailable apps gracefully.
-3. Reduce the size of `NekOSRoot.kt` (about 1,500 lines) by extracting Home, App Drawer, and Tag Rail composables and their state into focused files, without changing behavior.
+3. Keep `NekOSRoot.kt` focused on screen orchestration. Home, Favorite, Tag Rail, and App Drawer composables are extracted into focused files; tag viewing/actions are separated from the tag editor. Continue moving code only when the responsibility boundary is clear and behavior can be preserved.
 4. Keep new features out unless they pass the test in `PRODUCT_DIRECTION.md`.

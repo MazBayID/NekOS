@@ -1,0 +1,171 @@
+package com.nekos.android
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+
+private val TagColorOptions = listOf(
+    "Sand" to 0xFFE7E1D6L,
+    "Blue" to 0xFFDCE8F8L,
+    "Lavender" to 0xFFE8DFF5L,
+    "Rose" to 0xFFF5DDE3L,
+    "Peach" to 0xFFF6E1D2L,
+    "Amber" to 0xFFF4E8C9L,
+    "Mint" to 0xFFD9EEE6L,
+    "Sage" to 0xFFE0E9D8L,
+    "Slate" to 0xFFE1E5E9L
+)
+
+private val TagIconFrameColors = listOf(
+    "Ocean" to 0xFF114B56L,
+    "Blue" to 0xFF2563EBL,
+    "Purple" to 0xFF7C3AEDL,
+    "Rose" to 0xFFE11D48L,
+    "Red" to 0xFFDC2626L,
+    "Orange" to 0xFFEA580CL,
+    "Amber" to 0xFFD97706L,
+    "Green" to 0xFF16A34AL,
+    "Mint" to 0xFF0D9488L,
+    "Slate" to 0xFF64748BL,
+    "Silver" to 0xFFA1A1AAL,
+    "Dark" to 0xFF27272AL
+)
+
+@Composable
+internal fun TagColorPickerDialog(
+    selectedColor: Long,
+    launcherSurface: Color,
+    launcherUiColorArgb: Long,
+    onColorSelected: (Long) -> Unit,
+    onDismiss: () -> Unit
+) {
+    NekOSAlertDialog(
+        topFrameColorArgb = launcherUiColorArgb,
+        onDismissRequest = onDismiss,
+        shape = RoundedCornerShape(18.dp),
+        containerColor = launcherSurface,
+        titleContentColor = Color(0xFF34332F),
+        textContentColor = Color(0xFF34332F),
+        title = { Text("Tag Color") },
+        text = {
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(3),
+                modifier = Modifier.heightIn(max = 200.dp),
+                contentPadding = PaddingValues(2.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                items(TagColorOptions) { (name, colorValue) ->
+                    val selected = selectedColor == colorValue
+                    Column(
+                        Modifier.fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color(0xFFF4F1EA))
+                            .clickable {
+                                onColorSelected(colorValue)
+                                onDismiss()
+                            }
+                            .padding(6.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Box(
+                            Modifier.fillMaxWidth()
+                                .height(34.dp)
+                                .clip(RoundedCornerShape(9.dp))
+                                .background(Color(colorValue.toInt()))
+                                .border(
+                                    width = if (selected) 2.dp else 1.dp,
+                                    color = if (selected) Color(0xFF746657) else Color(0xFF34332F).copy(alpha = 0.16f),
+                                    shape = RoundedCornerShape(9.dp)
+                                )
+                        )
+                        Text(name, color = Color(0xFF34332F), style = MaterialTheme.typography.labelMedium)
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text("Done") }
+        }
+    )
+}
+
+@Composable
+internal fun TagIconFrameColorPickerDialog(
+    selectedColor: Long,
+    launcherSurface: Color,
+    launcherUiColorArgb: Long,
+    onColorSelected: (Long) -> Unit,
+    onDismiss: () -> Unit
+) {
+    NekOSAlertDialog(
+        topFrameColorArgb = launcherUiColorArgb,
+        onDismissRequest = onDismiss,
+        shape = RoundedCornerShape(18.dp),
+        containerColor = launcherSurface,
+        titleContentColor = Color(0xFF34332F),
+        textContentColor = Color(0xFF34332F),
+        title = { Text("Icon Color") },
+        text = {
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(3),
+                modifier = Modifier.heightIn(max = 200.dp),
+                contentPadding = PaddingValues(4.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalArrangement = Arrangement.spacedBy(5.dp)
+            ) {
+                items(TagIconFrameColors) { (name, colorValue) ->
+                    val selected = selectedColor == colorValue
+                    Row(
+                        Modifier.fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color(0xFFF4F1EA))
+                            .clickable {
+                                onColorSelected(colorValue)
+                                onDismiss()
+                            }
+                            .padding(6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(7.dp)
+                    ) {
+                        Box(
+                            Modifier.size(18.dp)
+                                .clip(CircleShape)
+                                .background(Color(colorValue.toInt()))
+                                .border(
+                                    width = if (selected) 2.dp else 1.dp,
+                                    color = if (selected) Color(0xFF34332F) else Color(0xFF34332F).copy(alpha = 0.18f),
+                                    shape = CircleShape
+                                )
+                        )
+                        Text(
+                            name,
+                            color = Color(0xFF34332F),
+                            style = MaterialTheme.typography.labelMedium,
+                            maxLines = 1
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text("Done") }
+        }
+    )
+}

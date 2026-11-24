@@ -29,7 +29,7 @@
       "simplified": "(W - 124) / 2",
       "constraint": "W must be at least 124 dp for non-negative bar widths."
     },
-    "stretch_behavior": "Kedua bagian bar memiliki lebar dinamis yang sama. Bar menggunakan tile 4x64 dp yang diulang atau di-stretch secara horizontal. Cap kiri, head, dan cap kanan mempertahankan ukuran serta proporsinya."
+    "stretch_behavior": "Kedua bagian bar memiliki lebar dinamis yang sama. Masing-masing memakai bitmap sumber bar_tile dan di-stretch secara horizontal dengan ContentScale.FillBounds; runtime tidak mengulang tile. Cap kiri, head, dan cap kanan mempertahankan ukuran serta proporsinya."
   },
   "atlas": {
     "height_1x": 64,

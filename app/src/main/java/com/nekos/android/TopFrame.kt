@@ -8,8 +8,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.produceState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
@@ -32,8 +35,9 @@ internal fun TopFrame(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val images by produceState<TopFrameImages?>(initialValue = null, context, colorArgb) {
-        value = withContext(Dispatchers.IO) {
+    var images by remember { mutableStateOf<TopFrameImages?>(null) }
+    LaunchedEffect(context, colorArgb) {
+        val loadedImages = withContext(Dispatchers.IO) {
             runCatching {
                 val sheet = context.assets.open(
                     "topframe_spritesheet@4x.png"
@@ -59,6 +63,7 @@ internal fun TopFrame(
                 }
             }.getOrNull()
         }
+        images = loadedImages
     }
 
     val frame = images ?: return

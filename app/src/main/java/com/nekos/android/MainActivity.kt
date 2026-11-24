@@ -125,7 +125,7 @@ class MainActivity : ComponentActivity() {
         } else {
             temporarilyUnavailableAppIds - appIds
         }
-        setTemporarilyUnavailableAppIds(updatedAppIds)
+        persistTemporarilyUnavailableAppIds(updatedAppIds)
     }
 
     private fun clearTemporarilyUnavailableAppsForProfile(user: UserHandle) {
@@ -136,10 +136,10 @@ class MainActivity : ComponentActivity() {
         val profileStillExists: (Long) -> Boolean = { serial ->
             serial != removedProfileSerial && userManager.getUserForSerialNumber(serial) != null
         }
-        setTemporarilyUnavailableAppIds(
+        persistTemporarilyUnavailableAppIds(
             retainAppIdsForExistingProfiles(temporarilyUnavailableAppIds, profileStillExists)
         )
-        setSuspendedAppIds(
+        persistSuspendedAppIds(
             retainAppIdsForExistingProfiles(suspendedAppIds, profileStillExists)
         )
     }
@@ -181,16 +181,16 @@ class MainActivity : ComponentActivity() {
         if (profileSerial < 0L || packageNames.isEmpty()) return
         val appIds = packageNames.mapTo(mutableSetOf()) { launcherAppId(it, profileSerial) }
         val updatedAppIds = if (suspended) suspendedAppIds + appIds else suspendedAppIds - appIds
-        setSuspendedAppIds(updatedAppIds)
+        persistSuspendedAppIds(updatedAppIds)
     }
 
-    private fun setSuspendedAppIds(appIds: Set<String>) {
+    private fun persistSuspendedAppIds(appIds: Set<String>) {
         if (appIds == suspendedAppIds) return
         suspendedAppIds = appIds
         SuspendedAppStore.save(this, appIds)
     }
 
-    private fun setTemporarilyUnavailableAppIds(appIds: Set<String>) {
+    private fun persistTemporarilyUnavailableAppIds(appIds: Set<String>) {
         if (appIds == temporarilyUnavailableAppIds) return
         temporarilyUnavailableAppIds = appIds
         TemporarilyUnavailableAppStore.save(this, appIds)

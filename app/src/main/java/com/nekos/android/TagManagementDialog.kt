@@ -9,11 +9,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
@@ -29,193 +25,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-
-private val TagColorOptions = listOf(
-    "Sand" to 0xFFE7E1D6L,
-    "Blue" to 0xFFDCE8F8L,
-    "Lavender" to 0xFFE8DFF5L,
-    "Rose" to 0xFFF5DDE3L,
-    "Peach" to 0xFFF6E1D2L,
-    "Amber" to 0xFFF4E8C9L,
-    "Mint" to 0xFFD9EEE6L,
-    "Sage" to 0xFFE0E9D8L,
-    "Slate" to 0xFFE1E5E9L
-)
-
-private val TagIconFrameColors = listOf(
-    "Ocean" to 0xFF114B56L,
-    "Blue" to 0xFF2563EBL,
-    "Purple" to 0xFF7C3AEDL,
-    "Rose" to 0xFFE11D48L,
-    "Red" to 0xFFDC2626L,
-    "Orange" to 0xFFEA580CL,
-    "Amber" to 0xFFD97706L,
-    "Green" to 0xFF16A34AL,
-    "Mint" to 0xFF0D9488L,
-    "Slate" to 0xFF64748BL,
-    "Silver" to 0xFFA1A1AAL,
-    "Dark" to 0xFF27272AL
-)
-
-@Composable
-private fun TagAppIcon(app: InstalledApp, iconBitmapCache: AppIconBitmapCache) {
-    var bitmap by remember(app.id, iconBitmapCache.generation) {
-        mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null)
-    }
-
-    LaunchedEffect(app.id, iconBitmapCache.generation) {
-        bitmap = iconBitmapCache.getOrLoad(app)
-    }
-
-    if (bitmap != null) {
-        Image(
-            bitmap = bitmap!!,
-            contentDescription = null,
-            modifier = Modifier.size(40.dp).clip(RoundedCornerShape(11.dp))
-        )
-    } else {
-        Box(
-            modifier = Modifier.size(40.dp).clip(RoundedCornerShape(11.dp))
-                .background(Color(0xFFE7E1D6))
-        )
-    }
-}
-
-@Composable
-fun TagAppsDialog(
-    tag: NekTag,
-    apps: List<InstalledApp>,
-    iconBitmapCache: AppIconBitmapCache,
-    launcherSurface: Color,
-    launcherUiColorArgb: Long,
-    onLaunch: (InstalledApp) -> Unit,
-    onEdit: () -> Unit,
-    onDismiss: () -> Unit
-) {
-    val assignedApps = remember(tag.appPackages, apps) {
-        val byPackage = apps.associateBy { it.id }
-        tag.appPackages.mapNotNull(byPackage::get)
-    }
-    val tagColor = Color(tag.colorArgb.toInt())
-
-    NekOSAlertDialog(
-        topFrameColorArgb = launcherUiColorArgb,
-        onDismissRequest = onDismiss,
-        shape = RoundedCornerShape(18.dp),
-        containerColor = launcherSurface,
-        titleContentColor = Color(0xFF34332F),
-        textContentColor = Color(0xFF34332F),
-        title = {
-            Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    Box(Modifier.size(12.dp).clip(CircleShape).background(tagColor))
-                    Text(
-                        text = tag.name,
-                        modifier = Modifier.weight(1f),
-                        style = MaterialTheme.typography.titleLarge
-                    )
-                }
-        },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                Text(
-                    text = "${assignedApps.size} ${if (assignedApps.size == 1) "app" else "apps"}",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = Color(0xFF8B8982)
-                )
-                if (assignedApps.isEmpty()) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth()
-                            .clip(RoundedCornerShape(18.dp))
-                            .background(Color(0xFFF4F1EA))
-                            .padding(horizontal = 10.dp, vertical = 10.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(5.dp)
-                    ) {
-                        Text(
-                            if (tag.appPackages.isEmpty()) "No apps in this tag" else "No apps currently available",
-                            color = Color(0xFF34332F)
-                        )
-                        Text(
-                            if (tag.appPackages.isEmpty()) {
-                                "Edit this tag to add applications."
-                            } else {
-                                "Saved app assignments are kept while their Android profile is unavailable."
-                            },
-                            color = Color(0xFF8B8982),
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
-                } else {
-                    LazyColumn(Modifier.heightIn(max = 200.dp)) {
-                        items(assignedApps, key = { it.id }) { app ->
-                            Row(
-                                modifier = Modifier.fillMaxWidth()
-                                    .clickable { onLaunch(app) }
-                                    .padding(vertical = 4.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                TagAppIcon(app, iconBitmapCache)
-                                Text(
-                                    app.label,
-                                    color = Color(0xFF34332F),
-                                    modifier = Modifier.weight(1f).padding(start = 10.dp),
-                                    maxLines = 1
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        confirmButton = { TextButton(onClick = onEdit) { Text("Edit tag") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Close") } }
-    )
-}
-
-@Composable
-fun TagActionsDialog(
-    tag: NekTag,
-    movePageLabel: String?,
-    launcherSurface: Color,
-    launcherUiColorArgb: Long,
-    onMovePage: () -> Unit,
-    onEdit: () -> Unit,
-    onDelete: () -> Unit,
-    onDismiss: () -> Unit
-) {
-    NekOSAlertDialog(
-        topFrameColorArgb = launcherUiColorArgb,
-        onDismissRequest = onDismiss,
-        shape = RoundedCornerShape(18.dp),
-        containerColor = launcherSurface,
-        titleContentColor = Color(0xFF34332F),
-        textContentColor = Color(0xFF34332F),
-        title = { Text(tag.name) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                TextButton(onClick = onEdit, modifier = Modifier.fillMaxWidth()) {
-                    Text("Edit tag")
-                }
-                if (movePageLabel != null) {
-                    TextButton(onClick = onMovePage, modifier = Modifier.fillMaxWidth()) {
-                        Text(movePageLabel)
-                    }
-                }
-                TextButton(onClick = onDelete, modifier = Modifier.fillMaxWidth()) {
-                    Text("Delete tag", color = Color(0xFFB3261E))
-                }
-            }
-        },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("Close") } }
-    )
-}
 
 @Composable
 fun TagManagementDialog(
@@ -462,113 +273,22 @@ fun TagManagementDialog(
     )
 
     if (showTagColorPicker) {
-        NekOSAlertDialog(
-            topFrameColorArgb = launcherUiColorArgb,
-            onDismissRequest = { showTagColorPicker = false },
-            shape = RoundedCornerShape(18.dp),
-            containerColor = launcherSurface,
-            titleContentColor = Color(0xFF34332F),
-            textContentColor = Color(0xFF34332F),
-            title = { Text("Tag Color") },
-            text = {
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(3),
-                    modifier = Modifier.heightIn(max = 200.dp),
-                    contentPadding = PaddingValues(2.dp),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    items(TagColorOptions) { (name, colorValue) ->
-                        val selected = selectedColor == colorValue
-                        Column(
-                            Modifier.fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(Color(0xFFF4F1EA))
-                                .clickable {
-                                    selectedColor = colorValue
-                                    showTagColorPicker = false
-                                }
-                                .padding(6.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            Box(
-                                Modifier.fillMaxWidth()
-                                    .height(34.dp)
-                                    .clip(RoundedCornerShape(9.dp))
-                                    .background(Color(colorValue.toInt()))
-                                    .border(
-                                        width = if (selected) 2.dp else 1.dp,
-                                        color = if (selected) Color(0xFF746657) else Color(0xFF34332F).copy(alpha = 0.16f),
-                                        shape = RoundedCornerShape(9.dp)
-                                    )
-                            )
-                            Text(name, color = Color(0xFF34332F), style = MaterialTheme.typography.labelMedium)
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { showTagColorPicker = false }) { Text("Done") }
-            }
+        TagColorPickerDialog(
+            selectedColor = selectedColor,
+            launcherSurface = launcherSurface,
+            launcherUiColorArgb = launcherUiColorArgb,
+            onColorSelected = { selectedColor = it },
+            onDismiss = { showTagColorPicker = false }
         )
     }
 
     if (showIconColorPicker) {
-        NekOSAlertDialog(
-            topFrameColorArgb = launcherUiColorArgb,
-            onDismissRequest = { showIconColorPicker = false },
-            shape = RoundedCornerShape(18.dp),
-            containerColor = launcherSurface,
-            titleContentColor = Color(0xFF34332F),
-            textContentColor = Color(0xFF34332F),
-            title = { Text("Icon Color") },
-            text = {
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(3),
-                    modifier = Modifier.heightIn(max = 200.dp),
-                    contentPadding = PaddingValues(4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalArrangement = Arrangement.spacedBy(5.dp)
-                ) {
-                    items(TagIconFrameColors) { (name, colorValue) ->
-                        val selected = selectedIconFrameColor == colorValue
-                        Row(
-                            Modifier.fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(Color(0xFFF4F1EA))
-                                .clickable {
-                                    selectedIconFrameColor = colorValue
-                                    showIconColorPicker = false
-                                }
-                                .padding(6.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(7.dp)
-                        ) {
-                            Box(
-                                Modifier.size(18.dp)
-                                    .clip(CircleShape)
-                                    .background(Color(colorValue.toInt()))
-                                    .border(
-                                        width = if (selected) 2.dp else 1.dp,
-                                        color = if (selected) Color(0xFF34332F) else Color(0xFF34332F).copy(alpha = 0.18f),
-                                        shape = CircleShape
-                                    )
-                            )
-                            Text(
-                                name,
-                                color = Color(0xFF34332F),
-                                style = MaterialTheme.typography.labelMedium,
-                                maxLines = 1
-                            )
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { showIconColorPicker = false }) { Text("Done") }
-            }
+        TagIconFrameColorPickerDialog(
+            selectedColor = selectedIconFrameColor,
+            launcherSurface = launcherSurface,
+            launcherUiColorArgb = launcherUiColorArgb,
+            onColorSelected = { selectedIconFrameColor = it },
+            onDismiss = { showIconColorPicker = false }
         )
     }
-
 }
