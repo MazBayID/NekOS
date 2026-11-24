@@ -78,6 +78,34 @@ class LauncherReferenceCleanupTest {
     }
 
     @Test
+    fun preservesSuspendedAndDisabledAppsUntilTheyBecomeLaunchableAgain() {
+        val suspendedAppId = "10::com.example.suspended"
+        val disabledAppId = "10::com.example.disabled"
+        val removedAppId = "10::com.example.removed"
+        val tag = NekTag(
+            id = "retained-apps",
+            name = "Retained apps",
+            appPackages = listOf(suspendedAppId, disabledAppId, removedAppId)
+        )
+
+        val result = cleanupLauncherReferences(
+            favorites = listOf(suspendedAppId, disabledAppId, removedAppId),
+            tags = listOf(tag),
+            installedAppIds = emptySet(),
+            temporarilyUnavailableAppIds = setOf(suspendedAppId, disabledAppId)
+        )
+
+        assertEquals(
+            listOf(suspendedAppId, disabledAppId, null),
+            result.favorites
+        )
+        assertEquals(
+            tag.copy(appPackages = listOf(suspendedAppId, disabledAppId)),
+            result.tags.single()
+        )
+    }
+
+    @Test
     fun refreshesTagDialogReferencesUsingStableIdAndLatestData() {
         val oldTag = NekTag(
             id = "tools",
