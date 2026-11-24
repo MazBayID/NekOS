@@ -505,6 +505,7 @@ internal fun NekOSRoot(
         }
         fun closeDrawer() {
             focusManager.clearFocus()
+            clearActionMenuPreview()
             drawerFullyOpen = false
             isDrawerDragging = false
             drawerTargetProgress = 1f
