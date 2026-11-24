@@ -22,4 +22,20 @@ class LauncherAppIdentityTest {
             launcherAppId("com.example.notes", 42L)
         )
     }
+
+    @Test
+    fun removesPersistedMarkersForDeletedProfilesButKeepsExistingProfiles() {
+        val markers = setOf(
+            "10::com.example.personal",
+            "42::com.example.work",
+            "deleted-profile-marker",
+            "not-a-serial::com.example.invalid"
+        )
+
+        val retained = retainAppIdsForExistingProfiles(markers) { serial ->
+            serial == 42L
+        }
+
+        assertEquals(setOf("42::com.example.work"), retained)
+    }
 }
