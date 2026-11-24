@@ -98,8 +98,12 @@ class MainActivity : ComponentActivity() {
         mainHandler.postDelayed(refreshInstalledAppsRunnable, 250L)
     }
 
-    override fun onStart() {
-        super.onStart()
+    /**
+     * Keep package/profile observers registered while the launcher Activity is stopped.
+     * Package changes can happen while another app is in the foreground; unregistering
+     * in onStop would leave a gap that a short return to Home cannot detect.
+     */
+    private fun registerAppChangeObservers() {
         if (!isPackageCallbackRegistered) {
             launcherApps.registerCallback(packageCallback, Handler(Looper.getMainLooper()))
             isPackageCallbackRegistered = true
@@ -134,11 +138,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    override fun onStop() {
-        Log.i(LIFECYCLE_TAG, "onStop pid=${Process.myPid()}")
-        stoppedAtElapsedMillis = SystemClock.elapsedRealtime()
-        backgroundSignal++
-        mainHandler.removeCallbacks(refreshInstalledAppsRunnable)
+    private fun unregisterAppChangeObservers() {
         if (isPackageCallbackRegistered) {
             launcherApps.unregisterCallback(packageCallback)
             isPackageCallbackRegistered = false
@@ -147,6 +147,12 @@ class MainActivity : ComponentActivity() {
             unregisterReceiver(profileReceiver)
             isProfileReceiverRegistered = false
         }
+    }
+
+    override fun onStop() {
+        Log.i(LIFECYCLE_TAG, "onStop pid=${Process.myPid()}")
+        stoppedAtElapsedMillis = SystemClock.elapsedRealtime()
+        backgroundSignal++
         super.onStop()
     }
 
@@ -183,6 +189,7 @@ class MainActivity : ComponentActivity() {
         installSplashScreen()
         super.onCreate(savedInstanceState)
         logProcessDiagnostics(savedInstanceState != null)
+        registerAppChangeObservers()
         WindowCompat.setDecorFitsSystemWindows(window, false)
         window.statusBarColor = android.graphics.Color.TRANSPARENT
         window.navigationBarColor = android.graphics.Color.TRANSPARENT
@@ -210,6 +217,8 @@ class MainActivity : ComponentActivity() {
             LIFECYCLE_TAG,
             "onDestroy pid=${Process.myPid()} finishing=$isFinishing changingConfigurations=$isChangingConfigurations"
         )
+        mainHandler.removeCallbacks(refreshInstalledAppsRunnable)
+        unregisterAppChangeObservers()
         super.onDestroy()
     }
 
