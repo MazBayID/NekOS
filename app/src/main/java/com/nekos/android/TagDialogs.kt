@@ -19,7 +19,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 @Composable
-private fun TagAppIcon(app: InstalledApp, iconBitmapCache: AppIconBitmapCache) {
+internal fun TagAppIcon(app: InstalledApp, iconBitmapCache: AppIconBitmapCache) {
     var bitmap by remember(app.id, iconBitmapCache.generation) {
         mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null)
     }
