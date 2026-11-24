@@ -410,18 +410,19 @@ internal fun NekOSRoot(
         actionMenuPreviewApp = null
     }
 
-    fun saveTags(updated: List<NekTag>) {
+    fun saveTags(updated: List<NekTag>): Boolean {
         if (!tagStorageWritable) {
             Toast.makeText(
                 context,
                 "Tags could not be loaded. Existing data was preserved.",
                 Toast.LENGTH_LONG
             ).show()
-            return
+            return false
         }
         val normalized = updated.distinctBy { it.id }
         if (TagStore.save(context, normalized)) {
             tags = normalized
+            return true
         } else {
             tagStorageWritable = false
             Toast.makeText(
@@ -429,17 +430,18 @@ internal fun NekOSRoot(
                 "Tags could not be saved. Existing data was preserved.",
                 Toast.LENGTH_LONG
             ).show()
+            return false
         }
     }
 
-    fun updateFavorites(updated: List<String?>) {
+    fun updateFavorites(updated: List<String?>): Boolean {
         if (!favoriteStorageWritable) {
             Toast.makeText(
                 context,
                 "Favorites could not be loaded. Existing data was preserved.",
                 Toast.LENGTH_LONG
             ).show()
-            return
+            return false
         }
         if (!saveFavoritePackages(context, updated)) {
             favoriteStorageWritable = false
@@ -448,7 +450,7 @@ internal fun NekOSRoot(
                 "Favorites could not be saved. Existing data was preserved.",
                 Toast.LENGTH_LONG
             ).show()
-            return
+            return false
         }
         favoritePackages = updated
         val activeFavoriteIds = updated.filterNotNull().toSet()
@@ -464,6 +466,7 @@ internal fun NekOSRoot(
             }
         favoriteAppSnapshots = retainedSnapshots + refreshedSnapshots
         FavoriteAppSnapshotStore.save(context, favoriteAppSnapshots.values)
+        return true
     }
 
     fun placeFavoriteFromDrawer(appId: String, targetIndex: Int) {
@@ -631,8 +634,8 @@ internal fun NekOSRoot(
                 val snapshot = favoriteOrderSnapshot
                 if (cancelled) {
                     if (snapshot != null) favoritePackages = snapshot
-                } else {
-                    updateFavorites(favoritePackages)
+                } else if (!updateFavorites(favoritePackages)) {
+                    if (snapshot != null) favoritePackages = snapshot
                 }
                 favoriteOrderSnapshot = null
             },
@@ -651,8 +654,8 @@ internal fun NekOSRoot(
                 val snapshot = tagOrderSnapshot
                 if (cancelled) {
                     if (snapshot != null) tags = snapshot
-                } else {
-                    saveTags(tags)
+                } else if (!saveTags(tags)) {
+                    if (snapshot != null) tags = snapshot
                 }
                 tagOrderSnapshot = null
             },
