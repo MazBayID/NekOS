@@ -8,7 +8,7 @@ NekOS uses a single Activity with Jetpack Compose. Keep the Activity responsible
 
 - **Presentation:** Compose screens, dialogs, gestures, and visual state. Keep screen-level orchestration in `NekOSRoot.kt`; Home layout orchestration lives in `HomeScreen.kt`; reusable Favorite Slot, Tag Pill, and Tag Frame composables live in `HomeComponents.kt`. App Drawer rendering and grid items live in `AppDrawer.kt`. Settings dialog orchestration lives in `NekOSSettingsDialog.kt`, with reusable preview and card composables in `SettingsComponents.kt`. Tag editor UI lives in `TagManagementDialog.kt`; tag viewing and action dialogs live in `TagDialogs.kt`, and tag color selection dialogs live in `TagColorPickerDialogs.kt`. UI components should not directly own package-management or persistence rules.
 - **Domain:** launcher operations such as loading launchable apps, adding/removing/reordering favorites, and resolving app actions.
-- **Data:** local persistence for favorites and user-defined collections, plus Android PackageManager / LauncherApps access for installed applications.
+- **Data:** local persistence for favorites and user-defined collections; app availability markers are isolated in `AppAvailabilityStore.kt`. Android PackageManager / LauncherApps access and launch operations remain in `InstalledApp.kt`.
 - **Assets:** catalog metadata remains the source of truth for UI/tag icon names and paths. App icons in the drawer and favorites always come from Android.
 
 ## State and persistence rules
