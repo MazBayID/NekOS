@@ -1208,8 +1208,8 @@ private fun HomeScreen(
                                 val tagListState = rememberLazyListState()
                                 val reorderableTagState = rememberReorderableLazyListState(tagListState) { from, to ->
                                     onTagReorder(
-                                        safeTagPage * 5 + from.index,
-                                        safeTagPage * 5 + to.index
+                                        tagPageItemIndex(safeTagPage, from.index),
+                                        tagPageItemIndex(safeTagPage, to.index)
                                     )
                                 }
                                 LazyColumn(
