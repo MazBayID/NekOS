@@ -35,6 +35,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -184,6 +185,13 @@ internal fun NekOSRoot(
             if (!isInitialLoadComplete) isInitialLoadComplete = true
             return@LaunchedEffect
         }
+        // Do not mutate Favorite or Tag collections while a reorder gesture is
+        // still using index-based positions and a pre-refresh rollback snapshot.
+        // The gesture completion commits or restores its state before cleanup runs.
+        snapshotFlow {
+            favoriteOrderSnapshot == null && tagOrderSnapshot == null
+        }.first { reorderFinished -> reorderFinished }
+
         catalogLoadFailed = false
         val refreshedApps = refreshedCatalog.apps
         // This effect runs only for initial load or a real package/profile refresh.
