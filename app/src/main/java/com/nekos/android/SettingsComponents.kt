@@ -35,13 +35,14 @@ internal fun BuiltInWallpaperPreview(
     label: String
 ) {
     val context = LocalContext.current
-    val preview = remember { mutableStateOf<ImageBitmap?>(null) }
+    val previewState = remember { mutableStateOf<ImageBitmap?>(null) }
     LaunchedEffect(resourceId) {
         val loadedPreview = withContext(Dispatchers.IO) {
             loadBuiltInHomeWallpaper(context, resourceId, maxDimension = 480)
         }
-        preview.value = loadedPreview
+        previewState.value = loadedPreview
     }
+    val preview = previewState.value
 
     if (preview != null) {
         Image(
