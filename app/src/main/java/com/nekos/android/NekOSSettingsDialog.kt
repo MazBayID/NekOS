@@ -432,7 +432,7 @@ private fun BuiltInWallpaperPreview(
         val loadedPreview = withContext(Dispatchers.IO) {
             loadBuiltInHomeWallpaper(context, resourceId, maxDimension = 480)
         }
-        value = loadedPreview
+        this.value = loadedPreview
     }.value
 
     if (preview != null) {
