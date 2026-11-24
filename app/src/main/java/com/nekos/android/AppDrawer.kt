@@ -82,7 +82,16 @@ internal fun AppDrawer(
         object : NestedScrollConnection {
             override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
                 if (available.y != 0f) focusManager.clearFocus()
-                if (available.y < 0f) pendingDrawerCloseDrag[0] = 0f
+                if (available.y < 0f) {
+                    pendingDrawerCloseDrag[0] = 0f
+                    if (shouldInvalidateDrawerCloseGesture(
+                            availableY = available.y,
+                            isUserInput = source == NestedScrollSource.UserInput
+                        )
+                    ) {
+                        drawerGestureStartedAtTop[0] = false
+                    }
+                }
                 return Offset.Zero
             }
 
