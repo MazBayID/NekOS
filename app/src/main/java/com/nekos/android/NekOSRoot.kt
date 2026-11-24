@@ -1009,8 +1009,9 @@ internal fun NekOSRoot(
                 movePageLabel = targetPage?.let { "Move to page ${it + 1}" },
                 onMovePage = {
                     targetPage?.let { page ->
-                        saveTags(moveTagToPage(tags, tag.id, page))
-                        activeTagPage = page
+                        if (saveTags(moveTagToPage(tags, tag.id, page))) {
+                            activeTagPage = page
+                        }
                     }
                     actionMenuTag = null
                 },
@@ -1043,10 +1044,16 @@ internal fun NekOSRoot(
                         if (tagEditorTarget == null && tags.size >= 10) {
                             Toast.makeText(context, "Maximum of 10 tags", Toast.LENGTH_SHORT).show()
                         } else {
-                            if (tagEditorTarget == null) activeTagPage = tags.size / 5
-                            saveTags(if (tagEditorTarget == null) tags + saved else tags.map { if (it.id == saved.id) saved else it })
-                            showTagEditor = false
-                            tagEditorTarget = null
+                            val updatedTags = if (tagEditorTarget == null) {
+                                tags + saved
+                            } else {
+                                tags.map { if (it.id == saved.id) saved else it }
+                            }
+                            if (saveTags(updatedTags)) {
+                                if (tagEditorTarget == null) activeTagPage = tags.size / 5
+                                showTagEditor = false
+                                tagEditorTarget = null
+                            }
                         }
                     }
                 },
@@ -1067,10 +1074,11 @@ internal fun NekOSRoot(
                 text = { Text("Only the tag is removed. Your apps are not affected.") },
                 confirmButton = {
                     TextButton(onClick = {
-                        saveTags(tags.filterNot { it.id == tag.id })
-                        tagPendingDelete = null
-                        showTagEditor = false
-                        tagEditorTarget = null
+                        if (saveTags(tags.filterNot { it.id == tag.id })) {
+                            tagPendingDelete = null
+                            showTagEditor = false
+                            tagEditorTarget = null
+                        }
                     }) { Text("Delete", color = Color(0xFFB3261E)) }
                 },
                 dismissButton = {
