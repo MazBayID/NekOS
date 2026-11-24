@@ -177,6 +177,32 @@ class TagStoreTest {
     }
 
     @Test
+    fun malformedAppsFieldIsUnreadableAndCannotBeOverwritten() {
+        val malformed = """[{"id":"tag-one","name":"Work","apps":"com.example.mail"}]"""
+        tagsPreferences().edit().putString("tag_collection_v1", malformed).commit()
+
+        val loadResult = TagStore.loadResult(context)
+
+        assertEquals(emptyList<NekTag>(), loadResult.tags)
+        assertEquals(false, loadResult.isValid)
+        assertEquals(false, TagStore.save(context, listOf(NekTag(id = "new", name = "New"))))
+        assertEquals(malformed, tagsPreferences().getString("tag_collection_v1", null))
+    }
+
+    @Test
+    fun nonStringAppReferenceIsUnreadableAndCannotBeOverwritten() {
+        val malformed = """[{"id":"tag-one","name":"Work","apps":["com.example.mail",42]}]"""
+        tagsPreferences().edit().putString("tag_collection_v1", malformed).commit()
+
+        val loadResult = TagStore.loadResult(context)
+
+        assertEquals(emptyList<NekTag>(), loadResult.tags)
+        assertEquals(false, loadResult.isValid)
+        assertEquals(false, TagStore.save(context, listOf(NekTag(id = "new", name = "New"))))
+        assertEquals(malformed, tagsPreferences().getString("tag_collection_v1", null))
+    }
+
+    @Test
     fun wrongPreferenceValueTypeIsUnreadableAndCannotBeOverwritten() {
         tagsPreferences().edit().putInt("tag_collection_v1", 42).commit()
 
