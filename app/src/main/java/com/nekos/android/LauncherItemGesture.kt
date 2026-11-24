@@ -126,6 +126,7 @@ internal class LauncherReorderGestureDetector(
     private val onLongPressCancel: () -> Unit = {},
     private val onReorderStart: () -> Unit = {},
     private val onReorderEnd: (cancelled: Boolean) -> Unit = {},
+    private val onTrace: (String) -> Unit = {},
 ) : sh.calvin.reorderable.DragGestureDetector {
     override suspend fun PointerInputScope.detect(
         onDragStart: (Offset) -> Unit,
@@ -135,6 +136,7 @@ internal class LauncherReorderGestureDetector(
     ) {
         awaitEachGesture {
             val down = awaitFirstDown(requireUnconsumed = false)
+            onTrace("down position=${down.position} consumed=${down.isConsumed}")
             val longPress = awaitLongPressOrCancellation(down.id)
 
             if (longPress == null) {
@@ -143,7 +145,11 @@ internal class LauncherReorderGestureDetector(
                 val gestureCancelled = downChange == null ||
                     downChange.isConsumed ||
                     currentEvent.changes.any { it.id != down.id && it.pressed }
-                if (pointerReleased && !gestureCancelled) onTap()
+                onTrace("press-ended tapCandidate=$pointerReleased cancelled=$gestureCancelled changeConsumed=${downChange?.isConsumed}")
+                if (pointerReleased && !gestureCancelled) {
+                    onTrace("tap")
+                    onTap()
+                }
                 return@awaitEachGesture
             }
 
@@ -151,9 +157,11 @@ internal class LauncherReorderGestureDetector(
                 longPress.id != down.id ||
                 currentEvent.changes.any { it.id != down.id && it.pressed }
             ) {
+                onTrace("long-press-rejected pointerMismatch=${longPress.id != down.id} multiTouch=${currentEvent.changes.any { it.id != down.id && it.pressed }}")
                 return@awaitEachGesture
             }
 
+            onTrace("long-press position=${toRootPosition(longPress.position)}")
             onLongPress(toRootPosition(longPress.position))
 
             var accumulated = Offset.Zero
@@ -166,6 +174,7 @@ internal class LauncherReorderGestureDetector(
                     val change = event.changes.firstOrNull { it.id == down.id }
 
                     if (change == null) {
+                        onTrace("pointer-missing dragging=$dragging")
                         if (dragging) {
                             onReorderEnd(true)
                             onDragCancel()
@@ -175,6 +184,7 @@ internal class LauncherReorderGestureDetector(
                     }
 
                     if (event.changes.any { it.id != down.id && it.pressed }) {
+                        onTrace("multi-touch-cancel dragging=$dragging")
                         if (dragging) {
                             onReorderEnd(true)
                             onDragCancel()
@@ -184,16 +194,25 @@ internal class LauncherReorderGestureDetector(
                     }
 
                     if (!change.pressed) {
+                        onTrace("release consumed=${change.isConsumed} dragging=$dragging")
                         if (change.isConsumed) {
                             if (dragging) {
+                                onTrace("reorder-cancel")
                                 onReorderEnd(true)
                                 onDragCancel()
-                            } else onLongPressCancel()
+                            } else {
+                                onTrace("long-press-cancel")
+                                onLongPressCancel()
+                            }
                         } else {
                             if (dragging) {
+                                onTrace("reorder-end")
                                 onReorderEnd(false)
                                 onDragEnd()
-                            } else onLongPressEnd()
+                            } else {
+                                onTrace("long-press-end")
+                                onLongPressEnd()
+                            }
                         }
                         completed = true
                         break
@@ -204,6 +223,7 @@ internal class LauncherReorderGestureDetector(
 
                     if (!dragging && accumulated.getDistance() > viewConfiguration.touchSlop) {
                         dragging = true
+                        onTrace("reorder-start delta=${accumulated}")
                         onLongPressCancel()
                         onReorderStart()
                         onDragStart(change.position)
@@ -217,6 +237,7 @@ internal class LauncherReorderGestureDetector(
                 }
             } finally {
                 if (!completed) {
+                    onTrace("detector-finally cancelled dragging=$dragging")
                     if (dragging) {
                         onReorderEnd(true)
                         onDragCancel()
