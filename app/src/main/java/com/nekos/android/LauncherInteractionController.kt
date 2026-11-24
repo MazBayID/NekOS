@@ -106,6 +106,15 @@ internal fun shouldCloseDrawerAfterDrag(
 
 
 /**
+ * An upward user scroll means this gesture is browsing the app list, not closing the Drawer.
+ */
+internal fun shouldInvalidateDrawerCloseGesture(
+    availableY: Float,
+    isUserInput: Boolean
+): Boolean = isUserInput && availableY < 0f
+
+
+/**
  * The Tag rail no longer scrolls vertically, so the Drawer swipe can begin
  * anywhere on Home. Tag-handle long-press drags are handled by the child gesture
  * detector, which consumes the active drag sequence before it reaches this parent.
