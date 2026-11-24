@@ -149,7 +149,9 @@ internal fun NekOSRoot(
     var favoriteAppSnapshots by remember {
         mutableStateOf(FavoriteAppSnapshotStore.load(context))
     }
-    var tags by remember { mutableStateOf(TagStore.load(context)) }
+    val initialTagLoad = remember(context) { TagStore.loadResult(context) }
+    var tags by remember { mutableStateOf(initialTagLoad.tags) }
+    var tagStorageWritable by remember { mutableStateOf(initialTagLoad.isValid) }
     var favoriteOrderSnapshot by remember { mutableStateOf<List<String?>?>(null) }
     var tagOrderSnapshot by remember { mutableStateOf<List<NekTag>?>(null) }
     var activeTagPage by remember { mutableIntStateOf(0) }
@@ -230,9 +232,17 @@ internal fun NekOSRoot(
             favoritePackages = cleanedReferences.favorites
             saveFavoritePackages(context, cleanedReferences.favorites)
         }
-        if (cleanedReferences.tags != latestTags) {
-            tags = cleanedReferences.tags
-            TagStore.save(context, cleanedReferences.tags)
+        if (tagStorageWritable && cleanedReferences.tags != latestTags) {
+            if (TagStore.save(context, cleanedReferences.tags)) {
+                tags = cleanedReferences.tags
+            } else {
+                tagStorageWritable = false
+                Toast.makeText(
+                    context,
+                    "Tags could not be saved. Existing data was preserved.",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
         }
         isInitialLoadComplete = true
     }
@@ -388,8 +398,25 @@ internal fun NekOSRoot(
     }
 
     fun saveTags(updated: List<NekTag>) {
-        tags = updated.distinctBy { it.id }
-        TagStore.save(context, tags)
+        if (!tagStorageWritable) {
+            Toast.makeText(
+                context,
+                "Tags could not be loaded. Existing data was preserved.",
+                Toast.LENGTH_LONG
+            ).show()
+            return
+        }
+        val normalized = updated.distinctBy { it.id }
+        if (TagStore.save(context, normalized)) {
+            tags = normalized
+        } else {
+            tagStorageWritable = false
+            Toast.makeText(
+                context,
+                "Tags could not be saved. Existing data was preserved.",
+                Toast.LENGTH_LONG
+            ).show()
+        }
     }
 
     fun updateFavorites(updated: List<String?>) {
