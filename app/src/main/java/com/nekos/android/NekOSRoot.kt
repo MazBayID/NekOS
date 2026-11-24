@@ -156,6 +156,7 @@ internal fun NekOSRoot(
     // Restored launcher tasks render Home immediately while the app catalog refreshes.
     var isInitialLoadComplete by remember { mutableStateOf(skipStartupSplash) }
     var lastAppliedRefreshToken by remember { mutableIntStateOf(-1) }
+    var catalogLoadFailed by remember { mutableStateOf(false) }
 
     val latestFavoritePackages by rememberUpdatedState(favoritePackages)
     val latestFavoriteAppSnapshots by rememberUpdatedState(favoriteAppSnapshots)
@@ -163,7 +164,12 @@ internal fun NekOSRoot(
 
     // Discover launchable apps while the brand splash is visible instead of
     // waiting for an artificial timer before starting initialization.
-    LaunchedEffect(refreshToken) {
+    LaunchedEffect(refreshToken, resumeToken) {
+        // A normal resume must not rescan a healthy catalog. It only retries a
+        // previous failed scan, covering transient package/profile service errors.
+        if (refreshToken == lastAppliedRefreshToken && !catalogLoadFailed) {
+            return@LaunchedEffect
+        }
         val refreshedCatalog = try {
             withContext(Dispatchers.IO) {
                 loadLaunchableApps(context)
@@ -172,11 +178,13 @@ internal fun NekOSRoot(
             throw cancelled
         } catch (_: Exception) {
             // Keep the last known catalog and user collections intact when a
-            // transient package/profile query fails. A later resume retries it.
+            // transient package/profile query fails. The next resume retries it.
+            catalogLoadFailed = true
             Toast.makeText(context, "Unable to load apps. Try again shortly.", Toast.LENGTH_SHORT).show()
             if (!isInitialLoadComplete) isInitialLoadComplete = true
             return@LaunchedEffect
         }
+        catalogLoadFailed = false
         val refreshedApps = refreshedCatalog.apps
         // This effect runs only for initial load or a real package/profile refresh.
         if (refreshToken != lastAppliedRefreshToken || !hasSameAppCatalog(apps, refreshedApps)) {
