@@ -59,7 +59,7 @@ internal fun TopFrame(
                 }
             }.getOrNull()
         }
-        value = loadedImages
+        this.value = loadedImages
     }
 
     val frame = images ?: return
