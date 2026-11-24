@@ -38,8 +38,10 @@ class MainActivity : ComponentActivity() {
     private var homeSignal by mutableIntStateOf(0)
     /** Bumped when the launcher stops being visible so transient drawer UI can reset. */
     private var backgroundSignal by mutableIntStateOf(0)
-    /** Package IDs temporarily unavailable according to LauncherApps callbacks. */
+    /** Package IDs whose launcher activities are temporarily unavailable. */
     private var temporarilyUnavailableAppIds by mutableStateOf<Set<String>>(emptySet())
+    /** Suspended packages remain assigned even if the current catalog omits them. */
+    private var suspendedAppIds by mutableStateOf<Set<String>>(emptySet())
     private var isForcedRefreshPending = false
     private var stoppedAtElapsedMillis = 0L
     private val mainHandler = Handler(Looper.getMainLooper())
@@ -51,17 +53,18 @@ class MainActivity : ComponentActivity() {
     private val packageCallback = object : LauncherApps.Callback() {
         override fun onPackageAdded(packageName: String, user: UserHandle) {
             updateTemporarilyUnavailableApps(listOf(packageName), user, unavailable = false)
+            updateSuspendedApps(listOf(packageName), user, suspended = false)
             refreshInstalledApps()
         }
 
         override fun onPackageRemoved(packageName: String, user: UserHandle) {
             updateTemporarilyUnavailableApps(listOf(packageName), user, unavailable = false)
+            updateSuspendedApps(listOf(packageName), user, suspended = false)
             refreshInstalledApps()
         }
 
         override fun onPackageChanged(packageName: String, user: UserHandle) {
-            // Keep a temporary-unavailable marker until Android explicitly reports
-            // the package available; a package update can emit this callback mid-replacement.
+            refreshPackageLauncherAvailability(packageName, user)
             refreshInstalledApps()
         }
 
@@ -84,10 +87,12 @@ class MainActivity : ComponentActivity() {
         }
 
         override fun onPackagesSuspended(packageNames: Array<out String>, user: UserHandle) {
+            updateSuspendedApps(packageNames.toList(), user, suspended = true)
             refreshInstalledApps()
         }
 
         override fun onPackagesUnsuspended(packageNames: Array<out String>, user: UserHandle) {
+            updateSuspendedApps(packageNames.toList(), user, suspended = false)
             refreshInstalledApps()
         }
     }
@@ -130,7 +135,44 @@ class MainActivity : ComponentActivity() {
         val updatedAppIds = temporarilyUnavailableAppIds
             .filterNot { it.startsWith(prefix) }
             .toSet()
+        val updatedSuspendedIds = suspendedAppIds
+            .filterNot { it.startsWith(prefix) }
+            .toSet()
         setTemporarilyUnavailableAppIds(updatedAppIds)
+        setSuspendedAppIds(updatedSuspendedIds)
+    }
+
+    private fun refreshPackageLauncherAvailability(packageName: String, user: UserHandle) {
+        val hasLaunchableActivities = try {
+            launcherApps.getActivityList(packageName, user).isNotEmpty()
+        } catch (_: SecurityException) {
+            return
+        } catch (_: IllegalStateException) {
+            return
+        }
+        updateTemporarilyUnavailableApps(
+            listOf(packageName),
+            user,
+            unavailable = !hasLaunchableActivities
+        )
+    }
+
+    private fun updateSuspendedApps(
+        packageNames: List<String>,
+        user: UserHandle,
+        suspended: Boolean
+    ) {
+        val profileSerial = getSystemService(UserManager::class.java).getSerialNumberForUser(user)
+        if (profileSerial < 0L || packageNames.isEmpty()) return
+        val appIds = packageNames.mapTo(mutableSetOf()) { launcherAppId(it, profileSerial) }
+        val updatedAppIds = if (suspended) suspendedAppIds + appIds else suspendedAppIds - appIds
+        setSuspendedAppIds(updatedAppIds)
+    }
+
+    private fun setSuspendedAppIds(appIds: Set<String>) {
+        if (appIds == suspendedAppIds) return
+        suspendedAppIds = appIds
+        SuspendedAppStore.save(this, appIds)
     }
 
     private fun setTemporarilyUnavailableAppIds(appIds: Set<String>) {
@@ -247,6 +289,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         logProcessDiagnostics(savedInstanceState != null)
         temporarilyUnavailableAppIds = TemporarilyUnavailableAppStore.load(this)
+        suspendedAppIds = SuspendedAppStore.load(this)
         registerAppChangeObservers()
         WindowCompat.setDecorFitsSystemWindows(window, false)
         window.statusBarColor = android.graphics.Color.TRANSPARENT
@@ -263,7 +306,7 @@ class MainActivity : ComponentActivity() {
                         resumeToken = resumeRefreshToken,
                         homeSignal = homeSignal,
                         backgroundSignal = backgroundSignal,
-                        temporarilyUnavailableAppIds = temporarilyUnavailableAppIds,
+                        temporarilyUnavailableAppIds = temporarilyUnavailableAppIds + suspendedAppIds,
                         skipStartupSplash = isRestoredActivity
                     )
                 }
