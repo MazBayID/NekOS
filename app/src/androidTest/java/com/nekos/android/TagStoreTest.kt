@@ -164,10 +164,36 @@ class TagStoreTest {
     }
 
     @Test
-    fun wrongPreferenceValueTypeDoesNotCrash() {
+    fun malformedJsonIsReportedAsUnreadableAndCannotBeOverwritten() {
+        val malformed = "[not-json"
+        tagsPreferences().edit().putString("tag_collection_v1", malformed).commit()
+
+        val loadResult = TagStore.loadResult(context)
+
+        assertEquals(emptyList<NekTag>(), loadResult.tags)
+        assertEquals(false, loadResult.isValid)
+        assertEquals(false, TagStore.save(context, listOf(NekTag(id = "new", name = "New"))))
+        assertEquals(malformed, tagsPreferences().getString("tag_collection_v1", null))
+    }
+
+    @Test
+    fun wrongPreferenceValueTypeIsUnreadableAndCannotBeOverwritten() {
         tagsPreferences().edit().putInt("tag_collection_v1", 42).commit()
 
-        assertEquals(emptyList<NekTag>(), TagStore.load(context))
+        val loadResult = TagStore.loadResult(context)
+
+        assertEquals(emptyList<NekTag>(), loadResult.tags)
+        assertEquals(false, loadResult.isValid)
+        assertEquals(false, TagStore.save(context, listOf(NekTag(id = "new", name = "New"))))
+        assertEquals(42, tagsPreferences().getInt("tag_collection_v1", -1))
+    }
+
+    @Test
+    fun missingStorageIsAValidEmptyCollection() {
+        val loadResult = TagStore.loadResult(context)
+
+        assertEquals(emptyList<NekTag>(), loadResult.tags)
+        assertEquals(true, loadResult.isValid)
     }
 
     private fun tagsPreferences() =
