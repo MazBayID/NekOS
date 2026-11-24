@@ -41,7 +41,10 @@ object TagStore {
             context.getSharedPreferences(TAGS_PREFS, Context.MODE_PRIVATE)
         }.getOrNull() ?: return TagLoadResult(emptyList(), false)
 
-        if (!preferences.contains(TAGS_KEY)) {
+        val hasStoredValue = runCatching {
+            preferences.contains(TAGS_KEY)
+        }.getOrDefault(false)
+        if (!hasStoredValue) {
             return TagLoadResult(emptyList(), true)
         }
 
