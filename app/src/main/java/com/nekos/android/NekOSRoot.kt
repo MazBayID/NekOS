@@ -541,6 +541,7 @@ internal fun NekOSRoot(
                 if (showTagEditor) {
                     showTagEditor = false
                     tagEditorTarget = null
+                    tagPendingDelete = null
                 } else {
                     closeDrawer()
                     showSettings = false
