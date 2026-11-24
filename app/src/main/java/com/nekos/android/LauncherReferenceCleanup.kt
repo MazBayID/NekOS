@@ -10,10 +10,11 @@ fun cleanupLauncherReferences(
     favorites: List<String?>,
     tags: List<NekTag>,
     installedAppIds: Set<String>,
-    unavailableProfileSerialNumbers: Set<Long> = emptySet()
+    unavailableProfileSerialNumbers: Set<Long> = emptySet(),
+    temporarilyUnavailableAppIds: Set<String> = emptySet()
 ): LauncherReferenceCleanupResult {
     fun isInstalledOrTemporarilyUnavailable(appId: String): Boolean {
-        if (appId in installedAppIds) return true
+        if (appId in installedAppIds || appId in temporarilyUnavailableAppIds) return true
         val separator = appId.indexOf(LAUNCHER_APP_ID_SEPARATOR)
         if (separator <= 0) return false
         val profileSerial = appId.substring(0, separator).toLongOrNull() ?: return false
