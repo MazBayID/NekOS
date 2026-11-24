@@ -58,6 +58,26 @@ class LauncherReferenceCleanupTest {
     }
 
     @Test
+    fun preservesFavoritesAndTagAssignmentsForTemporarilyUnavailablePackages() {
+        val appId = "10::com.example.external"
+        val tag = NekTag(
+            id = "external-tools",
+            name = "External tools",
+            appPackages = listOf(appId, "10::com.example.removed")
+        )
+
+        val result = cleanupLauncherReferences(
+            favorites = listOf(appId, "10::com.example.removed"),
+            tags = listOf(tag),
+            installedAppIds = emptySet(),
+            temporarilyUnavailableAppIds = setOf(appId)
+        )
+
+        assertEquals(listOf(appId, null), result.favorites)
+        assertEquals(tag.copy(appPackages = listOf(appId)), result.tags.single())
+    }
+
+    @Test
     fun refreshesTagDialogReferencesUsingStableIdAndLatestData() {
         val oldTag = NekTag(
             id = "tools",
