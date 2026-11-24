@@ -60,7 +60,8 @@ class MainActivity : ComponentActivity() {
         }
 
         override fun onPackageChanged(packageName: String, user: UserHandle) {
-            updateTemporarilyUnavailableApps(listOf(packageName), user, unavailable = false)
+            // Keep a temporary-unavailable marker until Android explicitly reports
+            // the package available; a package update can emit this callback mid-replacement.
             refreshInstalledApps()
         }
 
