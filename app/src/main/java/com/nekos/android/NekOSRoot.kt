@@ -162,10 +162,6 @@ internal fun NekOSRoot(
     var lastAppliedRefreshToken by remember { mutableIntStateOf(-1) }
     var catalogLoadFailed by remember { mutableStateOf(false) }
 
-    val latestFavoritePackages by rememberUpdatedState(favoritePackages)
-    val latestFavoriteAppSnapshots by rememberUpdatedState(favoriteAppSnapshots)
-    val latestTags by rememberUpdatedState(tags)
-
     // Discover launchable apps while the brand splash is visible instead of
     // waiting for an artificial timer before starting initialization.
     LaunchedEffect(refreshToken, resumeToken) {
@@ -204,8 +200,8 @@ internal fun NekOSRoot(
             .filter { it.profileSerialNumber == currentProfileSerialNumber }
             .associate { it.packageName to it.id }
         val migratedReferences = migrateLegacyLauncherReferences(
-            favorites = latestFavoritePackages,
-            tags = latestTags,
+            favorites = favoritePackages,
+            tags = tags,
             currentProfileAppIds = currentProfileAppIds
         )
         val installedAppIds = refreshedApps.mapTo(mutableSetOf<String>()) { it.id }
@@ -218,7 +214,7 @@ internal fun NekOSRoot(
             unavailableProfileSerialNumbers = refreshedCatalog.unavailableProfileSerialNumbers
         )
         val activeFavoriteIds = cleanedReferences.favorites.filterNotNull().toSet()
-        val retainedSnapshots = latestFavoriteAppSnapshots.filterKeys { it in activeFavoriteIds }
+        val retainedSnapshots = favoriteAppSnapshots.filterKeys { it in activeFavoriteIds }
         val refreshedSnapshots = refreshedApps
             .filter { it.id in activeFavoriteIds }
             .associate { app ->
@@ -232,7 +228,7 @@ internal fun NekOSRoot(
         FavoriteAppSnapshotStore.save(context, favoriteAppSnapshots.values)
         if (
             favoriteStorageWritable &&
-            cleanedReferences.favorites != latestFavoritePackages
+            cleanedReferences.favorites != favoritePackages
         ) {
             if (saveFavoritePackages(context, cleanedReferences.favorites)) {
                 favoritePackages = cleanedReferences.favorites
@@ -245,7 +241,7 @@ internal fun NekOSRoot(
                 ).show()
             }
         }
-        if (tagStorageWritable && cleanedReferences.tags != latestTags) {
+        if (tagStorageWritable && cleanedReferences.tags != tags) {
             if (TagStore.save(context, cleanedReferences.tags)) {
                 tags = cleanedReferences.tags
             } else {
