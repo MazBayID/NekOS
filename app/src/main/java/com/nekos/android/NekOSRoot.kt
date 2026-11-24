@@ -98,6 +98,10 @@ internal fun NekOSRoot(
     val initialTagLoad = remember(context) { TagStore.loadResult(context) }
     var tags by remember { mutableStateOf(initialTagLoad.tags) }
     var tagStorageWritable by remember { mutableStateOf(initialTagLoad.isValid) }
+    var tagEditorTarget by remember { mutableStateOf<NekTag?>(null) }
+    var viewingTag by remember { mutableStateOf<NekTag?>(null) }
+    var actionMenuTag by remember { mutableStateOf<NekTag?>(null) }
+    var tagPendingDelete by remember { mutableStateOf<NekTag?>(null) }
     var favoriteOrderSnapshot by remember { mutableStateOf<List<String?>?>(null) }
     var tagOrderSnapshot by remember { mutableStateOf<List<NekTag>?>(null) }
     var activeTagPage by remember { mutableIntStateOf(0) }
@@ -231,10 +235,6 @@ internal fun NekOSRoot(
     var favoriteDrag by remember { mutableStateOf<LauncherDragSession?>(null) }
     val favoriteSlotBounds = remember { mutableStateMapOf<Int, Rect>() }
     var cancelDropBounds by remember { mutableStateOf<Rect?>(null) }
-    var tagEditorTarget by remember { mutableStateOf<NekTag?>(null) }
-    var viewingTag by remember { mutableStateOf<NekTag?>(null) }
-    var actionMenuTag by remember { mutableStateOf<NekTag?>(null) }
-    var tagPendingDelete by remember { mutableStateOf<NekTag?>(null) }
     var showTagEditor by remember { mutableStateOf(false) }
     var actionMenuApp by remember { mutableStateOf<InstalledApp?>(null) }
     var actionMenuPreviewApp by remember { mutableStateOf<InstalledApp?>(null) }
