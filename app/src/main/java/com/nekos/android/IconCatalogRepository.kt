@@ -30,6 +30,15 @@ data class CatalogIcon(
  * Rejecting empty and dot path segments keeps asset lookup unambiguous and prevents
  * traversal outside the catalog directory.
  */
+internal fun isValidCachedTagIconDimensions(
+    width: Int,
+    height: Int,
+    maxDimensionPx: Int = 128
+): Boolean =
+    maxDimensionPx > 0 &&
+        width in 1..maxDimensionPx &&
+        height in 1..maxDimensionPx
+
 internal fun isValidCatalogIconPath(path: String): Boolean {
     if (!path.startsWith("icons/") || '\\' in path || '\u0000' in path) {
         return false
@@ -216,7 +225,7 @@ class IconCatalogRepository(context: Context) {
         val cacheKey = "${icon.file}:${normalizedColor.toString(16)}:display:$targetSize"
         memoryState.ifEnabled { bitmapCache.get(cacheKey) }?.let { return it }
         val loadEpoch = memoryState.beginLoad() ?: return null
-        readDisplayDiskBitmap(cacheKey)?.let { cachedBitmap ->
+        readDisplayDiskBitmap(cacheKey, targetSize)?.let { cachedBitmap ->
             return memoryState.storeIfCurrent(loadEpoch) {
                 bitmapCache.put(cacheKey, cachedBitmap)
                 cachedBitmap
@@ -270,11 +279,24 @@ class IconCatalogRepository(context: Context) {
         return File(displayDiskDirectory, "$name.png")
     }
 
-    private fun readDisplayDiskBitmap(cacheKey: String): Bitmap? {
+    private fun readDisplayDiskBitmap(cacheKey: String, maxDimensionPx: Int): Bitmap? {
         val file = displayDiskFile(cacheKey)
         if (!file.isFile) return null
+
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeFile(file.absolutePath, bounds)
+        if (!isValidCachedTagIconDimensions(bounds.outWidth, bounds.outHeight, maxDimensionPx)) {
+            file.delete()
+            return null
+        }
+
         val bitmap = BitmapFactory.decodeFile(file.absolutePath)
-        if (bitmap == null || bitmap.width <= 0 || bitmap.height <= 0) {
+        if (bitmap == null) {
+            file.delete()
+            return null
+        }
+        if (!isValidCachedTagIconDimensions(bitmap.width, bitmap.height, maxDimensionPx)) {
+            bitmap.recycle()
             file.delete()
             return null
         }
