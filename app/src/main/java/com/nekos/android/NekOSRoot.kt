@@ -1702,7 +1702,7 @@ private fun TagPill(
         label = "tag-drag-elevation"
     )
     val iconCacheGeneration = iconCatalogRepository.generation
-    var tagIcon by remember(tag.iconId, tag.iconFrameColorArgb) {
+    var tagIcon by remember(tag.iconId, tag.iconFrameColorArgb, iconCacheGeneration) {
         mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null)
     }
     val currentOnHandleClick by rememberUpdatedState(onHandleClick)
@@ -1727,7 +1727,7 @@ private fun TagPill(
                 }
             }.getOrNull()
         }
-        if (refreshedTagIcon != null) tagIcon = refreshedTagIcon
+        tagIcon = refreshedTagIcon
     }
     Row(
         modifier = modifier
