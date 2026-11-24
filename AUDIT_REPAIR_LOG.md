@@ -24,6 +24,7 @@ One repair at a time: inspect current source -> make the smallest targeted chang
 | 6 | Repair CI lint issue | IMPLEMENTED — lint passed | Commit `6209c78` replaces the invalid `fillMaxWidth(1.02f)` with full width plus a 1.02x graphics-layer scale anchored at the start, preserving the intentional visual bleed. CI #520 `lintDebug` passed. | Keep lint in CI |
 | 7 | Build-time resource asset optimization | REVIEWED — native pipeline retained; raw catalog asset conversion deferred pending benchmark | AAPT2 already compiles and crunches PNG resources; release PNG crunching is enabled by default. The 100 icon PNGs under `src/main/assets` total about 12.44 MiB and are not AAPT2 drawable resources. WebP lossless is a possible candidate, but conversion is deferred until file-by-file pixel/alpha and size comparisons can prove a benefit without visual regression. | Benchmark lossless WebP against the original catalog icons before any conversion; keep originals unchanged |
 | 8 | Android app archiving lifecycle | REVIEWED — Android 15+ path already supported by LauncherApps catalog; no safe code change indicated | Current `loadLaunchableApps()` uses `LauncherApps.getActivityList()`; Android's archived apps are exposed as displayable launcher entries through LauncherApps. Those entries therefore remain in `installedAppIds`, so Favorite/Tag cleanup retains them. Tapping the archived launcher entry follows Android's unarchive flow. Android 14 Play auto-archive is store/device dependent and needs physical-device validation; it is not equivalent to the Android 15 platform archive API. | Verify archive → visible in NekOS → tap to restore → Favorite/Tag retained on an Android 15 device; separately test Play auto-archive on Android 14 if available |
+| 9 | Package replacement and profile lifecycle | IMPLEMENTED — stale profile-marker cleanup hardened; package update callbacks already handled correctly | Android documents that an update is reported through `onPackageChanged`, while a package removed during update also uses `onPackageChanged` rather than `onPackageRemoved`. NekOS already refreshes the catalog from that callback. Profile removal now prunes persisted temporary/suspended markers by checking whether each profile serial still resolves, including when the removed `UserHandle` already returns serial `-1`. Added a unit test for retaining existing-profile markers and dropping deleted/malformed entries. | Run unit tests/build; verify update, profile quiet-mode off/on, and profile deletion on device |
 
 ## Completed
 - Initial source-level audit and prioritization: completed 2026-11-23.
@@ -31,6 +32,8 @@ One repair at a time: inspect current source -> make the smallest targeted chang
 - Repair 6: the existing width-range lint error is fixed without removing the intentional logo bleed; CI #520 lint passed.
 - Stage 7 review: confirmed AAPT2 is already the build-time PNG resource compiler/cruncher for `res` assets. No duplicate custom crunch task was added. A local lossless WebP benchmark script is available; no icon source assets have been changed. Commit `5014446` documents Termux's native `python-pillow` package so the benchmark setup does not unnecessarily attempt a slow Pillow source build.
 - Stage 2 lifecycle audit — Android app archiving: source review completed 2026-11-24. No production code change was made because the Android 15+ platform path is already handled by the existing LauncherApps catalog flow. This is a source/API compatibility finding, not a physical-device test result.
+
+- Stage 3 lifecycle audit — Package replacement and profile lifecycle: Android callback semantics reviewed 2026-11-24. Package updates are delivered through `onPackageChanged`; NekOS already refreshes the catalog there, while actual removals clear availability markers. Hardened profile-removal cleanup so persisted temporary/suspended markers for deleted profiles are pruned even if the removed `UserHandle` no longer maps to a serial number. Added a focused unit test; build and tests have not yet been run.
 
 ## References
 - Android Developers, Optimize bitmap images in Jetpack Compose: https://developer.android.com/develop/ui/compose/graphics/images/optimization
@@ -47,6 +50,10 @@ One repair at a time: inspect current source -> make the smallest targeted chang
 - Android Developers, PackageManager.MATCH_ARCHIVED_PACKAGES: https://developer.android.com/reference/android/content/pm/PackageManager#MATCH_ARCHIVED_PACKAGES
 - Google Play Help, Archive unused apps on Android: https://support.google.com/android/answer/15523443
 - Android Developers Blog, Reduce uninstalls for your app with auto-archive: https://android-developers.googleblog.com/2023/04/reduce-uninstalls-for-your-app-with-auto-archive.html
+
+- Android Developers, LauncherApps.Callback package update/removal semantics: https://developer.android.com/reference/android/content/pm/LauncherApps.Callback
+- Android Developers, UserManager.getSerialNumberForUser / getUserForSerialNumber: https://developer.android.com/reference/android/os/UserManager
+- Android Developers, managed profile available/unavailable/removed broadcasts: https://developer.android.com/reference/android/content/Intent
 
 ## CI efficiency pass — 2026-11-23
 - [x] Android CI: use `gradle/actions/setup-gradle@v6` enhanced cache (the default) instead of basic cache. NekOS is a public repository, so the enhanced cache is available without a paid private-repository entitlement.
