@@ -18,19 +18,22 @@ The goal is simple: **make your apps comfortable to find, organize, and open.**
 
 ## Screenshots
 
-The following screenshots show the NekOS 0.6.1 interface.
+The following screenshots show the NekOS 0.7.1 interface.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/MazBayID/NekOS/25ca7edbff48e9fc9e11ec1bf0e52c2187466541/user_screenshot/v0.6.1/ss_1.png" alt="NekOS 0.6.1 screenshot 1" width="32%">
-  <img src="https://raw.githubusercontent.com/MazBayID/NekOS/25ca7edbff48e9fc9e11ec1bf0e52c2187466541/user_screenshot/v0.6.1/ss_2.png" alt="NekOS 0.6.1 screenshot 2" width="32%">
-  <img src="https://raw.githubusercontent.com/MazBayID/NekOS/25ca7edbff48e9fc9e11ec1bf0e52c2187466541/user_screenshot/v0.6.1/ss_3.png" alt="NekOS 0.6.1 screenshot 3" width="32%">
+  <img src="https://raw.githubusercontent.com/MazBayID/NekOS/v0.7.1/user_screenshot/V0.7.1/ss_01.png" alt="NekOS 0.7.1 Home" width="32%">
+  <img src="https://raw.githubusercontent.com/MazBayID/NekOS/v0.7.1/user_screenshot/V0.7.1/ss_01a.png" alt="NekOS 0.7.1 Home detail" width="32%">
+  <img src="https://raw.githubusercontent.com/MazBayID/NekOS/v0.7.1/user_screenshot/V0.7.1/ss_01b.png" alt="NekOS 0.7.1 Home detail" width="32%">
 </p>
 <p align="center">
-  <img src="https://raw.githubusercontent.com/MazBayID/NekOS/25ca7edbff48e9fc9e11ec1bf0e52c2187466541/user_screenshot/v0.6.1/ss_4.png" alt="NekOS 0.6.1 screenshot 4" width="32%">
-  <img src="https://raw.githubusercontent.com/MazBayID/NekOS/25ca7edbff48e9fc9e11ec1bf0e52c2187466541/user_screenshot/v0.6.1/ss_5.png" alt="NekOS 0.6.1 screenshot 5" width="32%">
-  <img src="https://raw.githubusercontent.com/MazBayID/NekOS/25ca7edbff48e9fc9e11ec1bf0e52c2187466541/user_screenshot/v0.6.1/ss_6.png" alt="NekOS 0.6.1 screenshot 6" width="32%">
+  <img src="https://raw.githubusercontent.com/MazBayID/NekOS/v0.7.1/user_screenshot/V0.7.1/ss_02.png" alt="NekOS 0.7.1 App Drawer" width="32%">
+  <img src="https://raw.githubusercontent.com/MazBayID/NekOS/v0.7.1/user_screenshot/V0.7.1/ss_03.png" alt="NekOS 0.7.1 Tags" width="32%">
+  <img src="https://raw.githubusercontent.com/MazBayID/NekOS/v0.7.1/user_screenshot/V0.7.1/ss_04.png" alt="NekOS 0.7.1 Tag management" width="32%">
 </p>
-
+<p align="center">
+  <img src="https://raw.githubusercontent.com/MazBayID/NekOS/v0.7.1/user_screenshot/V0.7.1/ss_05.png" alt="NekOS 0.7.1 Settings" width="32%">
+  <img src="https://raw.githubusercontent.com/MazBayID/NekOS/v0.7.1/user_screenshot/V0.7.1/ss_06.png" alt="NekOS 0.7.1 Settings detail" width="32%">
+</p>
 ## Features
 
 - **Favorite Grid** — 15 slots arranged in a 5 × 3 grid. Keep frequently used apps on Home.
@@ -70,12 +73,12 @@ NekOS is not intended to become a feature-heavy launcher. It deliberately avoids
 
 ## Project status
 
-- **Version:** 0.6.1
+- **Version:** 0.7.1
 - **Application ID:** `com.nekos.android`
 - **Platform:** Android 8.0 (API 26) and newer
 - **Target SDK:** 35
 - **Status:** in active development; not yet a stable production release
-- **Latest release notes:** [NekOS 0.6.1](docs/releases/v0.6.1.md)
+- **Latest release notes:** [NekOS 0.7.1](docs/releases/v0.7.1.md)
 
 The feature list describes what is implemented in the source on `main`; it does not mean every interaction has been verified on every Android device. Physical-device checks and stability improvements remain part of development.
 
