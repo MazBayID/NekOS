@@ -533,18 +533,24 @@ internal fun NekOSRoot(
                 ) 0f else 1f
             },
             onFavoriteClick = { app, bounds ->
+                FavoriteGestureDiagnostics.log(context, "click-dispatch appId=${app.id} label=${app.label}")
                 launchApp(context, app, launchSourceView, bounds.left.roundToInt(), bounds.top.roundToInt(), bounds.width.roundToInt(), bounds.height.roundToInt())
             },
             onFavoriteLongPress = { index, position ->
-                favoritePackages.getOrNull(index)?.let { favoriteId ->
-                    val app = apps.firstOrNull { it.id == favoriteId }
+                val favoriteId = favoritePackages.getOrNull(index)
+                val app = favoriteId?.let { id ->
+                    apps.firstOrNull { it.id == id }
                         ?: apps.firstOrNull {
-                            it.isInCurrentProfile && it.packageName == favoriteId
+                            it.isInCurrentProfile && it.packageName == id
                         }
-                    app?.let {
-                        actionMenuPreviewApp = it
-                        actionMenuPreviewPosition = position
-                    }
+                }
+                FavoriteGestureDiagnostics.log(
+                    context,
+                    "long-press-dispatch slot=$index favoriteId=$favoriteId resolvedAppId=${app?.id} resolved=${app != null}"
+                )
+                app?.let {
+                    actionMenuPreviewApp = it
+                    actionMenuPreviewPosition = position
                 }
             },
             onFavoriteLongPressEnd = ::openActionMenuAfterRelease,
@@ -1401,6 +1407,7 @@ private fun HomeScreen(
                             )
                         ) {
                             FavoriteSlot(
+                                slotIndex = index,
                                 app = app,
                                 snapshot = appId?.let { favoriteAppSnapshots[it] },
                                 iconBitmapCache = iconBitmapCache,
@@ -1426,6 +1433,7 @@ private fun HomeScreen(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun FavoriteSlot(
+    slotIndex: Int,
     app: InstalledApp?,
     snapshot: FavoriteAppSnapshot?,
     iconBitmapCache: AppIconBitmapCache,
@@ -1440,8 +1448,23 @@ private fun FavoriteSlot(
     reorderHandleScope: sh.calvin.reorderable.ReorderableCollectionItemScope,
     modifier: Modifier = Modifier
 ) {
+    val diagnosticContext = LocalContext.current
     val cacheGeneration = iconBitmapCache.generation
     val iconCacheKey = app?.iconCacheKey ?: snapshot?.iconCacheKey
+
+    LaunchedEffect(slotIndex, app?.id, snapshot?.appId) {
+        if (app == null && snapshot != null) {
+            FavoriteGestureDiagnostics.log(
+                diagnosticContext,
+                "slot-state slot=$slotIndex app=missing snapshotAppId=${snapshot.appId}; input disabled"
+            )
+        } else {
+            FavoriteGestureDiagnostics.log(
+                diagnosticContext,
+                "slot-state slot=$slotIndex appId=${app?.id} snapshotAppId=${snapshot?.appId} inputEnabled=${app != null}"
+            )
+        }
+    }
     val cachedBitmap = iconCacheKey?.let { iconBitmapCache[it] }
     var bitmap by remember(iconCacheKey, cacheGeneration) { mutableStateOf(cachedBitmap) }
     LaunchedEffect(iconCacheKey, app?.id, cacheGeneration) {
@@ -1475,15 +1498,43 @@ private fun FavoriteSlot(
                     currentSlotCoordinates?.localToRoot(local) ?: local
                 },
                 onTap = {
+                    FavoriteGestureDiagnostics.log(
+                        diagnosticContext,
+                        "slot-tap slot=$slotIndex appId=${app?.id} enabled=${app != null}"
+                    )
                     if (app != null) {
                         currentOnClick(currentSlotCoordinates?.boundsInRoot() ?: Rect.Zero)
                     }
                 },
-                onLongPress = { position -> currentOnLongPress(position) },
-                onLongPressEnd = { currentOnLongPressEnd() },
-                onLongPressCancel = { currentOnLongPressCancel() },
-                onReorderStart = { currentOnReorderStart() },
-                onReorderEnd = { cancelled -> currentOnReorderEnd(cancelled) }
+                onLongPress = { position ->
+                    FavoriteGestureDiagnostics.log(
+                        diagnosticContext,
+                        "slot-long-press slot=$slotIndex appId=${app?.id}"
+                    )
+                    currentOnLongPress(position)
+                },
+                onLongPressEnd = {
+                    FavoriteGestureDiagnostics.log(diagnosticContext, "slot-long-press-end slot=$slotIndex")
+                    currentOnLongPressEnd()
+                },
+                onLongPressCancel = {
+                    FavoriteGestureDiagnostics.log(diagnosticContext, "slot-long-press-cancel slot=$slotIndex")
+                    currentOnLongPressCancel()
+                },
+                onReorderStart = {
+                    FavoriteGestureDiagnostics.log(diagnosticContext, "slot-reorder-start slot=$slotIndex appId=${app?.id}")
+                    currentOnReorderStart()
+                },
+                onReorderEnd = { cancelled ->
+                    FavoriteGestureDiagnostics.log(diagnosticContext, "slot-reorder-end slot=$slotIndex cancelled=$cancelled")
+                    currentOnReorderEnd(cancelled)
+                },
+                onTrace = { event ->
+                    FavoriteGestureDiagnostics.log(
+                        diagnosticContext,
+                        "slot-gesture slot=$slotIndex appId=${app?.id} $event"
+                    )
+                }
             )
         )
     }
