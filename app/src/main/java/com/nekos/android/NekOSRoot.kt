@@ -169,33 +169,40 @@ internal fun NekOSRoot(
             unavailableProfileSerialNumbers = refreshedCatalog.unavailableProfileSerialNumbers,
             temporarilyUnavailableAppIds = temporarilyUnavailableAppIds
         )
-        val activeFavoriteIds = cleanedReferences.favorites.filterNotNull().toSet()
-        val retainedSnapshots = favoriteAppSnapshots.filterKeys { it in activeFavoriteIds }
-        val refreshedSnapshots = refreshedApps
-            .filter { it.id in activeFavoriteIds }
-            .associate { app ->
-                app.id to FavoriteAppSnapshot(
-                    appId = app.id,
-                    label = app.label,
-                    iconCacheKey = app.iconCacheKey
-                )
-            }
-        favoriteAppSnapshots = retainedSnapshots + refreshedSnapshots
-        FavoriteAppSnapshotStore.save(context, favoriteAppSnapshots.values)
-        if (
-            favoriteStorageWritable &&
-            cleanedReferences.favorites != favoritePackages
-        ) {
-            if (saveFavoritePackages(context, cleanedReferences.favorites)) {
+        val favoritesChanged = cleanedReferences.favorites != favoritePackages
+        val favoriteSaveSucceeded = when {
+            !favoritesChanged -> true
+            !favoriteStorageWritable -> false
+            saveFavoritePackages(context, cleanedReferences.favorites) -> {
                 favoritePackages = cleanedReferences.favorites
-            } else {
+                true
+            }
+            else -> {
                 favoriteStorageWritable = false
                 Toast.makeText(
                     context,
                     "Favorites could not be saved. Existing data was preserved.",
                     Toast.LENGTH_LONG
                 ).show()
+                false
             }
+        }
+        if (shouldPersistFavoriteSnapshots(favoritesChanged, favoriteSaveSucceeded)) {
+            // Snapshot metadata must describe the persisted Favorite list, never
+            // a cleanup result whose Favorite write failed.
+            val activeFavoriteIds = favoritePackages.filterNotNull().toSet()
+            val retainedSnapshots = favoriteAppSnapshots.filterKeys { it in activeFavoriteIds }
+            val refreshedSnapshots = refreshedApps
+                .filter { it.id in activeFavoriteIds }
+                .associate { app ->
+                    app.id to FavoriteAppSnapshot(
+                        appId = app.id,
+                        label = app.label,
+                        iconCacheKey = app.iconCacheKey
+                    )
+                }
+            favoriteAppSnapshots = retainedSnapshots + refreshedSnapshots
+            FavoriteAppSnapshotStore.save(context, favoriteAppSnapshots.values)
         }
         if (tagStorageWritable && cleanedReferences.tags != tags) {
             if (TagStore.save(context, cleanedReferences.tags)) {
