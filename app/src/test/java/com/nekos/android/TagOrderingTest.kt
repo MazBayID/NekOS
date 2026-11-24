@@ -11,6 +11,25 @@ class TagOrderingTest {
     private val tags = listOf(first, second, third)
 
     @Test
+    fun convertsPagedTagIndicesToFullListIndices() {
+        assertEquals(7, tagPageItemIndex(pageIndex = 1, itemIndex = 2))
+        assertEquals(10, tagPageItemIndex(pageIndex = 2, itemIndex = 0))
+        assertEquals(14, tagPageItemIndex(pageIndex = 2, itemIndex = 4))
+    }
+
+    @Test
+    fun rejectsInvalidPageIndexArguments() {
+        try {
+            tagPageItemIndex(pageIndex = -1, itemIndex = 0)
+            throw AssertionError("Expected invalid page index to be rejected")
+        } catch (_: IllegalArgumentException) { }
+        try {
+            tagPageItemIndex(pageIndex = 0, itemIndex = 0, pageSize = 0)
+            throw AssertionError("Expected invalid page size to be rejected")
+        } catch (_: IllegalArgumentException) { }
+    }
+
+    @Test
     fun movesTagUpByOnePosition() {
         assertEquals(listOf(second, first, third), moveTag(tags, "second", -1))
     }
