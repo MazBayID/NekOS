@@ -29,6 +29,10 @@ fun cleanupLauncherReferences(
     return LauncherReferenceCleanupResult(cleanedFavorites, cleanedTags)
 }
 
+/** Refreshes a dialog/editor's Tag snapshot from the latest collection by stable ID. */
+internal fun refreshTagReference(reference: NekTag?, tags: List<NekTag>): NekTag? =
+    reference?.let { target -> tags.firstOrNull { it.id == target.id } }
+
 /**
  * Upgrades pre-profile package-only references to the current profile's stable app IDs.
  * Older NekOS versions only queried the current profile, so assigning legacy values to
