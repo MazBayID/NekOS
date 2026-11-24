@@ -231,7 +231,7 @@ fun TagManagementDialog(
     var selectedIconFrameColor by remember(tag?.id) {
         mutableLongStateOf(tag?.iconFrameColorArgb ?: DEFAULT_TAG_ICON_FRAME_COLOR)
     }
-    var selectedPackages by remember(tag?.id) { mutableStateOf(tag?.appPackages?.toSet().orEmpty()) }
+    var selectedPackages by remember(tag?.id, tag?.appPackages) { mutableStateOf(tag?.appPackages?.toSet().orEmpty()) }
     var showIconColorPicker by remember { mutableStateOf(false) }
     var showTagColorPicker by remember { mutableStateOf(false) }
     var appSearch by remember(tag?.id) { mutableStateOf("") }
