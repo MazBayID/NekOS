@@ -74,6 +74,16 @@ class IconCatalogRepositoryTest {
     }
 
     @Test
+    fun cachedTagIconDimensionsMustFitTheRequestedThumbnailSize() {
+        assertTrue(isValidCachedTagIconDimensions(128, 128))
+        assertTrue(isValidCachedTagIconDimensions(96, 64, 128))
+        org.junit.Assert.assertFalse(isValidCachedTagIconDimensions(129, 128))
+        org.junit.Assert.assertFalse(isValidCachedTagIconDimensions(128, 129))
+        org.junit.Assert.assertFalse(isValidCachedTagIconDimensions(0, 128))
+        org.junit.Assert.assertFalse(isValidCachedTagIconDimensions(128, 128, 0))
+    }
+
+    @Test
     fun bitmapLoaderRejectsPathTraversal() {
         val repository = IconCatalogRepository(context)
         val unsafeIcon = CatalogIcon(
