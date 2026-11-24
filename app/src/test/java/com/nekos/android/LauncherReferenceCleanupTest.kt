@@ -58,6 +58,20 @@ class LauncherReferenceCleanupTest {
     }
 
     @Test
+    fun refreshesTagDialogReferencesUsingStableIdAndLatestData() {
+        val oldTag = NekTag(
+            id = "tools",
+            name = "Tools",
+            appPackages = listOf("installed", "uninstalled")
+        )
+        val refreshedTag = oldTag.copy(appPackages = listOf("installed"))
+
+        assertEquals(refreshedTag, refreshTagReference(oldTag, listOf(refreshedTag)))
+        assertEquals(null, refreshTagReference(oldTag, emptyList()))
+        assertEquals(null, refreshTagReference(null, listOf(refreshedTag)))
+    }
+
+    @Test
     fun migratesLegacyFavoritesAndTagsToCurrentProfileIds() {
         val favorites = listOf("com.example.alpha", null, "42::com.example.work")
         val tags = listOf(
