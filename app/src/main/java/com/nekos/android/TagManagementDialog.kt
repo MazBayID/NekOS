@@ -138,9 +138,16 @@ fun TagAppsDialog(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(5.dp)
                     ) {
-                        Text("No apps in this tag", color = Color(0xFF34332F))
                         Text(
-                            "Edit this tag to add applications.",
+                            if (tag.appPackages.isEmpty()) "No apps in this tag" else "No apps currently available",
+                            color = Color(0xFF34332F)
+                        )
+                        Text(
+                            if (tag.appPackages.isEmpty()) {
+                                "Edit this tag to add applications."
+                            } else {
+                                "Saved app assignments are kept while their Android profile is unavailable."
+                            },
                             color = Color(0xFF8B8982),
                             style = MaterialTheme.typography.bodySmall
                         )
@@ -240,6 +247,8 @@ fun TagManagementDialog(
         val index = catalog.indexOfFirst { it.id == selectedIcon }
         if (index >= 0) iconCarouselState.scrollToItem(index)
     }
+    val availableAppIds = remember(apps) { apps.mapTo(mutableSetOf()) { it.id } }
+    val unavailableSelectedCount = selectedPackages.count { it !in availableAppIds }
     val filteredApps = remember(apps, appSearch) {
         if (appSearch.isBlank()) apps
         else apps.filter { it.label.contains(appSearch.trim(), ignoreCase = true) ||
@@ -360,6 +369,13 @@ fun TagManagementDialog(
 
                 Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
                     Text("App assignment · ${selectedPackages.size} selected", color = Color(0xFF34332F), style = MaterialTheme.typography.labelMedium)
+                    if (unavailableSelectedCount > 0) {
+                        Text(
+                            "$unavailableSelectedCount saved assignment(s) are not currently visible. NekOS keeps them until their Android profile becomes available again.",
+                            color = Color(0xFF8B8982),
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
                     TextField(
                         value = appSearch,
                         onValueChange = { appSearch = it },
