@@ -827,10 +827,11 @@ internal fun NekOSRoot(
                             },
                             onRemoveFavorite = if (favoritePackages.any { it == app.id }) {
                                 {
-                                    updateFavorites(favoritePackages.map { favoriteId ->
+                                    if (updateFavorites(favoritePackages.map { favoriteId ->
                                         if (favoriteId == app.id) null else favoriteId
-                                    })
-                                    actionMenuApp = null
+                                    })) {
+                                        actionMenuApp = null
+                                    }
                                 }
                             } else null,
                             launcherSurface = launcherSurface,
@@ -1015,9 +1016,9 @@ internal fun NekOSRoot(
                     targetPage?.let { page ->
                         if (saveTags(moveTagToPage(tags, tag.id, page))) {
                             activeTagPage = page
+                            actionMenuTag = null
                         }
                     }
-                    actionMenuTag = null
                 },
                 onEdit = {
                     actionMenuTag = null
