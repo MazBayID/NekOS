@@ -129,17 +129,19 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun clearTemporarilyUnavailableAppsForProfile(user: UserHandle) {
-        val profileSerial = getSystemService(UserManager::class.java).getSerialNumberForUser(user)
-        if (profileSerial < 0L) return
-        val prefix = "$profileSerial$LAUNCHER_APP_ID_SEPARATOR"
-        val updatedAppIds = temporarilyUnavailableAppIds
-            .filterNot { it.startsWith(prefix) }
-            .toSet()
-        val updatedSuspendedIds = suspendedAppIds
-            .filterNot { it.startsWith(prefix) }
-            .toSet()
-        setTemporarilyUnavailableAppIds(updatedAppIds)
-        setSuspendedAppIds(updatedSuspendedIds)
+        val userManager = getSystemService(UserManager::class.java)
+        val removedProfileSerial = userManager.getSerialNumberForUser(user)
+        // The removed UserHandle may already be invalid when its broadcast is delivered.
+        // Reconcile all persisted markers by serial so stale entries are still discarded.
+        val profileStillExists: (Long) -> Boolean = { serial ->
+            serial != removedProfileSerial && userManager.getUserForSerialNumber(serial) != null
+        }
+        setTemporarilyUnavailableAppIds(
+            retainAppIdsForExistingProfiles(temporarilyUnavailableAppIds, profileStillExists)
+        )
+        setSuspendedAppIds(
+            retainAppIdsForExistingProfiles(suspendedAppIds, profileStillExists)
+        )
     }
 
     private fun refreshPackageLauncherAvailability(packageName: String, user: UserHandle) {
