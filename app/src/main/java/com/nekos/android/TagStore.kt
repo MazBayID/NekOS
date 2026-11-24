@@ -43,7 +43,9 @@ object TagStore {
 
         val hasStoredValue = runCatching {
             preferences.contains(TAGS_KEY)
-        }.getOrDefault(false)
+        }.getOrElse {
+            return TagLoadResult(emptyList(), false)
+        }
         if (!hasStoredValue) {
             return TagLoadResult(emptyList(), true)
         }
