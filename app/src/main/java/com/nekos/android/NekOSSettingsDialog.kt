@@ -429,9 +429,10 @@ private fun BuiltInWallpaperPreview(
 ) {
     val context = LocalContext.current
     val preview = produceState<ImageBitmap?>(initialValue = null, resourceId) {
-        value = withContext(Dispatchers.IO) {
+        val loadedPreview = withContext(Dispatchers.IO) {
             loadBuiltInHomeWallpaper(context, resourceId, maxDimension = 480)
         }
+        value = loadedPreview
     }.value
 
     if (preview != null) {
