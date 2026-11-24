@@ -6,7 +6,7 @@ NekOS uses a single Activity with Jetpack Compose. Keep the Activity responsible
 
 ## Core layers
 
-- **Presentation:** Compose screens, dialogs, gestures, and visual state. Keep screen-level orchestration in `NekOSRoot.kt`; Home layout orchestration lives in `HomeScreen.kt`; reusable Favorite Slot, Tag Pill, and Tag Frame composables live in `HomeComponents.kt`. App Drawer rendering and grid items live in `AppDrawer.kt`. Settings dialog orchestration lives in `NekOSSettingsDialog.kt`, with reusable preview and card composables in `SettingsComponents.kt`. UI components should not directly own package-management or persistence rules.
+- **Presentation:** Compose screens, dialogs, gestures, and visual state. Keep screen-level orchestration in `NekOSRoot.kt`; Home layout orchestration lives in `HomeScreen.kt`; reusable Favorite Slot, Tag Pill, and Tag Frame composables live in `HomeComponents.kt`. App Drawer rendering and grid items live in `AppDrawer.kt`. Settings dialog orchestration lives in `NekOSSettingsDialog.kt`, with reusable preview and card composables in `SettingsComponents.kt`. Tag editor UI lives in `TagManagementDialog.kt`; tag viewing and action dialogs live in `TagDialogs.kt`. UI components should not directly own package-management or persistence rules.
 - **Domain:** launcher operations such as loading launchable apps, adding/removing/reordering favorites, and resolving app actions.
 - **Data:** local persistence for favorites and user-defined collections, plus Android PackageManager / LauncherApps access for installed applications.
 - **Assets:** catalog metadata remains the source of truth for UI/tag icon names and paths. App icons in the drawer and favorites always come from Android.
@@ -45,5 +45,5 @@ NekOS uses a single Activity with Jetpack Compose. Keep the Activity responsible
 
 1. Verify gestures, drag-and-drop, and app-list refresh on physical devices.
 2. Handle disabled or unavailable apps gracefully.
-3. Keep `NekOSRoot.kt` focused on screen orchestration. Home, Favorite, Tag Rail, and App Drawer composables are extracted into focused files; continue moving code only when the responsibility boundary is clear and behavior can be preserved.
+3. Keep `NekOSRoot.kt` focused on screen orchestration. Home, Favorite, Tag Rail, and App Drawer composables are extracted into focused files; tag viewing/actions are separated from the tag editor. Continue moving code only when the responsibility boundary is clear and behavior can be preserved.
 4. Keep new features out unless they pass the test in `PRODUCT_DIRECTION.md`.
