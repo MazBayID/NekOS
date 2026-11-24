@@ -132,3 +132,12 @@ internal fun moveTagToPage(
         reordered.add(insertionIndex, moved)
     }
 }
+
+
+/** Converts an item index within a paged tag list to its index in the full list. */
+internal fun tagPageItemIndex(pageIndex: Int, itemIndex: Int, pageSize: Int = 5): Int {
+    require(pageIndex >= 0) { "pageIndex must not be negative" }
+    require(itemIndex >= 0) { "itemIndex must not be negative" }
+    require(pageSize > 0) { "pageSize must be positive" }
+    return pageIndex * pageSize + itemIndex
+}
