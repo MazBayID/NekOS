@@ -105,10 +105,23 @@ class FavoriteStoreTest {
     }
 
     @Test
-    fun wrongPreferenceValueTypeDoesNotCrashOrReturnInvalidSlots() {
+    fun wrongPreferenceValueTypeIsUnreadableAndCannotBeOverwritten() {
         favoritesPreferences().edit().putInt("favorite_packages", 42).commit()
 
-        assertEquals(List(15) { null }, loadFavoritePackages(context))
+        val loadResult = loadFavoritePackagesResult(context)
+
+        assertEquals(List(15) { null }, loadResult.packages)
+        assertEquals(false, loadResult.isValid)
+        assertEquals(false, saveFavoritePackages(context, listOf("com.example.new")))
+        assertEquals(42, favoritesPreferences().getInt("favorite_packages", -1))
+    }
+
+    @Test
+    fun missingStorageIsAValidEmptyFavoriteCollection() {
+        val loadResult = loadFavoritePackagesResult(context)
+
+        assertEquals(List(15) { null }, loadResult.packages)
+        assertEquals(true, loadResult.isValid)
     }
 
     private fun favoritesPreferences() =
