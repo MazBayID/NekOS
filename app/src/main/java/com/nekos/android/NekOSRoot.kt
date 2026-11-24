@@ -252,6 +252,10 @@ internal fun NekOSRoot(
         if (tagStorageWritable && cleanedReferences.tags != tags) {
             if (TagStore.save(context, cleanedReferences.tags)) {
                 tags = cleanedReferences.tags
+                viewingTag = refreshTagReference(viewingTag, tags)
+                actionMenuTag = refreshTagReference(actionMenuTag, tags)
+                tagEditorTarget = refreshTagReference(tagEditorTarget, tags)
+                tagPendingDelete = refreshTagReference(tagPendingDelete, tags)
             } else {
                 tagStorageWritable = false
                 Toast.makeText(
