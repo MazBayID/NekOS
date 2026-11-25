@@ -40,7 +40,8 @@ fun TagManagementDialog(
     onDelete: (NekTag) -> Unit,
     onDismiss: () -> Unit
 ) {
-    val catalog = remember(iconCatalogRepository) {
+    val activeSkinGeneration = SkinRuntimeState.generation
+    val catalog = remember(iconCatalogRepository, activeSkinGeneration) {
         runCatching { iconCatalogRepository.loadCatalog() }.getOrDefault(emptyList())
     }
     var name by remember(tag?.id) { mutableStateOf(tag?.name.orEmpty()) }
@@ -149,10 +150,10 @@ fun TagManagementDialog(
                         contentPadding = PaddingValues(horizontal = 2.dp)
                     ) {
                         items(catalog, key = { it.id }) { icon ->
-                            var bitmap by remember(icon.id, selectedIconFrameColor, iconCatalogRepository.generation) {
+                            var bitmap by remember(icon.id, selectedIconFrameColor, iconCatalogRepository.generation, activeSkinGeneration) {
                                 mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null)
                             }
-                            LaunchedEffect(icon.id, selectedIconFrameColor, iconCatalogRepository.generation) {
+                            LaunchedEffect(icon.id, selectedIconFrameColor, iconCatalogRepository.generation, activeSkinGeneration) {
                                 bitmap = withContext(Dispatchers.IO) {
                                     runCatching {
                                         iconCatalogRepository.loadPickerBitmap(icon, selectedIconFrameColor)?.asImageBitmap()
