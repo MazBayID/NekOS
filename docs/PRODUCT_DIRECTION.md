@@ -11,7 +11,7 @@ This document is the product intent. For what is actually implemented, see `FEAT
 - **Simple:** only features that are genuinely useful for general use.
 - **Comfortable:** warm, calm, and not tiring to look at.
 - **Easy to reach:** favorites and apps grouped by tag are quick to get to.
-- **Personal:** users arrange apps, tags, and the Home appearance.
+- **Personal:** users arrange apps and tags, and can replace the visual asset skin without changing launcher behavior.
 - **Stable:** everyday reliability comes before adding features.
 
 **Usage flow:** Home → Favorite / Tag → App Drawer → Search. Settings remains directly accessible from the Home header.
@@ -45,16 +45,20 @@ This document is the product intent. For what is actually implemented, see `FEAT
 ## 5. Tag System
 
 - Create, rename, reorder, move between Tag Rail pages, and delete tags (up to ten total).
-- Each tag has a name (max 24 characters), a color from a small palette, and an optional icon from the bundled catalog.
+- Each tag has a name (max 24 characters), a color from a small palette, and an optional semantic glyph from the active skin catalog.
+- The tag badge uses the shared UI color; its glyph uses a contrast-aware foreground tint.
+- Legacy icon references migrate to retained glyphs or the documented fallback without changing tag names, colors, assigned apps, or order.
 - Deleting a tag always asks for confirmation.
 - Assign and unassign installed apps.
-- Tag color applies to the tag surface only; catalog icons keep their original colors.
 
 ## 6. Icon policy
 
-- Catalog icons in `main_assets/ikon/` are for **tag icons and launcher UI only**.
-- The catalog JSON is the source of truth for icon names and metadata; the Markdown indexes are human-readable references.
-- Do not expose icon-color customization unless it preserves the artwork and has been visually tested.
+- The bundled skin in `app/src/main/assets/skins/default/` is the runtime source for tag glyphs, UI glyphs, badge, TopFrame, TagFrame, and optional motifs.
+- Skin images are white alpha masks; runtime applies the semantic tint with `SRC_IN`.
+- Catalog JSON is the source of truth for asset names and metadata; Markdown indexes are human-readable references.
+- User skins are data-only ZIP packages. They may override assets, never code, navigation, gestures, permissions, or launcher behavior.
+- Missing or invalid assets fall back per-file to the bundled default skin.
+- Wallpapers and Android app icons remain separate from the skin system.
 
 ## 7. Visual direction
 
@@ -62,7 +66,7 @@ This document is the product intent. For what is actually implemented, see `FEAT
 - Warm neutral backgrounds; tags use soft tinted surfaces; app icons stay native.
 - Animations are short and purposeful and must never slow down launching an app.
 - Use UI icon assets selectively rather than decorating every surface.
-- Branding: the launcher icon is `app_logo.png`; a short, calm startup splash uses the wordmark; the Home header shows a small secondary wordmark.
+- Branding: the debug APK uses `app/src/debug/res/drawable-nodpi/app_logo.webp`; release branding, startup wordmark, wallpapers, and the Home secondary wordmark remain separate from skin assets.
 
 ## 8. Settings scope
 
@@ -82,7 +86,7 @@ To protect its focus, NekOS does not add:
 - Multiple Home pages.
 - News or recommendation feeds.
 - Complex automation.
-- An elaborate theme system.
+- A layout or behavior theme engine; NekOS uses an asset-only skin contract instead.
 - Too many gestures.
 
 Also deferred: AI tagging, alphabet or color search, and advanced gesture customization. Revisit these only through an explicit product decision.
@@ -91,11 +95,11 @@ Also deferred: AI tagging, alphabet or color search, and advanced gesture custom
 
 Do not add features first. Make the basics work well:
 
-1. Keep the app list up to date after apps are installed or removed.
-2. Make app search comfortable to use.
-3. Handle disabled or unavailable apps gracefully.
-4. Keep gestures and drag-and-drop stable on physical devices.
-5. Consider small refinements, such as notification dots, only if they are really needed.
+1. Complete the skin installer, selection UI, per-file fallback, and package validation.
+2. Verify all skin assets and renderer geometry on physical devices.
+3. Keep app refresh, search, gestures, and drag-and-drop stable throughout the reskin.
+4. Preserve tag data during upgrades and skin changes.
+5. Keep wallpapers and native Android app icons independent from skins.
 
 ## 11. Design principles
 

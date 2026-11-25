@@ -1,6 +1,6 @@
 # NekOS — Feature Inventory
 
-> Snapshot: 2026-11-24 (after the package/profile lifecycle audit and UI file extraction)  
+> Snapshot: 2026-11-25 (NekOS 1.0.0 reskin migration in progress)  
 > Scope: what the source code on `main` does today, compared with `PRODUCT_DIRECTION.md`.
 
 A feature is marked **implemented** only when matching source code exists. This is not a claim that every edge case has been verified on every Android version or on physical devices.
@@ -36,7 +36,7 @@ A feature is marked **implemented** only when matching source code exists. This 
 
 ### Tag System
 - Create, edit, and delete tags; names are trimmed and limited to 24 characters.
-- Nine preset tag colors and an optional icon from the bundled 100-icon catalog.
+- Nine preset tag colors and an optional glyph from the bundled 36-icon skin catalog.
 - Assign and unassign installed apps; tapping a tag opens its collection and tapping an app launches it.
 - The tag body has no long-press action. The six-dot handle at the right edge of each tag opens Edit/Delete, and long-press plus drag on the handle reorders tags. Order is persisted.
 - Deleting a tag, from either the options menu or the editor, asks for confirmation first.
@@ -54,8 +54,13 @@ A feature is marked **implemented** only when matching source code exists. This 
 - Gesture handling distinguishes tap, long-press, drag, completed drag, and cancellation.
 - Back closes dialogs and menus, or returns from the drawer.
 
-### Assets
-- Launcher icon and startup wordmark are included. Tag icon catalog (JSON plus Markdown indexes) is bundled as runtime assets.
+### Assets and skin runtime
+- 103 files from `nekos_skin_kit/default_skin/` are bundled under `app/src/main/assets/skins/default/`, with the legacy icon map alongside them.
+- Tag icons render as a tinted badge mask plus a contrast-aware glyph; the picker now uses the 36 semantic glyph catalog.
+- TopFrame and TagFrame load the new white alpha-mask assets and tint with `SRC_IN`.
+- Seven UI glyph mappings now point to the new skin catalog.
+- Legacy numeric tag icon references migrate to canonical retained IDs; removed icons use the star fallback. Other tag fields are preserved.
+- Debug APK icon uses the new `apk_logo.webp`; release icon and startup wordmark remain separate.
 - App icons are always the original Android icons.
 
 ## 2. Gaps against the concept (to review)
@@ -70,21 +75,22 @@ These are places where the code and `PRODUCT_DIRECTION.md` do not fully line up.
 | Typography | System font; the Nunito Sans recommendation was removed from the docs | Warm, calm look | None |
 | Disabled or suspended single apps | Not specially handled; relies on launch error messages | "Check handling of disabled or unavailable apps" | Verify on a device and add explicit handling if needed |
 | Notification dots | No code found | Optional, only if needed | Leave out unless there is a clear need |
+| Skin packages | Bundled default skin is active; ZIP installation and skin selection are not implemented yet | Users can install and select data-only skins | Implement a validated installer, skin registry, and selection UI with per-file fallback |
 | Backup | `allowBackup` is enabled; there is no documented backup or export workflow | Personal data should survive | Document the behavior or add an explicit decision |
 
 ## 3. Next steps
 
-Follow the concept's priorities: stability over new features.
+Follow the reskin migration in small verified stages while preserving launcher behavior.
 
-1. Test on physical devices: drawer gesture, drag-and-drop for favorites and tags, the 40% close target, and persistence after restart.
-2. Check behavior after installing and uninstalling apps, and with disabled or unavailable apps.
-3. Verify Tag Rail paging, the 10-tag limit, and moving tags between pages on physical devices.
-4. Confirm search feels comfortable with real app lists.
-5. Resolve the remaining gaps in section 2.
+1. Finish the ZIP installer, skin registry, skin selection UI, and validation tests.
+2. Run CI build, unit tests, lint, and emulator UI tests for the current migration.
+3. Verify the badge/glyph composition, TopFrame atlas crops, TagFrame slices, and UI glyph tinting on a physical device.
+4. Verify old tag IDs migrate correctly and all tag metadata/order survives an app upgrade.
+5. Re-check Home refresh, drawer gestures, drag-and-drop, wallpaper selection, and app launch after the asset migration.
 
 ## 4. Explicitly deferred
 
-Widget engine, nested folders, multiple Home pages, feeds or recommendations, complex automation, a full theme system, many gestures, AI tagging, alphabet or color search, and advanced gesture customization. Add none of these implicitly.
+Widget engine, nested folders, multiple Home pages, feeds or recommendations, complex automation, a layout/behavior theme engine (the asset-only skin contract is the supported customization model), many gestures, AI tagging, alphabet or color search, and advanced gesture customization. Add none of these implicitly.
 
 ## 5. Automated tests
 
