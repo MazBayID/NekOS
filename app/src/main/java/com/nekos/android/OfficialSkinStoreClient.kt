@@ -60,6 +60,9 @@ internal object OfficialSkinStoreClient {
         } finally { connection.disconnect() }
     }
 
+    fun pendingSkinIds(context: Context): Set<String> = context.getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE)
+        .all.keys.filter { it.startsWith(PENDING_PREFIX) }.map { it.removePrefix(PENDING_PREFIX) }.toSet()
+
     fun loadCatalog(): List<OfficialStoreSkin> {
         val array = request("").optJSONArray("skins") ?: return emptyList()
         return buildList {
