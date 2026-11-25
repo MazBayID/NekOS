@@ -103,33 +103,6 @@
       "coverage": 0.226,
       "suggested_display_dp": 320,
       "suggested_opacity": 0.18
-    },
-    {
-      "id": "sakura",
-      "file": "motifs/motif_sakura.png",
-      "file_small": "motifs/motif_sakura@512.png",
-      "type": "line",
-      "coverage": 0.071,
-      "suggested_display_dp": 640,
-      "suggested_opacity": 0.35
-    },
-    {
-      "id": "butterfly",
-      "file": "motifs/motif_butterfly.png",
-      "file_small": "motifs/motif_butterfly@512.png",
-      "type": "line",
-      "coverage": 0.137,
-      "suggested_display_dp": 640,
-      "suggested_opacity": 0.3
-    },
-    {
-      "id": "flame",
-      "file": "motifs/motif_flame.png",
-      "file_small": "motifs/motif_flame@512.png",
-      "type": "line",
-      "coverage": 0.238,
-      "suggested_display_dp": 512,
-      "suggested_opacity": 0.25
     }
   ],
   "compatibility": {

@@ -24,7 +24,7 @@ Yang bisa diganti:
 | TagFrame | `components/tag_frame/frame_spritesheet.webp` | 512×240 | bingkai dialog tag |
 | Ikon tag (36) | `icons/tag/icon_<bentuk>.webp` | 96×96 | digambar di atas badge |
 | Ikon UI (45) | `icons/ui/icon_<bentuk>.webp` | 96×96 | ikon antarmuka |
-| Motif dialog | `motifs/motif_<nama>.png` (+ `@512`) | 1024×1024 | pola latar tile |
+| Motif dialog (1) | `motifs/motif_<nama>.png` (+ `@512`) | 1024×1024 | satu pola latar tile per skin |
 
 ---
 
@@ -47,7 +47,7 @@ Kerjakan bertahap; setiap tingkat sudah menghasilkan skin yang bisa dipakai.
 | 2 | + TopFrame + TagFrame | 3 gambar dengan **satu siluet kepala yang sama** |
 | 3 | + sebagian/semua ikon tag | 36 glyph |
 | 4 | + ikon UI | 45 glyph |
-| 5 | + motif dialog | 1 gambar per motif |
+| 5 | + satu motif dialog | 1 gambar utama + versi `@512` |
 
 Urutan yang disarankan: **badge → TopFrame → TagFrame → glyph → ikon UI → motif**. Tetapkan dulu gaya (tebal garis, sudut membulat/tajam) di badge, lalu pakai di semua yang lain.
 
@@ -185,7 +185,7 @@ Jalankan:
 python3 -I tools/make_motif.py sumber.png --name bunga --out my_skin/motifs --type line
 ```
 
-Hasil: `motif_bunga.png` (1024) dan `motif_bunga@512.png`, plus **snippet JSON** yang tinggal ditempel ke `"motifs"` di `skin.json`.
+Hasil: `motif_bunga.png` (1024) dan `motif_bunga@512.png`, plus **satu entri motif** untuk `skin.json`. Setiap skin hanya boleh memiliki satu motif.
 
 | Opsi | Fungsi |
 |---|---|
@@ -199,10 +199,9 @@ Ukuran tampil dan opacity awal (nilai dp diasumsikan, uji di perangkat):
 
 | Jenis | Tile tampil | Opacity |
 |---|---|---|
-| paw (solid) | 256–384 dp | 15–25 % |
-| flame (garis tebal) | 400–600 dp | 20–30 % |
-| sakura (garis tipis) | 560–800 dp | 30–45 % |
-| butterfly (garis tipis, padat) | 560–800 dp | 25–40 % |
+| Motif solid | 256–384 dp | 15–25 % |
+| Motif garis tebal | 400–600 dp | 20–30 % |
+| Motif garis tipis | 560–800 dp | 25–40 % |
 
 Motif garis tipis jangan diperkecil terlalu jauh. Bila dialog terasa ramai: perbesar tile, turunkan opacity, atau pilih motif yang lebih jarang. Motif yang aman: siluet sederhana (paw, bintang, hati, daun), garis geometris (gelombang, seigaiha, bintik).
 
@@ -210,7 +209,7 @@ Motif garis tipis jangan diperkecil terlalu jauh. Bila dialog terasa ramai: perb
 
 ## 6. `skin.json`
 
-Edit field `skin` dan, bila ada motif, `motifs`:
+Edit field `skin` dan, bila ada motif, `motifs` (maksimal satu entri):
 
 ```json
 {
@@ -262,7 +261,7 @@ python3 -I tools/validate_skin.py my_skin
 python3 -I tools/preview_skin.py my_skin --out previews/my_skin
 ```
 
-Pratinjau menulis `*_tags.png` (semua ikon tag di empat warna contoh: Purple, Ocean, Silver, Dark), `*_ui.png` (ikon UI di latar terang dan gelap), `*_frames.png` (TopFrame 360 dan 124 dp, TagFrame tiga tinggi), `*_motifs.png` (tile 2×2).
+Pratinjau menulis `*_tags.png` (semua ikon tag di empat warna contoh: Purple, Ocean, Silver, Dark), `*_ui.png` (ikon UI di latar terang dan gelap), `*_frames.png` (TopFrame 360 dan 124 dp, TagFrame tiga tinggi), `*_motifs.png` (tile 2×2 untuk satu motif).
 
 Yang harus kamu lihat sendiri (validator tidak bisa menilainya):
 
