@@ -41,16 +41,28 @@ internal class SkinAssetResolver(context: Context) {
         if (!isSafeRelativePath(relativePath)) return null
         val selectedSkinDirectory = activeSkinDirectory ?: SkinRepository.activeSkinDirectory(appContext)
         val skinKey = selectedSkinDirectory?.absolutePath ?: "default"
-        val cacheKey = "${SkinRuntimeState.generation}:${skinKey}:${relativePath}:${expectedWidth ?: 0}x${expectedHeight ?: 0}"
+        val requestedGeneration = SkinRuntimeState.generation
+        val cacheKey = "${requestedGeneration}:${skinKey}:${relativePath}:${expectedWidth ?: 0}x${expectedHeight ?: 0}"
         cache.get(cacheKey)?.let { return it }
 
         val activeBitmap = selectedSkinDirectory
             ?.let { loadFromDirectory(it, relativePath) }
-            ?.takeIf { matchesExpectedSize(it, expectedWidth, expectedHeight) }
+            ?.let { bitmap ->
+                if (matchesExpectedSize(bitmap, expectedWidth, expectedHeight)) bitmap
+                else bitmap.recycle().let { null }
+            }
 
         val bitmap = activeBitmap ?: loadFromBundledDefault(relativePath)
-            ?.takeIf { matchesExpectedSize(it, expectedWidth, expectedHeight) }
+            ?.let { fallback ->
+                if (matchesExpectedSize(fallback, expectedWidth, expectedHeight)) fallback
+                else fallback.recycle().let { null }
+            }
             ?: return null
+
+        if (requestedGeneration != SkinRuntimeState.generation) {
+            bitmap.recycle()
+            return null
+        }
         cache.put(cacheKey, bitmap)
         return bitmap
     }

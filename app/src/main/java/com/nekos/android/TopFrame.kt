@@ -54,7 +54,9 @@ internal fun TopFrame(
                 TopFrameImages(crop(0, 32), crop(34, 4), crop(40, 60), crop(102, 32))
             }.getOrNull()
         }
-        images = loadedImages
+        if (skinGeneration == SkinRuntimeState.generation) {
+            images = loadedImages
+        }
     }
 
     val frame = images ?: return
