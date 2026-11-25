@@ -109,7 +109,6 @@ internal fun NekOSSettingsDialog(
     activeSkinId: String,
     isOfficialSkinDownloading: Boolean,
     officialSkinDownloadProgress: Int,
-    officialSkinUpdateAvailable: Boolean,
     onDownloadOfficialSkin: () -> Unit,
     onImportSkin: () -> Unit,
     onSelectSkin: (String) -> Unit,
@@ -561,14 +560,13 @@ internal fun NekOSSettingsDialog(
                                 )
                                 TextButton(
                                     onClick = onDownloadOfficialSkin,
-                                    enabled = !isOfficialSkinDownloading && (!isInfernoInstalled || officialSkinUpdateAvailable)
+                                    enabled = !isOfficialSkinDownloading && !isInfernoInstalled
                                 ) {
                                     Text(
                                         when {
                                             isOfficialSkinDownloading && officialSkinDownloadProgress >= 0 ->
                                                 "DOWNLOADING $officialSkinDownloadProgress%"
                                             isOfficialSkinDownloading -> "DOWNLOADING…"
-                                            officialSkinUpdateAvailable -> "UPDATE"
                                             isInfernoInstalled -> "INSTALLED"
                                             else -> "DOWNLOAD & INSTALL"
                                         },
