@@ -51,14 +51,17 @@
   },
   "usage": "tinggi_total = TOP + tinggi_tengah + BOT; hanya slice middle yang diubah tingginya",
   "runtime": {
-    "android_drawable": "tag_frame_spritesheet",
-    "uses_source_slices": true,
-    "middle_rendering": "stretch_vertical",
-    "runtime_spec_path": "app/src/main/assets/tag_frame_spec.json",
-    "runtime_image_path": "app/src/main/res/drawable-nodpi/tag_frame_spritesheet.png",
+    "renderer": "Jetpack Compose Canvas in HomeComponents.TagFrame",
+    "asset_resolution": "SkinAssetResolver.loadBitmap",
+    "active_skin_path": "components/tag_frame/frame_spritesheet.webp",
+    "bundled_fallback_path": "skins/default/components/tag_frame/frame_spritesheet.webp",
     "source_image_path": "default_skin/components/tag_frame/frame_spritesheet.webp",
-    "source_runtime_relationship": "The source WebP and runtime PNG are distinct files; visual equivalence and conversion provenance have not been verified. Do not replace either automatically.",
-    "implementation_reference": "app/src/main/java/com/nekos/android/HomeComponents.kt"
+    "source_runtime_relationship": "The same relative asset path is resolved from the active installed skin, with the bundled default used as a per-file fallback. No separate drawable PNG is used by the current TagFrame renderer.",
+    "implementation_reference": [
+      "app/src/main/java/com/nekos/android/HomeComponents.kt",
+      "app/src/main/java/com/nekos/android/SkinAssetResolver.kt",
+      "app/src/main/java/com/nekos/android/HomeScreen.kt"
+    ]
   },
   "schema_version": 1,
   "component_id": "tag_frame",
