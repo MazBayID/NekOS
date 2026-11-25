@@ -21,6 +21,8 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -42,6 +44,9 @@ internal fun NekOSAlertDialog(
     confirmButton: @Composable () -> Unit = {},
     dismissButton: (@Composable () -> Unit)? = null
 ) {
+    val motifBrush = rememberDialogMotifBrush()
+    val motifTint = ColorFilter.tint(Color(topFrameColorArgb.toInt()), BlendMode.SrcIn)
+
     Dialog(
         onDismissRequest = onDismissRequest,
         properties = DialogProperties(
@@ -74,6 +79,11 @@ internal fun NekOSAlertDialog(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
+                            .drawBehind {
+                                motifBrush?.let {
+                                    drawRect(brush = it, alpha = 0.18f, colorFilter = motifTint)
+                                }
+                            }
                             .padding(start = 12.dp, end = 12.dp, top = 28.dp, bottom = 6.dp),
                         verticalArrangement = Arrangement.spacedBy(5.dp)
                     ) {

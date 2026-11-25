@@ -35,6 +35,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
@@ -102,6 +105,8 @@ internal fun NekOSSettingsDialog(
 ) {
     var page by remember { mutableStateOf(SettingsPage.MAIN) }
     val surfaceColor = launcherThemeColor(launcherThemeKey)
+    val motifBrush = rememberDialogMotifBrush()
+    val motifTint = ColorFilter.tint(Color(launcherUiColor.toInt()), BlendMode.SrcIn)
 
     BackHandler(enabled = page != SettingsPage.MAIN) {
         page = SettingsPage.MAIN
@@ -136,6 +141,11 @@ internal fun NekOSSettingsDialog(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
+                            .drawBehind {
+                                motifBrush?.let {
+                                    drawRect(brush = it, alpha = 0.18f, colorFilter = motifTint)
+                                }
+                            }
                             .padding(start = 10.dp, end = 10.dp, top = 24.dp, bottom = 4.dp),
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
