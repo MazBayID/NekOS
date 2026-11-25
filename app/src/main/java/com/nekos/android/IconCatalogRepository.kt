@@ -181,10 +181,12 @@ class IconCatalogRepository(context: Context) {
             result.recycle()
             return null
         }
-        return memoryState.storeIfCurrent(epoch) {
+        val cached = memoryState.storeIfCurrent(epoch) {
             bitmapCache.put(key, result)
             result
         }
+        if (cached == null && !result.isRecycled) result.recycle()
+        return cached
     }
 
     private fun onBadgeColor(background: Int): Int {
