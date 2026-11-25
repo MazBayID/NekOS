@@ -247,7 +247,7 @@ internal fun NekOSSettingsDialog(
                                 painter = painterResource(R.drawable.tagline_a),
                                 contentDescription = "NekOS",
                                 contentScale = androidx.compose.ui.layout.ContentScale.Fit,
-                                modifier = Modifier.fillMaxWidth().heightIn(max = 128.dp)
+                                modifier = Modifier.fillMaxWidth().heightIn(max = 188.dp)
                             )
                             Text("Version $appVersion", color = SettingsMuted, fontSize = 12.sp)
                             TextButton(onClick = onOpenRepository) {
