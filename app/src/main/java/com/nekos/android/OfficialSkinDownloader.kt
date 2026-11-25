@@ -51,7 +51,7 @@ internal object OfficialSkinDownloader {
             }
             val digest = MessageDigest.getInstance("SHA-256")
                 .digest(archive.readBytes())
-                .joinToString("") { "%02x".format(it) }
+                .joinToString("") { "%02x".format(it.toInt() and 0xff) }
             if (!digest.equals(EXPECTED_SHA256, ignoreCase = true)) {
                 return SkinInstallResult(false, error = "Skin download failed integrity verification")
             }
