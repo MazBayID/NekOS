@@ -19,36 +19,19 @@ internal data class SkinDirectoryFinalizeResult(
     val error: String? = null
 )
 
-/** Replaces an installed skin only after the new staging directory has passed validation. */
-internal fun finalizeSkinDirectory(
+/** Installs a skin only when its permanent identity is not already present. */
+internal fun finalizeSkinInstallation(
     staging: File,
-    destination: File,
-    backup: File
+    destination: File
 ): SkinDirectoryFinalizeResult {
-    if (!destination.exists()) {
-        return if (staging.renameTo(destination)) {
-            SkinDirectoryFinalizeResult(true)
-        } else {
-            SkinDirectoryFinalizeResult(false, "Unable to finalize skin installation")
-        }
+    if (destination.exists()) {
+        return SkinDirectoryFinalizeResult(false, "Skin is already installed")
     }
-    if (!destination.isDirectory || backup.exists()) {
-        return SkinDirectoryFinalizeResult(false, "Unable to prepare skin update")
+    return if (staging.renameTo(destination)) {
+        SkinDirectoryFinalizeResult(true)
+    } else {
+        SkinDirectoryFinalizeResult(false, "Unable to finalize skin installation")
     }
-    if (!destination.renameTo(backup)) {
-        return SkinDirectoryFinalizeResult(false, "Unable to preserve the installed skin")
-    }
-    if (staging.renameTo(destination)) {
-        backup.deleteRecursively()
-        return SkinDirectoryFinalizeResult(true)
-    }
-    if (backup.renameTo(destination)) {
-        return SkinDirectoryFinalizeResult(false, "Update failed; previous skin was restored")
-    }
-    return SkinDirectoryFinalizeResult(
-        false,
-        "Update failed; previous skin is preserved in recovery folder ${backup.name}"
-    )
 }
 
 internal data class SkinInstallResult(
@@ -74,7 +57,7 @@ internal class SkinInstaller(context: Context) {
     }
 
     @Synchronized
-    fun install(input: InputStream, replaceExisting: Boolean = false): SkinInstallResult {
+    fun install(input: InputStream): SkinInstallResult {
         val workDir = File(appContext.cacheDir, "skin-import-${UUID.randomUUID()}")
         val archive = File(workDir, "skin.zip")
         val staging = File(workDir, "staging")
@@ -173,19 +156,13 @@ internal class SkinInstaller(context: Context) {
             if (destination.parentFile != skinsRoot.canonicalFile) {
                 return SkinInstallResult(false, error = "Invalid skin installation destination")
             }
-            if (destination.exists() && !replaceExisting) {
-                return SkinInstallResult(false, error = "Skin '$skinId' is already installed")
-            }
-            val backup = File(skinsRoot, ".skin-update-$skinId-${UUID.randomUUID()}")
             val finalized = synchronized(SkinDirectoryLock.monitor) {
-                finalizeSkinDirectory(staging, destination, backup)
+                finalizeSkinInstallation(staging, destination)
             }
             if (!finalized.success) {
                 return SkinInstallResult(false, error = finalized.error)
             }
-            // The installed directory may have replaced files for the currently
-            // selected skin without changing its ID. Advance the generation so
-            // all skin-dependent renderers discard bitmaps from the old version.
+            // A newly installed skin becomes visible to skin-dependent renderers.
             SkinRuntimeState.invalidate()
             SkinInstallResult(true, skinId = skinId)
         } catch (error: Exception) {
