@@ -132,8 +132,6 @@ internal fun NekOSSettingsDialog(
     onOpenRepository: () -> Unit,
     installedSkins: List<InstalledSkin>,
     activeSkinId: String,
-    isOfficialSkinDownloading: Boolean,
-    officialSkinDownloadProgress: Int,
     officialStoreSkins: List<OfficialStoreSkin>,
     isOfficialStoreLoading: Boolean,
     storeBusySkinId: String?,
@@ -146,6 +144,7 @@ internal fun NekOSSettingsDialog(
     onDismiss: () -> Unit
 ) {
     var page by remember { mutableStateOf(SettingsPage.MAIN) }
+    LaunchedEffect(page) { if (page == SettingsPage.OFFICIAL_SKIN_STORE) onRefreshOfficialStore() }
     val surfaceColor = launcherThemeColor(launcherThemeKey)
     val optionSurface = lerp(surfaceColor, Color.White, 0.48f)
     val motifBrush = rememberDialogMotifBrush()
