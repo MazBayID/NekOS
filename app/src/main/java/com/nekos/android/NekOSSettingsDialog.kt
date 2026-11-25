@@ -39,6 +39,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -110,6 +111,7 @@ internal fun NekOSSettingsDialog(
 ) {
     var page by remember { mutableStateOf(SettingsPage.MAIN) }
     val surfaceColor = launcherThemeColor(launcherThemeKey)
+    val optionSurface = lerp(surfaceColor, Color.White, 0.48f)
     val motifBrush = rememberDialogMotifBrush()
     val motifTint = ColorFilter.tint(Color(launcherUiColor.toInt()), BlendMode.SrcIn)
 
@@ -192,6 +194,7 @@ internal fun NekOSSettingsDialog(
                                 modifier = Modifier.weight(1f),
                                 iconRes = R.drawable.nekos_ui_wallpaper,
                                 iconColorArgb = launcherUiColor,
+                                surface = optionSurface,
                                 title = "Wallpaper",
                                 onClick = { page = SettingsPage.WALLPAPER }
                             )
@@ -199,6 +202,7 @@ internal fun NekOSSettingsDialog(
                                 modifier = Modifier.weight(1f),
                                 iconRes = R.drawable.nekos_ui_palette,
                                 iconColorArgb = launcherUiColor,
+                                surface = optionSurface,
                                 title = "Launcher theme",
                                 onClick = { page = SettingsPage.LAUNCHER_THEME }
                             )
@@ -208,6 +212,7 @@ internal fun NekOSSettingsDialog(
                         SettingsActionCard(
                             title = "Skins",
                             action = "Manage",
+                            surface = optionSurface,
                             onClick = { page = SettingsPage.SKINS }
                         )
 
@@ -215,11 +220,13 @@ internal fun NekOSSettingsDialog(
                         SettingsActionCard(
                             title = "Default launcher",
                             action = if (isDefaultLauncher) "Active" else "Choose",
+                            surface = optionSurface,
                             onClick = onSetAsHome
                         )
                         SettingsActionCard(
                             title = "Gesture hints",
                             action = "View",
+                            surface = optionSurface,
                             onClick = onShowDrawerHint
                         )
 
@@ -281,7 +288,7 @@ internal fun NekOSSettingsDialog(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clip(SettingsCardShape)
-                                    .background(SettingsInk.copy(alpha = 0.025f))
+                                    .background(optionSurface)
                                     .border(
                                         width = if (selected) 1.5.dp else 1.dp,
                                         color = if (selected) SettingsAccent else SettingsBorder,
@@ -320,12 +327,14 @@ internal fun NekOSSettingsDialog(
                         SettingsActionCard(
                             title = if (hasWallpaper) "Change wallpaper" else "Choose from gallery",
                             action = "Choose",
+                            surface = optionSurface,
                             onClick = onChooseWallpaper
                         )
                         if (hasWallpaper) {
                             SettingsActionCard(
                                 title = "Remove photo",
                                 action = "Remove",
+                                surface = optionSurface,
                                 onClick = onClearWallpaper
                             )
                         }
@@ -420,7 +429,7 @@ internal fun NekOSSettingsDialog(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clip(SettingsCardShape)
-                                    .background(if (selected) SettingsAccent.copy(alpha = 0.08f) else SettingsInk.copy(alpha = 0.025f))
+                                    .background(optionSurface)
                                     .border(
                                         width = if (selected) 1.5.dp else 1.dp,
                                         color = if (selected) SettingsAccent else SettingsBorder,
