@@ -8,20 +8,19 @@ import org.junit.Test
 
 class SkinInstallerUpdateTest {
     @Test
-    fun replacesInstalledDirectoryAndRemovesBackup() {
-        val root = createTempDir(prefix = "nekos-skin-update-test")
+    fun refusesToReplaceAnInstalledSkinWithTheSameIdentity() {
+        val root = createTempDir(prefix = "nekos-skin-immutable-test")
         try {
             val installed = File(root, "inferno_phoenix").apply { mkdirs() }
             File(installed, "version.txt").writeText("1.0.0")
             val staging = File(root, "staging").apply { mkdirs() }
             File(staging, "version.txt").writeText("1.1.0")
-            val backup = File(root, "backup")
 
-            val result = finalizeSkinDirectory(staging, installed, backup)
+            val result = finalizeSkinInstallation(staging, installed)
 
-            assertTrue(result.success)
-            assertEquals("1.1.0", File(installed, "version.txt").readText())
-            assertFalse(backup.exists())
+            assertFalse(result.success)
+            assertEquals("1.0.0", File(installed, "version.txt").readText())
+            assertEquals("1.1.0", File(staging, "version.txt").readText())
         } finally {
             root.deleteRecursively()
         }
@@ -36,7 +35,7 @@ class SkinInstallerUpdateTest {
             val destination = File(root, "new_skin")
             val backup = File(root, "backup")
 
-            val result = finalizeSkinDirectory(staging, destination, backup)
+            val result = finalizeSkinInstallation(staging, destination)
 
             assertTrue(result.success)
             assertTrue(File(destination, "skin.json").isFile)
@@ -137,19 +136,16 @@ class SkinInstallerUpdateTest {
     }
 
     @Test
-    fun restoresPreviousSkinWhenStagingCannotBeFinalized() {
-        val root = createTempDir(prefix = "nekos-skin-rollback-test")
+    fun failsCleanlyWhenNewSkinStagingCannotBeFinalized() {
+        val root = createTempDir(prefix = "nekos-skin-finalize-failure-test")
         try {
-            val installed = File(root, "inferno_phoenix").apply { mkdirs() }
-            File(installed, "version.txt").writeText("1.0.0")
             val missingStaging = File(root, "missing-staging")
-            val backup = File(root, ".skin-update-inferno_phoenix-test")
+            val destination = File(root, "new_skin")
 
-            val result = finalizeSkinDirectory(missingStaging, installed, backup)
+            val result = finalizeSkinInstallation(missingStaging, destination)
 
             assertFalse(result.success)
-            assertEquals("1.0.0", File(installed, "version.txt").readText())
-            assertFalse(backup.exists())
+            assertFalse(destination.exists())
         } finally {
             root.deleteRecursively()
         }
