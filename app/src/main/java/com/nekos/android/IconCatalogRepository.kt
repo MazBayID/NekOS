@@ -39,6 +39,16 @@ internal fun isValidCatalogIconPath(path: String): Boolean {
 internal fun isValidCatalogIconEntry(id: Int, file: String, name: String, row: Int, column: Int): Boolean =
     id > 0 && isValidCatalogIconPath(file) && name.isNotBlank() && row > 0 && column > 0
 
+/** Skin catalogs may replace artwork, but canonical IDs must keep their semantic names. */
+internal fun isCanonicalSkinCatalog(
+    skinIcons: List<CatalogIcon>,
+    bundledIcons: List<CatalogIcon>
+): Boolean {
+    if (skinIcons.isEmpty()) return false
+    val canonicalNames = bundledIcons.associate { it.id to it.name }
+    return skinIcons.all { icon -> canonicalNames[icon.id] == icon.name }
+}
+
 /** Loads semantic skin glyphs and composites them over the default skin badge. */
 class IconCatalogRepository(context: Context) {
     private val appContext = context.applicationContext
@@ -69,7 +79,9 @@ class IconCatalogRepository(context: Context) {
         val customIndex = activeDirectory?.let { java.io.File(it, "icons/tag/icons_index.json") }
             ?.takeIf { it.isFile }
         val customIcons = customIndex?.let { index ->
-            runCatching { parseCatalog(index.readText(Charsets.UTF_8)) }.getOrNull()
+            runCatching { parseCatalog(index.readText(Charsets.UTF_8)) }
+                .getOrNull()
+                ?.takeIf { isCanonicalSkinCatalog(it, bundledIcons) }
         }
         // Invalid custom catalogs fall back completely; valid partial catalogs retain canonical entries.
         val icons = if ( customIcons == null) bundledIcons else {
