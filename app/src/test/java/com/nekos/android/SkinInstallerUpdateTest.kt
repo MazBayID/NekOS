@@ -52,6 +52,9 @@ class SkinInstallerUpdateTest {
             val backup = File(root, ".skin-update-inferno_phoenix-123e4567-e89b-12d3-a456-426614174000")
                 .apply { mkdirs() }
             File(backup, "version.txt").writeText("1.0.0")
+            File(backup, "skin.json").writeText(
+                """{"schema_version":1,"skin":{"id":"inferno_phoenix","name":"Inferno","version":"1.0.0"}}"""
+            )
 
             val recovered = recoverInterruptedSkinUpdates(root)
 
@@ -107,6 +110,27 @@ class SkinInstallerUpdateTest {
             assertTrue(recovered)
             assertEquals("1.0.0", File(installed, "version.txt").readText())
             assertFalse(backup.exists())
+        } finally {
+            root.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun keepsInvalidBackupAndPartialDestinationForInspection() {
+        val root = createTempDir(prefix = "nekos-skin-recovery-invalid-backup-test")
+        try {
+            val installed = File(root, "inferno_phoenix").apply { mkdirs() }
+            File(installed, "version.txt").writeText("partial")
+            val backup = File(root, ".skin-update-inferno_phoenix-123e4567-e89b-12d3-a456-426614174000")
+                .apply { mkdirs() }
+            File(backup, "version.txt").writeText("corrupt backup")
+            File(backup, "skin.json").writeText("{}")
+
+            val recovered = recoverInterruptedSkinUpdates(root)
+
+            assertFalse(recovered)
+            assertEquals("partial", File(installed, "version.txt").readText())
+            assertTrue(backup.exists())
         } finally {
             root.deleteRecursively()
         }
