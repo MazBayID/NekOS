@@ -183,7 +183,7 @@ def check_glyph_dir(r, root, sub, strict):
             (r.err if strict else r.warn)(f'icons/{sub}/{f}: ada di index tetapi file tidak ada')
         for f in set(files) - listed:
             r.err(f'icons/{sub}/{f}: file tidak terdaftar di index')
-        items = idx.get('items')
+        items = idx.get('items') if isinstance(idx, dict) else None
         if isinstance(items, list) and idx.get('total') != len(items):
             r.err(f'icons/{sub}: "total" ({idx.get("total")}) != jumlah item ({len(items)})')
     elif strict:
