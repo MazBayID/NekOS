@@ -14,7 +14,8 @@ internal data class OfficialStoreSkin(
 )
 internal data class StoreActionResult(
     val success: Boolean, val message: String, val checkoutUrl: String? = null,
-    val orderId: String? = null, val installedSkinId: String? = null
+    val orderId: String? = null, val installedSkinId: String? = null,
+    val paymentFailed: Boolean = false
 )
 
 internal object OfficialSkinStoreClient {
@@ -96,10 +97,20 @@ internal object OfficialSkinStoreClient {
         val result=request("/status","POST",JSONObject().put("android_id",androidId(context))
             .put("app_version",appVersion(context)).put("order_id",orderId))
         if (!result.optBoolean("owned")) {
-            val status=result.optString("status")
+            val status=result.optString("status").lowercase()
             if (status != "pending") prefs.edit().remove(PENDING_PREFIX + skin.id).apply()
+            val failureMessage = when (status) {
+                "expire" -> "Pembayaran kedaluwarsa. Batas waktu 15 menit telah berakhir dan pembayaran belum diterima. Kamu bisa mencoba membeli skin ini lagi."
+                "cancel" -> "Pembayaran dibatalkan. Tidak ada skin yang dipasang dan kamu bisa mencoba membeli lagi."
+                "deny" -> "Pembayaran ditolak oleh penyedia pembayaran. Silakan coba metode pembayaran lain."
+                else -> null
+            }
+            if (failureMessage != null) {
+                return StoreActionResult(false, failureMessage, paymentFailed = true)
+            }
             return StoreActionResult(false,if(status=="pending")
-                "Payment has not been confirmed yet. Please try again shortly." else "Payment status: $status")
+                "Pembayaran belum dikonfirmasi. Silakan periksa kembali beberapa saat lagi."
+                else "Status pembayaran: $status")
         }
         val installed=downloadAndInstall(context,skin.id)
         if(installed.success)prefs.edit().remove(PENDING_PREFIX+skin.id).apply()
