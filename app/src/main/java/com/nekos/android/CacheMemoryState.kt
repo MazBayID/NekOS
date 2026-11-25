@@ -25,6 +25,14 @@ internal class CacheMemoryState {
             if (enabled && epoch == loadEpoch) action() else null
         }
 
+    /** Invalidates in-flight loads and cached data without disabling future loads. */
+    fun invalidate(action: () -> Unit) {
+        synchronized(lock) {
+            epoch++
+            action()
+        }
+    }
+
     fun trim(action: () -> Unit) {
         synchronized(lock) {
             enabled = false
