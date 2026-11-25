@@ -72,7 +72,7 @@ async function createPayment(order:Record<string,unknown>,orderId:string,skin:Re
     headers:{Authorization:authHeader(),"Content-Type":"application/json","Accept":"application/json"},
     body:JSON.stringify({
       transaction_details:{order_id:orderId,gross_amount:amount},
-      item_details:[{id:String(skin.skin_key).slice(0,50),price:amount,quantity:1,name:String(skin.name).slice(0,50)}],
+      item_details:[{id:String(skin.id),price:amount,quantity:1,name:String(skin.name).slice(0,50)}],
       callbacks:{
         finish:"https://mazbayid.github.io/skin-payment-return/",
         error:"https://mazbayid.github.io/skin-payment-return/",
