@@ -2,13 +2,14 @@ package com.nekos.android
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.clickable
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.Modifier
 import androidx.compose.runtime.Composable
@@ -22,8 +23,7 @@ import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
@@ -49,16 +49,8 @@ internal fun LauncherAppActionMenuContent(
     LaunchedEffect(app.id) {
         appIcon = iconBitmapCache.getOrLoad(app)
     }
-    val motifBrush = rememberDialogMotifBrush()
-    val motifTint = ColorFilter.tint(Color(uiColorArgb.toInt()), BlendMode.SrcIn)
-
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .drawBehind {
-                motifBrush?.let { drawRect(brush = it, alpha = 0.18f, colorFilter = motifTint) }
-            }
-            .padding(horizontal = 8.dp, vertical = 6.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(9.dp)
     ) {
@@ -74,9 +66,9 @@ internal fun LauncherAppActionMenuContent(
         )
     }
     val optionSurface = lerp(launcherSurface, Color.White, 0.48f)
-    PopupAction("App info", R.drawable.nekos_ui_info, enabled = isInteractive, surface = optionSurface, uiColorArgb = uiColorArgb, motifBrush = motifBrush, onClick = onAppInfo)
+    PopupAction("App info", R.drawable.nekos_ui_info, enabled = isInteractive, surface = optionSurface, uiColorArgb = uiColorArgb, onClick = onAppInfo)
     if (onRemoveFavorite != null) {
-        PopupAction("Remove from Favorites", R.drawable.nekos_ui_remove, enabled = isInteractive, surface = optionSurface, uiColorArgb = uiColorArgb, motifBrush = motifBrush, onClick = onRemoveFavorite)
+        PopupAction("Remove from Favorites", R.drawable.nekos_ui_remove, enabled = isInteractive, surface = optionSurface, uiColorArgb = uiColorArgb, onClick = onRemoveFavorite)
     }
     PopupAction(
         if (app.isInCurrentProfile) "Uninstall" else "Manage app",
@@ -84,7 +76,6 @@ internal fun LauncherAppActionMenuContent(
         enabled = isInteractive,
         surface = optionSurface,
         uiColorArgb = uiColorArgb,
-        motifBrush = motifBrush,
         onClick = onUninstall
     )
     if (!isInteractive) {
@@ -105,18 +96,13 @@ private fun PopupAction(
     iconTint: Color? = null,
     surface: Color,
     uiColorArgb: Long,
-    motifBrush: androidx.compose.ui.graphics.Brush?,
     onClick: () -> Unit
 ) {
-    val motifTint = ColorFilter.tint(Color(uiColorArgb.toInt()), BlendMode.SrcIn)
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(10.dp))
             .background(surface)
-            .drawBehind {
-                motifBrush?.let { drawRect(brush = it, alpha = 0.18f, colorFilter = motifTint) }
-            }
             .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
             .padding(horizontal = 10.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
