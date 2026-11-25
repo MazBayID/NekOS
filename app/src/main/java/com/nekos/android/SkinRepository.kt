@@ -23,14 +23,35 @@ internal fun recoverInterruptedSkinUpdates(skinsDirectory: File): Boolean =
             if (!SkinInstaller.isValidSkinId(skinId)) continue
             val destination = File(root, skinId).canonicalFile
             if (destination.parentFile != root) continue
-            if (!destination.exists()) {
-                if (backup.renameTo(destination)) recovered = true
-            } else {
+
+            if (isValidInstalledSkinDirectory(destination, skinId)) {
+                // The replacement was fully installed; its backup is now obsolete.
                 backup.deleteRecursively()
+            } else {
+                // A destination without a valid manifest may be a partial replacement.
+                // Never discard the last known-good copy in favor of that directory.
+                if (destination.exists() && !destination.deleteRecursively()) continue
+                if (backup.renameTo(destination)) recovered = true
             }
         }
         recovered
     }
+
+private fun isValidInstalledSkinDirectory(directory: File, expectedId: String): Boolean =
+    runCatching {
+        if (!directory.isDirectory) return false
+        val manifest = File(directory, "skin.json")
+        if (!manifest.isFile) return false
+        val json = JSONObject(manifest.readText(Charsets.UTF_8))
+        if (json.optInt("schema_version", -1) != 1) return false
+        val skin = json.optJSONObject("skin") ?: return false
+        val id = skin.optString("id")
+        id == expectedId &&
+            SkinInstaller.isValidSkinId(id) &&
+            id != "default" &&
+            skin.optString("name").isNotBlank() &&
+            skin.optString("version").isNotBlank()
+    }.getOrDefault(false)
 
 internal data class InstalledSkin(
     val id: String,
