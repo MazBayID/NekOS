@@ -264,7 +264,8 @@ internal fun TagPill(
         label = "tag-drag-elevation"
     )
     val iconCacheGeneration = iconCatalogRepository.generation
-    var tagIcon by remember(tag.iconId, tag.iconFrameColorArgb, iconCacheGeneration) {
+    val activeSkinGeneration = SkinRuntimeState.generation
+    var tagIcon by remember(tag.iconId, tag.iconFrameColorArgb, iconCacheGeneration, activeSkinGeneration) {
         mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null)
     }
     val currentOnHandleClick by rememberUpdatedState(onHandleClick)
@@ -279,7 +280,7 @@ internal fun TagPill(
             )
         )
     }
-    LaunchedEffect(tag.iconId, tag.iconFrameColorArgb, iconCacheGeneration) {
+    LaunchedEffect(tag.iconId, tag.iconFrameColorArgb, iconCacheGeneration, activeSkinGeneration) {
         val refreshedTagIcon = withContext(Dispatchers.IO) {
             runCatching {
                 tag.iconId?.let { id ->
