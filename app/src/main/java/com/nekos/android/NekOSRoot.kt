@@ -395,6 +395,7 @@ internal fun NekOSRoot(
                 }
                 if (result.success) {
                     installedSkins = skinRepository.listInstalledSkins()
+                    iconCatalogRepository.invalidateSkinCache()
                     Toast.makeText(context, "Skin imported: ${result.skinId}", Toast.LENGTH_SHORT).show()
                 } else {
                     Toast.makeText(
@@ -1016,7 +1017,6 @@ internal fun NekOSRoot(
                             officialSkinDownloadProgress = 0
                             if (result.success) {
                                 installedSkins = skinRepository.listInstalledSkins()
-                                SkinRuntimeState.invalidate()
                                 iconCatalogRepository.invalidateSkinCache()
                                 Toast.makeText(
                                     context,
