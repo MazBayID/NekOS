@@ -167,15 +167,19 @@ internal fun rememberThemedUiArtwork(
     maxDimensionPx: Int = 512
 ): ImageBitmap? {
     val context = LocalContext.current
-    var bitmap by remember(resourceId, colorArgb, maxDimensionPx) {
+    val skinGeneration = SkinRuntimeState.generation
+    var bitmap by remember(resourceId, colorArgb, maxDimensionPx, skinGeneration) {
         mutableStateOf<ImageBitmap?>(null)
     }
 
-    LaunchedEffect(resourceId, colorArgb, maxDimensionPx) {
-        bitmap = withContext(Dispatchers.IO) {
+    LaunchedEffect(resourceId, colorArgb, maxDimensionPx, skinGeneration) {
+        val loadedBitmap = withContext(Dispatchers.IO) {
             runCatching {
                 UiArtworkColorizer.load(context, resourceId, colorArgb, maxDimensionPx)?.asImageBitmap()
             }.getOrNull()
+        }
+        if (skinGeneration == SkinRuntimeState.generation) {
+            bitmap = loadedBitmap
         }
     }
     return bitmap
