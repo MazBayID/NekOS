@@ -84,7 +84,7 @@ async function createPayment(order:Record<string,unknown>,orderId:string,skin:Re
         error:"https://mazbayid.github.io/skin-payment-return/",
         pending:"https://mazbayid.github.io/skin-payment-return/"
       },
-      expiry:{unit:"minute",duration:30}
+      expiry:{unit:"minute",duration:15}
     })
   });
   const data=await response.json();
