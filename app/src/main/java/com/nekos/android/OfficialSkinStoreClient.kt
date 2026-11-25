@@ -53,6 +53,9 @@ internal object OfficialSkinStoreClient {
                         "payment_provider_not_configured" -> "Payment is not configured yet."
                         "purchase_required" -> "This skin has not been purchased on this device."
                         "already_owned" -> "This device already owns this skin."
+                        "midtrans_expire_permission_required" -> "Agar transaksi otomatis ditutup setelah 15 menit, aktifkan izin 'Expire transaction: Write' pada Access Key Midtrans."
+                        "midtrans_expire_failed" -> "Midtrans belum berhasil menutup transaksi. Silakan periksa kembali status pembayaran."
+                        "midtrans_status_check_failed" -> "NekOS gagal memeriksa status pembayaran ke Midtrans. Coba lagi beberapa saat."
                         else -> json.optString("error").ifBlank { "Store request failed ($code)" }
                     }
                 })
