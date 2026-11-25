@@ -106,6 +106,8 @@ internal fun NekOSSettingsDialog(
     onOpenRepository: () -> Unit,
     installedSkins: List<InstalledSkin>,
     activeSkinId: String,
+    isOfficialSkinDownloading: Boolean,
+    onDownloadOfficialSkin: () -> Unit,
     onImportSkin: () -> Unit,
     onSelectSkin: (String) -> Unit,
     onDeleteSkin: (String) -> Unit,
@@ -503,6 +505,7 @@ internal fun NekOSSettingsDialog(
                     }
 
                     SettingsPage.OFFICIAL_SKIN_STORE -> {
+                        val isInfernoInstalled = installedSkins.any { it.id == "inferno_phoenix" }
                         SettingsSectionTitle("OFFICIAL COLLECTION")
                         Text(
                             "A curated collection of skins made for NekOS.",
@@ -548,15 +551,30 @@ internal fun NekOSSettingsDialog(
                                     fontSize = 8.sp
                                 )
                                 Text(
-                                    "PAID · COMING SOON",
-                                    color = SettingsAccent,
+                                    "FREE · OFFICIAL SKIN",
+                                    color = Color(0xFF39734B),
                                     fontSize = 9.sp,
                                     fontWeight = FontWeight.Bold
                                 )
+                                TextButton(
+                                    onClick = onDownloadOfficialSkin,
+                                    enabled = !isOfficialSkinDownloading && !isInfernoInstalled
+                                ) {
+                                    Text(
+                                        when {
+                                            isInfernoInstalled -> "INSTALLED"
+                                            isOfficialSkinDownloading -> "DOWNLOADING…"
+                                            else -> "DOWNLOAD & INSTALL"
+                                        },
+                                        color = SettingsAccent,
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
                             }
                         }
                         Text(
-                            "Purchases and secure ZIP downloads will be enabled after the official store backend is ready.",
+                            "This skin is free and will remain in the official collection. More free and paid skins can be added separately.",
                             color = SettingsMuted,
                             fontSize = 10.sp
                         )
