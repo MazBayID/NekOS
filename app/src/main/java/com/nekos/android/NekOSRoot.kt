@@ -96,6 +96,7 @@ internal fun NekOSRoot(
     var activeSkinId by remember(skinRepository) {
         mutableStateOf(skinRepository.activeSkinId())
     }
+    var isOfficialSkinDownloading by remember { mutableStateOf(false) }
     var apps by remember { mutableStateOf(emptyList<InstalledApp>()) }
     val initialFavoriteLoad = remember(context) { loadFavoritePackagesResult(context) }
     var favoritePackages by remember { mutableStateOf(initialFavoriteLoad.packages) }
@@ -982,6 +983,30 @@ internal fun NekOSRoot(
                 },
                 installedSkins = installedSkins,
                 activeSkinId = activeSkinId,
+                isOfficialSkinDownloading = isOfficialSkinDownloading,
+                onDownloadOfficialSkin = {
+                    if (!isOfficialSkinDownloading &&
+                        installedSkins.none { it.id == "inferno_phoenix" }
+                    ) {
+                        skinPickerScope.launch {
+                            isOfficialSkinDownloading = true
+                            val result = withContext(Dispatchers.IO) {
+                                OfficialSkinDownloader.downloadAndInstall(context)
+                            }
+                            isOfficialSkinDownloading = false
+                            if (result.success) {
+                                installedSkins = skinRepository.listInstalledSkins()
+                                Toast.makeText(context, "Inferno Phoenix installed", Toast.LENGTH_SHORT).show()
+                            } else {
+                                Toast.makeText(
+                                    context,
+                                    result.error ?: "Unable to install official skin",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            }
+                        }
+                    }
+                },
                 onImportSkin = {
                     skinPicker.launch(arrayOf(
                         "application/zip",
