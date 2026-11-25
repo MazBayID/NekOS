@@ -81,7 +81,7 @@ internal fun launcherThemeColor(key: String): Color =
     LauncherThemeOptions.firstOrNull { it.key == normalizeLauncherTheme(key) }?.color
         ?: Color(0xFFFEFCF8)
 
-private enum class SettingsPage { MAIN, WALLPAPER, LAUNCHER_THEME }
+private enum class SettingsPage { MAIN, WALLPAPER, LAUNCHER_THEME, SKINS }
 
 @Composable
 internal fun NekOSSettingsDialog(
@@ -101,6 +101,11 @@ internal fun NekOSSettingsDialog(
     onClearWallpaper: () -> Unit,
     onShowDrawerHint: () -> Unit,
     onOpenRepository: () -> Unit,
+    installedSkins: List<InstalledSkin>,
+    activeSkinId: String,
+    onImportSkin: () -> Unit,
+    onSelectSkin: (String) -> Unit,
+    onDeleteSkin: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
     var page by remember { mutableStateOf(SettingsPage.MAIN) }
@@ -167,6 +172,7 @@ internal fun NekOSSettingsDialog(
                                     SettingsPage.MAIN -> "Settings"
                                     SettingsPage.WALLPAPER -> "Wallpaper"
                                     SettingsPage.LAUNCHER_THEME -> "Launcher theme"
+                                    SettingsPage.SKINS -> "Skins"
                                 },
                                 color = SettingsInk,
                                 fontSize = 18.sp,
@@ -197,6 +203,13 @@ internal fun NekOSSettingsDialog(
                                 onClick = { page = SettingsPage.LAUNCHER_THEME }
                             )
                         }
+
+                        SettingsSectionTitle("PERSONALIZATION")
+                        SettingsActionCard(
+                            title = "Skins",
+                            action = "Manage",
+                            onClick = { page = SettingsPage.SKINS }
+                        )
 
                         SettingsSectionTitle("HOME BEHAVIOR")
                         SettingsActionCard(
@@ -397,6 +410,59 @@ internal fun NekOSSettingsDialog(
                                 if (pair.size < 3) repeat(3 - pair.size) { Spacer(Modifier.weight(1f)) }
                             }
                         }
+                    }
+
+                    SettingsPage.SKINS -> {
+                        SettingsSectionTitle("INSTALLED SKINS")
+                        installedSkins.forEach { skin ->
+                            val selected = skin.id == activeSkinId
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(SettingsCardShape)
+                                    .background(if (selected) SettingsAccent.copy(alpha = 0.08f) else SettingsInk.copy(alpha = 0.025f))
+                                    .border(
+                                        width = if (selected) 1.5.dp else 1.dp,
+                                        color = if (selected) SettingsAccent else SettingsBorder,
+                                        shape = SettingsCardShape
+                                    )
+                                    .clickable { onSelectSkin(skin.id) }
+                                    .padding(horizontal = 10.dp, vertical = 9.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                    Text(
+                                        skin.name,
+                                        color = SettingsInk,
+                                        fontSize = 13.sp,
+                                        fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium
+                                    )
+                                    Text(
+                                        "${skin.author.ifBlank { "NekOS" }} · v${skin.version}",
+                                        color = SettingsMuted,
+                                        fontSize = 10.sp
+                                    )
+                                }
+                                if (selected) {
+                                    Text("Active", color = SettingsAccent, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                                } else if (!skin.isBuiltIn) {
+                                    TextButton(onClick = { onDeleteSkin(skin.id) }) {
+                                        Text("Remove", color = SettingsAccent, fontSize = 11.sp)
+                                    }
+                                }
+                            }
+                        }
+                        SettingsActionCard(
+                            title = "Import skin ZIP",
+                            action = "Import",
+                            onClick = onImportSkin
+                        )
+                        Text(
+                            "Skin files change appearance only. Your apps, tags, gestures, and launcher settings remain unchanged.",
+                            color = SettingsMuted,
+                            fontSize = 10.sp
+                        )
                     }
                 }
             }

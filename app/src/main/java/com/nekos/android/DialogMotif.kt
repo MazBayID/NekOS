@@ -24,9 +24,10 @@ internal fun rememberDialogMotifBrush(): Brush? {
     val context = LocalContext.current
     val tilePx = with(LocalDensity.current) { 320.dp.roundToPx().coerceAtLeast(64) }
     val resolver = remember(context) { SkinAssetResolver(context) }
-    var brush by remember(resolver, tilePx) { mutableStateOf<Brush?>(null) }
+    val skinGeneration = SkinRuntimeState.generation
+    var brush by remember(resolver, tilePx, skinGeneration) { mutableStateOf<Brush?>(null) }
 
-    LaunchedEffect(resolver, tilePx) {
+    LaunchedEffect(resolver, tilePx, skinGeneration) {
         brush = withContext(Dispatchers.IO) {
             runCatching {
                 val source = resolver.loadBitmap(

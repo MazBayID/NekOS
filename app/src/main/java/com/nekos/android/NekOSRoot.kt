@@ -88,6 +88,13 @@ internal fun NekOSRoot(
         isDefaultLauncher = isNekOSDefaultHome(context)
     }
     val iconCatalogRepository = remember(context) { IconCatalogRepository(context) }
+    val skinRepository = remember(context) { SkinRepository(context) }
+    var installedSkins by remember(skinRepository) {
+        mutableStateOf(skinRepository.listInstalledSkins())
+    }
+    var activeSkinId by remember(skinRepository) {
+        mutableStateOf(skinRepository.activeSkinId())
+    }
     var apps by remember { mutableStateOf(emptyList<InstalledApp>()) }
     val initialFavoriteLoad = remember(context) { loadFavoritePackagesResult(context) }
     var favoritePackages by remember { mutableStateOf(initialFavoriteLoad.packages) }
@@ -366,6 +373,30 @@ internal fun NekOSRoot(
             }
         }
     }
+
+    val skinPickerScope = rememberCoroutineScope()
+    val skinPicker = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri != null) {
+            skinPickerScope.launch {
+                val result = withContext(Dispatchers.IO) {
+                    SkinInstaller(context).install(uri)
+                }
+                if (result.success) {
+                    installedSkins = skinRepository.listInstalledSkins()
+                    Toast.makeText(context, "Skin imported: ${result.skinId}", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(
+                        context,
+                        result.error ?: "Unable to import skin",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+        }
+    }
+
     val homeBackground = nekosBackgroundColor(backgroundPreset)
 
     fun clearActionMenuPreview() {
@@ -935,6 +966,35 @@ internal fun NekOSRoot(
                         )
                     }.onFailure {
                         Toast.makeText(context, "Unable to open GitHub", Toast.LENGTH_SHORT).show()
+                    }
+                },
+                installedSkins = installedSkins,
+                activeSkinId = activeSkinId,
+                onImportSkin = {
+                    skinPicker.launch(arrayOf(
+                        "application/zip",
+                        "application/x-zip-compressed",
+                        "application/octet-stream"
+                    ))
+                },
+                onSelectSkin = { id ->
+                    if (skinRepository.setActiveSkin(id)) {
+                        activeSkinId = id
+                        iconCatalogRepository.trimMemory()
+                        installedSkins = skinRepository.listInstalledSkins()
+                        Toast.makeText(context, "Skin aktif: ${installedSkins.firstOrNull { it.id == id }?.name ?: id}", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(context, "Unable to activate this skin", Toast.LENGTH_SHORT).show()
+                    }
+                },
+                onDeleteSkin = { id ->
+                    if (skinRepository.deleteSkin(id)) {
+                        activeSkinId = skinRepository.activeSkinId()
+                        installedSkins = skinRepository.listInstalledSkins()
+                        iconCatalogRepository.trimMemory()
+                        Toast.makeText(context, "Skin removed", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(context, "Unable to remove this skin", Toast.LENGTH_SHORT).show()
                     }
                 },
                 onDismiss = { showSettings = false }

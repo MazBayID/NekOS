@@ -1,6 +1,9 @@
 package com.nekos.android
 
 import android.content.Context
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.setValue
 import org.json.JSONObject
 import java.io.File
 
@@ -52,7 +55,9 @@ internal class SkinRepository(context: Context) {
         if (id != DEFAULT_SKIN_ID && !SkinInstaller.isValidSkinId(id)) return false
         val exists = id == DEFAULT_SKIN_ID || readInstalledSkin(File(skinsDirectory, id)) != null
         if (!exists) return false
-        return preferences.edit().putString(ACTIVE_SKIN_KEY, id).commit()
+        val saved = preferences.edit().putString(ACTIVE_SKIN_KEY, id).commit()
+        if (saved) SkinRuntimeState.invalidate()
+        return saved
     }
 
     @Synchronized
@@ -113,5 +118,16 @@ internal class SkinRepository(context: Context) {
             val manifest = File(directory, "skin.json")
             return if (manifest.isFile) directory else null
         }
+    }
+}
+
+
+/** Compose-observable generation used to refresh cached skin artwork after selection changes. */
+internal object SkinRuntimeState {
+    var generation by mutableIntStateOf(0)
+        private set
+
+    fun invalidate() {
+        generation++
     }
 }

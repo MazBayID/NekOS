@@ -64,7 +64,7 @@ internal object UiArtworkColorizer {
     ): Bitmap? {
         val color = normalizeLauncherUiColor(targetColorArgb)
         val targetSize = maxDimensionPx.coerceAtLeast(1)
-        val key = "$resourceId:${color.toString(16)}:$targetSize"
+        val key = "${SkinRuntimeState.generation}:$resourceId:${color.toString(16)}:$targetSize"
         cache.get(key)?.let { return it }
 
         val skinFile = when (resourceId) {

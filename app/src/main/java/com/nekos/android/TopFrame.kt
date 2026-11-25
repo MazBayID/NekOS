@@ -38,9 +38,10 @@ internal fun TopFrame(
 ) {
     val context = LocalContext.current
     val resolver = remember(context) { SkinAssetResolver(context) }
-    var images by remember { mutableStateOf<TopFrameImages?>(null) }
+    val skinGeneration = SkinRuntimeState.generation
+    var images by remember(resolver, skinGeneration) { mutableStateOf<TopFrameImages?>(null) }
 
-    LaunchedEffect(resolver) {
+    LaunchedEffect(resolver, skinGeneration) {
         val loadedImages = withContext(Dispatchers.IO) {
             runCatching {
                 val sheet = resolver.loadBitmap(

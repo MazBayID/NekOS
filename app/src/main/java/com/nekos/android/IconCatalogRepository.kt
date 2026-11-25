@@ -109,7 +109,7 @@ class IconCatalogRepository(context: Context) {
         require(isValidCatalogIconPath(icon.file)) { "Invalid catalog asset path: ${icon.file}" }
         val target = maxDimensionPx.coerceAtLeast(1)
         val color = frameColorArgb and 0xFFFFFFFFL
-        val key = "${icon.file}:${color.toString(16)}:$target"
+        val key = "${SkinRuntimeState.generation}:${icon.file}:${color.toString(16)}:$target"
         memoryState.ifEnabled { bitmapCache.get(key) }?.let { return it }
         val epoch = memoryState.beginLoad() ?: return null
 
