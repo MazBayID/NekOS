@@ -4,7 +4,8 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const DEVICE_SECRET = Deno.env.get("SKIN_DEVICE_HMAC_SECRET") ?? "";
 const MIDTRANS_KEY = Deno.env.get("MIDTRANS_SERVER_KEY") ?? "";
-const MIDTRANS_ENV = (Deno.env.get("MIDTRANS_ENVIRONMENT") ?? "sandbox").toLowerCase();
+const MIDTRANS_SIGNATURE_SECRET = Deno.env.get("MIDTRANS_SIGNATURE_SECRET") ?? "";
+const MIDTRANS_ENV = (Deno.env.get("MIDTRANS_ENVIRONMENT") ?? "").trim().toLowerCase();
 const ORIGIN = "https://mazbayid.github.io";
 const PREVIEWS = "skin-previews";
 const db = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
@@ -41,6 +42,11 @@ function constantEqual(a:string,b:string) {
   let diff=0;for(let i=0;i<a.length;i++)diff|=a.charCodeAt(i)^b.charCodeAt(i);
   return diff===0;
 }
+function assertPaymentConfig() {
+  if (!MIDTRANS_KEY || !MIDTRANS_SIGNATURE_SECRET || !["production","sandbox"].includes(MIDTRANS_ENV)) {
+    throw new Error("payment_provider_not_configured");
+  }
+}
 function midtransBase() {
   return MIDTRANS_ENV==="production" ? "https://api.midtrans.com" : "https://api.sandbox.midtrans.com";
 }
@@ -64,7 +70,7 @@ async function catalog(origin:string) {
   }));
 }
 async function createPayment(order:Record<string,unknown>,orderId:string,skin:Record<string,unknown>) {
-  if(!MIDTRANS_KEY)throw new Error("payment_provider_not_configured");
+  assertPaymentConfig();
   const amount=Number(order.amount);
   if(!Number.isSafeInteger(amount)||amount<1)throw new Error("invalid_order_amount");
   const response=await fetch(snapBase()+"/snap/v1/transactions",{
@@ -87,14 +93,14 @@ async function createPayment(order:Record<string,unknown>,orderId:string,skin:Re
   return {checkout_url:data.redirect_url,token:data.token,order_id:orderId};
 }
 async function handleWebhook(req:Request) {
-  if(!MIDTRANS_KEY)return fail("payment_provider_not_configured",503);
+  try { assertPaymentConfig(); } catch { return fail("payment_provider_not_configured",503); }
   const body=await req.json();
   const orderId=String(body.order_id??"");
   const statusCode=String(body.status_code??"");
   const gross=String(body.gross_amount??"");
   const signature=String(body.signature_key??"");
   if(!orderId||!statusCode||!gross||!signature)return fail("invalid_notification",400);
-  const expected=await sha512(orderId+statusCode+gross+MIDTRANS_KEY);
+  const expected=await sha512(orderId+statusCode+gross+MIDTRANS_SIGNATURE_SECRET);
   if(!constantEqual(signature.toLowerCase(),expected))return fail("invalid_signature",401);
   const statusResponse=await fetch(midtransBase()+"/v2/"+encodeURIComponent(orderId)+"/status",{
     headers:{Authorization:authHeader(),"Accept":"application/json"}
@@ -151,7 +157,8 @@ Deno.serve(async(req:Request)=>{
       const orderId=String(body.order_id??"");
       let status=await rpc("skin_order_status",{p_order_id:orderId,p_device_hash:deviceHash});
       if(!status)return fail("order_not_found",404,origin);
-      if(status.status==="pending" && MIDTRANS_KEY) {
+      if(status.status==="pending") {
+        assertPaymentConfig();
         const verifiedResponse=await fetch(midtransBase()+"/v2/"+encodeURIComponent(orderId)+"/status",{
           headers:{Authorization:authHeader(),"Accept":"application/json"}
         });
