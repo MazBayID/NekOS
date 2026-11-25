@@ -14,9 +14,50 @@ import java.security.MessageDigest
 internal object OfficialSkinDownloader {
     private const val DOWNLOAD_URL = "https://raw.githubusercontent.com/MazBayID/NekOS/main/nekos_skin_kit/official_skin/skin_inferno_phoenix.zip"
     private const val EXPECTED_SHA256 = "c49003eab26be7cea6c0a6cf32c4897b4e79aa89b1a18b3e526a00054da338f1"
+    internal const val OFFICIAL_VERSION = "1.0.0"
+
+    internal fun isUpdateAvailable(installedVersion: String?): Boolean =
+        installedVersion != null && isNewerVersion(OFFICIAL_VERSION, installedVersion)
+
+    internal fun isNewerVersion(candidate: String, current: String): Boolean {
+        fun parts(version: String): List<Long>? =
+            version.substringBefore("-").substringBefore("+").split(".")
+                .map { it.toLongOrNull() ?: return null }
+        val candidateParts = parts(candidate) ?: return false
+        val currentParts = parts(current) ?: return false
+        for (index in 0 until maxOf(candidateParts.size, currentParts.size)) {
+            val comparison = candidateParts.getOrElse(index) { 0L }
+                .compareTo(currentParts.getOrElse(index) { 0L })
+            if (comparison != 0) return comparison > 0
+        }
+        val candidatePre = candidate.substringBefore("+").substringAfter("-", "")
+        val currentPre = current.substringBefore("+").substringAfter("-", "")
+        if (candidatePre.isEmpty()) return currentPre.isNotEmpty()
+        if (currentPre.isEmpty()) return false
+        val candidateIds = candidatePre.split(".")
+        val currentIds = currentPre.split(".")
+        for (index in 0 until minOf(candidateIds.size, currentIds.size)) {
+            val left = candidateIds[index]
+            val right = currentIds[index]
+            val leftNumber = left.toLongOrNull()
+            val rightNumber = right.toLongOrNull()
+            val comparison = when {
+                leftNumber != null && rightNumber != null -> leftNumber.compareTo(rightNumber)
+                leftNumber != null -> -1
+                rightNumber != null -> 1
+                else -> left.compareTo(right)
+            }
+            if (comparison != 0) return comparison > 0
+        }
+        return candidateIds.size > currentIds.size
+    }
     private const val MAX_DOWNLOAD_BYTES = 32L * 1024L * 1024L
 
-    fun downloadAndInstall(context: Context, onProgress: (Int) -> Unit = {}): SkinInstallResult {
+    fun downloadAndInstall(
+        context: Context,
+        replaceExisting: Boolean = false,
+        onProgress: (Int) -> Unit = {}
+    ): SkinInstallResult {
         val archive = File(context.cacheDir, "official-inferno-phoenix.zip")
         var connection: HttpURLConnection? = null
         return try {
@@ -60,7 +101,7 @@ internal object OfficialSkinDownloader {
             if (!digest.equals(EXPECTED_SHA256, ignoreCase = true)) {
                 return SkinInstallResult(false, error = "Skin download failed integrity verification")
             }
-            FileInputStream(archive).use { SkinInstaller(context).install(it) }
+            FileInputStream(archive).use { SkinInstaller(context).install(it, replaceExisting = replaceExisting) }
         } catch (error: Exception) {
             SkinInstallResult(false, error = error.message ?: "Unable to download official skin")
         } finally {
