@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "units": {
+    "layout": "dp",
+    "image_coordinates": "px",
+    "text": "sp",
+    "opacity": "0..1",
+    "color": "#AARRGGBB"
+  },
+  "colors": {
+    "background_primary": null,
+    "background_secondary": null,
+    "surface": null,
+    "surface_elevated": null,
+    "text_primary": null,
+    "text_secondary": null,
+    "accent": null,
+    "accent_on": null,
+    "border": null,
+    "scrim": null
+  },
+  "typography": {
+    "family": null,
+    "display": {
+      "size_sp": null,
+      "weight": null,
+      "line_height_sp": null
+    },
+    "title": {
+      "size_sp": null,
+      "weight": null,
+      "line_height_sp": null
+    },
+    "body": {
+      "size_sp": null,
+      "weight": null,
+      "line_height_sp": null
+    },
+    "label": {
+      "size_sp": null,
+      "weight": null,
+      "line_height_sp": null
+    }
+  },
+  "dimensions": {
+    "screen_horizontal_padding_dp": null,
+    "component_spacing_dp": null,
+    "icon_small_dp": null,
+    "icon_medium_dp": null,
+    "icon_large_dp": null,
+    "corner_small_dp": null,
+    "corner_medium_dp": null,
+    "corner_large_dp": null
+  },
+  "effects": {
+    "card_elevation_dp": null,
+    "shadow_opacity": null,
+    "blur_radius_dp": null
+  },
+  "notes": "Null values are intentional placeholders; populate only from measured/current runtime values."
+}

@@ -1,0 +1,97 @@
+{
+  "image": "frame_spritesheet.webp",
+  "sheet_size": {
+    "w": 512,
+    "h": 240
+  },
+  "layout": "3-slice vertikal (atas, tengah, bawah ditumpuk)",
+  "original_frame": {
+    "w": 512,
+    "h": 1024
+  },
+  "slices": {
+    "top": {
+      "x": 0,
+      "y": 0,
+      "w": 512,
+      "h": 144,
+      "mode": "fixed",
+      "note": "kepala kucing + sudut atas, jangan di-scale"
+    },
+    "middle": {
+      "x": 0,
+      "y": 144,
+      "w": 512,
+      "h": 16,
+      "mode": "stretch_vertical",
+      "note": "sisi kiri-kanan lurus, aman di-stretch/tile vertikal"
+    },
+    "bottom": {
+      "x": 0,
+      "y": 160,
+      "w": 512,
+      "h": 80,
+      "mode": "fixed",
+      "note": "sudut bawah, jangan di-scale"
+    }
+  },
+  "min_height": 224,
+  "nine_patch": {
+    "stretch_y": [
+      144,
+      "H-80"
+    ],
+    "content_inset": {
+      "left": 35,
+      "right": 35,
+      "top": 144,
+      "bottom": 80
+    },
+    "note": "Reference geometry only. Runtime uses a custom Compose 3-slice renderer, not an Android .9.png NinePatch resource."
+  },
+  "usage": "tinggi_total = TOP + tinggi_tengah + BOT; hanya slice middle yang diubah tingginya",
+  "runtime": {
+    "android_drawable": "tag_frame_spritesheet",
+    "uses_source_slices": true,
+    "middle_rendering": "stretch_vertical",
+    "runtime_spec_path": "app/src/main/assets/tag_frame_spec.json",
+    "runtime_image_path": "app/src/main/res/drawable-nodpi/tag_frame_spritesheet.png",
+    "source_image_path": "default_skin/components/tag_frame/frame_spritesheet.webp",
+    "source_runtime_relationship": "The source WebP and runtime PNG are distinct files; visual equivalence and conversion provenance have not been verified. Do not replace either automatically.",
+    "implementation_reference": "app/src/main/java/com/nekos/android/HomeComponents.kt"
+  },
+  "schema_version": 1,
+  "component_id": "tag_frame",
+  "asset_type": "vertical_three_slice_frame",
+  "coordinate_system": {
+    "unit": "px",
+    "origin": "top_left",
+    "positive_x": "right",
+    "positive_y": "down"
+  },
+  "source_asset_root": "default_skin/components/tag_frame/",
+  "stretch_formula": {
+    "total_height": "H",
+    "fixed_top_px": 144,
+    "fixed_bottom_px": 80,
+    "middle_height": "H - 224",
+    "minimum_total_height_px": 224,
+    "rule": "Keep top and bottom slices at source height; stretch only the 16 px middle slice vertically."
+  },
+  "color_mode": "alpha_mask_white",
+  "tint_role": "shared_ui",
+  "measured_px": {
+    "stroke_thickness": 19,
+    "outer_margin": {
+      "left": 18,
+      "top": 15,
+      "bottom": 18,
+      "right": 15
+    },
+    "head": {
+      "width": 87,
+      "height": 120,
+      "note": "lebih langsing (rasio 0.73) daripada kepala badge/top_frame (rasio ~0.98)"
+    }
+  }
+}

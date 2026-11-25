@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "skin": {
+    "id": "sakura_pink",
+    "name": "Sakura Pink",
+    "version": "1.0.0",
+    "author": "Nama Kamu",
+    "description": "Contoh skin parsial: hanya badge dan 1 motif. Yang tidak ada memakai aset bawaan.",
+    "min_nekos_version": "0.0.0"
+  },
+  "assets": [
+    {
+      "id": "badge_cat",
+      "kind": "badge",
+      "file": "components/tag_badge/badge_cat.webp",
+      "format": "webp",
+      "canvas_px": {
+        "width": 128,
+        "height": 128
+      },
+      "display_dp": {
+        "width": 32,
+        "height": 32
+      },
+      "tint_role": "shared_ui",
+      "notes": "Slot glyph ada di components/tag_badge/badge.json."
+    }
+  ],
+  "motifs": [
+    {
+      "id": "sakura",
+      "file": "motifs/motif_sakura.png",
+      "file_small": "motifs/motif_sakura@512.png",
+      "type": "line",
+      "coverage": 0.071,
+      "suggested_display_dp": 640,
+      "suggested_opacity": 0.35
+    }
+  ],
+  "compatibility": {
+    "min_nekos_version": "0.0.0",
+    "requires_network": false,
+    "contains_executable_code": false
+  }
+}

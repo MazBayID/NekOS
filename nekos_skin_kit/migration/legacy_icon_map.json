@@ -1,0 +1,1485 @@
+{
+  "schema_version": 1,
+  "purpose": "Pemetaan referensi ikon lama (icon_NNN.webp) ke ikon baru. Dipakai satu kali saat migrasi data tag/pengaturan yang masih menyimpan nama lama.",
+  "status_values": {
+    "kept": "ikon sama, hanya berganti nama/format",
+    "merged": "ikon lama adalah duplikat/varian; dipetakan ke ikon yang dipertahankan",
+    "removed": "tidak ada padanan; pakai fallback"
+  },
+  "fallback": {
+    "tag": "icon_star.webp",
+    "ui": null,
+    "note": "fallback tag adalah KEPUTUSAN DESAIN yang belum dikonfirmasi; ganti sesuai selera. UI icon dipanggil dari kode, jadi tidak ada data pengguna yang perlu dimigrasi."
+  },
+  "tag": [
+    {
+      "old_file": "icon_001.webp",
+      "old_name": "cloud",
+      "new_file": "icon_cloud.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_002.webp",
+      "old_name": "google",
+      "new_file": "icon_google.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_003.webp",
+      "old_name": "settings_tools",
+      "new_file": "icon_gear_wrench.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_004.webp",
+      "old_name": "brain",
+      "new_file": "icon_brain.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_005.webp",
+      "old_name": "hammer",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak relevan sebagai kategori tag aplikasi (aksi/UI atau terlalu spesifik)"
+    },
+    {
+      "old_file": "icon_006.webp",
+      "old_name": "sliders",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak relevan sebagai kategori tag aplikasi (aksi/UI atau terlalu spesifik)"
+    },
+    {
+      "old_file": "icon_007.webp",
+      "old_name": "globe",
+      "new_file": "icon_globe.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_008.webp",
+      "old_name": "music_note",
+      "new_file": "icon_music_note.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_009.webp",
+      "old_name": "play",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak relevan sebagai kategori tag aplikasi (aksi/UI atau terlalu spesifik)"
+    },
+    {
+      "old_file": "icon_010.webp",
+      "old_name": "camera_a",
+      "new_file": "icon_camera.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_011.webp",
+      "old_name": "mail",
+      "new_file": "icon_mail.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_012.webp",
+      "old_name": "chat_bubble",
+      "new_file": "icon_chat.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_013.webp",
+      "old_name": "contacts",
+      "new_file": "icon_contacts.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_014.webp",
+      "old_name": "calendar",
+      "new_file": "icon_calendar.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_015.webp",
+      "old_name": "alarm_clock",
+      "new_file": "icon_alarm_clock.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_016.webp",
+      "old_name": "weather",
+      "new_file": "icon_weather.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_017.webp",
+      "old_name": "folder",
+      "new_file": "icon_folder.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_018.webp",
+      "old_name": "download_tray",
+      "new_file": "icon_download.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_019.webp",
+      "old_name": "camera_b",
+      "new_file": "icon_camera.webp",
+      "status": "merged",
+      "reason": "duplikat/varian dari `icon_010` (camera_a)"
+    },
+    {
+      "old_file": "icon_020.webp",
+      "old_name": "gallery",
+      "new_file": "icon_image.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_021.webp",
+      "old_name": "share_a",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak relevan sebagai kategori tag aplikasi (aksi/UI atau terlalu spesifik)"
+    },
+    {
+      "old_file": "icon_022.webp",
+      "old_name": "news",
+      "new_file": "icon_newspaper.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_023.webp",
+      "old_name": "location_pin",
+      "new_file": "icon_location_pin.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_024.webp",
+      "old_name": "briefcase",
+      "new_file": "icon_briefcase.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_025.webp",
+      "old_name": "fitness_run",
+      "new_file": "icon_running.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_026.webp",
+      "old_name": "medical_plus",
+      "new_file": "icon_medical_cross.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_027.webp",
+      "old_name": "bar_chart",
+      "new_file": "icon_bar_chart.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_028.webp",
+      "old_name": "shopping_cart",
+      "new_file": "icon_cart.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_029.webp",
+      "old_name": "book_open",
+      "new_file": "icon_book.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_030.webp",
+      "old_name": "graduation_cap",
+      "new_file": "icon_graduation_cap.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_031.webp",
+      "old_name": "gamepad",
+      "new_file": "icon_gamepad.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_032.webp",
+      "old_name": "messages_dots",
+      "new_file": "icon_chat.webp",
+      "status": "merged",
+      "reason": "duplikat/varian dari `icon_012` (chat_bubble)"
+    },
+    {
+      "old_file": "icon_033.webp",
+      "old_name": "palette_a",
+      "new_file": "icon_palette.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_034.webp",
+      "old_name": "disc",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak relevan sebagai kategori tag aplikasi (aksi/UI atau terlalu spesifik)"
+    },
+    {
+      "old_file": "icon_035.webp",
+      "old_name": "video_film",
+      "new_file": "icon_film.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_036.webp",
+      "old_name": "microphone",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak relevan sebagai kategori tag aplikasi (aksi/UI atau terlalu spesifik)"
+    },
+    {
+      "old_file": "icon_037.webp",
+      "old_name": "broadcast",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak relevan sebagai kategori tag aplikasi (aksi/UI atau terlalu spesifik)"
+    },
+    {
+      "old_file": "icon_038.webp",
+      "old_name": "monitor",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak relevan sebagai kategori tag aplikasi (aksi/UI atau terlalu spesifik)"
+    },
+    {
+      "old_file": "icon_039.webp",
+      "old_name": "play_b",
+      "new_file": null,
+      "status": "removed",
+      "reason": "duplikat/varian dari `icon_009` (play)"
+    },
+    {
+      "old_file": "icon_040.webp",
+      "old_name": "ticket",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak relevan sebagai kategori tag aplikasi (aksi/UI atau terlalu spesifik)"
+    },
+    {
+      "old_file": "icon_041.webp",
+      "old_name": "home",
+      "new_file": "icon_home.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_042.webp",
+      "old_name": "shield",
+      "new_file": "icon_shield.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_043.webp",
+      "old_name": "key",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak relevan sebagai kategori tag aplikasi (aksi/UI atau terlalu spesifik)"
+    },
+    {
+      "old_file": "icon_044.webp",
+      "old_name": "network",
+      "new_file": "icon_network.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_045.webp",
+      "old_name": "storage_stack",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak relevan sebagai kategori tag aplikasi (aksi/UI atau terlalu spesifik)"
+    },
+    {
+      "old_file": "icon_046.webp",
+      "old_name": "bluetooth",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak relevan sebagai kategori tag aplikasi (aksi/UI atau terlalu spesifik)"
+    },
+    {
+      "old_file": "icon_047.webp",
+      "old_name": "wifi",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak relevan sebagai kategori tag aplikasi (aksi/UI atau terlalu spesifik)"
+    },
+    {
+      "old_file": "icon_048.webp",
+      "old_name": "battery",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak relevan sebagai kategori tag aplikasi (aksi/UI atau terlalu spesifik)"
+    },
+    {
+      "old_file": "icon_049.webp",
+      "old_name": "brightness",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak relevan sebagai kategori tag aplikasi (aksi/UI atau terlalu spesifik)"
+    },
+    {
+      "old_file": "icon_050.webp",
+      "old_name": "volume",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak relevan sebagai kategori tag aplikasi (aksi/UI atau terlalu spesifik)"
+    },
+    {
+      "old_file": "icon_051.webp",
+      "old_name": "accessibility",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak relevan sebagai kategori tag aplikasi (aksi/UI atau terlalu spesifik)"
+    },
+    {
+      "old_file": "icon_052.webp",
+      "old_name": "waveform",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak relevan sebagai kategori tag aplikasi (aksi/UI atau terlalu spesifik)"
+    },
+    {
+      "old_file": "icon_053.webp",
+      "old_name": "search",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak relevan sebagai kategori tag aplikasi (aksi/UI atau terlalu spesifik)"
+    },
+    {
+      "old_file": "icon_054.webp",
+      "old_name": "scan_ocr",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak relevan sebagai kategori tag aplikasi (aksi/UI atau terlalu spesifik)"
+    },
+    {
+      "old_file": "icon_055.webp",
+      "old_name": "translate",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak relevan sebagai kategori tag aplikasi (aksi/UI atau terlalu spesifik)"
+    },
+    {
+      "old_file": "icon_056.webp",
+      "old_name": "notes",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak relevan sebagai kategori tag aplikasi (aksi/UI atau terlalu spesifik)"
+    },
+    {
+      "old_file": "icon_057.webp",
+      "old_name": "markup",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak relevan sebagai kategori tag aplikasi (aksi/UI atau terlalu spesifik)"
+    },
+    {
+      "old_file": "icon_058.webp",
+      "old_name": "widgets",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak relevan sebagai kategori tag aplikasi (aksi/UI atau terlalu spesifik)"
+    },
+    {
+      "old_file": "icon_059.webp",
+      "old_name": "document",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak relevan sebagai kategori tag aplikasi (aksi/UI atau terlalu spesifik)"
+    },
+    {
+      "old_file": "icon_060.webp",
+      "old_name": "screencast",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak relevan sebagai kategori tag aplikasi (aksi/UI atau terlalu spesifik)"
+    },
+    {
+      "old_file": "icon_061.webp",
+      "old_name": "calculator",
+      "new_file": "icon_calculator.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_062.webp",
+      "old_name": "stopwatch",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak relevan sebagai kategori tag aplikasi (aksi/UI atau terlalu spesifik)"
+    },
+    {
+      "old_file": "icon_063.webp",
+      "old_name": "timer",
+      "new_file": null,
+      "status": "removed",
+      "reason": "duplikat/varian dari `icon_062` (stopwatch)"
+    },
+    {
+      "old_file": "icon_064.webp",
+      "old_name": "compass",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak relevan sebagai kategori tag aplikasi (aksi/UI atau terlalu spesifik)"
+    },
+    {
+      "old_file": "icon_065.webp",
+      "old_name": "ruler_a",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak relevan sebagai kategori tag aplikasi (aksi/UI atau terlalu spesifik)"
+    },
+    {
+      "old_file": "icon_066.webp",
+      "old_name": "ruler_level",
+      "new_file": null,
+      "status": "removed",
+      "reason": "duplikat/varian dari `icon_065` (ruler_a)"
+    },
+    {
+      "old_file": "icon_067.webp",
+      "old_name": "barcode",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak relevan sebagai kategori tag aplikasi (aksi/UI atau terlalu spesifik)"
+    },
+    {
+      "old_file": "icon_068.webp",
+      "old_name": "qr_code",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak relevan sebagai kategori tag aplikasi (aksi/UI atau terlalu spesifik)"
+    },
+    {
+      "old_file": "icon_069.webp",
+      "old_name": "fingerprint",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak relevan sebagai kategori tag aplikasi (aksi/UI atau terlalu spesifik)"
+    },
+    {
+      "old_file": "icon_070.webp",
+      "old_name": "password",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak relevan sebagai kategori tag aplikasi (aksi/UI atau terlalu spesifik)"
+    },
+    {
+      "old_file": "icon_071.webp",
+      "old_name": "login",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak relevan sebagai kategori tag aplikasi (aksi/UI atau terlalu spesifik)"
+    },
+    {
+      "old_file": "icon_072.webp",
+      "old_name": "logout",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak relevan sebagai kategori tag aplikasi (aksi/UI atau terlalu spesifik)"
+    },
+    {
+      "old_file": "icon_073.webp",
+      "old_name": "user",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak relevan sebagai kategori tag aplikasi (aksi/UI atau terlalu spesifik)"
+    },
+    {
+      "old_file": "icon_074.webp",
+      "old_name": "group",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak relevan sebagai kategori tag aplikasi (aksi/UI atau terlalu spesifik)"
+    },
+    {
+      "old_file": "icon_075.webp",
+      "old_name": "tie",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak relevan sebagai kategori tag aplikasi (aksi/UI atau terlalu spesifik)"
+    },
+    {
+      "old_file": "icon_076.webp",
+      "old_name": "server_list",
+      "new_file": null,
+      "status": "removed",
+      "reason": "duplikat/varian dari `icon_045` (storage_stack)"
+    },
+    {
+      "old_file": "icon_077.webp",
+      "old_name": "code",
+      "new_file": "icon_code.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_078.webp",
+      "old_name": "terminal",
+      "new_file": "icon_terminal.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_079.webp",
+      "old_name": "database",
+      "new_file": "icon_database.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_080.webp",
+      "old_name": "folder_open",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak relevan sebagai kategori tag aplikasi (aksi/UI atau terlalu spesifik)"
+    },
+    {
+      "old_file": "icon_081.webp",
+      "old_name": "trash",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak relevan sebagai kategori tag aplikasi (aksi/UI atau terlalu spesifik)"
+    },
+    {
+      "old_file": "icon_082.webp",
+      "old_name": "archive",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak relevan sebagai kategori tag aplikasi (aksi/UI atau terlalu spesifik)"
+    },
+    {
+      "old_file": "icon_083.webp",
+      "old_name": "sync",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak relevan sebagai kategori tag aplikasi (aksi/UI atau terlalu spesifik)"
+    },
+    {
+      "old_file": "icon_084.webp",
+      "old_name": "google_drive",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak relevan sebagai kategori tag aplikasi (aksi/UI atau terlalu spesifik)"
+    },
+    {
+      "old_file": "icon_085.webp",
+      "old_name": "arrow_up",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak relevan sebagai kategori tag aplikasi (aksi/UI atau terlalu spesifik)"
+    },
+    {
+      "old_file": "icon_086.webp",
+      "old_name": "download",
+      "new_file": "icon_download.webp",
+      "status": "merged",
+      "reason": "duplikat/varian dari `icon_018` (download_tray)"
+    },
+    {
+      "old_file": "icon_087.webp",
+      "old_name": "upload",
+      "new_file": null,
+      "status": "removed",
+      "reason": "duplikat/varian dari `icon_085` (arrow_up)"
+    },
+    {
+      "old_file": "icon_088.webp",
+      "old_name": "share_b",
+      "new_file": null,
+      "status": "removed",
+      "reason": "duplikat/varian dari `icon_021` (share_a)"
+    },
+    {
+      "old_file": "icon_089.webp",
+      "old_name": "pin",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak relevan sebagai kategori tag aplikasi (aksi/UI atau terlalu spesifik)"
+    },
+    {
+      "old_file": "icon_090.webp",
+      "old_name": "star",
+      "new_file": "icon_star.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_091.webp",
+      "old_name": "bookmark",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak relevan sebagai kategori tag aplikasi (aksi/UI atau terlalu spesifik)"
+    },
+    {
+      "old_file": "icon_092.webp",
+      "old_name": "flag",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak relevan sebagai kategori tag aplikasi (aksi/UI atau terlalu spesifik)"
+    },
+    {
+      "old_file": "icon_093.webp",
+      "old_name": "tag",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak relevan sebagai kategori tag aplikasi (aksi/UI atau terlalu spesifik)"
+    },
+    {
+      "old_file": "icon_094.webp",
+      "old_name": "bell",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak relevan sebagai kategori tag aplikasi (aksi/UI atau terlalu spesifik)"
+    },
+    {
+      "old_file": "icon_095.webp",
+      "old_name": "gift",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak relevan sebagai kategori tag aplikasi (aksi/UI atau terlalu spesifik)"
+    },
+    {
+      "old_file": "icon_096.webp",
+      "old_name": "palette_b",
+      "new_file": "icon_palette.webp",
+      "status": "merged",
+      "reason": "duplikat/varian dari `icon_033` (palette_a)"
+    },
+    {
+      "old_file": "icon_097.webp",
+      "old_name": "brush",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak relevan sebagai kategori tag aplikasi (aksi/UI atau terlalu spesifik)"
+    },
+    {
+      "old_file": "icon_098.webp",
+      "old_name": "pencil",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak relevan sebagai kategori tag aplikasi (aksi/UI atau terlalu spesifik)"
+    },
+    {
+      "old_file": "icon_099.webp",
+      "old_name": "eraser",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak relevan sebagai kategori tag aplikasi (aksi/UI atau terlalu spesifik)"
+    },
+    {
+      "old_file": "icon_100.webp",
+      "old_name": "link",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak relevan sebagai kategori tag aplikasi (aksi/UI atau terlalu spesifik)"
+    }
+  ],
+  "ui": [
+    {
+      "old_file": "icon_001.webp",
+      "old_name": "pencil",
+      "new_file": "icon_pencil.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_002.webp",
+      "old_name": "heart",
+      "new_file": "icon_heart.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_003.webp",
+      "old_name": "settings_a",
+      "new_file": "icon_gear.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_004.webp",
+      "old_name": "search_a",
+      "new_file": "icon_search.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_005.webp",
+      "old_name": "search_b",
+      "new_file": "icon_search.webp",
+      "status": "merged",
+      "reason": "duplikat/varian dari `icon_004` (search_a)"
+    },
+    {
+      "old_file": "icon_006.webp",
+      "old_name": "home",
+      "new_file": "icon_home.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_007.webp",
+      "old_name": "user",
+      "new_file": "icon_user.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_008.webp",
+      "old_name": "group",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_009.webp",
+      "old_name": "folder_a",
+      "new_file": "icon_folder.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_010.webp",
+      "old_name": "folder_b",
+      "new_file": "icon_folder.webp",
+      "status": "merged",
+      "reason": "duplikat/varian dari `icon_009` (folder_a)"
+    },
+    {
+      "old_file": "icon_011.webp",
+      "old_name": "document",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_012.webp",
+      "old_name": "more_horizontal",
+      "new_file": "icon_dots_horizontal.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_013.webp",
+      "old_name": "star",
+      "new_file": "icon_star.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_014.webp",
+      "old_name": "bookmark",
+      "new_file": "icon_bookmark.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_015.webp",
+      "old_name": "tag",
+      "new_file": "icon_tag.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_016.webp",
+      "old_name": "bell_a",
+      "new_file": "icon_bell.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_017.webp",
+      "old_name": "bell_b",
+      "new_file": "icon_bell.webp",
+      "status": "merged",
+      "reason": "duplikat/varian dari `icon_016` (bell_a)"
+    },
+    {
+      "old_file": "icon_018.webp",
+      "old_name": "calendar_a",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_019.webp",
+      "old_name": "calendar_day",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_020.webp",
+      "old_name": "alarm_a",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_021.webp",
+      "old_name": "alarm_b",
+      "new_file": null,
+      "status": "removed",
+      "reason": "duplikat/varian dari `icon_020` (alarm_a)"
+    },
+    {
+      "old_file": "icon_022.webp",
+      "old_name": "brightness",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_023.webp",
+      "old_name": "location_a",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_024.webp",
+      "old_name": "location_b",
+      "new_file": null,
+      "status": "removed",
+      "reason": "duplikat/varian dari `icon_023` (location_a)"
+    },
+    {
+      "old_file": "icon_025.webp",
+      "old_name": "mail",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_026.webp",
+      "old_name": "chat_dots",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_027.webp",
+      "old_name": "chat_bubble",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_028.webp",
+      "old_name": "reply",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_029.webp",
+      "old_name": "forward",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_030.webp",
+      "old_name": "arrow_right",
+      "new_file": "icon_arrow_right.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_031.webp",
+      "old_name": "share",
+      "new_file": "icon_share.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_032.webp",
+      "old_name": "attachment",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_033.webp",
+      "old_name": "link_a",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_034.webp",
+      "old_name": "link_b",
+      "new_file": null,
+      "status": "removed",
+      "reason": "duplikat/varian dari `icon_033` (link_a)"
+    },
+    {
+      "old_file": "icon_035.webp",
+      "old_name": "image",
+      "new_file": "icon_image.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_036.webp",
+      "old_name": "camera",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_037.webp",
+      "old_name": "play",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_038.webp",
+      "old_name": "music",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_039.webp",
+      "old_name": "microphone",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_040.webp",
+      "old_name": "volume",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_041.webp",
+      "old_name": "volume_mute",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_042.webp",
+      "old_name": "battery_a",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_043.webp",
+      "old_name": "battery_b",
+      "new_file": null,
+      "status": "removed",
+      "reason": "duplikat/varian dari `icon_042` (battery_a)"
+    },
+    {
+      "old_file": "icon_044.webp",
+      "old_name": "wifi",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_045.webp",
+      "old_name": "bluetooth",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_046.webp",
+      "old_name": "nfc",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_047.webp",
+      "old_name": "flashlight_a",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_048.webp",
+      "old_name": "flashlight_b",
+      "new_file": null,
+      "status": "removed",
+      "reason": "duplikat/varian dari `icon_047` (flashlight_a)"
+    },
+    {
+      "old_file": "icon_049.webp",
+      "old_name": "refresh",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_050.webp",
+      "old_name": "sync_a",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_051.webp",
+      "old_name": "backup_restore",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_052.webp",
+      "old_name": "download",
+      "new_file": "icon_download.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_053.webp",
+      "old_name": "upload",
+      "new_file": "icon_upload.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_054.webp",
+      "old_name": "cloud",
+      "new_file": "icon_cloud.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_055.webp",
+      "old_name": "cloud_upload_a",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_056.webp",
+      "old_name": "cloud_upload_b",
+      "new_file": null,
+      "status": "removed",
+      "reason": "duplikat/varian dari `icon_055` (cloud_upload_a)"
+    },
+    {
+      "old_file": "icon_057.webp",
+      "old_name": "database_a",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_058.webp",
+      "old_name": "database_b",
+      "new_file": null,
+      "status": "removed",
+      "reason": "duplikat/varian dari `icon_057` (database_a)"
+    },
+    {
+      "old_file": "icon_059.webp",
+      "old_name": "network",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_060.webp",
+      "old_name": "shield_check",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_061.webp",
+      "old_name": "lock",
+      "new_file": "icon_lock.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_062.webp",
+      "old_name": "unlock",
+      "new_file": "icon_lock_open.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_063.webp",
+      "old_name": "key",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_064.webp",
+      "old_name": "dialpad",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_065.webp",
+      "old_name": "calculator",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_066.webp",
+      "old_name": "ruler",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_067.webp",
+      "old_name": "ruler_pencil",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_068.webp",
+      "old_name": "compass",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_069.webp",
+      "old_name": "barcode",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_070.webp",
+      "old_name": "qr_code",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_071.webp",
+      "old_name": "fingerprint_a",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_072.webp",
+      "old_name": "fingerprint_b",
+      "new_file": null,
+      "status": "removed",
+      "reason": "duplikat/varian dari `icon_071` (fingerprint_a)"
+    },
+    {
+      "old_file": "icon_073.webp",
+      "old_name": "printer",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_074.webp",
+      "old_name": "scan_frame",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_075.webp",
+      "old_name": "cast",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_076.webp",
+      "old_name": "monitor",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_077.webp",
+      "old_name": "tv",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_078.webp",
+      "old_name": "tablet",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_079.webp",
+      "old_name": "phone",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_080.webp",
+      "old_name": "vr_headset",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_081.webp",
+      "old_name": "gamepad",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_082.webp",
+      "old_name": "palette",
+      "new_file": "icon_palette.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_083.webp",
+      "old_name": "brush_a",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_084.webp",
+      "old_name": "brush_b",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_085.webp",
+      "old_name": "add",
+      "new_file": "icon_plus.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_086.webp",
+      "old_name": "remove",
+      "new_file": "icon_minus.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_087.webp",
+      "old_name": "trash",
+      "new_file": "icon_trash.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_088.webp",
+      "old_name": "archive",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_089.webp",
+      "old_name": "translate",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_090.webp",
+      "old_name": "edit_square",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_091.webp",
+      "old_name": "clipboard",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_092.webp",
+      "old_name": "clipboard_copy",
+      "new_file": "icon_copy.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_093.webp",
+      "old_name": "cut",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_094.webp",
+      "old_name": "undo_a",
+      "new_file": "icon_undo.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_095.webp",
+      "old_name": "undo_b",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_096.webp",
+      "old_name": "redo",
+      "new_file": "icon_redo.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_097.webp",
+      "old_name": "power",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_098.webp",
+      "old_name": "reload",
+      "new_file": "icon_refresh.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_099.webp",
+      "old_name": "eject",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_100.webp",
+      "old_name": "sort_updown",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_101.webp",
+      "old_name": "swap_vertical",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_102.webp",
+      "old_name": "filter",
+      "new_file": "icon_filter.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_103.webp",
+      "old_name": "zoom_in",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_104.webp",
+      "old_name": "zoom_out",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_105.webp",
+      "old_name": "fullscreen",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_106.webp",
+      "old_name": "crop_a",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_107.webp",
+      "old_name": "crop_b",
+      "new_file": null,
+      "status": "removed",
+      "reason": "duplikat/varian dari `icon_106` (crop_a)"
+    },
+    {
+      "old_file": "icon_108.webp",
+      "old_name": "sync_b",
+      "new_file": null,
+      "status": "removed",
+      "reason": "tidak dipakai launcher"
+    },
+    {
+      "old_file": "icon_109.webp",
+      "old_name": "check",
+      "new_file": "icon_check.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_110.webp",
+      "old_name": "close",
+      "new_file": "icon_close.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_111.webp",
+      "old_name": "info",
+      "new_file": "icon_info.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_112.webp",
+      "old_name": "warning",
+      "new_file": "icon_warning.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_113.webp",
+      "old_name": "help_a",
+      "new_file": "icon_help.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_114.webp",
+      "old_name": "help_b",
+      "new_file": "icon_help.webp",
+      "status": "merged",
+      "reason": "duplikat/varian dari `icon_113` (help_a)"
+    },
+    {
+      "old_file": "icon_115.webp",
+      "old_name": "menu",
+      "new_file": "icon_menu.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_116.webp",
+      "old_name": "apps_grid",
+      "new_file": "icon_grid.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_117.webp",
+      "old_name": "list_a",
+      "new_file": "icon_list.webp",
+      "status": "kept"
+    },
+    {
+      "old_file": "icon_118.webp",
+      "old_name": "list_b",
+      "new_file": "icon_list.webp",
+      "status": "merged",
+      "reason": "duplikat/varian dari `icon_117` (list_a)"
+    },
+    {
+      "old_file": "icon_119.webp",
+      "old_name": "settings_b",
+      "new_file": "icon_gear.webp",
+      "status": "merged",
+      "reason": "duplikat/varian dari `icon_003` (settings_a)"
+    },
+    {
+      "old_file": "icon_120.webp",
+      "old_name": "shield",
+      "new_file": null,
+      "status": "removed",
+      "reason": "duplikat/varian dari `icon_060` (shield_check)"
+    }
+  ]
+}

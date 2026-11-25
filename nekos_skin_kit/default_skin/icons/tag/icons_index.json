@@ -1,0 +1,309 @@
+{
+  "category": "tag_icon",
+  "total": 36,
+  "size": "96x96",
+  "canvas_px": {
+    "width": 96,
+    "height": 96
+  },
+  "live_area_px": {
+    "x": 8,
+    "y": 8,
+    "width": 80,
+    "height": 80
+  },
+  "color_mode": "alpha_mask_white",
+  "format": "webp_lossless",
+  "tint_role": "on_badge",
+  "composition": "badge_cat.webp (tint: Shared UI Color) + glyph di glyph_slot (tint: on_badge)",
+  "items": [
+    {
+      "id": 1,
+      "file": "icon_mail.webp",
+      "name": "mail",
+      "visual": "Amplop",
+      "description": "email / surat",
+      "legacy_file": "icon_011.webp"
+    },
+    {
+      "id": 2,
+      "file": "icon_chat.webp",
+      "name": "chat",
+      "visual": "Gelembung chat",
+      "description": "pesan / chat / sosial",
+      "legacy_file": "icon_012.webp"
+    },
+    {
+      "id": 3,
+      "file": "icon_contacts.webp",
+      "name": "contacts",
+      "visual": "Buku kontak",
+      "description": "kontak / buku alamat",
+      "legacy_file": "icon_013.webp"
+    },
+    {
+      "id": 4,
+      "file": "icon_music_note.webp",
+      "name": "music_note",
+      "visual": "Not musik",
+      "description": "musik / audio",
+      "legacy_file": "icon_008.webp"
+    },
+    {
+      "id": 5,
+      "file": "icon_film.webp",
+      "name": "film",
+      "visual": "Klaper film dengan tombol play",
+      "description": "video / film / streaming",
+      "legacy_file": "icon_035.webp"
+    },
+    {
+      "id": 6,
+      "file": "icon_camera.webp",
+      "name": "camera",
+      "visual": "Kamera",
+      "description": "kamera / foto",
+      "legacy_file": "icon_010.webp"
+    },
+    {
+      "id": 7,
+      "file": "icon_image.webp",
+      "name": "image",
+      "visual": "Gambar pemandangan",
+      "description": "galeri / foto / wallpaper",
+      "legacy_file": "icon_020.webp"
+    },
+    {
+      "id": 8,
+      "file": "icon_gamepad.webp",
+      "name": "gamepad",
+      "visual": "Stik gim",
+      "description": "game",
+      "legacy_file": "icon_031.webp"
+    },
+    {
+      "id": 9,
+      "file": "icon_palette.webp",
+      "name": "palette",
+      "visual": "Palet cat",
+      "description": "seni / desain / kustomisasi",
+      "legacy_file": "icon_033.webp"
+    },
+    {
+      "id": 10,
+      "file": "icon_globe.webp",
+      "name": "globe",
+      "visual": "Globe",
+      "description": "browser / internet",
+      "legacy_file": "icon_007.webp"
+    },
+    {
+      "id": 11,
+      "file": "icon_cloud.webp",
+      "name": "cloud",
+      "visual": "Awan",
+      "description": "cloud / sinkronisasi",
+      "legacy_file": "icon_001.webp"
+    },
+    {
+      "id": 12,
+      "file": "icon_google.webp",
+      "name": "google",
+      "visual": "Huruf G",
+      "description": "layanan Google",
+      "legacy_file": "icon_002.webp"
+    },
+    {
+      "id": 13,
+      "file": "icon_network.webp",
+      "name": "network",
+      "visual": "Diagram hierarki / jaringan",
+      "description": "jaringan / hirarki / server",
+      "legacy_file": "icon_044.webp"
+    },
+    {
+      "id": 14,
+      "file": "icon_download.webp",
+      "name": "download",
+      "visual": "Panah turun ke baki",
+      "description": "unduhan",
+      "legacy_file": "icon_018.webp"
+    },
+    {
+      "id": 15,
+      "file": "icon_briefcase.webp",
+      "name": "briefcase",
+      "visual": "Koper kerja",
+      "description": "kerja / bisnis",
+      "legacy_file": "icon_024.webp"
+    },
+    {
+      "id": 16,
+      "file": "icon_calendar.webp",
+      "name": "calendar",
+      "visual": "Kalender",
+      "description": "kalender / agenda",
+      "legacy_file": "icon_014.webp"
+    },
+    {
+      "id": 17,
+      "file": "icon_alarm_clock.webp",
+      "name": "alarm_clock",
+      "visual": "Jam beker",
+      "description": "jam / alarm / waktu",
+      "legacy_file": "icon_015.webp"
+    },
+    {
+      "id": 18,
+      "file": "icon_folder.webp",
+      "name": "folder",
+      "visual": "Folder",
+      "description": "berkas / file manager",
+      "legacy_file": "icon_017.webp"
+    },
+    {
+      "id": 19,
+      "file": "icon_newspaper.webp",
+      "name": "newspaper",
+      "visual": "Koran",
+      "description": "berita / bacaan",
+      "legacy_file": "icon_022.webp"
+    },
+    {
+      "id": 20,
+      "file": "icon_book.webp",
+      "name": "book",
+      "visual": "Buku terbuka",
+      "description": "buku / baca",
+      "legacy_file": "icon_029.webp"
+    },
+    {
+      "id": 21,
+      "file": "icon_graduation_cap.webp",
+      "name": "graduation_cap",
+      "visual": "Topi toga",
+      "description": "pendidikan / belajar",
+      "legacy_file": "icon_030.webp"
+    },
+    {
+      "id": 22,
+      "file": "icon_calculator.webp",
+      "name": "calculator",
+      "visual": "Kalkulator",
+      "description": "kalkulator / utilitas",
+      "legacy_file": "icon_061.webp"
+    },
+    {
+      "id": 23,
+      "file": "icon_bar_chart.webp",
+      "name": "bar_chart",
+      "visual": "Grafik batang",
+      "description": "keuangan / statistik",
+      "legacy_file": "icon_027.webp"
+    },
+    {
+      "id": 24,
+      "file": "icon_cart.webp",
+      "name": "cart",
+      "visual": "Keranjang belanja",
+      "description": "belanja / e-commerce",
+      "legacy_file": "icon_028.webp"
+    },
+    {
+      "id": 25,
+      "file": "icon_weather.webp",
+      "name": "weather",
+      "visual": "Matahari di balik awan",
+      "description": "cuaca",
+      "legacy_file": "icon_016.webp"
+    },
+    {
+      "id": 26,
+      "file": "icon_location_pin.webp",
+      "name": "location_pin",
+      "visual": "Pin lokasi",
+      "description": "peta / navigasi / lokasi",
+      "legacy_file": "icon_023.webp"
+    },
+    {
+      "id": 27,
+      "file": "icon_medical_cross.webp",
+      "name": "medical_cross",
+      "visual": "Tanda plus tebal",
+      "description": "kesehatan / medis",
+      "legacy_file": "icon_026.webp"
+    },
+    {
+      "id": 28,
+      "file": "icon_running.webp",
+      "name": "running",
+      "visual": "Orang berlari",
+      "description": "olahraga / kebugaran",
+      "legacy_file": "icon_025.webp"
+    },
+    {
+      "id": 29,
+      "file": "icon_home.webp",
+      "name": "home",
+      "visual": "Rumah",
+      "description": "beranda / rumah pintar",
+      "legacy_file": "icon_041.webp"
+    },
+    {
+      "id": 30,
+      "file": "icon_star.webp",
+      "name": "star",
+      "visual": "Bintang",
+      "description": "favorit",
+      "legacy_file": "icon_090.webp"
+    },
+    {
+      "id": 31,
+      "file": "icon_gear_wrench.webp",
+      "name": "gear_wrench",
+      "visual": "Roda gigi dengan kunci pas",
+      "description": "sistem / alat",
+      "legacy_file": "icon_003.webp"
+    },
+    {
+      "id": 32,
+      "file": "icon_shield.webp",
+      "name": "shield",
+      "visual": "Perisai",
+      "description": "keamanan / privasi",
+      "legacy_file": "icon_042.webp"
+    },
+    {
+      "id": 33,
+      "file": "icon_brain.webp",
+      "name": "brain",
+      "visual": "Otak",
+      "description": "AI / pengetahuan",
+      "legacy_file": "icon_004.webp"
+    },
+    {
+      "id": 34,
+      "file": "icon_terminal.webp",
+      "name": "terminal",
+      "visual": "Jendela terminal",
+      "description": "terminal / shell",
+      "legacy_file": "icon_078.webp"
+    },
+    {
+      "id": 35,
+      "file": "icon_code.webp",
+      "name": "code",
+      "visual": "Kurung sudut </>",
+      "description": "pemrograman / developer",
+      "legacy_file": "icon_077.webp"
+    },
+    {
+      "id": 36,
+      "file": "icon_database.webp",
+      "name": "database",
+      "visual": "Tumpukan silinder",
+      "description": "database / penyimpanan data",
+      "legacy_file": "icon_079.webp"
+    }
+  ]
+}

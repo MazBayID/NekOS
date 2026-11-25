@@ -1,0 +1,401 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nekos.example/schemas/skin-manifest.schema.json",
+  "title": "NekOS Skin Manifest (skin.json)",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "skin"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "skin": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "version"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]*$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string"
+        },
+        "author": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "min_nekos_version": {
+          "type": "string",
+          "description": "Versi NekOS minimum (semver). Launcher menolak skin bila versinya lebih rendah."
+        },
+        "max_nekos_version": {
+          "type": "string"
+        },
+        "license": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "assets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "file"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9._-]*$"
+          },
+          "kind": {
+            "enum": [
+              "branding",
+              "tag_icon",
+              "ui_icon",
+              "wallpaper",
+              "background",
+              "frame",
+              "badge",
+              "texture",
+              "illustration",
+              "font",
+              "other"
+            ]
+          },
+          "file": {
+            "type": "string",
+            "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$"
+          },
+          "format": {
+            "type": "string"
+          },
+          "canvas_px": {
+            "type": "object",
+            "required": [
+              "width",
+              "height"
+            ],
+            "properties": {
+              "width": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "height": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "additionalProperties": false
+          },
+          "display_dp": {
+            "type": "object",
+            "properties": {
+              "width": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "height": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "min_width": {
+                "type": "number",
+                "minimum": 0
+              },
+              "min_height": {
+                "type": "number",
+                "minimum": 0
+              }
+            },
+            "additionalProperties": false
+          },
+          "content_bounds_px": {
+            "$ref": "#/$defs/rect"
+          },
+          "safe_area_px": {
+            "$ref": "#/$defs/rect"
+          },
+          "anchor": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "y": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          },
+          "slices": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "rect_px",
+                "mode"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "rect_px": {
+                  "$ref": "#/$defs/rect"
+                },
+                "mode": {
+                  "enum": [
+                    "fixed",
+                    "stretch_horizontal",
+                    "stretch_vertical",
+                    "tile_horizontal",
+                    "tile_vertical",
+                    "stretch_both"
+                  ]
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "rendering": {
+            "type": "object",
+            "properties": {
+              "scale_mode": {
+                "enum": [
+                  "fit",
+                  "fill",
+                  "crop",
+                  "stretch",
+                  "tile",
+                  "nine_slice",
+                  "three_slice",
+                  "atlas"
+                ]
+              },
+              "content_scale": {
+                "type": "string"
+              },
+              "tint": {
+                "type": "string"
+              },
+              "opacity": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "preserve_aspect_ratio": {
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": true
+          },
+          "placement": {
+            "type": "object",
+            "properties": {
+              "parent": {
+                "type": "string"
+              },
+              "alignment": {
+                "type": "string"
+              },
+              "offset_dp": {
+                "$ref": "#/$defs/point"
+              },
+              "padding_dp": {
+                "type": "object",
+                "properties": {
+                  "left": {
+                    "type": "number"
+                  },
+                  "top": {
+                    "type": "number"
+                  },
+                  "right": {
+                    "type": "number"
+                  },
+                  "bottom": {
+                    "type": "number"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "layer": {
+                "type": "integer"
+              }
+            },
+            "additionalProperties": true
+          },
+          "runtime": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "enum": [
+                  "source_only",
+                  "bundled",
+                  "generated",
+                  "not_integrated"
+                ]
+              },
+              "consumer": {
+                "type": "string"
+              },
+              "runtime_path": {
+                "type": "string"
+              },
+              "fallback_id": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          },
+          "notes": {
+            "type": "string"
+          },
+          "tint_role": {
+            "enum": [
+              "none",
+              "shared_ui",
+              "on_badge",
+              "foreground"
+            ],
+            "description": "Peran warna runtime untuk mask putih. none = aset berwarna penuh (mis. wallpaper)."
+          }
+        },
+        "additionalProperties": true
+      },
+      "description": "OPSIONAL. Ikon ditemukan lewat konvensi folder+nama, tidak wajib didaftarkan. Daftarkan komponen dan override yang butuh metadata."
+    },
+    "design_tokens": {
+      "type": "string"
+    },
+    "compatibility": {
+      "type": "object",
+      "properties": {
+        "min_nekos_version": {
+          "type": "string"
+        },
+        "requires_network": {
+          "const": false
+        },
+        "contains_executable_code": {
+          "const": false
+        }
+      },
+      "additionalProperties": true
+    },
+    "motifs": {
+      "type": "array",
+      "description": "Motif tile seamless untuk latar dialog (mask putih, di-tint runtime).",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "file",
+          "type"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(_[a-z0-9]+)*$"
+          },
+          "file": {
+            "type": "string",
+            "pattern": "^motifs/motif_[a-z0-9_]+\\.png$"
+          },
+          "file_small": {
+            "type": "string",
+            "pattern": "^motifs/motif_[a-z0-9_]+@512\\.png$"
+          },
+          "type": {
+            "enum": [
+              "solid",
+              "line"
+            ]
+          },
+          "coverage": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "suggested_display_dp": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "description": "Ukuran tampil 1 tile (dp). ASUMSI satuan dp; verifikasi di perangkat."
+          },
+          "suggested_opacity": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "$defs": {
+    "rect": {
+      "type": "object",
+      "required": [
+        "x",
+        "y",
+        "width",
+        "height"
+      ],
+      "properties": {
+        "x": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "y": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "point": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": true
+}
