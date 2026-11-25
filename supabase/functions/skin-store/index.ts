@@ -139,10 +139,9 @@ Deno.serve(async(req:Request)=>{
       const skinId=String(body.skin_id??"");
       const {data:skin,error:skinError}=await db.from("skins").select("id,skin_key,name,price_amount,currency,status").eq("id",skinId).eq("status","published").maybeSingle();
       if(skinError||!skin)return fail("skin_not_found",404,origin);
-      if(Number(skin.price_amount)===0) {
-        await rpc("skin_download_info",{p_device_hash:deviceHash,p_skin_id:skinId,p_app_version:appVersion});
-        return json({success:true,free:true,skin_id:skinId},200,origin);
-      }
+      const existingAccess=await rpc("skin_download_info",{p_device_hash:deviceHash,p_skin_id:skinId,p_app_version:appVersion});
+      if(existingAccess) return json({success:true,free:true,owned:true,skin_id:skinId},200,origin);
+      if(Number(skin.price_amount)===0) return fail("package_not_available",503,origin);
       if(String(skin.currency)!=="IDR"||!Number.isSafeInteger(Number(skin.price_amount)))return fail("unsupported_price_currency",400,origin);
       const order=await rpc("skin_create_order",{p_device_hash:deviceHash,p_skin_id:skinId,p_app_version:appVersion});
       const payment=await createPayment(order,String(order.order_id),skin);
