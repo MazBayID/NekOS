@@ -106,15 +106,15 @@ class IconCatalogRepository(context: Context) {
         frameColorArgb: Long = DEFAULT_TAG_ICON_FRAME_COLOR,
         maxDimensionPx: Int = 128
     ): Bitmap? {
-        require(isValidCatalogIconPath(icon.file)) { "Invalid catalog asset path: \${icon.file}" }
+        require(isValidCatalogIconPath(icon.file)) { "Invalid catalog asset path: ${icon.file}" }
         val target = maxDimensionPx.coerceAtLeast(1)
         val color = frameColorArgb and 0xFFFFFFFFL
-        val key = "\${icon.file}:\${color.toString(16)}:$target"
+        val key = "${icon.file}:${color.toString(16)}:$target"
         memoryState.ifEnabled { bitmapCache.get(key) }?.let { return it }
         val epoch = memoryState.beginLoad() ?: return null
 
         val badge = skinAssets.loadBitmap("components/tag_badge/badge_cat.webp", 128, 128) ?: return null
-        val glyph = skinAssets.loadBitmap("icons/tag/\${icon.file.substringAfterLast('/')}", 96, 96) ?: return null
+        val glyph = skinAssets.loadBitmap("icons/tag/${icon.file.substringAfterLast('/')}", 96, 96) ?: return null
         val composed = Bitmap.createBitmap(128, 128, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(composed)
         val badgePaint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG).apply {
