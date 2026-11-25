@@ -97,6 +97,7 @@ internal object OfficialSkinStoreClient {
             .put("app_version",appVersion(context)).put("order_id",orderId))
         if (!result.optBoolean("owned")) {
             val status=result.optString("status")
+            if (status != "pending") prefs.edit().remove(PENDING_PREFIX + skin.id).apply()
             return StoreActionResult(false,if(status=="pending")
                 "Payment has not been confirmed yet. Please try again shortly." else "Payment status: $status")
         }
