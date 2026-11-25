@@ -505,57 +505,54 @@ internal fun NekOSSettingsDialog(
                     SettingsPage.OFFICIAL_SKIN_STORE -> {
                         SettingsSectionTitle("OFFICIAL COLLECTION")
                         Text(
-                            "Discover skins created for NekOS. Official downloads will be available here.",
+                            "A curated collection of skins made for NekOS.",
                             color = SettingsMuted,
                             fontSize = 11.sp
                         )
-                        listOf(
-                            Triple("Obsidian", "Dark minimal · Official preview", Color(0xFF34343D)),
-                            Triple("Aurora", "Soft gradient · Official preview", Color(0xFF718C91)),
-                            Triple("Mono", "Clean monochrome · Official preview", Color(0xFFB8B5AE))
-                        ).forEach { (name, description, previewColor) ->
-                            Row(
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(SettingsCardShape)
+                                .background(optionSurface)
+                                .border(1.dp, SettingsBorder, SettingsCardShape)
+                                .padding(10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Image(
+                                painter = painterResource(R.drawable.inferno_phoenix_preview),
+                                contentDescription = "Inferno Phoenix skin preview",
+                                contentScale = androidx.compose.ui.layout.ContentScale.Crop,
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(SettingsCardShape)
-                                    .background(optionSurface)
-                                    .border(1.dp, SettingsBorder, SettingsCardShape)
-                                    .padding(9.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(11.dp)
+                                    .size(width = 92.dp, height = 104.dp)
+                                    .clip(RoundedCornerShape(11.dp))
+                            )
+                            Column(
+                                modifier = Modifier.weight(1f),
+                                verticalArrangement = Arrangement.spacedBy(5.dp)
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(width = 68.dp, height = 76.dp)
-                                        .clip(RoundedCornerShape(11.dp))
-                                        .background(previewColor),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        name.take(1),
-                                        color = Color.White.copy(alpha = 0.9f),
-                                        fontSize = 28.sp,
-                                        fontWeight = FontWeight.Light
-                                    )
-                                }
-                                Column(
-                                    modifier = Modifier.weight(1f),
-                                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                                ) {
-                                    Text(
-                                        name,
-                                        color = SettingsInk,
-                                        fontSize = 13.sp,
-                                        fontWeight = FontWeight.SemiBold
-                                    )
-                                    Text(description, color = SettingsMuted, fontSize = 10.sp)
-                                    Text(
-                                        "PAID · COMING SOON",
-                                        color = SettingsAccent,
-                                        fontSize = 9.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
+                                Text(
+                                    "Inferno Phoenix",
+                                    color = SettingsInk,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Text(
+                                    "Phoenix fire · Ember motif",
+                                    color = SettingsMuted,
+                                    fontSize = 10.sp
+                                )
+                                Text(
+                                    "VERSION 1.0.0 · CUSTOM SKIN",
+                                    color = SettingsMuted,
+                                    fontSize = 8.sp
+                                )
+                                Text(
+                                    "PAID · COMING SOON",
+                                    color = SettingsAccent,
+                                    fontSize = 9.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
                             }
                         }
                         Text(
