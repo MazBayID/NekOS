@@ -100,8 +100,8 @@ internal object OfficialSkinStoreClient {
             val status=result.optString("status").lowercase()
             if (status != "pending") prefs.edit().remove(PENDING_PREFIX + skin.id).apply()
             val failureMessage = when (status) {
-                "expire" -> "Pembayaran kedaluwarsa. Batas waktu 15 menit telah berakhir dan pembayaran belum diterima. Kamu bisa mencoba membeli skin ini lagi."
-                "cancel" -> "Pembayaran dibatalkan. Tidak ada skin yang dipasang dan kamu bisa mencoba membeli lagi."
+                "expire", "failed" -> "Pembayaran gagal atau kedaluwarsa. Midtrans belum mengonfirmasi pembayaran, jadi skin belum bisa dipasang. Kamu bisa mencoba membeli skin ini lagi."
+                "cancel", "cancelled" -> "Pembayaran dibatalkan. Tidak ada skin yang dipasang dan kamu bisa mencoba membeli lagi."
                 "deny" -> "Pembayaran ditolak oleh penyedia pembayaran. Silakan coba metode pembayaran lain."
                 else -> null
             }
