@@ -10,6 +10,10 @@ import java.util.Locale
 import java.util.UUID
 import java.util.zip.ZipFile
 
+internal object SkinDirectoryLock {
+    val monitor = Any()
+}
+
 internal data class SkinDirectoryFinalizeResult(
     val success: Boolean,
     val error: String? = null
@@ -173,7 +177,9 @@ internal class SkinInstaller(context: Context) {
                 return SkinInstallResult(false, error = "Skin '$skinId' is already installed")
             }
             val backup = File(skinsRoot, ".skin-update-$skinId-${UUID.randomUUID()}")
-            val finalized = finalizeSkinDirectory(staging, destination, backup)
+            val finalized = synchronized(SkinDirectoryLock.monitor) {
+                finalizeSkinDirectory(staging, destination, backup)
+            }
             if (!finalized.success) {
                 return SkinInstallResult(false, error = finalized.error)
             }
