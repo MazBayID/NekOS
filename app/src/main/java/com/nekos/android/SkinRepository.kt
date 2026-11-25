@@ -181,9 +181,10 @@ internal class SkinRepository(context: Context) {
                 if (id == DEFAULT_SKIN_ID || !SkinInstaller.isValidSkinId(id)) return@synchronized null
                 val root = File(context.applicationContext.filesDir, "skins").canonicalFile
                 val directory = File(root, id).canonicalFile
-                if (directory.parentFile != root || !directory.isDirectory) return@synchronized null
-                val manifest = File(directory, "skin.json")
-                if (manifest.isFile) directory else null
+                if (directory.parentFile != root ||
+                    !isValidInstalledSkinDirectory(directory, id)
+                ) return@synchronized null
+                directory
             }
     }
 }
