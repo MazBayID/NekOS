@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -68,6 +69,7 @@ internal fun SettingsNavigationCard(
     modifier: Modifier = Modifier,
     iconRes: Int,
     iconColorArgb: Long,
+    surface: Color,
     title: String,
     onClick: () -> Unit
 ) {
@@ -75,7 +77,7 @@ internal fun SettingsNavigationCard(
         modifier = modifier
             .defaultMinSize(minHeight = 50.dp)
             .clip(SettingsCardShape)
-            .background(SettingsInk.copy(alpha = 0.025f))
+            .background(surface)
             .border(1.dp, SettingsBorder, SettingsCardShape)
             .clickable(onClick = onClick)
             .padding(horizontal = 8.dp, vertical = 7.dp),
@@ -95,13 +97,14 @@ internal fun SettingsNavigationCard(
 internal fun SettingsActionCard(
     title: String,
     action: String,
+    surface: Color,
     onClick: () -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(SettingsCardShape)
-            .background(SettingsInk.copy(alpha = 0.025f))
+            .background(surface)
             .border(1.dp, SettingsBorder, SettingsCardShape)
             .clickable(onClick = onClick)
             .padding(horizontal = 10.dp, vertical = 8.dp),
