@@ -2,19 +2,19 @@ package com.nekos.android
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffColorFilter
+import android.graphics.Rect
 import android.graphics.Color as AndroidColor
 import android.util.LruCache
-import kotlin.math.abs
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
-import org.json.JSONObject
-import java.io.File
-import java.io.FileOutputStream
-import java.security.MessageDigest
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
+import org.json.JSONObject
 
 data class CatalogIcon(
     val id: Int,
@@ -26,112 +26,57 @@ data class CatalogIcon(
     val column: Int
 )
 
-/**
- * Accepts paths contained in the icon catalog's dedicated assets/icons directory.
- *
- * Rejecting empty and dot path segments keeps asset lookup unambiguous and prevents
- * traversal outside the catalog directory.
- */
-internal fun isValidCachedTagIconDimensions(
-    width: Int,
-    height: Int,
-    maxDimensionPx: Int = 128
-): Boolean =
-    maxDimensionPx > 0 &&
-        width in 1..maxDimensionPx &&
-        height in 1..maxDimensionPx
+internal fun isValidCachedTagIconDimensions(width: Int, height: Int, maxDimensionPx: Int = 128): Boolean =
+    maxDimensionPx > 0 && width in 1..maxDimensionPx && height in 1..maxDimensionPx
 
 internal fun isValidCatalogIconPath(path: String): Boolean {
-    if (!path.startsWith("icons/") || '\\' in path || '\u0000' in path) {
-        return false
-    }
-
-    val segments = path.split('/')
-    return segments.size >= 2 &&
-        segments.first() == "icons" &&
-        segments.drop(1).all { segment ->
-            segment.isNotBlank() && segment != "." && segment != ".."
-        }
+    if (!path.startsWith("icons/tag/") || '\\' in path || '\u0000' in path) return false
+    val parts = path.split('/')
+    return parts.size == 3 && parts[0] == "icons" && parts[1] == "tag" &&
+        parts[2].isNotBlank() && parts[2] != "." && parts[2] != ".."
 }
 
-/** Rejects incomplete or malformed entries before they enter the icon picker. */
-internal fun isValidCatalogIconEntry(
-    id: Int,
-    file: String,
-    name: String,
-    row: Int,
-    column: Int
-): Boolean =
-    id > 0 &&
-        isValidCatalogIconPath(file) &&
-        name.isNotBlank() &&
-        row > 0 &&
-        column > 0
+internal fun isValidCatalogIconEntry(id: Int, file: String, name: String, row: Int, column: Int): Boolean =
+    id > 0 && isValidCatalogIconPath(file) && name.isNotBlank() && row > 0 && column > 0
 
-/**
- * Reads the tag-icon catalog bundled under assets/ikon.
- * The JSON index is the source of truth; images are decoded only when requested.
- */
+/** Loads semantic skin glyphs and composites them over the default skin badge. */
 class IconCatalogRepository(context: Context) {
     private val appContext = context.applicationContext
-    private val displayDiskDirectory = File(appContext.filesDir, "tag_icon_cache")
+    private val skinAssets = SkinAssetResolver(appContext)
     private var cachedIcons: List<CatalogIcon>? = null
     private val bitmapCache = object : LruCache<String, Bitmap>(8 * 1024) {
-        override fun sizeOf(key: String, bitmap: Bitmap): Int =
-            (bitmap.allocationByteCount / 1024).coerceAtLeast(1)
-    }
-    // Picker thumbnails use a separate cache so full-size tag icons cannot evict them.
-    // 8 MB can retain the 100 catalog icons at the picker's 96 px target size.
-    private val pickerBitmapCache = object : LruCache<String, Bitmap>(8 * 1024) {
-        override fun sizeOf(key: String, bitmap: Bitmap): Int =
-            (bitmap.allocationByteCount / 1024).coerceAtLeast(1)
+        override fun sizeOf(key: String, value: Bitmap): Int =
+            (value.allocationByteCount / 1024).coerceAtLeast(1)
     }
     private val memoryState = CacheMemoryState()
     private val pickerLoadSemaphore = Semaphore(2)
 
-    /** Invalidates TagPill bitmap references after a memory trim or resume. */
     var generation by mutableIntStateOf(0)
         private set
 
     @Synchronized
     fun loadCatalog(): List<CatalogIcon> {
         cachedIcons?.let { return it }
-
-        val jsonText = appContext.assets.open("ikon/icons_index.json")
-            .bufferedReader()
-            .use { it.readText() }
-        val items = JSONObject(jsonText).getJSONArray("items")
+        val json = appContext.assets.open("skins/default/icons/tag/icons_index.json")
+            .bufferedReader().use { it.readText() }
+        val items = JSONObject(json).getJSONArray("items")
         val icons = buildList(items.length()) {
             for (index in 0 until items.length()) {
                 val item = items.getJSONObject(index)
-                val file = item.getString("file")
-                val id = item.getInt("id")
-                val name = item.getString("name")
-                val row = item.optInt("row")
-                val column = item.optInt("column")
-                require(isValidCatalogIconEntry(id, file, name, row, column)) {
-                    "Invalid catalog icon entry: id=$id, file=$file, name=$name, row=$row, column=$column"
-                }
-                add(
-                    CatalogIcon(
-                        id = id,
-                        file = file,
-                        name = name,
-                        visual = item.optString("visual"),
-                        description = item.optString("description"),
-                        row = row,
-                        column = column
-                    )
-                )
+                val filename = item.getString("file")
+                val legacyFile = item.getString("legacy_file")
+                val id = legacyFile.substringAfter("icon_").substringBefore(".").toIntOrNull()
+                    ?: error("Invalid legacy icon reference: $legacyFile")
+                val file = "icons/tag/$filename"
+                val row = index / 6 + 1
+                val column = index % 6 + 1
+                require(isValidCatalogIconEntry(id, file, item.getString("name"), row, column))
+                add(CatalogIcon(id, file, item.getString("name"), item.optString("visual"),
+                    item.optString("description"), row, column))
             }
         }
-
-        require(icons.map { it.id }.distinct().size == icons.size) {
-            "Catalog icon IDs must be unique"
-        }
-        require(icons.map { it.file }.distinct().size == icons.size) {
-            "Catalog icon asset paths must be unique"
-        }
+        require(icons.map { it.id }.distinct().size == icons.size) { "Canonical icon IDs must be unique" }
+        require(icons.map { it.file }.distinct().size == icons.size) { "Skin icon paths must be unique" }
         cachedIcons = icons
         return icons
     }
@@ -140,260 +85,64 @@ class IconCatalogRepository(context: Context) {
     fun trimMemory() {
         memoryState.trim {
             bitmapCache.evictAll()
-            pickerBitmapCache.evictAll()
+            skinAssets.clearCache()
             generation++
         }
     }
 
     fun resumeAfterBackground() {
-        memoryState.resume {
-            generation++
-        }
+        memoryState.resume { generation++ }
     }
 
-    /**
-     * Loads a reduced-size bitmap for the icon picker. Icons render at roughly
-     * 28 dp, so a 96 px thumbnail is sufficient for high-density displays.
-     * The original asset is decoded near the target size, then scaled exactly.
-     */
     suspend fun loadPickerBitmap(
         icon: CatalogIcon,
         frameColorArgb: Long = DEFAULT_TAG_ICON_FRAME_COLOR,
         maxDimensionPx: Int = 96
-    ): Bitmap? = pickerLoadSemaphore.withPermit {
-        require(isValidCatalogIconPath(icon.file)) {
-            "Invalid catalog asset path: ${icon.file}"
-        }
-        val normalizedColor = frameColorArgb and 0xFFFFFFFFL
-        val targetSize = maxDimensionPx.coerceAtLeast(1)
-        val cacheKey = "${icon.file}:${normalizedColor.toString(16)}:picker:$targetSize"
-        memoryState.ifEnabled { pickerBitmapCache.get(cacheKey) }?.let {
-            return@withPermit it
-        }
-        val loadEpoch = memoryState.beginLoad() ?: return@withPermit null
+    ): Bitmap? = pickerLoadSemaphore.withPermit { loadBitmap(icon, frameColorArgb, maxDimensionPx) }
 
-        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-        appContext.assets.open("ikon/${icon.file}").use {
-            BitmapFactory.decodeStream(it, null, bounds)
-        }
-        if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return@withPermit null
-
-        var sampleSize = 1
-        while (maxOf(bounds.outWidth, bounds.outHeight) / (sampleSize * 2) >= targetSize) {
-            sampleSize *= 2
-        }
-        val decodeOptions = BitmapFactory.Options().apply {
-            inSampleSize = sampleSize
-            inPreferredConfig = Bitmap.Config.ARGB_8888
-        }
-        val source = appContext.assets.open("ikon/${icon.file}").use {
-            BitmapFactory.decodeStream(it, null, decodeOptions)
-        } ?: return@withPermit null
-        val scale = minOf(
-            1f,
-            targetSize.toFloat() / maxOf(source.width, source.height)
-        )
-        val targetWidth = (source.width * scale).toInt().coerceAtLeast(1)
-        val targetHeight = (source.height * scale).toInt().coerceAtLeast(1)
-        val thumbnail = if (
-            source.width == targetWidth && source.height == targetHeight
-        ) {
-            source
-        } else {
-            Bitmap.createScaledBitmap(source, targetWidth, targetHeight, true)
-                .also { source.recycle() }
-        }
-        val bitmap = recolorIconFrame(thumbnail, normalizedColor)
-
-        memoryState.storeIfCurrent(loadEpoch) {
-            pickerBitmapCache.put(cacheKey, bitmap)
-            bitmap
-        }
-    }
-
-    /**
-     * Loads a display-sized Tag icon. Home pills render at 20 dp and the editor
-     * preview is only slightly larger, so 128 px preserves sharpness on dense
-     * screens without retaining the original 512 px asset in memory.
-     */
     @Synchronized
     fun loadBitmap(
         icon: CatalogIcon,
         frameColorArgb: Long = DEFAULT_TAG_ICON_FRAME_COLOR,
         maxDimensionPx: Int = 128
     ): Bitmap? {
-        require(isValidCatalogIconPath(icon.file)) {
-            "Invalid catalog asset path: ${icon.file}"
-        }
-        val normalizedColor = frameColorArgb and 0xFFFFFFFFL
-        val targetSize = maxDimensionPx.coerceAtLeast(1)
-        val cacheKey = "${icon.file}:${normalizedColor.toString(16)}:display:$targetSize"
-        memoryState.ifEnabled { bitmapCache.get(cacheKey) }?.let { return it }
-        val loadEpoch = memoryState.beginLoad() ?: return null
-        readDisplayDiskBitmap(cacheKey, targetSize)?.let { cachedBitmap ->
-            return memoryState.storeIfCurrent(loadEpoch) {
-                bitmapCache.put(cacheKey, cachedBitmap)
-                cachedBitmap
-            }
-        }
+        require(isValidCatalogIconPath(icon.file)) { "Invalid catalog asset path: \${icon.file}" }
+        val target = maxDimensionPx.coerceAtLeast(1)
+        val color = frameColorArgb and 0xFFFFFFFFL
+        val key = "\${icon.file}:\${color.toString(16)}:$target"
+        memoryState.ifEnabled { bitmapCache.get(key) }?.let { return it }
+        val epoch = memoryState.beginLoad() ?: return null
 
-        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-        appContext.assets.open("ikon/${icon.file}").use {
-            BitmapFactory.decodeStream(it, null, bounds)
+        val badge = skinAssets.loadBitmap("components/tag_badge/badge_cat.webp", 128, 128) ?: return null
+        val glyph = skinAssets.loadBitmap("icons/tag/\${icon.file.substringAfterLast('/')}", 96, 96) ?: return null
+        val composed = Bitmap.createBitmap(128, 128, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(composed)
+        val badgePaint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG).apply {
+            colorFilter = PorterDuffColorFilter(color.toInt(), PorterDuff.Mode.SRC_IN)
         }
-        if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null
+        val glyphPaint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG).apply {
+            colorFilter = PorterDuffColorFilter(onBadgeColor(color.toInt()), PorterDuff.Mode.SRC_IN)
+        }
+        canvas.drawBitmap(badge, null, Rect(0, 0, 128, 128), badgePaint)
+        canvas.drawBitmap(glyph, null, Rect(16, 22, 112, 118), glyphPaint)
+        val result = if (target == 128) composed else
+            Bitmap.createScaledBitmap(composed, target, target, true).also { composed.recycle() }
 
-        var sampleSize = 1
-        while (maxOf(bounds.outWidth, bounds.outHeight) / (sampleSize * 2) >= targetSize) {
-            sampleSize *= 2
-        }
-        val decodeOptions = BitmapFactory.Options().apply {
-            inSampleSize = sampleSize
-            inPreferredConfig = Bitmap.Config.ARGB_8888
-        }
-        val source = appContext.assets.open("ikon/${icon.file}").use {
-            BitmapFactory.decodeStream(it, null, decodeOptions)
-        } ?: return null
-        val scale = minOf(
-            1f,
-            targetSize.toFloat() / maxOf(source.width, source.height)
-        )
-        val targetWidth = (source.width * scale).toInt().coerceAtLeast(1)
-        val targetHeight = (source.height * scale).toInt().coerceAtLeast(1)
-        val displayBitmap = if (
-            source.width == targetWidth && source.height == targetHeight
-        ) {
-            source
-        } else {
-            Bitmap.createScaledBitmap(source, targetWidth, targetHeight, true)
-                .also { source.recycle() }
-        }
-        val bitmap = recolorIconFrame(displayBitmap, normalizedColor)
-        writeDisplayDiskBitmap(cacheKey, bitmap)
-
-        return memoryState.storeIfCurrent(loadEpoch) {
-            bitmapCache.put(cacheKey, bitmap)
-            bitmap
+        return memoryState.storeIfCurrent(epoch) {
+            bitmapCache.put(key, result)
+            result
         }
     }
 
-    private fun displayDiskFile(cacheKey: String): File {
-        val digest = MessageDigest.getInstance("SHA-256")
-            .digest(cacheKey.toByteArray(Charsets.UTF_8))
-        val name = digest.joinToString("") { byte -> "%02x".format(byte) }
-        return File(displayDiskDirectory, "$name.png")
+    private fun onBadgeColor(background: Int): Int {
+        val light = AndroidColor.rgb(0xF5, 0xF2, 0xED)
+        val dark = AndroidColor.rgb(0x1B, 0x1B, 0x1F)
+        return if (contrastRatio(light, background) >= 3f) light else dark
     }
 
-    private fun readDisplayDiskBitmap(cacheKey: String, maxDimensionPx: Int): Bitmap? {
-        val file = displayDiskFile(cacheKey)
-        if (!file.isFile) return null
-
-        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-        BitmapFactory.decodeFile(file.absolutePath, bounds)
-        if (!isValidCachedTagIconDimensions(bounds.outWidth, bounds.outHeight, maxDimensionPx)) {
-            file.delete()
-            return null
-        }
-
-        val bitmap = BitmapFactory.decodeFile(file.absolutePath)
-        if (bitmap == null) {
-            file.delete()
-            return null
-        }
-        if (!isValidCachedTagIconDimensions(bitmap.width, bitmap.height, maxDimensionPx)) {
-            bitmap.recycle()
-            file.delete()
-            return null
-        }
-        file.setLastModified(System.currentTimeMillis())
-        return bitmap
-    }
-
-    private fun writeDisplayDiskBitmap(cacheKey: String, bitmap: Bitmap) {
-        if (!displayDiskDirectory.isDirectory &&
-            !displayDiskDirectory.mkdirs() &&
-            !displayDiskDirectory.isDirectory
-        ) return
-
-        val target = displayDiskFile(cacheKey)
-        val temporary = File(displayDiskDirectory, "${target.name}.${System.nanoTime()}.tmp")
-        try {
-            val success = FileOutputStream(temporary).use { output ->
-                val compressed = bitmap.compress(Bitmap.CompressFormat.PNG, 100, output)
-                if (compressed) output.fd.sync()
-                compressed
-            }
-            if (success) {
-                if (!temporary.renameTo(target)) {
-                    temporary.copyTo(target, overwrite = true)
-                    temporary.delete()
-                }
-            } else {
-                temporary.delete()
-            }
-            pruneDisplayDiskCache()
-        } catch (_: Exception) {
-            temporary.delete()
-        }
-    }
-
-    private fun pruneDisplayDiskCache() {
-        val files = displayDiskDirectory.listFiles()
-            ?.filter { it.isFile && it.name.endsWith(".png") }
-            ?: return
-        var totalBytes = files.sumOf { it.length() }
-        val maxBytes = 16L * 1024L * 1024L
-        if (totalBytes <= maxBytes) return
-        for (file in files.sortedBy { it.lastModified() }) {
-            if (totalBytes <= maxBytes) break
-            val size = file.length()
-            if (file.delete()) totalBytes -= size
-        }
-    }
-
-    /**
-     * Recolors pixels belonging to the catalog's teal circular frame.
-     * Hue matching leaves the white glyph and transparent pixels untouched;
-     * relative saturation/value preserve antialiasing and frame shading.
-     */
-    private fun recolorIconFrame(source: Bitmap, targetColorArgb: Long): Bitmap {
-        if (targetColorArgb == DEFAULT_TAG_ICON_FRAME_COLOR) return source
-
-        val output = source.copy(Bitmap.Config.ARGB_8888, true) ?: return source
-        val width = output.width
-        val height = output.height
-        val pixels = IntArray(width * height)
-        output.getPixels(pixels, 0, width, 0, 0, width, height)
-
-        val sourceHsv = FloatArray(3)
-        val targetHsv = FloatArray(3)
-        val pixelHsv = FloatArray(3)
-        AndroidColor.colorToHSV(AndroidColor.rgb(0x11, 0x4B, 0x56), sourceHsv)
-        AndroidColor.colorToHSV(targetColorArgb.toInt(), targetHsv)
-        val sourceValue = sourceHsv[2].coerceAtLeast(0.01f)
-        val sourceSaturation = sourceHsv[1].coerceAtLeast(0.01f)
-
-        for (index in pixels.indices) {
-            val pixel = pixels[index]
-            val alpha = AndroidColor.alpha(pixel)
-            if (alpha == 0) continue
-
-            AndroidColor.colorToHSV(pixel, pixelHsv)
-            val rawHueDifference = abs(pixelHsv[0] - sourceHsv[0])
-            val hueDifference = minOf(rawHueDifference, 360f - rawHueDifference)
-            if (hueDifference <= 28f && pixelHsv[1] >= 0.12f) {
-                pixelHsv[0] = targetHsv[0]
-                pixelHsv[1] = (
-                    pixelHsv[1] * targetHsv[1] / sourceSaturation
-                ).coerceIn(0f, 1f)
-                pixelHsv[2] = (
-                    pixelHsv[2] * targetHsv[2] / sourceValue
-                ).coerceIn(0f, 1f)
-                pixels[index] = AndroidColor.HSVToColor(alpha, pixelHsv)
-            }
-        }
-
-        output.setPixels(pixels, 0, width, 0, 0, width, height)
-        return output
+    private fun contrastRatio(first: Int, second: Int): Float {
+        val a = AndroidColor.luminance(first)
+        val b = AndroidColor.luminance(second)
+        return (maxOf(a, b) + 0.05f) / (minOf(a, b) + 0.05f)
     }
 }
