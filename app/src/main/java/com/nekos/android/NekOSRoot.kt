@@ -691,6 +691,7 @@ internal fun NekOSRoot(
             AppDrawer(
                 apps = apps,
                 launcherSurface = launcherSurface,
+                motifTintArgb = launcherUiColorArgb,
                 iconBitmapCache = iconBitmapCache,
                 closeThresholdPx = drawerCloseThresholdPx,
                 modifier = Modifier

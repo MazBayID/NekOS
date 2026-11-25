@@ -28,7 +28,10 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
@@ -50,6 +53,7 @@ internal fun AppDrawer(
     apps: List<InstalledApp>,
     iconBitmapCache: AppIconBitmapCache,
     launcherSurface: Color,
+    motifTintArgb: Long,
     closeThresholdPx: Float,
     modifier: Modifier = Modifier,
     onAppClick: (InstalledApp, Rect) -> Unit,
@@ -132,10 +136,24 @@ internal fun AppDrawer(
         gridState.scrollToItem(0)
     }
 
+    val drawerMotifBrush = rememberDialogMotifBrush()
+    val drawerMotifTint = remember(motifTintArgb) {
+        ColorFilter.tint(Color(motifTintArgb.toInt()), BlendMode.SrcIn)
+    }
+
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
             .background(launcherSurface)
+            .drawBehind {
+                drawerMotifBrush?.let { brush ->
+                    drawRect(
+                        brush = brush,
+                        alpha = 0.18f,
+                        colorFilter = drawerMotifTint
+                    )
+                }
+            }
             .navigationBarsPadding()
     ) {
         Box(
