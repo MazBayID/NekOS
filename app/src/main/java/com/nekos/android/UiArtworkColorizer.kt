@@ -56,6 +56,11 @@ internal object UiArtworkColorizer {
     }
 
     @Synchronized
+    fun trimMemory() {
+        cache.evictAll()
+    }
+
+    @Synchronized
     fun load(
         context: Context,
         @DrawableRes resourceId: Int,
