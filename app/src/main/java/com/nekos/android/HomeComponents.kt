@@ -353,12 +353,21 @@ internal fun TagFrame(
     colorArgb: Long,
     modifier: Modifier = Modifier
 ) {
-    val frameBitmap = rememberThemedUiArtwork(
-        R.drawable.tag_frame_spritesheet,
-        colorArgb,
-        maxDimensionPx = 512
-    )
-    if (frameBitmap != null) Canvas(modifier = modifier) {
+    val context = LocalContext.current
+    val resolver = remember(context) { SkinAssetResolver(context) }
+    var frameBitmap by remember { mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null) }
+
+    LaunchedEffect(resolver) {
+        frameBitmap = withContext(Dispatchers.IO) {
+            runCatching {
+                resolver.loadBitmap("components/tag_frame/frame_spritesheet.webp")
+                    ?.asImageBitmap()
+            }.getOrNull()
+        }
+    }
+
+    val bitmap = frameBitmap
+    if (bitmap != null) Canvas(modifier = modifier) {
         val widthPx = size.width
         val scale = widthPx / 512f
         val topHeight = 144f * scale
@@ -368,29 +377,20 @@ internal fun TagFrame(
         val topDstHeight = topHeight.toInt().coerceAtLeast(1)
         val middleDstHeight = middleHeight.toInt()
         val bottomDstHeight = bottomHeight.toInt().coerceAtLeast(1)
+        val tint = androidx.compose.ui.graphics.ColorFilter.tint(
+            Color(colorArgb.toInt()),
+            androidx.compose.ui.graphics.BlendMode.SrcIn
+        )
 
-        drawImage(
-            image = frameBitmap,
-            srcOffset = IntOffset(0, 0),
-            srcSize = IntSize(512, 144),
-            dstOffset = IntOffset(0, 0),
-            dstSize = IntSize(dstWidth, topDstHeight)
-        )
+        drawImage(bitmap, IntOffset(0, 0), IntSize(512, 144), IntOffset(0, 0),
+            IntSize(dstWidth, topDstHeight), colorFilter = tint)
         if (middleDstHeight > 0) {
-            drawImage(
-                image = frameBitmap,
-                srcOffset = IntOffset(0, 144),
-                srcSize = IntSize(512, 16),
-                dstOffset = IntOffset(0, topDstHeight),
-                dstSize = IntSize(dstWidth, middleDstHeight)
-            )
+            drawImage(bitmap, IntOffset(0, 144), IntSize(512, 16),
+                IntOffset(0, topDstHeight), IntSize(dstWidth, middleDstHeight),
+                colorFilter = tint)
         }
-        drawImage(
-            image = frameBitmap,
-            srcOffset = IntOffset(0, 160),
-            srcSize = IntSize(512, 80),
-            dstOffset = IntOffset(0, topDstHeight + middleDstHeight),
-            dstSize = IntSize(dstWidth, bottomDstHeight)
-        )
+        drawImage(bitmap, IntOffset(0, 160), IntSize(512, 80),
+            IntOffset(0, topDstHeight + middleDstHeight),
+            IntSize(dstWidth, bottomDstHeight), colorFilter = tint)
     }
 }
