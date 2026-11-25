@@ -27,9 +27,9 @@ internal fun recoverInterruptedSkinUpdates(skinsDirectory: File): Boolean =
             if (isValidInstalledSkinDirectory(destination, skinId)) {
                 // The replacement was fully installed; its backup is now obsolete.
                 backup.deleteRecursively()
-            } else {
+            } else if (isValidInstalledSkinDirectory(backup, skinId)) {
                 // A destination without a valid manifest may be a partial replacement.
-                // Never discard the last known-good copy in favor of that directory.
+                // Restore only a backup that is itself a valid installed skin.
                 if (destination.exists() && !destination.deleteRecursively()) continue
                 if (backup.renameTo(destination)) recovered = true
             }
