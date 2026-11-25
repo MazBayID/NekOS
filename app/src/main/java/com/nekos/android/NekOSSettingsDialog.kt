@@ -244,7 +244,7 @@ internal fun NekOSSettingsDialog(
                             verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
                             Image(
-                                painter = painterResource(R.drawable.nekos_logo_tag),
+                                painter = painterResource(R.drawable.tagline_a),
                                 contentDescription = "NekOS",
                                 contentScale = androidx.compose.ui.layout.ContentScale.Fit,
                                 modifier = Modifier.fillMaxWidth().heightIn(max = 128.dp)
