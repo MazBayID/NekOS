@@ -152,7 +152,7 @@ internal class SkinInstaller(context: Context) {
             if (!skinsRoot.exists() && !skinsRoot.mkdirs()) {
                 return SkinInstallResult(false, error = "Unable to create skins directory")
             }
-            val destination = File(skinsRoot, skinId).canonicalFile
+            val destination = File(skinsRoot, skinDirectoryName(skinId)).canonicalFile
             if (destination.parentFile != skinsRoot.canonicalFile) {
                 return SkinInstallResult(false, error = "Invalid skin installation destination")
             }
@@ -244,6 +244,12 @@ internal class SkinInstaller(context: Context) {
         }
 
         internal fun isValidSkinId(id: String): Boolean =
+            id.isNotBlank() && id.length <= 255 && id != "default"
+
+        internal fun skinDirectoryName(id: String): String =
+            UUID.nameUUIDFromBytes(id.toByteArray(Charsets.UTF_8)).toString()
+
+        internal fun isLegacySafeSkinId(id: String): Boolean =
             id.length in 1..64 && Regex("^[a-z0-9][a-z0-9._-]*$").matches(id)
 
         internal fun isSafeEntryPath(path: String): Boolean {
