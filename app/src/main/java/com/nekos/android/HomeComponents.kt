@@ -355,9 +355,12 @@ internal fun TagFrame(
 ) {
     val context = LocalContext.current
     val resolver = remember(context) { SkinAssetResolver(context) }
-    var frameBitmap by remember { mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null) }
+    val skinGeneration = SkinRuntimeState.generation
+    var frameBitmap by remember(resolver, skinGeneration) {
+        mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null)
+    }
 
-    LaunchedEffect(resolver) {
+    LaunchedEffect(resolver, skinGeneration) {
         frameBitmap = withContext(Dispatchers.IO) {
             runCatching {
                 resolver.loadBitmap("components/tag_frame/frame_spritesheet.webp")
