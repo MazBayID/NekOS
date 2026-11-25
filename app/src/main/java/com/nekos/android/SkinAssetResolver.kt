@@ -39,11 +39,12 @@ internal class SkinAssetResolver(context: Context) {
         expectedHeight: Int? = null
     ): Bitmap? {
         if (!isSafeRelativePath(relativePath)) return null
-        val skinKey = activeSkinDirectory?.absolutePath ?: "default"
+        val selectedSkinDirectory = activeSkinDirectory ?: SkinRepository.activeSkinDirectory(appContext)
+        val skinKey = selectedSkinDirectory?.absolutePath ?: "default"
         val cacheKey = "${skinKey}:${relativePath}:${expectedWidth ?: 0}x${expectedHeight ?: 0}"
         cache.get(cacheKey)?.let { return it }
 
-        val activeBitmap = activeSkinDirectory
+        val activeBitmap = selectedSkinDirectory
             ?.let { loadFromDirectory(it, relativePath) }
             ?.takeIf { matchesExpectedSize(it, expectedWidth, expectedHeight) }
 
