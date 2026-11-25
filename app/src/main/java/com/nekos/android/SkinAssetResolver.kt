@@ -10,8 +10,8 @@ import java.io.File
  * Loads skin artwork from the selected skin directory and falls back to the
  * APK-bundled default asset on a per-file basis.
  *
- * Skin installation/selection is intentionally managed by a later layer; this
- * resolver already enforces path containment and safe fallback semantics.
+ * The selected skin is read from SkinRepository and missing or invalid files
+ * fall back independently to the APK-bundled default skin.
  */
 internal class SkinAssetResolver(context: Context) {
     private val appContext = context.applicationContext

@@ -37,7 +37,10 @@ internal class SkinRepository(context: Context) {
     @Synchronized
     fun activeSkinId(): String {
         val requested = preferences.getString(ACTIVE_SKIN_KEY, DEFAULT_SKIN_ID) ?: DEFAULT_SKIN_ID
-        if (requested == DEFAULT_SKIN_ID || readInstalledSkin(File(skinsDirectory, requested)) != null) {
+        if (requested == DEFAULT_SKIN_ID ||
+            (SkinInstaller.isValidSkinId(requested) &&
+                readInstalledSkin(File(skinsDirectory, requested)) != null)
+        ) {
             return requested
         }
         preferences.edit().putString(ACTIVE_SKIN_KEY, DEFAULT_SKIN_ID).commit()
@@ -46,6 +49,7 @@ internal class SkinRepository(context: Context) {
 
     @Synchronized
     fun setActiveSkin(id: String): Boolean {
+        if (id != DEFAULT_SKIN_ID && !SkinInstaller.isValidSkinId(id)) return false
         val exists = id == DEFAULT_SKIN_ID || readInstalledSkin(File(skinsDirectory, id)) != null
         if (!exists) return false
         return preferences.edit().putString(ACTIVE_SKIN_KEY, id).commit()

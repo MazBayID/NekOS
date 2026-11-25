@@ -201,7 +201,7 @@ internal class SkinInstaller(context: Context) {
             id.length in 1..64 && Regex("^[a-z0-9][a-z0-9._-]*$").matches(id)
 
         internal fun isSafeEntryPath(path: String): Boolean {
-            if (path.isBlank() || path.startsWith("/") || '\\\\' in path || '\u0000' in path ||
+            if (path.isBlank() || path.startsWith("/") || path.contains(92.toChar()) || '\u0000' in path ||
                 Regex("^[A-Za-z]:").containsMatchIn(path)
             ) return false
             val parts = path.split('/')
