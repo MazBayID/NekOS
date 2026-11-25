@@ -170,9 +170,13 @@ def check_glyph_dir(r, root, sub, strict):
     files = sorted(f for f in os.listdir(d) if f.endswith('.webp'))
     if idx is not None:
         check_index_catalog(r, idx, sub, f'icons/{sub}/')
-        try:
-            listed = {i['file'] for i in idx['items']}
-        except (KeyError, TypeError):
+        items = idx.get('items') if isinstance(idx, dict) else None
+        if isinstance(items, list):
+            listed = {
+                item.get('file') for item in items
+                if isinstance(item, dict) and isinstance(item.get('file'), str)
+            }
+        else:
             r.err(f'icons/{sub}: index harus memiliki daftar items yang valid')
             listed = set()
         for f in listed - set(files):
@@ -335,6 +339,9 @@ def load_default_catalog():
 
 def check_index_catalog(r, idx, sub, rel):
     """Pastikan identitas ID -> nama tidak berubah dari katalog bawaan."""
+    if not isinstance(idx, dict):
+        r.err(f'{rel}index: akar JSON harus berupa objek')
+        return
     items = idx.get('items')
     if not isinstance(items, list):
         r.err(f'{rel}index: field items harus berupa daftar')
