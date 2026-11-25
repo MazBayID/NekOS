@@ -150,4 +150,16 @@ class IconCatalogRepositoryTest {
         assertNotNull(error)
         assertTrue(error is IllegalArgumentException)
     }
+
+    @Test
+    fun skinCatalogCannotRemapCanonicalIdsToDifferentGlyphMeanings() {
+        val bundled = CatalogIcon(11, "icons/tag/icon_mail.webp", "mail", "", "", 1, 1)
+        val validOverride = CatalogIcon(11, "icons/tag/icon_envelope_alt.webp", "mail", "", "", 1, 1)
+        val wrongMeaning = CatalogIcon(11, "icons/tag/icon_camera.webp", "camera", "", "", 1, 1)
+        val unknownId = CatalogIcon(999, "icons/tag/icon_custom.webp", "custom", "", "", 1, 1)
+
+        assertTrue(isCanonicalSkinCatalog(listOf(validOverride), listOf(bundled)))
+        org.junit.Assert.assertFalse(isCanonicalSkinCatalog(listOf(wrongMeaning), listOf(bundled)))
+        org.junit.Assert.assertFalse(isCanonicalSkinCatalog(listOf(unknownId), listOf(bundled)))
+    }
 }
