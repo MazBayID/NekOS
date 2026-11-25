@@ -24,17 +24,25 @@ internal class SkinAssetResolver(context: Context) {
     @Volatile
     private var activeSkinDirectory: File? = null
 
+    private var cacheEpoch = 0L
+
     init {
         synchronized(instances) { instances[this] = Unit }
     }
 
     fun clearCache() {
-        synchronized(cache) { cache.evictAll() }
+        synchronized(cache) {
+            cacheEpoch++
+            cache.evictAll()
+        }
     }
 
     fun setActiveSkinDirectory(directory: File?) {
         activeSkinDirectory = directory?.canonicalFile
-        synchronized(cache) { cache.evictAll() }
+        synchronized(cache) {
+            cacheEpoch++
+            cache.evictAll()
+        }
     }
 
     @Synchronized
@@ -44,14 +52,19 @@ internal class SkinAssetResolver(context: Context) {
         expectedHeight: Int? = null
     ): Bitmap? {
         if (!isSafeRelativePath(relativePath)) return null
+        val requestedCacheEpoch = synchronized(cache) { cacheEpoch }
         val generationBeforeSkinRead = SkinRuntimeState.generation
         val selectedSkinDirectory = activeSkinDirectory ?: SkinRepository.activeSkinDirectory(appContext)
         val requestedGeneration = SkinRuntimeState.generation
         if (generationBeforeSkinRead != requestedGeneration) return null
         val skinKey = selectedSkinDirectory?.absolutePath ?: "default"
         val cacheKey = "${requestedGeneration}:${skinKey}:${relativePath}:${expectedWidth ?: 0}x${expectedHeight ?: 0}"
-        cache.get(cacheKey)?.let {
-            return if (requestedGeneration == SkinRuntimeState.generation) it else null
+        synchronized(cache) {
+            cache.get(cacheKey)?.let {
+                return if (requestedGeneration == SkinRuntimeState.generation &&
+                    requestedCacheEpoch == cacheEpoch
+                ) it else null
+            }
         }
 
         val activeBitmap = selectedSkinDirectory
@@ -68,12 +81,17 @@ internal class SkinAssetResolver(context: Context) {
             }
             ?: return null
 
-        if (requestedGeneration != SkinRuntimeState.generation) {
-            bitmap.recycle()
-            return null
+        return synchronized(cache) {
+            if (requestedGeneration != SkinRuntimeState.generation ||
+                requestedCacheEpoch != cacheEpoch
+            ) {
+                bitmap.recycle()
+                null
+            } else {
+                cache.put(cacheKey, bitmap)
+                bitmap
+            }
         }
-        cache.put(cacheKey, bitmap)
-        return bitmap
     }
 
     private fun loadFromDirectory(root: File, relativePath: String): Bitmap? =
