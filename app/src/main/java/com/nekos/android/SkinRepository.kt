@@ -7,6 +7,30 @@ import androidx.compose.runtime.setValue
 import org.json.JSONObject
 import java.io.File
 
+
+/** Restores or removes backup directories left by an interrupted skin update. */
+internal fun recoverInterruptedSkinUpdates(skinsDirectory: File): Boolean {
+    val root = skinsDirectory.canonicalFile
+    val backups = root.listFiles()
+        ?.filter { it.isDirectory && it.name.startsWith(".skin-update-") }
+        .orEmpty()
+    var recovered = false
+    for (backup in backups) {
+        val suffix = backup.name.removePrefix(".skin-update-")
+        if (suffix.length <= 37) continue
+        val skinId = suffix.dropLast(37)
+        if (!SkinInstaller.isValidSkinId(skinId)) continue
+        val destination = File(root, skinId).canonicalFile
+        if (destination.parentFile != root) continue
+        if (!destination.exists()) {
+            if (backup.renameTo(destination)) recovered = true
+        } else {
+            backup.deleteRecursively()
+        }
+    }
+    return recovered
+}
+
 internal data class InstalledSkin(
     val id: String,
     val name: String,
@@ -37,24 +61,7 @@ internal class SkinRepository(context: Context) {
      */
     @Synchronized
     private fun recoverInterruptedUpdates() {
-        val backups = skinsDirectory.listFiles()
-            ?.filter { it.isDirectory && it.name.startsWith(".skin-update-") }
-            .orEmpty()
-        var recovered = false
-        for (backup in backups) {
-            val suffix = backup.name.removePrefix(".skin-update-")
-            if (suffix.length <= 37) continue
-            val skinId = suffix.dropLast(37)
-            if (!SkinInstaller.isValidSkinId(skinId)) continue
-            val destination = File(skinsDirectory, skinId).canonicalFile
-            if (destination.parentFile != skinsDirectory.canonicalFile) continue
-            if (!destination.exists()) {
-                if (backup.renameTo(destination)) recovered = true
-            } else {
-                backup.deleteRecursively()
-            }
-        }
-        if (recovered) SkinRuntimeState.invalidate()
+        if (recoverInterruptedSkinUpdates(skinsDirectory)) SkinRuntimeState.invalidate()
     }
 
     @Synchronized
