@@ -549,7 +549,7 @@ internal fun NekOSSettingsDialog(
                                     fontSize = 10.sp
                                 )
                                 Text(
-                                    "VERSION 1.0.0 · CUSTOM SKIN",
+                                    "VERSION ${OfficialSkinDownloader.OFFICIAL_VERSION} · CUSTOM SKIN",
                                     color = SettingsMuted,
                                     fontSize = 8.sp
                                 )
