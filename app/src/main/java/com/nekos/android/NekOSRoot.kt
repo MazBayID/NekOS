@@ -328,6 +328,8 @@ internal fun NekOSRoot(
                 if (level >= ComponentCallbacks2.TRIM_MEMORY_BACKGROUND) {
                     iconBitmapCache.trimMemory()
                     iconCatalogRepository.trimMemory()
+                    SkinAssetResolver.trimAllCaches()
+                    UiArtworkColorizer.trimMemory()
                     isWallpaperTrimmed = true
                     wallpaperLoadGeneration++
                     wallpaperBitmap = null
@@ -340,6 +342,8 @@ internal fun NekOSRoot(
             override fun onLowMemory() {
                 iconBitmapCache.trimMemory()
                 iconCatalogRepository.trimMemory()
+                SkinAssetResolver.trimAllCaches()
+                UiArtworkColorizer.trimMemory()
                 isWallpaperTrimmed = true
                 wallpaperLoadGeneration++
                 wallpaperBitmap = null
