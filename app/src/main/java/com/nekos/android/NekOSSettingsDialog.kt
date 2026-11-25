@@ -578,7 +578,7 @@ internal fun NekOSSettingsDialog(
                                 if (isOfficialSkinDownloading) {
                                     if (officialSkinDownloadProgress >= 0) {
                                         LinearProgressIndicator(
-                                            progress = { officialSkinDownloadProgress.coerceIn(0, 100) / 100f },
+                                            progress = officialSkinDownloadProgress.coerceIn(0, 100) / 100f,
                                             modifier = Modifier.fillMaxWidth()
                                         )
                                     } else {
