@@ -446,7 +446,8 @@ internal fun NekOSSettingsDialog(
                                 }
                                 if (selected) {
                                     Text("Active", color = SettingsAccent, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
-                                } else if (!skin.isBuiltIn) {
+                                }
+                                if (!skin.isBuiltIn) {
                                     TextButton(onClick = { onDeleteSkin(skin.id) }) {
                                         Text("Remove", color = SettingsAccent, fontSize = 11.sp)
                                     }
