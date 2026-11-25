@@ -3,6 +3,10 @@ package com.nekos.android
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffColorFilter
 import android.graphics.Color as AndroidColor
 import android.util.LruCache
 import androidx.annotation.DrawableRes
@@ -63,15 +67,43 @@ internal object UiArtworkColorizer {
         val key = "$resourceId:${color.toString(16)}:$targetSize"
         cache.get(key)?.let { return it }
 
+        val skinFile = when (resourceId) {
+            R.drawable.nekos_ui_add_tag -> "icon_plus.webp"
+            R.drawable.nekos_ui_info -> "icon_info.webp"
+            R.drawable.nekos_ui_launcher_settings -> "icon_gear.webp"
+            R.drawable.nekos_ui_palette -> "icon_palette.webp"
+            R.drawable.nekos_ui_remove -> "icon_minus.webp"
+            R.drawable.nekos_ui_trash -> "icon_trash.webp"
+            R.drawable.nekos_ui_wallpaper -> "icon_image.webp"
+            else -> null
+        }
+        if (skinFile != null) {
+            val source = SkinAssetResolver(context).loadBitmap("icons/ui/$skinFile", 96, 96)
+                ?: return null
+            val tinted = Bitmap.createBitmap(source.width, source.height, Bitmap.Config.ARGB_8888)
+            val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG).apply {
+                colorFilter = PorterDuffColorFilter(color.toInt(), PorterDuff.Mode.SRC_IN)
+            }
+            Canvas(tinted).drawBitmap(source, 0f, 0f, paint)
+            val result = if (maxOf(tinted.width, tinted.height) <= targetSize) tinted else {
+                val scale = targetSize.toFloat() / maxOf(tinted.width, tinted.height)
+                Bitmap.createScaledBitmap(
+                    tinted,
+                    (tinted.width * scale).toInt().coerceAtLeast(1),
+                    (tinted.height * scale).toInt().coerceAtLeast(1),
+                    true
+                ).also { tinted.recycle() }
+            }
+            cache.put(key, result)
+            return result
+        }
+
         val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
         BitmapFactory.decodeResource(context.resources, resourceId, bounds)
         val sourceMaxDimension = maxOf(bounds.outWidth, bounds.outHeight)
         if (sourceMaxDimension <= 0) return null
-
         var sampleSize = 1
-        while (sourceMaxDimension / sampleSize > targetSize) {
-            sampleSize *= 2
-        }
+        while (sourceMaxDimension / sampleSize > targetSize) sampleSize *= 2
         val options = BitmapFactory.Options().apply {
             inSampleSize = sampleSize
             inPreferredConfig = Bitmap.Config.ARGB_8888
