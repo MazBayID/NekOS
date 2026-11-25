@@ -136,4 +136,23 @@ class SkinInstallerUpdateTest {
         }
     }
 
+    @Test
+    fun restoresPreviousSkinWhenStagingCannotBeFinalized() {
+        val root = createTempDir(prefix = "nekos-skin-rollback-test")
+        try {
+            val installed = File(root, "inferno_phoenix").apply { mkdirs() }
+            File(installed, "version.txt").writeText("1.0.0")
+            val missingStaging = File(root, "missing-staging")
+            val backup = File(root, ".skin-update-inferno_phoenix-test")
+
+            val result = finalizeSkinDirectory(missingStaging, installed, backup)
+
+            assertFalse(result.success)
+            assertEquals("1.0.0", File(installed, "version.txt").readText())
+            assertFalse(backup.exists())
+        } finally {
+            root.deleteRecursively()
+        }
+    }
+
 }
