@@ -23,6 +23,10 @@ internal class SkinAssetResolver(context: Context) {
     @Volatile
     private var activeSkinDirectory: File? = null
 
+    fun clearCache() {
+        synchronized(cache) { cache.evictAll() }
+    }
+
     fun setActiveSkinDirectory(directory: File?) {
         activeSkinDirectory = directory?.canonicalFile
         synchronized(cache) { cache.evictAll() }

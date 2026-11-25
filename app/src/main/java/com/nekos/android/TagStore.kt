@@ -58,6 +58,7 @@ object TagStore {
 
         return runCatching {
             val array = JSONArray(raw)
+            migrateLegacyTagIconIds(context, preferences, array)
             val parsed = buildList {
                 for (i in 0 until array.length()) {
                     val item = array.getJSONObject(i)
