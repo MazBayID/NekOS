@@ -25,6 +25,38 @@ internal class SkinRepository(context: Context) {
     private val preferences = appContext.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
     private val skinsDirectory = File(appContext.filesDir, "skins")
 
+    init {
+        recoverInterruptedUpdates()
+    }
+
+    /**
+     * A process can be killed after the old skin directory was renamed to its
+     * backup but before the staged replacement was moved into place. Restore
+     * that backup when the destination is missing; otherwise the replacement
+     * completed and the leftover backup is safe to remove.
+     */
+    @Synchronized
+    private fun recoverInterruptedUpdates() {
+        val backups = skinsDirectory.listFiles()
+            ?.filter { it.isDirectory && it.name.startsWith(".skin-update-") }
+            .orEmpty()
+        var recovered = false
+        for (backup in backups) {
+            val suffix = backup.name.removePrefix(".skin-update-")
+            if (suffix.length <= 37) continue
+            val skinId = suffix.dropLast(37)
+            if (!SkinInstaller.isValidSkinId(skinId)) continue
+            val destination = File(skinsDirectory, skinId).canonicalFile
+            if (destination.parentFile != skinsDirectory.canonicalFile) continue
+            if (!destination.exists()) {
+                if (backup.renameTo(destination)) recovered = true
+            } else {
+                backup.deleteRecursively()
+            }
+        }
+        if (recovered) SkinRuntimeState.invalidate()
+    }
+
     @Synchronized
     fun listInstalledSkins(): List<InstalledSkin> {
         val result = mutableListOf<InstalledSkin>()
