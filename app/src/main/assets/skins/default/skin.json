@@ -1,0 +1,140 @@
+{
+  "schema_version": 1,
+  "skin": {
+    "id": "default",
+    "name": "NekOS Default",
+    "version": "2.0.0",
+    "author": "NekOS",
+    "description": "Skin bawaan NekOS. Juga referensi struktur untuk skin baru.",
+    "min_nekos_version": "0.0.0"
+  },
+  "assets": [
+    {
+      "id": "badge_cat",
+      "kind": "badge",
+      "file": "components/tag_badge/badge_cat.webp",
+      "format": "webp",
+      "canvas_px": {
+        "width": 128,
+        "height": 128
+      },
+      "display_dp": {
+        "width": 32,
+        "height": 32
+      },
+      "tint_role": "shared_ui",
+      "notes": "Slot glyph ada di components/tag_badge/badge.json."
+    },
+    {
+      "id": "top_frame",
+      "kind": "frame",
+      "file": "components/top_frame/topframe_spritesheet@4x.png",
+      "format": "png",
+      "canvas_px": {
+        "width": 536,
+        "height": 256
+      },
+      "display_dp": {
+        "height": 64,
+        "min_width": 124
+      },
+      "tint_role": "shared_ui",
+      "rendering": {
+        "scale_mode": "atlas",
+        "content_scale": "FillBounds",
+        "preserve_aspect_ratio": false
+      },
+      "notes": "Atlas: components/top_frame/topframe_atlas.json. Sheet 1x/2x diturunkan dari 4x."
+    },
+    {
+      "id": "tag_frame",
+      "kind": "frame",
+      "file": "components/tag_frame/frame_spritesheet.webp",
+      "format": "webp",
+      "canvas_px": {
+        "width": 512,
+        "height": 240
+      },
+      "tint_role": "shared_ui",
+      "rendering": {
+        "scale_mode": "three_slice"
+      },
+      "slices": [
+        {
+          "id": "top",
+          "rect_px": {
+            "x": 0,
+            "y": 0,
+            "width": 512,
+            "height": 144
+          },
+          "mode": "fixed"
+        },
+        {
+          "id": "middle",
+          "rect_px": {
+            "x": 0,
+            "y": 144,
+            "width": 512,
+            "height": 16
+          },
+          "mode": "stretch_vertical"
+        },
+        {
+          "id": "bottom",
+          "rect_px": {
+            "x": 0,
+            "y": 160,
+            "width": 512,
+            "height": 80
+          },
+          "mode": "fixed"
+        }
+      ],
+      "notes": "display_dp belum diverifikasi dari runtime (lihat docs/03_REFERENSI_ASET.md §6)."
+    }
+  ],
+  "motifs": [
+    {
+      "id": "paw",
+      "file": "motifs/motif_paw.png",
+      "file_small": "motifs/motif_paw@512.png",
+      "type": "solid",
+      "coverage": 0.226,
+      "suggested_display_dp": 320,
+      "suggested_opacity": 0.18
+    },
+    {
+      "id": "sakura",
+      "file": "motifs/motif_sakura.png",
+      "file_small": "motifs/motif_sakura@512.png",
+      "type": "line",
+      "coverage": 0.071,
+      "suggested_display_dp": 640,
+      "suggested_opacity": 0.35
+    },
+    {
+      "id": "butterfly",
+      "file": "motifs/motif_butterfly.png",
+      "file_small": "motifs/motif_butterfly@512.png",
+      "type": "line",
+      "coverage": 0.137,
+      "suggested_display_dp": 640,
+      "suggested_opacity": 0.3
+    },
+    {
+      "id": "flame",
+      "file": "motifs/motif_flame.png",
+      "file_small": "motifs/motif_flame@512.png",
+      "type": "line",
+      "coverage": 0.238,
+      "suggested_display_dp": 512,
+      "suggested_opacity": 0.25
+    }
+  ],
+  "compatibility": {
+    "min_nekos_version": "0.0.0",
+    "requires_network": false,
+    "contains_executable_code": false
+  }
+}

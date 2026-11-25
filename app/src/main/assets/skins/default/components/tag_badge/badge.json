@@ -1,0 +1,32 @@
+{
+  "component_id": "tag_badge",
+  "schema_version": 1,
+  "file": "badge_cat.webp",
+  "canvas_px": {
+    "width": 128,
+    "height": 128
+  },
+  "display_dp": {
+    "width": 32,
+    "height": 32
+  },
+  "scale_note": "1 dp = 4 px pada master (xxxhdpi). Turunan densitas dibuat runtime dengan downscale.",
+  "silhouette_bounds_px": {
+    "x": 6,
+    "y": 4,
+    "width": 116,
+    "height": 120
+  },
+  "safe_margin_px": 4,
+  "color_mode": "alpha_mask_white",
+  "tint_role": "shared_ui",
+  "glyph_slot": {
+    "x": 16,
+    "y": 22,
+    "w": 96,
+    "h": 96,
+    "note": "Glyph 96x96 digambar 1:1 (atau diskalakan proporsional) ke dalam slot ini. Skin yang mengganti bentuk badge WAJIB menyesuaikan slot ini."
+  },
+  "glyph_tint_role": "on_badge",
+  "default_on_badge_color": "#F5F2ED"
+}

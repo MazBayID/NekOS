@@ -1,0 +1,146 @@
+{
+  "name": "NekOS TopFrame Formula",
+  "version": 1,
+  "purpose": "Dokumentasi geometri, pembagian sprite, peregangan, dan posisi TopFrame.",
+  "coordinate_system": {
+    "logical_unit": "dp",
+    "source_atlas_unit": "px",
+    "base_scale": "1x",
+    "runtime_scale": "4x",
+    "origin": "top_left",
+    "positive_x": "right",
+    "positive_y": "down"
+  },
+  "geometry": {
+    "height_dp": 64,
+    "fixed_widths_dp": {
+      "left_cap": 32,
+      "head": 60,
+      "right_cap": 32
+    },
+    "stretch_element": "bar_tile",
+    "layout_order": [
+      "left_cap",
+      "left_bar",
+      "head",
+      "right_bar",
+      "right_cap"
+    ],
+    "formula": {
+      "total_width": "W",
+      "bar_width_each": "(W - (2 * 32) - 60) / 2",
+      "simplified": "(W - 124) / 2",
+      "constraint": "W must be at least 124 dp for non-negative bar widths."
+    },
+    "stretch_behavior": "Kedua bagian bar memiliki lebar dinamis yang sama. Masing-masing memakai bitmap sumber bar_tile dan di-stretch secara horizontal dengan ContentScale.FillBounds; runtime tidak mengulang tile. Cap kiri, head, dan cap kanan mempertahankan ukuran serta proporsinya."
+  },
+  "atlas": {
+    "height_1x": 64,
+    "transparent_gap_px_1x": 2,
+    "frames_1x": {
+      "left_cap": {
+        "x": 0,
+        "y": 0,
+        "width": 32,
+        "height": 64
+      },
+      "bar_tile": {
+        "x": 34,
+        "y": 0,
+        "width": 4,
+        "height": 64
+      },
+      "head": {
+        "x": 40,
+        "y": 0,
+        "width": 60,
+        "height": 64
+      },
+      "right_cap": {
+        "x": 102,
+        "y": 0,
+        "width": 32,
+        "height": 64
+      }
+    },
+    "frames_4x": {
+      "left_cap": {
+        "x": 0,
+        "y": 0,
+        "width": 128,
+        "height": 256
+      },
+      "bar_tile": {
+        "x": 136,
+        "y": 0,
+        "width": 16,
+        "height": 256
+      },
+      "head": {
+        "x": 160,
+        "y": 0,
+        "width": 240,
+        "height": 256
+      },
+      "right_cap": {
+        "x": 408,
+        "y": 0,
+        "width": 128,
+        "height": 256
+      }
+    },
+    "runtime_source": "topframe_spritesheet@4x.png",
+    "runtime_crop_rule": "Koordinat dan ukuran crop 1x dikalikan 4 saat mengambil gambar dari spritesheet 4x. Jangan membagi spritesheet menjadi empat bagian sama besar; gunakan koordinat atlas setiap frame."
+  },
+  "positioning": {
+    "anchor": "Anchor geometris artwork: garis tengah pada Y = 32 dp sejajar dengan sisi atas Surface dialog sebelum koreksi visual runtime.",
+    "overlap": {
+      "above_dialog": 32,
+      "inside_dialog": 32
+    },
+    "known_instance_offsets_dp": {
+      "alert_dialog_topframe_y": -6,
+      "launcher_settings_topframe_y": -6
+    },
+    "offset_note": "TopFrame digeser ke atas 6 dp pada Alert Dialog dan Launcher Settings untuk menyelaraskan artwork secara visual dengan frame dialog. Offset ini merupakan koreksi visual runtime; geometri sprite, anchor dasar, dan rumus pembagian lebar tetap tidak berubah.",
+    "coordinate_note": "Atlas rectangles use source-image px. Runtime placement offsets and component dimensions use dp."
+  },
+  "rendering": {
+    "width": "Mengisi lebar parent dialog yang sudah dibatasi (maksimal 360 dp pada dialog standar dan Settings).",
+    "height": "64 dp.",
+    "content_scale": "FillBounds untuk setiap bagian sprite.",
+    "color": "Spritesheet adalah mask putih + alpha. Runtime men-tint dengan warna Shared UI Color (SRC_IN). Tidak memerlukan recolor berbasis hue.",
+    "fixed_parts": "left_cap, head, dan right_cap menggunakan lebar tetap.",
+    "dynamic_parts": "Dua bar menggunakan bobot yang sama agar lebarnya selalu seimbang."
+  },
+  "implementation_reference": {
+    "source_file": "app/src/main/java/com/nekos/android/TopFrame.kt",
+    "atlas_definition": "default_skin/components/top_frame/topframe_atlas.json",
+    "runtime_atlas": "app/src/main/assets/topframe_atlas.json",
+    "runtime_status": "Atlas geometry and crop rectangles are parsed from the packaged JSON. The formula document is a companion specification and validation reference."
+  },
+  "schema_version": 1,
+  "component_id": "top_frame",
+  "source_asset_root": "default_skin/components/top_frame/",
+  "measured_4x": {
+    "left_cap_content_px": {
+      "x": 0,
+      "y": 128,
+      "w": 128,
+      "h": 96,
+      "note": "sudut luar berbentuk elips 128x96 px = 32x24 dp (bukan lingkaran)"
+    },
+    "bar_band_px": {
+      "y": 128,
+      "h": 48,
+      "note": "ketebalan bar 12 dp; seluruh area y<128 di cap/bar kosong (ruang telinga kepala)"
+    },
+    "head_content_px": {
+      "x": 10,
+      "y": 14,
+      "w": 220,
+      "h": 222,
+      "note": "kepala 55x55.5 dp, terpusat di frame head 240 px"
+    }
+  }
+}
