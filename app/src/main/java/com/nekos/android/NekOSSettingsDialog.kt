@@ -1,6 +1,12 @@
 package com.nekos.android
 
 import androidx.compose.foundation.Image
+import androidx.compose.ui.graphics.asImageBitmap
+import android.graphics.BitmapFactory
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import androidx.compose.runtime.produceState
+import java.net.URL
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -47,6 +53,25 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+
+@Composable
+private fun OfficialStorePreview(url: String) {
+    val image by produceState<androidx.compose.ui.graphics.ImageBitmap?>(null, url) {
+        value = withContext(Dispatchers.IO) {
+            runCatching { URL(url).openStream().use { BitmapFactory.decodeStream(it)?.asImageBitmap() } }.getOrNull()
+        }
+    }
+    if (image != null) {
+        Image(bitmap = image!!, contentDescription = "Skin preview",
+            contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+            modifier = Modifier.size(width = 82.dp, height = 96.dp).clip(RoundedCornerShape(10.dp)))
+    } else {
+        Box(modifier = Modifier.size(width = 82.dp, height = 96.dp).clip(RoundedCornerShape(10.dp))
+            .background(SettingsBorder), contentAlignment = Alignment.Center) {
+            Text("NEKOS", color = SettingsMuted, fontSize = 9.sp)
+        }
+    }
+}
 
 internal val SettingsInk = Color(0xFF34332F)
 internal val SettingsMuted = Color(0xFF706B63)
@@ -109,7 +134,12 @@ internal fun NekOSSettingsDialog(
     activeSkinId: String,
     isOfficialSkinDownloading: Boolean,
     officialSkinDownloadProgress: Int,
-    onDownloadOfficialSkin: () -> Unit,
+    officialStoreSkins: List<OfficialStoreSkin>,
+    isOfficialStoreLoading: Boolean,
+    storeBusySkinId: String?,
+    pendingStoreSkinIds: Set<String>,
+    onRefreshOfficialStore: () -> Unit,
+    onStoreAction: (OfficialStoreSkin, Boolean) -> Unit,
     onImportSkin: () -> Unit,
     onSelectSkin: (String) -> Unit,
     onDeleteSkin: (String) -> Unit,
@@ -507,91 +537,44 @@ internal fun NekOSSettingsDialog(
                     }
 
                     SettingsPage.OFFICIAL_SKIN_STORE -> {
-                        val isInfernoInstalled = installedSkins.any { it.id == "inferno_phoenix" }
                         SettingsSectionTitle("OFFICIAL COLLECTION")
-                        Text(
-                            "A curated collection of skins made for NekOS.",
-                            color = SettingsMuted,
-                            fontSize = 11.sp
-                        )
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(SettingsCardShape)
-                                .background(optionSurface)
-                                .border(1.dp, SettingsBorder, SettingsCardShape)
-                                .padding(10.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            Image(
-                                painter = painterResource(R.drawable.inferno_phoenix_preview),
-                                contentDescription = "Inferno Phoenix skin preview",
-                                contentScale = androidx.compose.ui.layout.ContentScale.Crop,
-                                modifier = Modifier
-                                    .size(width = 92.dp, height = 104.dp)
-                                    .clip(RoundedCornerShape(11.dp))
-                            )
-                            Column(
-                                modifier = Modifier.weight(1f),
-                                verticalArrangement = Arrangement.spacedBy(5.dp)
-                            ) {
-                                Text(
-                                    "Inferno Phoenix",
-                                    color = SettingsInk,
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.SemiBold
-                                )
-                                Text(
-                                    "Phoenix fire · Ember motif",
-                                    color = SettingsMuted,
-                                    fontSize = 10.sp
-                                )
-                                Text(
-                                    "VERSION ${OfficialSkinDownloader.OFFICIAL_VERSION} · CUSTOM SKIN",
-                                    color = SettingsMuted,
-                                    fontSize = 8.sp
-                                )
-                                Text(
-                                    "FREE · OFFICIAL SKIN",
-                                    color = Color(0xFF39734B),
-                                    fontSize = 9.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                TextButton(
-                                    onClick = onDownloadOfficialSkin,
-                                    enabled = !isOfficialSkinDownloading && !isInfernoInstalled
-                                ) {
-                                    Text(
-                                        when {
-                                            isOfficialSkinDownloading && officialSkinDownloadProgress >= 0 ->
-                                                "DOWNLOADING $officialSkinDownloadProgress%"
-                                            isOfficialSkinDownloading -> "DOWNLOADING…"
-                                            isInfernoInstalled -> "INSTALLED"
-                                            else -> "DOWNLOAD & INSTALL"
-                                        },
-                                        color = SettingsAccent,
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-                                if (isOfficialSkinDownloading) {
-                                    if (officialSkinDownloadProgress >= 0) {
-                                        LinearProgressIndicator(
-                                            progress = officialSkinDownloadProgress.coerceIn(0, 100) / 100f,
-                                            modifier = Modifier.fillMaxWidth()
-                                        )
-                                    } else {
-                                        LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                        Text("Browse, buy, and install skins directly on this device. Purchases are locked to this device.",
+                            color = SettingsMuted, fontSize = 11.sp)
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                            TextButton(onClick = onRefreshOfficialStore, enabled = !isOfficialStoreLoading) {
+                                Text(if (isOfficialStoreLoading) "LOADING…" else "REFRESH", color = SettingsAccent, fontSize = 10.sp)
+                            }
+                        }
+                        if (officialStoreSkins.isEmpty() && !isOfficialStoreLoading) {
+                            Text("No skins are published yet.", color = SettingsMuted, fontSize = 12.sp)
+                        }
+                        officialStoreSkins.forEach { skin ->
+                            val installed = installedSkins.any { it.id == skin.skinKey || it.id == skin.id }
+                            val pending = skin.id in pendingStoreSkinIds
+                            Row(modifier = Modifier.fillMaxWidth().clip(SettingsCardShape)
+                                .background(optionSurface).border(1.dp, SettingsBorder, SettingsCardShape).padding(10.dp),
+                                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                OfficialStorePreview(skin.previewUrl)
+                                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                                    Text(skin.name, color = SettingsInk, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                                    Text(skin.description.ifBlank { "By ${skin.author}" }, color = SettingsMuted, fontSize = 10.sp)
+                                    Text(if (skin.price <= 0L) "FREE" else "Rp ${"%,d".format(skin.price)}",
+                                        color = Color(0xFF39734B), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                    TextButton(onClick = { onStoreAction(skin, pending) },
+                                        enabled = storeBusySkinId != skin.id && !installed) {
+                                        Text(when {
+                                            installed -> "INSTALLED"
+                                            storeBusySkinId == skin.id -> "PLEASE WAIT…"
+                                            pending -> "CHECK PAYMENT & INSTALL"
+                                            skin.price <= 0L -> "INSTALL FREE"
+                                            else -> "BUY NOW"
+                                        }, color = SettingsAccent, fontSize = 9.sp, fontWeight = FontWeight.Bold)
                                     }
                                 }
                             }
                         }
-                        Text(
-                            "This skin is free and will remain in the official collection. More free and paid skins can be added separately.",
-                            color = SettingsMuted,
-                            fontSize = 10.sp
-                        )
+                        Text("Paid packages are delivered from private storage only after payment is confirmed. Temporary ZIP files are removed after installation.",
+                            color = SettingsMuted, fontSize = 10.sp)
                     }
                 }
             }
