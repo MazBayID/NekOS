@@ -74,6 +74,30 @@ class IconCatalogRepositoryTest {
     }
 
     @Test
+    fun skinCacheInvalidationAllowsTagIconsToReloadImmediately() {
+        val repository = IconCatalogRepository(context)
+        val icon = repository.loadCatalog().first()
+        assertNotNull(repository.loadBitmap(icon))
+
+        repository.invalidateSkinCache()
+
+        assertNotNull(repository.loadBitmap(icon))
+    }
+
+    @Test
+    fun bundledCatalogUsesStableLegacyCanonicalIds() {
+        val json = context.assets.open("skins/default/icons/tag/icons_index.json")
+            .bufferedReader().use { it.readText() }
+        val items = org.json.JSONObject(json).getJSONArray("items")
+        for (index in 0 until items.length()) {
+            val item = items.getJSONObject(index)
+            val legacyId = item.getString("legacy_file")
+                .removePrefix("icon_").removeSuffix(".webp").toInt()
+            assertEquals(legacyId, item.getInt("id"))
+        }
+    }
+
+    @Test
     fun cachedTagIconDimensionsMustFitTheRequestedThumbnailSize() {
         assertTrue(isValidCachedTagIconDimensions(128, 128))
         assertTrue(isValidCachedTagIconDimensions(96, 64, 128))

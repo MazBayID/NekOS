@@ -44,6 +44,20 @@ class CacheMemoryStateTest {
     }
 
     @Test
+    fun invalidateKeepsLoadingEnabledAndRejectsStaleLoads() {
+        val state = CacheMemoryState()
+        val oldEpoch = state.beginLoad()!!
+        var cached = false
+
+        state.invalidate { cached = false }
+
+        assertTrue(state.isEnabled())
+        assertNull(state.storeIfCurrent(oldEpoch) { cached = true })
+        assertFalse(cached)
+        assertTrue(state.beginLoad() != null)
+    }
+
+    @Test
     fun trimWaitsForAnInFlightStoreThenEvictsIt() {
         val state = CacheMemoryState()
         val cached = AtomicBoolean(false)

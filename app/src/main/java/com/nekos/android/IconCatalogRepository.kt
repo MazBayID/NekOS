@@ -94,9 +94,23 @@ class IconCatalogRepository(context: Context) {
         return icons
     }
 
+    /** Clears skin-dependent caches while keeping bitmap loading available in foreground. */
+    @Synchronized
+    fun invalidateSkinCache() {
+        memoryState.invalidate {
+            cachedIcons = null
+            cachedCatalogSkinGeneration = -1
+            bitmapCache.evictAll()
+            skinAssets.clearCache()
+            generation++
+        }
+    }
+
     @Synchronized
     fun trimMemory() {
         memoryState.trim {
+            cachedIcons = null
+            cachedCatalogSkinGeneration = -1
             bitmapCache.evictAll()
             skinAssets.clearCache()
             generation++
