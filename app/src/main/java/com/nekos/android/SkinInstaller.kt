@@ -183,6 +183,10 @@ internal class SkinInstaller(context: Context) {
                 val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
                 BitmapFactory.decodeFile(image.absolutePath, options)
                 require(options.outWidth in 1..MAX_IMAGE_SIDE && options.outHeight in 1..MAX_IMAGE_SIDE)
+                val relativePath = image.relativeTo(root).invariantSeparatorsPath
+                expectedImageSize(relativePath)?.let { (width, height) ->
+                    require(options.outWidth == width && options.outHeight == height)
+                }
             }
         manifest
     }.getOrNull()
@@ -196,6 +200,18 @@ internal class SkinInstaller(context: Context) {
         private const val MAX_IMAGE_SIDE = 4096
         private val IMAGE_EXTENSIONS = setOf("png", "webp")
         private val VERSION_PATTERN = Regex("^\\d+\\.\\d+\\.\\d+(?:[-+][0-9A-Za-z.-]+)?$")
+
+        internal fun expectedImageSize(path: String): Pair<Int, Int>? = when {
+            Regex("^icons/(tag|ui)/icon_[a-z0-9]+(?:_[a-z0-9]+)*\\.webp$").matches(path) -> 96 to 96
+            path == "components/tag_badge/badge_cat.webp" -> 128 to 128
+            path == "components/tag_frame/frame_spritesheet.webp" -> 512 to 240
+            path == "components/top_frame/topframe_spritesheet.png" -> 134 to 64
+            path == "components/top_frame/topframe_spritesheet@2x.png" -> 268 to 128
+            path == "components/top_frame/topframe_spritesheet@4x.png" -> 536 to 256
+            path.startsWith("motifs/") && path.endsWith("@512.png") -> 512 to 512
+            path.startsWith("motifs/") && path.endsWith(".png") -> 1024 to 1024
+            else -> null
+        }
 
         internal fun isValidSkinId(id: String): Boolean =
             id.length in 1..64 && Regex("^[a-z0-9][a-z0-9._-]*$").matches(id)

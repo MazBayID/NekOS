@@ -363,8 +363,11 @@ internal fun TagFrame(
     LaunchedEffect(resolver, skinGeneration) {
         frameBitmap = withContext(Dispatchers.IO) {
             runCatching {
-                resolver.loadBitmap("components/tag_frame/frame_spritesheet.webp")
-                    ?.asImageBitmap()
+                resolver.loadBitmap(
+                    "components/tag_frame/frame_spritesheet.webp",
+                    expectedWidth = 512,
+                    expectedHeight = 240
+                )?.asImageBitmap()
             }.getOrNull()
         }
     }
