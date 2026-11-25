@@ -466,6 +466,7 @@ internal fun NekOSSettingsDialog(
                         SettingsActionCard(
                             title = "Import skin ZIP",
                             action = "Import",
+                            surface = optionSurface,
                             onClick = onImportSkin
                         )
                         Text(
