@@ -46,7 +46,12 @@ internal class SkinRepository(context: Context) {
         ) {
             return requested
         }
-        preferences.edit().putString(ACTIVE_SKIN_KEY, DEFAULT_SKIN_ID).commit()
+        // A skin may have been removed or damaged while NekOS was not running.
+        // Persist the safe fallback and notify every skin-dependent Compose
+        // renderer so no artwork from the previous generation remains visible.
+        if (preferences.edit().putString(ACTIVE_SKIN_KEY, DEFAULT_SKIN_ID).commit()) {
+            SkinRuntimeState.invalidate()
+        }
         return DEFAULT_SKIN_ID
     }
 
