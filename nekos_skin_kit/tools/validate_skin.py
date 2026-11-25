@@ -163,7 +163,12 @@ def check_glyph_dir(r, root, sub, strict):
     idx = json.load(open(idx_p, encoding='utf-8')) if os.path.exists(idx_p) else None
     files = sorted(f for f in os.listdir(d) if f.endswith('.webp'))
     if idx is not None:
-        listed = {i['file'] for i in idx['items']}
+        check_index_catalog(r, idx, sub, f'icons/{sub}/')
+        try:
+            listed = {i['file'] for i in idx['items']}
+        except (KeyError, TypeError):
+            r.err(f'icons/{sub}: index harus memiliki daftar items yang valid')
+            listed = set()
         for f in listed - set(files):
             (r.err if strict else r.warn)(f'icons/{sub}/{f}: ada di index tetapi file tidak ada')
         for f in set(files) - listed:
@@ -307,6 +312,7 @@ def check_motifs(r, root, strict):
 
 
 DEFAULT_CATALOG = {}
+DEFAULT_ID_NAMES = {}
 
 
 def load_default_catalog():
@@ -315,7 +321,47 @@ def load_default_catalog():
     for sub, fn in (('tag', 'icons_index.json'), ('ui', 'ui_index.json')):
         p = os.path.join(base, sub, fn)
         if os.path.exists(p):
-            DEFAULT_CATALOG[sub] = {i['file'] for i in json.load(open(p, encoding='utf-8'))['items']}
+            items = json.load(open(p, encoding='utf-8'))['items']
+            DEFAULT_CATALOG[sub] = {i['file'] for i in items}
+            DEFAULT_ID_NAMES[sub] = {i['id']: i['name'] for i in items}
+
+
+def check_index_catalog(r, idx, sub, rel):
+    """Pastikan identitas ID -> nama tidak berubah dari katalog bawaan."""
+    items = idx.get('items')
+    if not isinstance(items, list):
+        r.err(f'{rel}index: field items harus berupa daftar')
+        return
+
+    canonical = DEFAULT_ID_NAMES.get(sub, {})
+    seen_ids, seen_names = set(), set()
+    for item in items:
+        if not isinstance(item, dict):
+            r.err(f'{rel}index: setiap item harus berupa objek')
+            continue
+        glyph_id, name, filename = item.get('id'), item.get('name'), item.get('file')
+        if type(glyph_id) is not int:
+            r.err(f'{rel}index: ID glyph harus berupa integer ({glyph_id!r})')
+            continue
+        if glyph_id in seen_ids:
+            r.err(f'{rel}index: ID glyph duplikat {glyph_id}')
+        seen_ids.add(glyph_id)
+        if not isinstance(name, str) or not name:
+            r.err(f'{rel}index: nama glyph untuk ID {glyph_id} tidak valid')
+            continue
+        if name in seen_names:
+            r.err(f'{rel}index: nama glyph duplikat "{name}"')
+        seen_names.add(name)
+
+        expected = canonical.get(glyph_id)
+        if expected is None:
+            r.err(f'{rel}index: ID {glyph_id} tidak dikenal katalog bawaan')
+        elif name != expected:
+            r.err(f'{rel}index: ID {glyph_id} harus bermakna "{expected}", bukan "{name}"')
+
+        expected_file = f'icon_{name}.webp'
+        if filename != expected_file:
+            r.err(f'{rel}index: file untuk "{name}" harus "{expected_file}", bukan "{filename}"')
 
 
 def check_all_images(r, root):
