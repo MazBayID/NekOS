@@ -84,7 +84,12 @@ async function createPayment(order:Record<string,unknown>,orderId:string,skin:Re
         error:"https://mazbayid.github.io/skin-payment-return/",
         pending:"https://mazbayid.github.io/skin-payment-return/"
       },
-      expiry:{unit:"minute",duration:15}
+      page_expiry:{unit:"minute",duration:15},
+      expiry:{
+        start_time:new Date(Date.now()+7*60*60*1000).toISOString().replace("T"," ").slice(0,19)+" +0700",
+        unit:"minute",
+        duration:15
+      }
     })
   });
   const data=await response.json();
@@ -159,22 +164,54 @@ Deno.serve(async(req:Request)=>{
       if(!status)return fail("order_not_found",404,origin);
       if(status.status==="pending") {
         assertPaymentConfig();
-        const verifiedResponse=await fetch(midtransBase()+"/v2/"+encodeURIComponent(orderId)+"/status",{
+        const createdAt=Date.parse(String(status.created_at??""));
+        const expiryReached=Number.isFinite(createdAt) && Date.now()-createdAt>=15*60*1000;
+        const statusUrl=midtransBase()+"/v2/"+encodeURIComponent(orderId)+"/status";
+        const verifiedResponse=await fetch(statusUrl,{
           headers:{Authorization:authHeader(),"Accept":"application/json"}
         });
-        if(verifiedResponse.ok) {
-          const verified=await verifiedResponse.json();
-          if(String(verified.order_id)===orderId && String(verified.currency)==="IDR") {
-            const paid=verified.transaction_status==="settlement" ||
-              (verified.transaction_status==="capture" && String(verified.fraud_status??"accept").toLowerCase()==="accept");
-            if(paid && String(verified.fraud_status??"accept").toLowerCase()==="accept") {
-              await rpc("skin_mark_paid",{p_order_id:orderId,p_provider_order_id:orderId,
-                p_provider_payment_id:String(verified.transaction_id??""),p_payload:verified});
-            } else if(["expire","cancel","deny"].includes(String(verified.transaction_status))) {
-              await rpc("skin_update_payment_status",{p_order_id:orderId,p_status:String(verified.transaction_status),p_payload:verified});
-            }
+        if(verifiedResponse.status===404) {
+          // Snap has no Core API transaction until the customer selects a payment method.
+          // The Snap page itself expires after 15 minutes, and does not send a webhook.
+          if(expiryReached) {
+            await rpc("skin_update_payment_status",{
+              p_order_id:orderId,p_status:"expire",
+              p_payload:{reason:"snap_page_expired_without_payment_method",expired_at:new Date().toISOString()}
+            });
             status=await rpc("skin_order_status",{p_order_id:orderId,p_device_hash:deviceHash});
           }
+        } else if(!verifiedResponse.ok) {
+          return fail("midtrans_status_check_failed",503,origin);
+        } else {
+          let verified=await verifiedResponse.json();
+          if(String(verified.order_id)!==orderId || String(verified.currency)!=="IDR") {
+            return fail("midtrans_transaction_mismatch",502,origin);
+          }
+          let transactionStatus=String(verified.transaction_status??"");
+          if(transactionStatus==="pending" && expiryReached) {
+            const expireResponse=await fetch(midtransBase()+"/v2/"+encodeURIComponent(orderId)+"/expire",{
+              method:"POST",
+              headers:{Authorization:authHeader(),"Accept":"application/json","Content-Type":"application/json"}
+            });
+            if(!expireResponse.ok) {
+              return fail(expireResponse.status===401||expireResponse.status===403
+                ?"midtrans_expire_permission_required":"midtrans_expire_failed",503,origin);
+            }
+            const expired=await expireResponse.json();
+            if(String(expired.order_id??orderId)!==orderId)return fail("midtrans_transaction_mismatch",502,origin);
+            verified=expired;
+            transactionStatus=String(verified.transaction_status??"expire");
+          }
+          const fraud=String(verified.fraud_status??"accept").toLowerCase();
+          const paid=transactionStatus==="settlement" ||
+            (transactionStatus==="capture" && fraud==="accept");
+          if(paid && fraud==="accept") {
+            await rpc("skin_mark_paid",{p_order_id:orderId,p_provider_order_id:orderId,
+              p_provider_payment_id:String(verified.transaction_id??""),p_payload:verified});
+          } else if(["expire","cancel","deny"].includes(transactionStatus)) {
+            await rpc("skin_update_payment_status",{p_order_id:orderId,p_status:transactionStatus,p_payload:verified});
+          }
+          status=await rpc("skin_order_status",{p_order_id:orderId,p_device_hash:deviceHash});
         }
       }
       return json(status,200,origin);
