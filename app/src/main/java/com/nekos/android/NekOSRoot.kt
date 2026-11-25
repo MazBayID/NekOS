@@ -1013,7 +1013,7 @@ internal fun NekOSRoot(
                             if (result.success) {
                                 installedSkins = skinRepository.listInstalledSkins()
                                 SkinRuntimeState.invalidate()
-                                iconCatalogRepository.trimMemory()
+                                iconCatalogRepository.invalidateSkinCache()
                                 Toast.makeText(
                                     context,
                                     if (shouldReplace) "Inferno Phoenix updated" else "Inferno Phoenix installed",
@@ -1039,7 +1039,7 @@ internal fun NekOSRoot(
                 onSelectSkin = { id ->
                     if (skinRepository.setActiveSkin(id)) {
                         activeSkinId = id
-                        iconCatalogRepository.trimMemory()
+                        iconCatalogRepository.invalidateSkinCache()
                         installedSkins = skinRepository.listInstalledSkins()
                         Toast.makeText(context, "Skin aktif: ${installedSkins.firstOrNull { it.id == id }?.name ?: id}", Toast.LENGTH_SHORT).show()
                     } else {
@@ -1050,7 +1050,7 @@ internal fun NekOSRoot(
                     if (skinRepository.deleteSkin(id)) {
                         activeSkinId = skinRepository.activeSkinId()
                         installedSkins = skinRepository.listInstalledSkins()
-                        iconCatalogRepository.trimMemory()
+                        iconCatalogRepository.invalidateSkinCache()
                         Toast.makeText(context, "Skin removed", Toast.LENGTH_SHORT).show()
                     } else {
                         Toast.makeText(context, "Unable to remove this skin", Toast.LENGTH_SHORT).show()
