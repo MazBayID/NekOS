@@ -77,6 +77,10 @@ Format file: ikon & badge & TagFrame = **WebP lossless** (RGBA); sprite TopFrame
 
 `icon_<bentuk>.webp`, huruf kecil, angka, underscore: regex `^icon_[a-z0-9]+(_[a-z0-9]+)*$`. Nama = **bentuk gambar** (`icon_brain`, `icon_terminal`, `icon_network`, `icon_cloud`), bukan nomor, bukan fungsi. Nomor urut hanya muncul di tabel index.
 
+### Stabilitas identitas ID
+
+Setiap ID numerik harus selalu menunjuk nama glyph yang sama seperti katalog bawaan. Skin boleh mengganti artwork/file mask, tetapi tidak boleh memakai ulang ID untuk bentuk lain. Index parsial diperbolehkan; setiap entri yang dicantumkan tetap harus memakai pasangan ID → nama kanonis dan file `icon_<nama>.webp` yang sesuai.
+
 ### Katalog wajib
 
 Skin yang mengganti sebuah ikon harus memakai **nama yang sama persis** dengan ikon bawaan (lihat `default_skin/icons/tag/icons_index.md` dan `default_skin/icons/ui/ui_index.md`). Nama tidak ada di katalog = diabaikan. Skin boleh menyediakan sebagian ikon.
