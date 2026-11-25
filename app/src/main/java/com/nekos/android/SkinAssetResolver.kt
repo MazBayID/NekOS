@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.LruCache
 import java.io.File
+import java.util.WeakHashMap
 
 /**
  * Loads skin artwork from the selected skin directory and falls back to the
@@ -22,6 +23,10 @@ internal class SkinAssetResolver(context: Context) {
 
     @Volatile
     private var activeSkinDirectory: File? = null
+
+    init {
+        synchronized(instances) { instances[this] = Unit }
+    }
 
     fun clearCache() {
         synchronized(cache) { cache.evictAll() }
@@ -97,6 +102,14 @@ internal class SkinAssetResolver(context: Context) {
             (expectedHeight == null || bitmap.height == expectedHeight)
 
     companion object {
+        private val instances = WeakHashMap<SkinAssetResolver, Unit>()
+
+        /** Evicts every live resolver cache after Android reports memory pressure. */
+        fun trimAllCaches() {
+            val resolvers = synchronized(instances) { instances.keys.toList() }
+            resolvers.forEach(SkinAssetResolver::clearCache)
+        }
+
         internal fun isSafeRelativePath(path: String): Boolean {
             if (path.isBlank() || path.startsWith("/") || '\\' in path || '\u0000' in path) {
                 return false
