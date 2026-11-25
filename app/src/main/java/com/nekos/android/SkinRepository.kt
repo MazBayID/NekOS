@@ -9,27 +9,28 @@ import java.io.File
 
 
 /** Restores or removes backup directories left by an interrupted skin update. */
-internal fun recoverInterruptedSkinUpdates(skinsDirectory: File): Boolean {
-    val root = skinsDirectory.canonicalFile
-    val backups = root.listFiles()
-        ?.filter { it.isDirectory && it.name.startsWith(".skin-update-") }
-        .orEmpty()
-    var recovered = false
-    for (backup in backups) {
-        val suffix = backup.name.removePrefix(".skin-update-")
-        if (suffix.length <= 37) continue
-        val skinId = suffix.dropLast(37)
-        if (!SkinInstaller.isValidSkinId(skinId)) continue
-        val destination = File(root, skinId).canonicalFile
-        if (destination.parentFile != root) continue
-        if (!destination.exists()) {
-            if (backup.renameTo(destination)) recovered = true
-        } else {
-            backup.deleteRecursively()
+internal fun recoverInterruptedSkinUpdates(skinsDirectory: File): Boolean =
+    synchronized(SkinDirectoryLock.monitor) {
+        val root = skinsDirectory.canonicalFile
+        val backups = root.listFiles()
+            ?.filter { it.isDirectory && it.name.startsWith(".skin-update-") }
+            .orEmpty()
+        var recovered = false
+        for (backup in backups) {
+            val suffix = backup.name.removePrefix(".skin-update-")
+            if (suffix.length <= 37) continue
+            val skinId = suffix.dropLast(37)
+            if (!SkinInstaller.isValidSkinId(skinId)) continue
+            val destination = File(root, skinId).canonicalFile
+            if (destination.parentFile != root) continue
+            if (!destination.exists()) {
+                if (backup.renameTo(destination)) recovered = true
+            } else {
+                backup.deleteRecursively()
+            }
         }
+        recovered
     }
-    return recovered
-}
 
 internal data class InstalledSkin(
     val id: String,
@@ -65,7 +66,7 @@ internal class SkinRepository(context: Context) {
     }
 
     @Synchronized
-    fun listInstalledSkins(): List<InstalledSkin> {
+    fun listInstalledSkins(): List<InstalledSkin> = synchronized(SkinDirectoryLock.monitor) {
         val result = mutableListOf<InstalledSkin>()
         readBundledDefault()?.let(result::add)
         skinsDirectory.listFiles()
@@ -73,17 +74,17 @@ internal class SkinRepository(context: Context) {
             ?.sortedBy { it.name }
             ?.mapNotNull(::readInstalledSkin)
             ?.let(result::addAll)
-        return result
+        result
     }
 
     @Synchronized
-    fun activeSkinId(): String {
+    fun activeSkinId(): String = synchronized(SkinDirectoryLock.monitor) {
         val requested = preferences.getString(ACTIVE_SKIN_KEY, DEFAULT_SKIN_ID) ?: DEFAULT_SKIN_ID
         if (requested == DEFAULT_SKIN_ID ||
             (SkinInstaller.isValidSkinId(requested) &&
                 readInstalledSkin(File(skinsDirectory, requested)) != null)
         ) {
-            return requested
+            return@synchronized requested
         }
         // A skin may have been removed or damaged while NekOS was not running.
         // Persist the safe fallback and notify every skin-dependent Compose
@@ -91,26 +92,26 @@ internal class SkinRepository(context: Context) {
         if (preferences.edit().putString(ACTIVE_SKIN_KEY, DEFAULT_SKIN_ID).commit()) {
             SkinRuntimeState.invalidate()
         }
-        return DEFAULT_SKIN_ID
+        DEFAULT_SKIN_ID
     }
 
     @Synchronized
-    fun setActiveSkin(id: String): Boolean {
-        if (id != DEFAULT_SKIN_ID && !SkinInstaller.isValidSkinId(id)) return false
+    fun setActiveSkin(id: String): Boolean = synchronized(SkinDirectoryLock.monitor) {
+        if (id != DEFAULT_SKIN_ID && !SkinInstaller.isValidSkinId(id)) return@synchronized false
         val exists = id == DEFAULT_SKIN_ID || readInstalledSkin(File(skinsDirectory, id)) != null
-        if (!exists) return false
+        if (!exists) return@synchronized false
         val saved = preferences.edit().putString(ACTIVE_SKIN_KEY, id).commit()
         if (saved) SkinRuntimeState.invalidate()
-        return saved
+        saved
     }
 
     @Synchronized
-    fun deleteSkin(id: String): Boolean {
-        if (id == DEFAULT_SKIN_ID || !SkinInstaller.isValidSkinId(id)) return false
+    fun deleteSkin(id: String): Boolean = synchronized(SkinDirectoryLock.monitor) {
+        if (id == DEFAULT_SKIN_ID || !SkinInstaller.isValidSkinId(id)) return@synchronized false
         val target = File(skinsDirectory, id).canonicalFile
-        if (target.parentFile != skinsDirectory.canonicalFile || !target.isDirectory) return false
-        if (activeSkinId() == id && !setActiveSkin(DEFAULT_SKIN_ID)) return false
-        return target.deleteRecursively()
+        if (target.parentFile != skinsDirectory.canonicalFile || !target.isDirectory) return@synchronized false
+        if (activeSkinId() == id && !setActiveSkin(DEFAULT_SKIN_ID)) return@synchronized false
+        target.deleteRecursively()
     }
 
     private fun readBundledDefault(): InstalledSkin? = runCatching {
@@ -150,18 +151,19 @@ internal class SkinRepository(context: Context) {
         private const val ACTIVE_SKIN_KEY = "active_skin_id"
         private const val DEFAULT_SKIN_ID = "default"
 
-        internal fun activeSkinDirectory(context: Context): File? {
-            val preferences = context.applicationContext.getSharedPreferences(
-                PREFERENCES_NAME, Context.MODE_PRIVATE
-            )
-            val id = preferences.getString(ACTIVE_SKIN_KEY, DEFAULT_SKIN_ID) ?: DEFAULT_SKIN_ID
-            if (id == DEFAULT_SKIN_ID || !SkinInstaller.isValidSkinId(id)) return null
-            val root = File(context.applicationContext.filesDir, "skins").canonicalFile
-            val directory = File(root, id).canonicalFile
-            if (directory.parentFile != root || !directory.isDirectory) return null
-            val manifest = File(directory, "skin.json")
-            return if (manifest.isFile) directory else null
-        }
+        internal fun activeSkinDirectory(context: Context): File? =
+            synchronized(SkinDirectoryLock.monitor) {
+                val preferences = context.applicationContext.getSharedPreferences(
+                    PREFERENCES_NAME, Context.MODE_PRIVATE
+                )
+                val id = preferences.getString(ACTIVE_SKIN_KEY, DEFAULT_SKIN_ID) ?: DEFAULT_SKIN_ID
+                if (id == DEFAULT_SKIN_ID || !SkinInstaller.isValidSkinId(id)) return@synchronized null
+                val root = File(context.applicationContext.filesDir, "skins").canonicalFile
+                val directory = File(root, id).canonicalFile
+                if (directory.parentFile != root || !directory.isDirectory) return@synchronized null
+                val manifest = File(directory, "skin.json")
+                if (manifest.isFile) directory else null
+            }
     }
 }
 
