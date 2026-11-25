@@ -98,6 +98,12 @@ class IconCatalogRepositoryTest {
     }
 
     @Test
+    fun catalogAlwaysContainsCanonicalStarFallback() {
+        val repository = IconCatalogRepository(context)
+        assertTrue(repository.loadCatalog().any { it.id == 90 })
+    }
+
+    @Test
     fun cachedTagIconDimensionsMustFitTheRequestedThumbnailSize() {
         assertTrue(isValidCachedTagIconDimensions(128, 128))
         assertTrue(isValidCachedTagIconDimensions(96, 64, 128))

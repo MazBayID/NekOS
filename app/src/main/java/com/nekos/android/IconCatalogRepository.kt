@@ -62,35 +62,49 @@ class IconCatalogRepository(context: Context) {
             cachedIcons?.let { return it }
         }
 
+        val bundledJson = appContext.assets.open("skins/default/icons/tag/icons_index.json")
+            .bufferedReader().use { it.readText() }
+        val bundledIcons = parseCatalog(bundledJson)
         val activeDirectory = SkinRepository.activeSkinDirectory(appContext)
         val customIndex = activeDirectory?.let { java.io.File(it, "icons/tag/icons_index.json") }
             ?.takeIf { it.isFile }
-        val jsonText = runCatching {
-            customIndex?.readText(Charsets.UTF_8)
-                ?: appContext.assets.open("skins/default/icons/tag/icons_index.json")
-                    .bufferedReader().use { it.readText() }
-        }.getOrElse {
-            appContext.assets.open("skins/default/icons/tag/icons_index.json")
-                .bufferedReader().use { it.readText() }
+        val customIcons = customIndex?.let { index ->
+            runCatching { parseCatalog(index.readText(Charsets.UTF_8)) }.getOrNull()
         }
+        // Invalid custom catalogs fall back completely; valid partial catalogs retain canonical entries.
+        val icons = if ( customIcons == null) bundledIcons else {
+            val customIds = customIcons.mapTo(mutableSetOf()) { it.id }
+            customIcons + bundledIcons.filter { it.id !in customIds }.mapIndexed { index, icon ->
+                icon.copy(row = customIcons.size / 6 + index / 6 + 1, column = index % 6 + 1)
+            }
+        }
+        cachedIcons = icons
+        cachedCatalogSkinGeneration = currentSkinGeneration
+        return icons
+    }
+
+    private fun parseCatalog(jsonText: String): List<CatalogIcon> {
         val items = JSONObject(jsonText).getJSONArray("items")
         val icons = buildList(items.length()) {
             for (index in 0 until items.length()) {
                 val item = items.getJSONObject(index)
                 val filename = item.getString("file")
+                require(filename.matches(Regex("^icon_[a-z0-9]+(?:_[a-z0-9]+)*\\.webp$"))) {
+                    "Invalid Tag icon filename"
+                }
                 val id = item.optInt("id", -1)
                 val file = "icons/tag/$filename"
+                val name = item.getString("name")
                 val row = item.optInt("row", index / 6 + 1)
                 val column = item.optInt("column", index % 6 + 1)
-                require(isValidCatalogIconEntry(id, file, item.getString("name"), row, column))
-                add(CatalogIcon(id, file, item.getString("name"), item.optString("visual"),
+                require(isValidCatalogIconEntry(id, file, name, row, column))
+                add(CatalogIcon(id, file, name, item.optString("visual"),
                     item.optString("description"), row, column))
             }
         }
+        require(icons.isNotEmpty()) { "Icon catalog is empty" }
         require(icons.map { it.id }.distinct().size == icons.size) { "Canonical icon IDs must be unique" }
         require(icons.map { it.file }.distinct().size == icons.size) { "Skin icon paths must be unique" }
-        cachedIcons = icons
-        cachedCatalogSkinGeneration = currentSkinGeneration
         return icons
     }
 
@@ -125,7 +139,14 @@ class IconCatalogRepository(context: Context) {
         icon: CatalogIcon,
         frameColorArgb: Long = DEFAULT_TAG_ICON_FRAME_COLOR,
         maxDimensionPx: Int = 96
-    ): Bitmap? = pickerLoadSemaphore.withPermit { loadBitmap(icon, frameColorArgb, maxDimensionPx) }
+    ): Bitmap? {
+        val requestedGeneration = SkinRuntimeState.generation
+        return pickerLoadSemaphore.withPermit {
+            if (requestedGeneration != SkinRuntimeState.generation) return@withPermit null
+            loadBitmap(icon, frameColorArgb, maxDimensionPx)
+                ?.takeIf { requestedGeneration == SkinRuntimeState.generation }
+        }
+    }
 
     @Synchronized
     fun loadBitmap(
@@ -136,7 +157,8 @@ class IconCatalogRepository(context: Context) {
         require(isValidCatalogIconPath(icon.file)) { "Invalid catalog asset path: ${icon.file}" }
         val target = maxDimensionPx.coerceAtLeast(1)
         val color = frameColorArgb and 0xFFFFFFFFL
-        val key = "${SkinRuntimeState.generation}:${icon.file}:${color.toString(16)}:$target"
+        val skinGeneration = SkinRuntimeState.generation
+        val key = "${skinGeneration}:${icon.file}:${color.toString(16)}:$target"
         memoryState.ifEnabled { bitmapCache.get(key) }?.let { return it }
         val epoch = memoryState.beginLoad() ?: return null
 
@@ -155,6 +177,10 @@ class IconCatalogRepository(context: Context) {
         val result = if (target == 128) composed else
             Bitmap.createScaledBitmap(composed, target, target, true).also { composed.recycle() }
 
+        if (skinGeneration != SkinRuntimeState.generation) {
+            result.recycle()
+            return null
+        }
         return memoryState.storeIfCurrent(epoch) {
             bitmapCache.put(key, result)
             result

@@ -284,13 +284,15 @@ internal fun TagPill(
         val refreshedTagIcon = withContext(Dispatchers.IO) {
             runCatching {
                 tag.iconId?.let { id ->
-                    iconCatalogRepository.loadCatalog().firstOrNull { it.id == id }
-                        ?.let { icon -> iconCatalogRepository.loadBitmap(icon, tag.iconFrameColorArgb) }
+                    val catalog = iconCatalogRepository.loadCatalog()
+                    val icon = catalog.firstOrNull { it.id == id }
+                        ?: catalog.firstOrNull { it.id == 90 } // canonical star fallback
+                    icon?.let { iconCatalogRepository.loadBitmap(it, tag.iconFrameColorArgb) }
                         ?.asImageBitmap()
                 }
             }.getOrNull()
         }
-        tagIcon = refreshedTagIcon
+        if (activeSkinGeneration == SkinRuntimeState.generation) tagIcon = refreshedTagIcon
     }
     Row(
         modifier = modifier
