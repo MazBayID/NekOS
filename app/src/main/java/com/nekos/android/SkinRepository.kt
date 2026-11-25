@@ -20,7 +20,7 @@ internal fun recoverInterruptedSkinUpdates(skinsDirectory: File): Boolean =
             val suffix = backup.name.removePrefix(".skin-update-")
             if (suffix.length <= 37) continue
             val skinId = suffix.dropLast(37)
-            if (!SkinInstaller.isValidSkinId(skinId)) continue
+            if (!SkinInstaller.isLegacySafeSkinId(skinId)) continue
             val destination = File(root, skinId).canonicalFile
             if (destination.parentFile != root) continue
 
@@ -102,8 +102,7 @@ internal class SkinRepository(context: Context) {
     fun activeSkinId(): String = synchronized(SkinDirectoryLock.monitor) {
         val requested = preferences.getString(ACTIVE_SKIN_KEY, DEFAULT_SKIN_ID) ?: DEFAULT_SKIN_ID
         if (requested == DEFAULT_SKIN_ID ||
-            (SkinInstaller.isValidSkinId(requested) &&
-                readInstalledSkin(File(skinsDirectory, requested)) != null)
+            (SkinInstaller.isValidSkinId(requested) && findInstalledSkinDirectory(requested) != null)
         ) {
             return@synchronized requested
         }
@@ -119,7 +118,7 @@ internal class SkinRepository(context: Context) {
     @Synchronized
     fun setActiveSkin(id: String): Boolean = synchronized(SkinDirectoryLock.monitor) {
         if (id != DEFAULT_SKIN_ID && !SkinInstaller.isValidSkinId(id)) return@synchronized false
-        val exists = id == DEFAULT_SKIN_ID || readInstalledSkin(File(skinsDirectory, id)) != null
+        val exists = id == DEFAULT_SKIN_ID || findInstalledSkinDirectory(id) != null
         if (!exists) return@synchronized false
         val saved = preferences.edit().putString(ACTIVE_SKIN_KEY, id).commit()
         if (saved) SkinRuntimeState.invalidate()
@@ -129,10 +128,23 @@ internal class SkinRepository(context: Context) {
     @Synchronized
     fun deleteSkin(id: String): Boolean = synchronized(SkinDirectoryLock.monitor) {
         if (id == DEFAULT_SKIN_ID || !SkinInstaller.isValidSkinId(id)) return@synchronized false
-        val target = File(skinsDirectory, id).canonicalFile
+        val target = findInstalledSkinDirectory(id) ?: return@synchronized false
         if (target.parentFile != skinsDirectory.canonicalFile || !target.isDirectory) return@synchronized false
         if (activeSkinId() == id && !setActiveSkin(DEFAULT_SKIN_ID)) return@synchronized false
         target.deleteRecursively()
+    }
+
+    private fun findInstalledSkinDirectory(id: String): File? {
+        if (!SkinInstaller.isValidSkinId(id)) return null
+        val hashed = File(skinsDirectory, SkinInstaller.skinDirectoryName(id))
+        if (readInstalledSkin(hashed)?.id == id) return hashed.canonicalFile
+        if (SkinInstaller.isLegacySafeSkinId(id)) {
+            val legacy = File(skinsDirectory, id)
+            if (readInstalledSkin(legacy)?.id == id) return legacy.canonicalFile
+        }
+        return skinsDirectory.listFiles()
+            ?.firstOrNull { it.isDirectory && readInstalledSkin(it)?.id == id }
+            ?.canonicalFile
     }
 
     private fun readBundledDefault(): InstalledSkin? = runCatching {
@@ -145,7 +157,9 @@ internal class SkinRepository(context: Context) {
         val manifest = File(directory, "skin.json")
         if (!manifest.isFile) return null
         val summary = parseSummary(JSONObject(manifest.readText(Charsets.UTF_8)), false) ?: return null
-        if (summary.id != directory.name) return null
+        val expectedFolder = SkinInstaller.skinDirectoryName(summary.id)
+        val isLegacyFolder = SkinInstaller.isLegacySafeSkinId(summary.id) && directory.name == summary.id
+        if (directory.name != expectedFolder && !isLegacyFolder) return null
         summary
     }.getOrNull()
 
@@ -180,10 +194,17 @@ internal class SkinRepository(context: Context) {
                 val id = preferences.getString(ACTIVE_SKIN_KEY, DEFAULT_SKIN_ID) ?: DEFAULT_SKIN_ID
                 if (id == DEFAULT_SKIN_ID || !SkinInstaller.isValidSkinId(id)) return@synchronized null
                 val root = File(context.applicationContext.filesDir, "skins").canonicalFile
-                val directory = File(root, id).canonicalFile
-                if (directory.parentFile != root ||
-                    !isValidInstalledSkinDirectory(directory, id)
-                ) return@synchronized null
+                val hashedName = SkinInstaller.skinDirectoryName(id)
+                val directory = root.listFiles()
+                    ?.firstOrNull { candidate ->
+                        candidate.isDirectory &&
+                            (candidate.name == hashedName ||
+                                (SkinInstaller.isLegacySafeSkinId(id) && candidate.name == id)) &&
+                            isValidInstalledSkinDirectory(candidate, id)
+                    }
+                    ?.canonicalFile
+                    ?: return@synchronized null
+                if (directory.parentFile != root) return@synchronized null
                 directory
             }
     }
