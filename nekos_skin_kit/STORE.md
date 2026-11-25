@@ -48,4 +48,4 @@ Official docs:
 
 ## Known security trade-off
 
-The device ID is an Android identifier and can be spoofed by a modified client. HMAC protects database privacy and prevents raw identifier disclosure, but it does not make a client-submitted identifier cryptographic proof. For the initial direct-APK distribution this is a documented trade-off; add Play Integrity or a device key challenge later if stronger anti-abuse is required.
+The device ID is Android `Settings.Secure.ANDROID_ID`; it remains stable across normal app upgrades with the same signing identity, but a factory reset or signing-identity change can produce a new value and therefore requires repurchase. The identifier can be spoofed by a modified client. HMAC protects database privacy and prevents raw identifier disclosure, but it does not make a client-submitted identifier cryptographic proof. For the initial direct-APK distribution this is a documented trade-off; add Play Integrity or a device key challenge later if stronger anti-abuse is required.
