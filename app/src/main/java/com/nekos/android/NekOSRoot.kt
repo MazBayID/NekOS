@@ -53,6 +53,7 @@ import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.zIndex
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.input.pointer.pointerInput
@@ -773,6 +774,11 @@ internal fun NekOSRoot(
             popupApp?.let { app ->
                 val isInteractive = actionMenuApp != null
                 val popupMaxWidth = maxWidth
+                val appActionMotifBrush = rememberDialogMotifBrush()
+                val appActionMotifTint = androidx.compose.ui.graphics.ColorFilter.tint(
+                    Color(launcherUiColorArgb.toInt()),
+                    androidx.compose.ui.graphics.BlendMode.SrcIn
+                )
                 val popupMaxHeight = with(LocalDensity.current) {
                     (constraints.maxHeight - popupNavigationBarInsetPx).coerceAtLeast(0).toDp()
                 }
@@ -805,6 +811,11 @@ internal fun NekOSRoot(
                             )
                             .clip(RoundedCornerShape(16.dp))
                             .background(launcherSurface)
+                            .drawBehind {
+                                appActionMotifBrush?.let { brush ->
+                                    drawRect(brush = brush, alpha = 0.18f, colorFilter = appActionMotifTint)
+                                }
+                            }
                             .padding(horizontal = 10.dp, vertical = 10.dp),
                         verticalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
