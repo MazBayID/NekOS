@@ -1024,8 +1024,11 @@ internal fun NekOSRoot(
                             installedSkins = skinRepository.listInstalledSkins()
                             iconCatalogRepository.invalidateSkinCache()
                         }
-                        Toast.makeText(context, result.message, Toast.LENGTH_LONG).show()
-                        if (result.paymentFailed) storePaymentFailure = result.message
+                        if (result.paymentFailed) {
+                            storePaymentFailure = result.message
+                        } else {
+                            Toast.makeText(context, result.message, Toast.LENGTH_LONG).show()
+                        }
                         pendingStoreSkinIds = OfficialSkinStoreClient.pendingSkinIds(context)
                     }
                 },
