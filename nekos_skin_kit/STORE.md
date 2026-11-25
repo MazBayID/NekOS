@@ -33,6 +33,12 @@ Never commit these values. Never place the Midtrans Server Key, Supabase service
 
 ## Midtrans activation
 
+Configure the Midtrans Payment Notification URL (in both Sandbox and Production when applicable) to:
+
+\`https://vizmufbfaghqucsoukne.supabase.co/functions/v1/skin-store/webhook\`
+
+The payment return page is https://mazbayid.github.io/skin-payment-return/ . It asks the buyer to return to NekOS and check payment status; entitlement is never granted from the redirect alone.
+
 Midtrans currently supports Indonesian individual merchants. The current documented individual requirements are KTP and NPWP. Register at https://dashboard.midtrans.com/register, finish merchant verification, and add a bank account in the same personal name as the individual merchant. Enable Snap and payment methods in the merchant dashboard.
 
 Official docs:
