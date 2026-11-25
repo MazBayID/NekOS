@@ -100,6 +100,7 @@ internal fun NekOSRoot(
     var isOfficialStoreLoading by remember { mutableStateOf(false) }
     var storeBusySkinId by remember { mutableStateOf<String?>(null) }
     var pendingStoreSkinIds by remember { mutableStateOf(emptySet<String>()) }
+    var storePaymentFailure by remember { mutableStateOf<String?>(null) }
     var apps by remember { mutableStateOf(emptyList<InstalledApp>()) }
     val initialFavoriteLoad = remember(context) { loadFavoritePackagesResult(context) }
     var favoritePackages by remember { mutableStateOf(initialFavoriteLoad.packages) }
@@ -1024,6 +1025,7 @@ internal fun NekOSRoot(
                             iconCatalogRepository.invalidateSkinCache()
                         }
                         Toast.makeText(context, result.message, Toast.LENGTH_LONG).show()
+                        if (result.paymentFailed) storePaymentFailure = result.message
                         pendingStoreSkinIds = OfficialSkinStoreClient.pendingSkinIds(context)
                     }
                 },
@@ -1168,6 +1170,21 @@ internal fun NekOSRoot(
                 },
                 dismissButton = {
                     TextButton(onClick = { tagPendingDelete = null }) { Text("Cancel") }
+                }
+            )
+        }
+
+        storePaymentFailure?.let { message ->
+            NekOSAlertDialog(
+                topFrameColorArgb = launcherUiColorArgb,
+                onDismissRequest = { storePaymentFailure = null },
+                containerColor = launcherSurface,
+                title = { Text("Pembayaran gagal") },
+                text = { Text(message) },
+                confirmButton = {
+                    TextButton(onClick = { storePaymentFailure = null }) {
+                        Text("Mengerti")
+                    }
                 }
             )
         }
