@@ -16,7 +16,7 @@ internal object OfficialSkinDownloader {
     private const val EXPECTED_SHA256 = "c49003eab26be7cea6c0a6cf32c4897b4e79aa89b1a18b3e526a00054da338f1"
     private const val MAX_DOWNLOAD_BYTES = 32L * 1024L * 1024L
 
-    fun downloadAndInstall(context: Context): SkinInstallResult {
+    fun downloadAndInstall(context: Context, onProgress: (Int) -> Unit = {}): SkinInstallResult {
         val archive = File(context.cacheDir, "official-inferno-phoenix.zip")
         var connection: HttpURLConnection? = null
         return try {
@@ -38,6 +38,7 @@ internal object OfficialSkinDownloader {
                 archive.outputStream().use { output ->
                     val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
                     var total = 0L
+                    onProgress(if (declaredLength > 0L) 0 else -1)
                     while (true) {
                         val count = input.read(buffer)
                         if (count < 0) break
@@ -46,9 +47,13 @@ internal object OfficialSkinDownloader {
                             return SkinInstallResult(false, error = "Skin archive is larger than 32 MB")
                         }
                         output.write(buffer, 0, count)
+                        if (declaredLength > 0L) {
+                            onProgress(((total * 100L) / declaredLength).toInt().coerceIn(0, 100))
+                        }
                     }
                 }
             }
+            onProgress(100)
             val digest = MessageDigest.getInstance("SHA-256")
                 .digest(archive.readBytes())
                 .joinToString("") { "%02x".format(it.toInt() and 0xff) }
