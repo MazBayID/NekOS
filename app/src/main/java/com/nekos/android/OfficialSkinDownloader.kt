@@ -20,9 +20,11 @@ internal object OfficialSkinDownloader {
         installedVersion != null && isNewerVersion(OFFICIAL_VERSION, installedVersion)
 
     internal fun isNewerVersion(candidate: String, current: String): Boolean {
-        fun parts(version: String): List<Long>? =
-            version.substringBefore("-").substringBefore("+").split(".")
-                .map { it.toLongOrNull() ?: return null }
+        fun parts(version: String): List<Long>? {
+            val parsed = version.substringBefore("-").substringBefore("+").split(".")
+                .map { it.toLongOrNull() }
+            return if (parsed.any { it == null }) null else parsed.filterNotNull()
+        }
         val candidateParts = parts(candidate) ?: return false
         val currentParts = parts(current) ?: return false
         for (index in 0 until maxOf(candidateParts.size, currentParts.size)) {
