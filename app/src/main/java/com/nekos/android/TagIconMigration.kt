@@ -5,7 +5,7 @@ import android.content.SharedPreferences
 import org.json.JSONArray
 import org.json.JSONObject
 
-private const val TAG_ICON_MIGRATION_KEY = "tag_icon_ids_migrated_v1"
+internal const val TAG_ICON_MIGRATION_KEY = "tag_icon_ids_migrated_v1"
 
 internal fun buildLegacyTagIconIdMap(jsonText: String): Map<Int, Int> {
     val rows = JSONObject(jsonText).getJSONArray("tag")
@@ -30,19 +30,18 @@ internal fun buildLegacyTagIconIdMap(jsonText: String): Map<Int, Int> {
 private fun legacyId(filename: String): Int? =
     filename.substringAfter("icon_").substringBefore(".").toIntOrNull()
 
-internal fun migrateLegacyTagIconIds(
-    context: Context,
-    preferences: SharedPreferences,
-    tags: JSONArray
-) {
-    if (preferences.getBoolean(TAG_ICON_MIGRATION_KEY, false)) return
-    val idMap = runCatching {
+internal fun legacyTagIconIdMap(context: Context): Map<Int, Int> =
+    runCatching {
         val json = context.applicationContext.assets.open("skins/legacy_icon_map.json")
             .bufferedReader().use { it.readText() }
         buildLegacyTagIconIdMap(json)
     }.getOrDefault(emptyMap())
-    if (idMap.isEmpty()) return
 
+internal fun persistMigratedTagIconIds(
+    preferences: SharedPreferences,
+    tags: JSONArray,
+    idMap: Map<Int, Int>
+) {
     for (index in 0 until tags.length()) {
         val item = tags.optJSONObject(index) ?: continue
         if (item.isNull("iconId")) continue

@@ -58,7 +58,8 @@ object TagStore {
 
         return runCatching {
             val array = JSONArray(raw)
-            migrateLegacyTagIconIds(context, preferences, array)
+            val shouldMigrateIcons = !preferences.getBoolean(TAG_ICON_MIGRATION_KEY, false)
+            val iconIdMap = if (shouldMigrateIcons) legacyTagIconIdMap(context) else emptyMap()
             val parsed = buildList {
                 for (i in 0 until array.length()) {
                     val item = array.getJSONObject(i)
@@ -81,7 +82,10 @@ object TagStore {
                         NekTag(
                             id = (rawId as? String).orEmpty().ifBlank { UUID.randomUUID().toString() },
                             name = (rawName as String).trim().take(24),
-                            iconId = if (item.isNull("iconId")) null else item.optInt("iconId"),
+                            iconId = if (item.isNull("iconId")) null else {
+                                val storedId = item.optInt("iconId")
+                                iconIdMap[storedId] ?: storedId
+                            },
                             colorArgb = item.optLong("colorArgb", 0xFFE7E1D6),
                             appPackages = buildList {
                                 for (j in 0 until packages.length()) {
@@ -96,6 +100,9 @@ object TagStore {
                     )
                 }
             }.filter { it.name.isNotBlank() }.distinctBy { it.id }
+            if (shouldMigrateIcons && iconIdMap.isNotEmpty()) {
+                persistMigratedTagIconIds(preferences, array, iconIdMap)
+            }
             TagLoadResult(parsed, true)
         }.getOrElse {
             TagLoadResult(emptyList(), false)
