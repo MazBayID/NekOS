@@ -33,10 +33,13 @@ class SkinInstallerValidationTest {
     }
 
     @Test
-    fun validatesSkinIdentifiers() {
+    fun acceptsArbitrarySkinIdentifiersWithoutUsingThemAsFilePaths() {
         assertTrue(SkinInstaller.isValidSkinId("minimal_dark-2.0"))
-        assertFalse(SkinInstaller.isValidSkinId("../default"))
-        assertFalse(SkinInstaller.isValidSkinId("UpperCase"))
+        assertTrue(SkinInstaller.isValidSkinId("UpperCase / 日本語"))
+        assertTrue(SkinInstaller.isValidSkinId("../custom skin"))
         assertFalse(SkinInstaller.isValidSkinId(""))
+        assertFalse(SkinInstaller.isValidSkinId("   "))
+        assertFalse(SkinInstaller.isValidSkinId("default"))
+        assertTrue(SkinInstaller.skinDirectoryName("../custom skin").matches(Regex("^[0-9a-f-]{36}$")))
     }
 }
