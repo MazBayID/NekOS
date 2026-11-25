@@ -160,7 +160,13 @@ def check_glyph_dir(r, root, sub, strict):
     if not os.path.isdir(d):
         (r.err if strict else r.warn)(f'icons/{sub}/ tidak ada'); return
     idx_p = os.path.join(d, 'icons_index.json' if sub == 'tag' else 'ui_index.json')
-    idx = json.load(open(idx_p, encoding='utf-8')) if os.path.exists(idx_p) else None
+    idx = None
+    if os.path.exists(idx_p):
+        try:
+            idx = json.load(open(idx_p, encoding='utf-8'))
+        except Exception as e:
+            r.err(f'icons/{sub}: index JSON tidak valid ({e})')
+            idx = {}
     files = sorted(f for f in os.listdir(d) if f.endswith('.webp'))
     if idx is not None:
         check_index_catalog(r, idx, sub, f'icons/{sub}/')
@@ -173,8 +179,9 @@ def check_glyph_dir(r, root, sub, strict):
             (r.err if strict else r.warn)(f'icons/{sub}/{f}: ada di index tetapi file tidak ada')
         for f in set(files) - listed:
             r.err(f'icons/{sub}/{f}: file tidak terdaftar di index')
-        if idx.get('total') != len(idx['items']):
-            r.err(f'icons/{sub}: "total" ({idx.get("total")}) != jumlah item ({len(idx["items"])})')
+        items = idx.get('items')
+        if isinstance(items, list) and idx.get('total') != len(items):
+            r.err(f'icons/{sub}: "total" ({idx.get("total")}) != jumlah item ({len(items)})')
     elif strict:
         r.err(f'icons/{sub}: index json tidak ada')
     elif files:
