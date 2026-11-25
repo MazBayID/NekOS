@@ -44,6 +44,7 @@ class IconCatalogRepository(context: Context) {
     private val appContext = context.applicationContext
     private val skinAssets = SkinAssetResolver(appContext)
     private var cachedIcons: List<CatalogIcon>? = null
+    private var cachedCatalogSkinGeneration: Int = -1
     private val bitmapCache = object : LruCache<String, Bitmap>(8 * 1024) {
         override fun sizeOf(key: String, value: Bitmap): Int =
             (value.allocationByteCount / 1024).coerceAtLeast(1)
@@ -56,20 +57,31 @@ class IconCatalogRepository(context: Context) {
 
     @Synchronized
     fun loadCatalog(): List<CatalogIcon> {
-        cachedIcons?.let { return it }
-        val json = appContext.assets.open("skins/default/icons/tag/icons_index.json")
-            .bufferedReader().use { it.readText() }
-        val items = JSONObject(json).getJSONArray("items")
+        val currentSkinGeneration = SkinRuntimeState.generation
+        if (cachedCatalogSkinGeneration == currentSkinGeneration) {
+            cachedIcons?.let { return it }
+        }
+
+        val activeDirectory = SkinRepository.activeSkinDirectory(appContext)
+        val customIndex = activeDirectory?.let { java.io.File(it, "icons/tag/icons_index.json") }
+            ?.takeIf { it.isFile }
+        val jsonText = runCatching {
+            customIndex?.readText(Charsets.UTF_8)
+                ?: appContext.assets.open("skins/default/icons/tag/icons_index.json")
+                    .bufferedReader().use { it.readText() }
+        }.getOrElse {
+            appContext.assets.open("skins/default/icons/tag/icons_index.json")
+                .bufferedReader().use { it.readText() }
+        }
+        val items = JSONObject(jsonText).getJSONArray("items")
         val icons = buildList(items.length()) {
             for (index in 0 until items.length()) {
                 val item = items.getJSONObject(index)
                 val filename = item.getString("file")
-                val legacyFile = item.getString("legacy_file")
-                val id = legacyFile.substringAfter("icon_").substringBefore(".").toIntOrNull()
-                    ?: error("Invalid legacy icon reference: $legacyFile")
+                val id = item.optInt("id", -1)
                 val file = "icons/tag/$filename"
-                val row = index / 6 + 1
-                val column = index % 6 + 1
+                val row = item.optInt("row", index / 6 + 1)
+                val column = item.optInt("column", index % 6 + 1)
                 require(isValidCatalogIconEntry(id, file, item.getString("name"), row, column))
                 add(CatalogIcon(id, file, item.getString("name"), item.optString("visual"),
                     item.optString("description"), row, column))
@@ -78,6 +90,7 @@ class IconCatalogRepository(context: Context) {
         require(icons.map { it.id }.distinct().size == icons.size) { "Canonical icon IDs must be unique" }
         require(icons.map { it.file }.distinct().size == icons.size) { "Skin icon paths must be unique" }
         cachedIcons = icons
+        cachedCatalogSkinGeneration = currentSkinGeneration
         return icons
     }
 
