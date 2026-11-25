@@ -24,6 +24,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.activity.compose.BackHandler
 import androidx.compose.material3.Surface
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.material3.Text
@@ -107,6 +108,7 @@ internal fun NekOSSettingsDialog(
     installedSkins: List<InstalledSkin>,
     activeSkinId: String,
     isOfficialSkinDownloading: Boolean,
+    officialSkinDownloadProgress: Int,
     onDownloadOfficialSkin: () -> Unit,
     onImportSkin: () -> Unit,
     onSelectSkin: (String) -> Unit,
@@ -563,6 +565,8 @@ internal fun NekOSSettingsDialog(
                                     Text(
                                         when {
                                             isInfernoInstalled -> "INSTALLED"
+                                            isOfficialSkinDownloading && officialSkinDownloadProgress >= 0 ->
+                                                "DOWNLOADING $officialSkinDownloadProgress%"
                                             isOfficialSkinDownloading -> "DOWNLOADING…"
                                             else -> "DOWNLOAD & INSTALL"
                                         },
@@ -570,6 +574,16 @@ internal fun NekOSSettingsDialog(
                                         fontSize = 10.sp,
                                         fontWeight = FontWeight.Bold
                                     )
+                                }
+                                if (isOfficialSkinDownloading) {
+                                    if (officialSkinDownloadProgress >= 0) {
+                                        LinearProgressIndicator(
+                                            progress = { officialSkinDownloadProgress.coerceIn(0, 100) / 100f },
+                                            modifier = Modifier.fillMaxWidth()
+                                        )
+                                    } else {
+                                        LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                                    }
                                 }
                             }
                         }
