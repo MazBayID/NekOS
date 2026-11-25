@@ -97,6 +97,7 @@ internal fun NekOSRoot(
         mutableStateOf(skinRepository.activeSkinId())
     }
     var isOfficialSkinDownloading by remember { mutableStateOf(false) }
+    var officialSkinDownloadProgress by remember { mutableIntStateOf(0) }
     var apps by remember { mutableStateOf(emptyList<InstalledApp>()) }
     val initialFavoriteLoad = remember(context) { loadFavoritePackagesResult(context) }
     var favoritePackages by remember { mutableStateOf(initialFavoriteLoad.packages) }
@@ -984,16 +985,21 @@ internal fun NekOSRoot(
                 installedSkins = installedSkins,
                 activeSkinId = activeSkinId,
                 isOfficialSkinDownloading = isOfficialSkinDownloading,
+                officialSkinDownloadProgress = officialSkinDownloadProgress,
                 onDownloadOfficialSkin = {
                     if (!isOfficialSkinDownloading &&
                         installedSkins.none { it.id == "inferno_phoenix" }
                     ) {
                         skinPickerScope.launch {
                             isOfficialSkinDownloading = true
+                            officialSkinDownloadProgress = 0
                             val result = withContext(Dispatchers.IO) {
-                                OfficialSkinDownloader.downloadAndInstall(context)
+                                OfficialSkinDownloader.downloadAndInstall(context) {
+                                    officialSkinDownloadProgress = it
+                                }
                             }
                             isOfficialSkinDownloading = false
+                            officialSkinDownloadProgress = 0
                             if (result.success) {
                                 installedSkins = skinRepository.listInstalledSkins()
                                 Toast.makeText(context, "Inferno Phoenix installed", Toast.LENGTH_SHORT).show()
