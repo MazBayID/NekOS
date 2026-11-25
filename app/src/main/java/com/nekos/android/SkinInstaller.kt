@@ -177,6 +177,10 @@ internal class SkinInstaller(context: Context) {
             if (!finalized.success) {
                 return SkinInstallResult(false, error = finalized.error)
             }
+            // The installed directory may have replaced files for the currently
+            // selected skin without changing its ID. Advance the generation so
+            // all skin-dependent renderers discard bitmaps from the old version.
+            SkinRuntimeState.invalidate()
             SkinInstallResult(true, skinId = skinId)
         } catch (error: Exception) {
             SkinInstallResult(false, error = error.message ?: "Skin installation failed")
