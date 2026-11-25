@@ -381,20 +381,6 @@ internal fun HomeScreen(
                 Box(
                     modifier = Modifier.fillMaxWidth().height(122.dp)
                 ) {
-                    ThemedUiArtworkImage(
-                        resourceId = R.drawable.text_logo_sec,
-                        colorArgb = launcherUiColorArgb,
-                        contentDescription = "NekOS",
-                        contentScale = ContentScale.Fit,
-                        modifier = Modifier.align(Alignment.TopStart)
-                            .offset(x = (-138).dp)
-                            .fillMaxWidth()
-                            .graphicsLayer {
-                                scaleX = 1.02f
-                                transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0f, 0.5f)
-                            }
-                            .height(122.dp)
-                    )
                     Box(
                         modifier = Modifier.align(Alignment.CenterEnd)
                             .offset(x = 20.dp)

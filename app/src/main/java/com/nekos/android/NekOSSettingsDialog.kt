@@ -237,10 +237,17 @@ internal fun NekOSSettingsDialog(
                                 .clip(SettingsCardShape)
                                 .background(SettingsInk.copy(alpha = 0.025f))
                                 .border(1.dp, SettingsBorder, SettingsCardShape)
-                                .padding(9.dp),
+                                .padding(12.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            Text("NekOS", color = SettingsInk, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                            ThemedUiArtworkImage(
+                                resourceId = R.drawable.text_logo_sec,
+                                colorArgb = launcherUiColor,
+                                contentDescription = "NekOS",
+                                contentScale = androidx.compose.ui.layout.ContentScale.Fit,
+                                modifier = Modifier.fillMaxWidth().heightIn(max = 64.dp)
+                            )
                             Text("Version $appVersion", color = SettingsMuted, fontSize = 12.sp)
                             TextButton(onClick = onOpenRepository) {
                                 Text("GitHub repository", color = SettingsAccent, fontWeight = FontWeight.SemiBold)
