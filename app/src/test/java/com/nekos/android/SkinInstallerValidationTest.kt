@@ -25,6 +25,9 @@ class SkinInstallerValidationTest {
         assertTrue(SkinInstaller.isAllowedSkinPath("icons/ui/icon_palette.webp"))
         assertTrue(SkinInstaller.isAllowedSkinPath("components/top_frame/topframe_spritesheet@4x.png"))
         assertTrue(SkinInstaller.isAllowedSkinPath("motifs/motif_sakura@512.png"))
+        assertTrue(SkinInstaller.isAllowedSkinPath("LICENSE.txt"))
+        assertTrue(SkinInstaller.isAllowedSkinPath("README.md"))
+        assertFalse(SkinInstaller.isAllowedSkinPath("docs/README.md"))
         assertFalse(SkinInstaller.isAllowedSkinPath("scripts/install.sh"))
         assertFalse(SkinInstaller.isAllowedSkinPath("assets/unknown.bin"))
     }

@@ -6,13 +6,13 @@ import org.junit.Test
 class TagIconMigrationTest {
     @Test
     fun mapsMergedAndRemovedLegacyIconsToCanonicalIds() {
-        val json = """{"tag":[
-          {"old_file":"icon_001.webp","new_file":"icon_cloud.webp","status":"kept"},
-          {"old_file":"icon_002.webp","new_file":"icon_cloud.webp","status":"merged"},
-          {"old_file":"icon_003.webp","new_file":null,"status":"removed"},
-          {"old_file":"icon_004.webp","new_file":"icon_star.webp","status":"kept"}
-        ]}"""
-        val map = buildLegacyTagIconIdMap(json)
+        val entries = listOf(
+            LegacyTagIconEntry("icon_001.webp", "icon_cloud.webp"),
+            LegacyTagIconEntry("icon_002.webp", "icon_cloud.webp"),
+            LegacyTagIconEntry("icon_003.webp", null),
+            LegacyTagIconEntry("icon_004.webp", "icon_star.webp")
+        )
+        val map = buildLegacyTagIconIdMap(entries)
         assertEquals(1, map[1])
         assertEquals(1, map[2])
         assertEquals(4, map[3])

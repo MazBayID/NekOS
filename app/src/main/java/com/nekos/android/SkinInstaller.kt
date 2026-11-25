@@ -10,6 +10,43 @@ import java.util.Locale
 import java.util.UUID
 import java.util.zip.ZipFile
 
+internal data class SkinDirectoryFinalizeResult(
+    val success: Boolean,
+    val error: String? = null
+)
+
+/** Replaces an installed skin only after the new staging directory has passed validation. */
+internal fun finalizeSkinDirectory(
+    staging: File,
+    destination: File,
+    backup: File
+): SkinDirectoryFinalizeResult {
+    if (!destination.exists()) {
+        return if (staging.renameTo(destination)) {
+            SkinDirectoryFinalizeResult(true)
+        } else {
+            SkinDirectoryFinalizeResult(false, "Unable to finalize skin installation")
+        }
+    }
+    if (!destination.isDirectory || backup.exists()) {
+        return SkinDirectoryFinalizeResult(false, "Unable to prepare skin update")
+    }
+    if (!destination.renameTo(backup)) {
+        return SkinDirectoryFinalizeResult(false, "Unable to preserve the installed skin")
+    }
+    if (staging.renameTo(destination)) {
+        backup.deleteRecursively()
+        return SkinDirectoryFinalizeResult(true)
+    }
+    if (backup.renameTo(destination)) {
+        return SkinDirectoryFinalizeResult(false, "Update failed; previous skin was restored")
+    }
+    return SkinDirectoryFinalizeResult(
+        false,
+        "Update failed; previous skin is preserved in recovery folder ${backup.name}"
+    )
+}
+
 internal data class SkinInstallResult(
     val success: Boolean,
     val skinId: String? = null,
@@ -29,10 +66,11 @@ internal class SkinInstaller(context: Context) {
     fun install(uri: Uri): SkinInstallResult {
         val input = runCatching { appContext.contentResolver.openInputStream(uri) }.getOrNull()
             ?: return SkinInstallResult(false, error = "Unable to open selected file")
-        return input.use(::install)
+        return input.use { install(it) }
     }
 
-    fun install(input: InputStream): SkinInstallResult {
+    @Synchronized
+    fun install(input: InputStream, replaceExisting: Boolean = false): SkinInstallResult {
         val workDir = File(appContext.cacheDir, "skin-import-${UUID.randomUUID()}")
         val archive = File(workDir, "skin.zip")
         val staging = File(workDir, "staging")
@@ -127,12 +165,17 @@ internal class SkinInstaller(context: Context) {
             if (!skinsRoot.exists() && !skinsRoot.mkdirs()) {
                 return SkinInstallResult(false, error = "Unable to create skins directory")
             }
-            val destination = File(skinsRoot, skinId)
-            if (destination.exists()) {
-                return SkinInstallResult(false, error = "Skin '$skinId' is already installed. Remove it before importing an update.")
+            val destination = File(skinsRoot, skinId).canonicalFile
+            if (destination.parentFile != skinsRoot.canonicalFile) {
+                return SkinInstallResult(false, error = "Invalid skin installation destination")
             }
-            if (!staging.renameTo(destination)) {
-                return SkinInstallResult(false, error = "Unable to finalize skin installation")
+            if (destination.exists() && !replaceExisting) {
+                return SkinInstallResult(false, error = "Skin '$skinId' is already installed")
+            }
+            val backup = File(skinsRoot, ".skin-update-$skinId-${UUID.randomUUID()}")
+            val finalized = finalizeSkinDirectory(staging, destination, backup)
+            if (!finalized.success) {
+                return SkinInstallResult(false, error = finalized.error)
             }
             SkinInstallResult(true, skinId = skinId)
         } catch (error: Exception) {
@@ -226,6 +269,9 @@ internal class SkinInstaller(context: Context) {
 
         internal fun isAllowedSkinPath(path: String): Boolean {
             if (path == "skin.json") return true
+            if (!path.contains('/') && !path.startsWith(".") &&
+                (path.endsWith(".md", ignoreCase = true) || path.endsWith(".txt", ignoreCase = true))
+            ) return true
             if (path in setOf(
                     "icons/tag/icons_index.json", "icons/tag/icons_index.md",
                     "icons/ui/ui_index.json", "icons/ui/ui_index.md",

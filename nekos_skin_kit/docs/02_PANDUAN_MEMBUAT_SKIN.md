@@ -323,7 +323,7 @@ Jangan mengemas manual dengan klik-kanan "Compress folder": itu biasanya membuat
 python3 -I tools/validate_skin.py dist/sakura_pink-1.0.0.zip
 ```
 
-Batas paket (usulan): ≤ 400 file, ≤ 8 MB per file, ≤ 32 MB total, gambar ≤ 4096 px per sisi, hanya `.webp .png .json .md .txt`. Skin lengkap bawaan ±3 MB (±0,15 MB tanpa motif).
+Batas paket (usulan): ≤ 400 file, ≤ 8 MB per file, ≤ 32 MB total, gambar ≤ 4096 px per sisi, hanya `.webp .png .json .md .txt`. Berkas `.md` dan `.txt` hanya boleh berada di root ZIP (mis. `README.md` atau `LICENSE.txt`); berkas aset tetap harus mengikuti direktori dan nama yang diizinkan. Skin lengkap bawaan ±3 MB (±0,15 MB tanpa motif).
 
 ---
 
