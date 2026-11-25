@@ -45,4 +45,42 @@ class SkinInstallerUpdateTest {
             root.deleteRecursively()
         }
     }
+    @Test
+    fun restoresBackupWhenProcessStoppedBeforeReplacement() {
+        val root = createTempDir(prefix = "nekos-skin-recovery-test")
+        try {
+            val backup = File(root, ".skin-update-inferno_phoenix-123e4567-e89b-12d3-a456-426614174000")
+                .apply { mkdirs() }
+            File(backup, "version.txt").writeText("1.0.0")
+
+            val recovered = recoverInterruptedSkinUpdates(root)
+
+            assertTrue(recovered)
+            assertEquals("1.0.0", File(root, "inferno_phoenix/version.txt").readText())
+            assertFalse(backup.exists())
+        } finally {
+            root.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun removesBackupWhenReplacementAlreadyExists() {
+        val root = createTempDir(prefix = "nekos-skin-recovery-complete-test")
+        try {
+            val installed = File(root, "inferno_phoenix").apply { mkdirs() }
+            File(installed, "version.txt").writeText("1.1.0")
+            val backup = File(root, ".skin-update-inferno_phoenix-123e4567-e89b-12d3-a456-426614174000")
+                .apply { mkdirs() }
+            File(backup, "version.txt").writeText("1.0.0")
+
+            val recovered = recoverInterruptedSkinUpdates(root)
+
+            assertFalse(recovered)
+            assertEquals("1.1.0", File(installed, "version.txt").readText())
+            assertFalse(backup.exists())
+        } finally {
+            root.deleteRecursively()
+        }
+    }
+
 }
