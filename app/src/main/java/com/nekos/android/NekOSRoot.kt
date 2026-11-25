@@ -96,8 +96,10 @@ internal fun NekOSRoot(
     var activeSkinId by remember(skinRepository) {
         mutableStateOf(skinRepository.activeSkinId())
     }
-    var isOfficialSkinDownloading by remember { mutableStateOf(false) }
-    var officialSkinDownloadProgress by remember { mutableIntStateOf(0) }
+    var officialStoreSkins by remember { mutableStateOf(emptyList<OfficialStoreSkin>()) }
+    var isOfficialStoreLoading by remember { mutableStateOf(false) }
+    var storeBusySkinId by remember { mutableStateOf<String?>(null) }
+    var pendingStoreSkinIds by remember { mutableStateOf(emptySet<String>()) }
     var apps by remember { mutableStateOf(emptyList<InstalledApp>()) }
     val initialFavoriteLoad = remember(context) { loadFavoritePackagesResult(context) }
     var favoritePackages by remember { mutableStateOf(initialFavoriteLoad.packages) }
@@ -989,37 +991,40 @@ internal fun NekOSRoot(
                 },
                 installedSkins = installedSkins,
                 activeSkinId = activeSkinId,
-                isOfficialSkinDownloading = isOfficialSkinDownloading,
-                officialSkinDownloadProgress = officialSkinDownloadProgress,
-                onDownloadOfficialSkin = {
-                    val isOfficialSkinInstalled = installedSkins.any { it.id == "inferno_phoenix" }
-                    if (!isOfficialSkinDownloading && !isOfficialSkinInstalled) {
-                        skinPickerScope.launch {
-                            isOfficialSkinDownloading = true
-                            officialSkinDownloadProgress = 0
-                            val result = withContext(Dispatchers.IO) {
-                                OfficialSkinDownloader.downloadAndInstall(context) {
-                                    officialSkinDownloadProgress = it
-                                }
-                            }
-                            isOfficialSkinDownloading = false
-                            officialSkinDownloadProgress = 0
-                            if (result.success) {
-                                installedSkins = skinRepository.listInstalledSkins()
-                                iconCatalogRepository.invalidateSkinCache()
-                                Toast.makeText(
-                                    context,
-                                    "Inferno Phoenix installed",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            } else {
-                                Toast.makeText(
-                                    context,
-                                    result.error ?: "Unable to install official skin",
-                                    Toast.LENGTH_LONG
-                                ).show()
-                            }
+                officialStoreSkins = officialStoreSkins,
+                isOfficialStoreLoading = isOfficialStoreLoading,
+                storeBusySkinId = storeBusySkinId,
+                pendingStoreSkinIds = pendingStoreSkinIds,
+                onRefreshOfficialStore = {
+                    if (!isOfficialStoreLoading) skinPickerScope.launch {
+                        isOfficialStoreLoading = true
+                        val result = withContext(Dispatchers.IO) { runCatching { OfficialSkinStoreClient.loadCatalog() } }
+                        isOfficialStoreLoading = false
+                        result.onSuccess { officialStoreSkins = it }
+                            .onFailure { Toast.makeText(context, it.message ?: "Unable to load skin store", Toast.LENGTH_LONG).show() }
+                        pendingStoreSkinIds = OfficialSkinStoreClient.pendingSkinIds(context)
+                    }
+                },
+                onStoreAction = { skin, checkPayment ->
+                    if (storeBusySkinId == null) skinPickerScope.launch {
+                        storeBusySkinId = skin.id
+                        val result = withContext(Dispatchers.IO) {
+                            runCatching {
+                                if (checkPayment) OfficialSkinStoreClient.checkPaymentAndInstall(context, skin)
+                                else OfficialSkinStoreClient.buy(context, skin)
+                            }.getOrElse { StoreActionResult(false, it.message ?: "Store action failed.") }
                         }
+                        storeBusySkinId = null
+                        if (!result.checkoutUrl.isNullOrBlank()) {
+                            runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(result.checkoutUrl))) }
+                                .onFailure { Toast.makeText(context, "Unable to open payment page", Toast.LENGTH_LONG).show() }
+                        }
+                        if (result.success && result.installedSkinId != null) {
+                            installedSkins = skinRepository.listInstalledSkins()
+                            iconCatalogRepository.invalidateSkinCache()
+                        }
+                        Toast.makeText(context, result.message, Toast.LENGTH_LONG).show()
+                        pendingStoreSkinIds = OfficialSkinStoreClient.pendingSkinIds(context)
                     }
                 },
                 onImportSkin = {
