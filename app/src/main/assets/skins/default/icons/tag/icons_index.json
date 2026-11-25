@@ -18,7 +18,7 @@
   "composition": "badge_cat.webp (tint: Shared UI Color) + glyph di glyph_slot (tint: on_badge)",
   "items": [
     {
-      "id": 1,
+      "id": 11,
       "file": "icon_mail.webp",
       "name": "mail",
       "visual": "Amplop",
@@ -26,7 +26,7 @@
       "legacy_file": "icon_011.webp"
     },
     {
-      "id": 2,
+      "id": 12,
       "file": "icon_chat.webp",
       "name": "chat",
       "visual": "Gelembung chat",
@@ -34,7 +34,7 @@
       "legacy_file": "icon_012.webp"
     },
     {
-      "id": 3,
+      "id": 13,
       "file": "icon_contacts.webp",
       "name": "contacts",
       "visual": "Buku kontak",
@@ -42,7 +42,7 @@
       "legacy_file": "icon_013.webp"
     },
     {
-      "id": 4,
+      "id": 8,
       "file": "icon_music_note.webp",
       "name": "music_note",
       "visual": "Not musik",
@@ -50,7 +50,7 @@
       "legacy_file": "icon_008.webp"
     },
     {
-      "id": 5,
+      "id": 35,
       "file": "icon_film.webp",
       "name": "film",
       "visual": "Klaper film dengan tombol play",
@@ -58,7 +58,7 @@
       "legacy_file": "icon_035.webp"
     },
     {
-      "id": 6,
+      "id": 10,
       "file": "icon_camera.webp",
       "name": "camera",
       "visual": "Kamera",
@@ -66,7 +66,7 @@
       "legacy_file": "icon_010.webp"
     },
     {
-      "id": 7,
+      "id": 20,
       "file": "icon_image.webp",
       "name": "image",
       "visual": "Gambar pemandangan",
@@ -74,7 +74,7 @@
       "legacy_file": "icon_020.webp"
     },
     {
-      "id": 8,
+      "id": 31,
       "file": "icon_gamepad.webp",
       "name": "gamepad",
       "visual": "Stik gim",
@@ -82,7 +82,7 @@
       "legacy_file": "icon_031.webp"
     },
     {
-      "id": 9,
+      "id": 33,
       "file": "icon_palette.webp",
       "name": "palette",
       "visual": "Palet cat",
@@ -90,7 +90,7 @@
       "legacy_file": "icon_033.webp"
     },
     {
-      "id": 10,
+      "id": 7,
       "file": "icon_globe.webp",
       "name": "globe",
       "visual": "Globe",
@@ -98,7 +98,7 @@
       "legacy_file": "icon_007.webp"
     },
     {
-      "id": 11,
+      "id": 1,
       "file": "icon_cloud.webp",
       "name": "cloud",
       "visual": "Awan",
@@ -106,7 +106,7 @@
       "legacy_file": "icon_001.webp"
     },
     {
-      "id": 12,
+      "id": 2,
       "file": "icon_google.webp",
       "name": "google",
       "visual": "Huruf G",
@@ -114,7 +114,7 @@
       "legacy_file": "icon_002.webp"
     },
     {
-      "id": 13,
+      "id": 44,
       "file": "icon_network.webp",
       "name": "network",
       "visual": "Diagram hierarki / jaringan",
@@ -122,7 +122,7 @@
       "legacy_file": "icon_044.webp"
     },
     {
-      "id": 14,
+      "id": 18,
       "file": "icon_download.webp",
       "name": "download",
       "visual": "Panah turun ke baki",
@@ -130,7 +130,7 @@
       "legacy_file": "icon_018.webp"
     },
     {
-      "id": 15,
+      "id": 24,
       "file": "icon_briefcase.webp",
       "name": "briefcase",
       "visual": "Koper kerja",
@@ -138,7 +138,7 @@
       "legacy_file": "icon_024.webp"
     },
     {
-      "id": 16,
+      "id": 14,
       "file": "icon_calendar.webp",
       "name": "calendar",
       "visual": "Kalender",
@@ -146,7 +146,7 @@
       "legacy_file": "icon_014.webp"
     },
     {
-      "id": 17,
+      "id": 15,
       "file": "icon_alarm_clock.webp",
       "name": "alarm_clock",
       "visual": "Jam beker",
@@ -154,7 +154,7 @@
       "legacy_file": "icon_015.webp"
     },
     {
-      "id": 18,
+      "id": 17,
       "file": "icon_folder.webp",
       "name": "folder",
       "visual": "Folder",
@@ -162,7 +162,7 @@
       "legacy_file": "icon_017.webp"
     },
     {
-      "id": 19,
+      "id": 22,
       "file": "icon_newspaper.webp",
       "name": "newspaper",
       "visual": "Koran",
@@ -170,7 +170,7 @@
       "legacy_file": "icon_022.webp"
     },
     {
-      "id": 20,
+      "id": 29,
       "file": "icon_book.webp",
       "name": "book",
       "visual": "Buku terbuka",
@@ -178,7 +178,7 @@
       "legacy_file": "icon_029.webp"
     },
     {
-      "id": 21,
+      "id": 30,
       "file": "icon_graduation_cap.webp",
       "name": "graduation_cap",
       "visual": "Topi toga",
@@ -186,7 +186,7 @@
       "legacy_file": "icon_030.webp"
     },
     {
-      "id": 22,
+      "id": 61,
       "file": "icon_calculator.webp",
       "name": "calculator",
       "visual": "Kalkulator",
@@ -194,7 +194,7 @@
       "legacy_file": "icon_061.webp"
     },
     {
-      "id": 23,
+      "id": 27,
       "file": "icon_bar_chart.webp",
       "name": "bar_chart",
       "visual": "Grafik batang",
@@ -202,7 +202,7 @@
       "legacy_file": "icon_027.webp"
     },
     {
-      "id": 24,
+      "id": 28,
       "file": "icon_cart.webp",
       "name": "cart",
       "visual": "Keranjang belanja",
@@ -210,7 +210,7 @@
       "legacy_file": "icon_028.webp"
     },
     {
-      "id": 25,
+      "id": 16,
       "file": "icon_weather.webp",
       "name": "weather",
       "visual": "Matahari di balik awan",
@@ -218,7 +218,7 @@
       "legacy_file": "icon_016.webp"
     },
     {
-      "id": 26,
+      "id": 23,
       "file": "icon_location_pin.webp",
       "name": "location_pin",
       "visual": "Pin lokasi",
@@ -226,7 +226,7 @@
       "legacy_file": "icon_023.webp"
     },
     {
-      "id": 27,
+      "id": 26,
       "file": "icon_medical_cross.webp",
       "name": "medical_cross",
       "visual": "Tanda plus tebal",
@@ -234,7 +234,7 @@
       "legacy_file": "icon_026.webp"
     },
     {
-      "id": 28,
+      "id": 25,
       "file": "icon_running.webp",
       "name": "running",
       "visual": "Orang berlari",
@@ -242,7 +242,7 @@
       "legacy_file": "icon_025.webp"
     },
     {
-      "id": 29,
+      "id": 41,
       "file": "icon_home.webp",
       "name": "home",
       "visual": "Rumah",
@@ -250,7 +250,7 @@
       "legacy_file": "icon_041.webp"
     },
     {
-      "id": 30,
+      "id": 90,
       "file": "icon_star.webp",
       "name": "star",
       "visual": "Bintang",
@@ -258,7 +258,7 @@
       "legacy_file": "icon_090.webp"
     },
     {
-      "id": 31,
+      "id": 3,
       "file": "icon_gear_wrench.webp",
       "name": "gear_wrench",
       "visual": "Roda gigi dengan kunci pas",
@@ -266,7 +266,7 @@
       "legacy_file": "icon_003.webp"
     },
     {
-      "id": 32,
+      "id": 42,
       "file": "icon_shield.webp",
       "name": "shield",
       "visual": "Perisai",
@@ -274,7 +274,7 @@
       "legacy_file": "icon_042.webp"
     },
     {
-      "id": 33,
+      "id": 4,
       "file": "icon_brain.webp",
       "name": "brain",
       "visual": "Otak",
@@ -282,7 +282,7 @@
       "legacy_file": "icon_004.webp"
     },
     {
-      "id": 34,
+      "id": 78,
       "file": "icon_terminal.webp",
       "name": "terminal",
       "visual": "Jendela terminal",
@@ -290,7 +290,7 @@
       "legacy_file": "icon_078.webp"
     },
     {
-      "id": 35,
+      "id": 77,
       "file": "icon_code.webp",
       "name": "code",
       "visual": "Kurung sudut </>",
@@ -298,7 +298,7 @@
       "legacy_file": "icon_077.webp"
     },
     {
-      "id": 36,
+      "id": 79,
       "file": "icon_database.webp",
       "name": "database",
       "visual": "Tumpukan silinder",
