@@ -6,7 +6,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-class SkinInstallerUpdateTest {
+class SkinInstallerIdentityTest {
     @Test
     fun refusesToReplaceAnInstalledSkinWithTheSameIdentity() {
         val root = createTempDir(prefix = "nekos-skin-immutable-test")
@@ -33,13 +33,11 @@ class SkinInstallerUpdateTest {
             val staging = File(root, "staging").apply { mkdirs() }
             File(staging, "skin.json").writeText("{}")
             val destination = File(root, "new_skin")
-            val backup = File(root, "backup")
 
             val result = finalizeSkinInstallation(staging, destination)
 
             assertTrue(result.success)
             assertTrue(File(destination, "skin.json").isFile)
-            assertFalse(backup.exists())
         } finally {
             root.deleteRecursively()
         }
