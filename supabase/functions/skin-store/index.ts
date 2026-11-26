@@ -75,7 +75,7 @@ async function createPayment(order:Record<string,unknown>,orderId:string,skin:Re
   if(!Number.isSafeInteger(amount)||amount<1)throw new Error("invalid_order_amount");
   const response=await fetch(snapBase()+"/snap/v1/transactions",{
     method:"POST",
-    headers:{Authorization:authHeader(),"Content-Type":"application/json","Accept":"application/json"},
+    headers:{Authorization:authHeader(),"Content-Type":"application/json","Accept":"application/json","Idempotency-Key":orderId},
     body:JSON.stringify({
       transaction_details:{order_id:orderId,gross_amount:amount},
       item_details:[{id:String(skin.id),price:amount,quantity:1,name:String(skin.name).slice(0,50)}],
@@ -155,8 +155,13 @@ Deno.serve(async(req:Request)=>{
       if(Number(skin.price_amount)===0) return fail("package_not_available",503,origin);
       if(String(skin.currency)!=="IDR"||!Number.isSafeInteger(Number(skin.price_amount)))return fail("unsupported_price_currency",400,origin);
       const order=await rpc("skin_create_order",{p_device_hash:deviceHash,p_skin_id:skinId,p_app_version:appVersion});
-      const payment=await createPayment(order,String(order.order_id),skin);
-      return json({success:true,free:false,...payment},201,origin);
+      const orderId=String(order.order_id);
+      if(order.checkout_url) {
+        return json({success:true,free:false,checkout_url:String(order.checkout_url),
+          order_id:orderId,reused:true},200,origin);
+      }
+      const payment=await createPayment(order,orderId,skin);
+      return json({success:true,free:false,...payment,reused:Boolean(order.reused)},201,origin);
     }
     if(path==="status") {
       const orderId=String(body.order_id??"");
@@ -250,8 +255,9 @@ Deno.serve(async(req:Request)=>{
             const paid=transactionStatus==="settlement" ||
               (transactionStatus==="capture" && fraud==="accept");
             if(paid && fraud==="accept") {
-              await rpc("skin_mark_paid",{p_order_id:orderId,p_provider_order_id:orderId,
+              const granted=await rpc("skin_mark_paid",{p_order_id:orderId,p_provider_order_id:orderId,
                 p_provider_payment_id:String(verified.transaction_id??""),p_payload:verified});
+              if(!granted)return fail("entitlement_grant_failed",500,origin);
             } else if(["expire","cancel","deny"].includes(transactionStatus)) {
               await rpc("skin_update_payment_status",{p_order_id:orderId,p_status:transactionStatus,p_payload:verified});
             }
