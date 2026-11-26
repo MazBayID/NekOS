@@ -60,8 +60,9 @@ fun TagManagementDialog(
     var showAppPicker by remember { mutableStateOf(false) }
     var appSelectionBeforePicker by remember { mutableStateOf<Set<String>>(emptySet()) }
     val iconCarouselState = androidx.compose.foundation.lazy.rememberLazyListState()
-    LaunchedEffect(selectedIcon, catalog) {
-        val index = catalog.indexOfFirst { it.id == selectedIcon }
+    LaunchedEffect(tag?.id, catalog) {
+        val initialIconId = tag?.iconId
+        val index = catalog.indexOfFirst { it.id == initialIconId }
         if (index >= 0) iconCarouselState.scrollToItem(index)
     }
     val availableAppIds = remember(apps) { apps.mapTo(mutableSetOf()) { it.id } }
