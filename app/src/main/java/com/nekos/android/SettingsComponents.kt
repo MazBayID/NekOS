@@ -104,6 +104,7 @@ internal fun SettingsNavigationCard(
 internal fun SettingsListRow(
     title: String,
     trailing: String? = null,
+    shaded: Boolean = false,
     onClick: () -> Unit
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
@@ -112,6 +113,7 @@ internal fun SettingsListRow(
                 .fillMaxWidth()
                 .defaultMinSize(minHeight = 44.dp)
                 .clip(RoundedCornerShape(8.dp))
+                .background(if (shaded) SettingsInk.copy(alpha = 0.045f) else Color.Transparent)
                 .clickable(onClick = onClick)
                 .padding(horizontal = 7.dp, vertical = 9.dp),
             verticalAlignment = Alignment.CenterVertically,
