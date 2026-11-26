@@ -95,7 +95,7 @@ internal fun SettingsNavigationCard(
             colorArgb = iconColorArgb,
             modifier = Modifier.size(23.dp)
         )
-        Text(title, color = SettingsInk, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, maxLines = 2)
+        Text(title, color = SettingsInk, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 2)
     }
 }
 
@@ -121,13 +121,13 @@ internal fun SettingsListRow(
                 title,
                 color = SettingsInk,
                 fontWeight = FontWeight.Medium,
-                fontSize = 13.sp,
+                fontSize = 14.sp,
                 modifier = Modifier.weight(1f)
             )
             if (!trailing.isNullOrBlank()) {
-                Text(trailing, color = SettingsMuted, fontSize = 10.sp)
+                Text(trailing, color = SettingsMuted, fontSize = 11.sp)
             }
-            Text("›", color = SettingsMuted, fontSize = 20.sp)
+            Text("›", color = SettingsMuted, fontSize = 21.sp)
         }
         SettingsBrushSeparator(
             modifier = Modifier.padding(horizontal = 7.dp)
@@ -192,9 +192,9 @@ internal fun SettingsActionCard(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        Text(title, color = SettingsInk, fontWeight = FontWeight.SemiBold, fontSize = 12.sp,
+        Text(title, color = SettingsInk, fontWeight = FontWeight.SemiBold, fontSize = 14.sp,
             modifier = Modifier.weight(1f))
-        Text(action, color = SettingsAccent, fontWeight = FontWeight.SemiBold, fontSize = 12.sp)
+        Text(action, color = SettingsAccent, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
     }
 }
 
@@ -203,7 +203,7 @@ internal fun SettingsSectionTitle(label: String) {
     Text(
         label,
         color = SettingsMuted,
-        fontSize = 10.sp,
+        fontSize = 11.sp,
         letterSpacing = 1.2.sp,
         fontWeight = FontWeight.Bold,
         modifier = Modifier.padding(top = 3.dp, bottom = 0.dp)
