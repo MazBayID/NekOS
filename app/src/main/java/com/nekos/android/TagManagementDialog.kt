@@ -76,7 +76,7 @@ fun TagManagementDialog(
         topFrameColorArgb = launcherUiColorArgb,
         onDismissRequest = onDismiss,
         shape = RoundedCornerShape(18.dp),
-        dialogWidth = 240.dp,
+        dialogWidth = 260.dp,
         containerColor = launcherSurface,
         titleContentColor = Color(0xFF34332F),
         textContentColor = Color(0xFF34332F),
@@ -91,7 +91,7 @@ fun TagManagementDialog(
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     Column(
-                        modifier = Modifier.weight(1.0f),
+                        modifier = Modifier.weight(1.2f),
                         verticalArrangement = Arrangement.spacedBy(5.dp)
                     ) {
                         Text("Tag Name", color = Color(0xFF34332F), style = MaterialTheme.typography.labelSmall)
@@ -113,7 +113,7 @@ fun TagManagementDialog(
                         )
                     }
                     Column(
-                        modifier = Modifier.weight(1.0f),
+                        modifier = Modifier.weight(0.8f),
                         horizontalAlignment = Alignment.End,
                         verticalArrangement = Arrangement.spacedBy(5.dp)
                     ) {
