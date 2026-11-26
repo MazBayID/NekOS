@@ -1,5 +1,6 @@
 package com.nekos.android
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -23,7 +24,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -126,25 +129,49 @@ internal fun SettingsListRow(
             }
             Text("›", color = SettingsMuted, fontSize = 20.sp)
         }
-        Box(
+        Canvas(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 7.dp)
-                .height(3.dp),
-            contentAlignment = Alignment.Center
+                .height(4.dp)
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(1.dp)
-                    .background(SettingsBorder)
+            val centerY = size.height / 2f
+            val maxThickness = 2.8.dp.toPx()
+            val halfThickness = maxThickness / 2f
+            val brushShape = Path().apply {
+                moveTo(0f, centerY)
+                cubicTo(
+                    size.width * 0.18f, centerY - halfThickness * 0.18f,
+                    size.width * 0.34f, centerY - halfThickness * 0.78f,
+                    size.width * 0.5f, centerY - halfThickness
+                )
+                cubicTo(
+                    size.width * 0.66f, centerY - halfThickness * 0.78f,
+                    size.width * 0.82f, centerY - halfThickness * 0.18f,
+                    size.width, centerY
+                )
+                cubicTo(
+                    size.width * 0.82f, centerY + halfThickness * 0.18f,
+                    size.width * 0.66f, centerY + halfThickness * 0.78f,
+                    size.width * 0.5f, centerY + halfThickness
+                )
+                cubicTo(
+                    size.width * 0.34f, centerY + halfThickness * 0.78f,
+                    size.width * 0.18f, centerY + halfThickness * 0.18f,
+                    0f, centerY
+                )
+                close()
+            }
+            val brush = Brush.horizontalGradient(
+                colorStops = arrayOf(
+                    0f to SettingsBorder.copy(alpha = 0f),
+                    0.18f to SettingsBorder.copy(alpha = 0.38f),
+                    0.5f to SettingsBorder,
+                    0.82f to SettingsBorder.copy(alpha = 0.38f),
+                    1f to SettingsBorder.copy(alpha = 0f)
+                )
             )
-            Box(
-                modifier = Modifier
-                    .width(44.dp)
-                    .height(3.dp)
-                    .background(SettingsBorder)
-            )
+            drawPath(path = brushShape, brush = brush)
         }
     }
 }
