@@ -2,6 +2,7 @@ package com.nekos.android
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -128,6 +129,7 @@ fun TagAppsDialog(
                             Column(
                                 modifier = Modifier.fillMaxWidth()
                                     .clip(RoundedCornerShape(12.dp))
+                                    .border(1.dp, Color(0xFF34332F).copy(alpha = 0.13f), RoundedCornerShape(12.dp))
                                     .clickable { onLaunch(app) }
                                     .padding(horizontal = 3.dp, vertical = 4.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -190,6 +192,7 @@ fun TagActionsDialog(
                 Column(
                     modifier = Modifier
                         .clip(RoundedCornerShape(11.dp))
+                        .border(1.dp, SettingsBorder, RoundedCornerShape(11.dp))
                         .clickable(onClick = onEdit)
                         .padding(vertical = 4.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -207,6 +210,7 @@ fun TagActionsDialog(
                     Column(
                         modifier = Modifier
                             .clip(RoundedCornerShape(11.dp))
+                            .border(1.dp, SettingsBorder, RoundedCornerShape(11.dp))
                             .clickable(onClick = onMovePage)
                             .padding(vertical = 8.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
@@ -224,6 +228,7 @@ fun TagActionsDialog(
                 Column(
                     modifier = Modifier
                         .clip(RoundedCornerShape(11.dp))
+                        .border(1.dp, SettingsBorder, RoundedCornerShape(11.dp))
                         .clickable(onClick = onDelete)
                         .padding(vertical = 8.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
