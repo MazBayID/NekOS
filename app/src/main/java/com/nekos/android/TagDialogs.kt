@@ -16,7 +16,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.SwapHoriz
+import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -210,7 +210,7 @@ fun TagActionsDialog(
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.SwapHoriz,
+                            imageVector = Icons.Filled.ArrowForward,
                             contentDescription = movePageLabel,
                             tint = Color(0xFF746657),
                             modifier = Modifier.size(20.dp)
