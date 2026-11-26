@@ -129,7 +129,7 @@ fun TagManagementDialog(
                                 .size(44.dp)
                                 .offset(x = (-20).dp)
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(Color(0xFFF4F1EA))
+                                .background(Color(0xFFF4F1EA).copy(alpha = 0.5f))
                                 .clickable { showTagColorPicker = true },
                             contentAlignment = Alignment.Center
                         ) {
@@ -306,7 +306,7 @@ fun TagManagementDialog(
                                 Column(
                                     modifier = Modifier.fillMaxWidth()
                                         .clip(RoundedCornerShape(12.dp))
-                                        .background(if (selected) Color(0xFFE7E1D6) else Color(0xFFF4F1EA))
+                                        .background((if (selected) Color(0xFFE7E1D6) else Color(0xFFF4F1EA)).copy(alpha = 0.5f))
                                         .border(1.dp, if (selected) Color(0xFF746657) else Color(0xFF34332F).copy(alpha = 0.20f), RoundedCornerShape(12.dp))
                                         .clickable {
                                             selectedPackages = if (selected) selectedPackages - app.id
