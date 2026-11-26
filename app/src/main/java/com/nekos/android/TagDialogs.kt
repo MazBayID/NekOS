@@ -169,6 +169,7 @@ fun TagActionsDialog(
         topFrameColorArgb = launcherUiColorArgb,
         onDismissRequest = onDismiss,
         shape = RoundedCornerShape(14.dp),
+        dialogWidth = 280.dp,
         containerColor = launcherSurface,
         titleContentColor = Color(0xFF34332F),
         textContentColor = Color(0xFF34332F),
