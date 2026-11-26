@@ -6,9 +6,11 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -100,27 +102,36 @@ internal fun SettingsListRow(
     trailing: String? = null,
     onClick: () -> Unit
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .defaultMinSize(minHeight = 44.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .clickable(onClick = onClick)
-            .padding(horizontal = 7.dp, vertical = 9.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Text(
-            title,
-            color = SettingsInk,
-            fontWeight = FontWeight.Medium,
-            fontSize = 13.sp,
-            modifier = Modifier.weight(1f)
-        )
-        if (!trailing.isNullOrBlank()) {
-            Text(trailing, color = SettingsMuted, fontSize = 10.sp)
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .defaultMinSize(minHeight = 44.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .clickable(onClick = onClick)
+                .padding(horizontal = 7.dp, vertical = 9.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                title,
+                color = SettingsInk,
+                fontWeight = FontWeight.Medium,
+                fontSize = 13.sp,
+                modifier = Modifier.weight(1f)
+            )
+            if (!trailing.isNullOrBlank()) {
+                Text(trailing, color = SettingsMuted, fontSize = 10.sp)
+            }
+            Text("›", color = SettingsMuted, fontSize = 20.sp)
         }
-        Text("›", color = SettingsMuted, fontSize = 20.sp)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 7.dp)
+                .height(1.dp)
+                .background(SettingsBorder)
+        )
     }
 }
 
