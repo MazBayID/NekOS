@@ -170,6 +170,11 @@ Deno.serve(async(req:Request)=>{
         const verifiedResponse=await fetch(statusUrl,{
           headers:{Authorization:authHeader(),"Accept":"application/json"}
         });
+        console.info("skin_store_status_response", JSON.stringify({
+          order_id: orderId,
+          http_status: verifiedResponse.status,
+          expiry_reached: expiryReached
+        }));
         if(verifiedResponse.status===404) {
           // Snap has no Core API transaction until the customer selects a payment method.
           // The Snap page itself expires after 15 minutes, and does not send a webhook.
@@ -186,9 +191,18 @@ Deno.serve(async(req:Request)=>{
           let verified=await verifiedResponse.json();
           const localAmount=Number(status.amount);
           const remoteAmount=Number(verified.gross_amount);
-          if(String(verified.order_id)!==orderId ||
-             !Number.isFinite(localAmount) || !Number.isFinite(remoteAmount) ||
-             remoteAmount!==localAmount) {
+          const remoteOrderId=String(verified.order_id??"").trim();
+          const orderIdMatches=remoteOrderId===orderId;
+          const amountMatches=Number.isFinite(localAmount) && Number.isFinite(remoteAmount) &&
+            remoteAmount===localAmount;
+          if(!orderIdMatches || !amountMatches) {
+            console.error("skin_store_transaction_mismatch", JSON.stringify({
+              order_id: orderId,
+              remote_order_id: remoteOrderId,
+              local_amount: localAmount,
+              remote_amount: remoteAmount,
+              remote_status: String(verified.transaction_status??"")
+            }));
             return fail("midtrans_transaction_mismatch",502,origin);
           }
           let transactionStatus=String(verified.transaction_status??"");
@@ -231,6 +245,11 @@ Deno.serve(async(req:Request)=>{
     return fail("unknown_action",404,origin);
   } catch(error) {
     const message=error instanceof Error?error.message:"internal_error";
+    console.error("skin_store_request_failed", JSON.stringify({
+      path,
+      message,
+      stack: error instanceof Error ? error.stack : undefined
+    }));
     const status=message==="payment_provider_not_configured"?503:
       message==="already_owned"?409:
       message==="skin_not_found"?404:400;
