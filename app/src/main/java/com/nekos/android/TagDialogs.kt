@@ -182,7 +182,7 @@ fun TagActionsDialog(
         text = {
             Row(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterHorizontally),
+                horizontalArrangement = Arrangement.spacedBy(40.dp, Alignment.CenterHorizontally),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(
