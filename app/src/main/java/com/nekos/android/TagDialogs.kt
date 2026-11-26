@@ -180,12 +180,12 @@ fun TagActionsDialog(
         },
         text = {
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
+                horizontalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterHorizontally),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier
                         .clip(RoundedCornerShape(11.dp))
                         .clickable(onClick = onEdit)
                         .padding(vertical = 4.dp),
@@ -202,7 +202,7 @@ fun TagActionsDialog(
                 }
                 if (movePageLabel != null) {
                     Column(
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier
                             .clip(RoundedCornerShape(11.dp))
                             .clickable(onClick = onMovePage)
                             .padding(vertical = 8.dp),
@@ -219,7 +219,7 @@ fun TagActionsDialog(
                     }
                 }
                 Column(
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier
                         .clip(RoundedCornerShape(11.dp))
                         .clickable(onClick = onDelete)
                         .padding(vertical = 8.dp),
