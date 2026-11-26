@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -36,6 +37,7 @@ import androidx.compose.ui.unit.dp
 internal fun NekOSAlertDialog(
     onDismissRequest: () -> Unit,
     shape: Shape = RoundedCornerShape(18.dp),
+    dialogWidth: androidx.compose.ui.unit.Dp? = null,
     containerColor: Color = Color(0xFFFFFBFE),
     titleContentColor: Color = Color(0xFF1D1B20),
     textContentColor: Color = Color(0xFF49454F),
@@ -63,7 +65,7 @@ internal fun NekOSAlertDialog(
             Box(
                 modifier = Modifier
                     .widthIn(max = 360.dp)
-                    .fillMaxWidth()
+                    .then(dialogWidth?.let { Modifier.width(it) } ?: Modifier.fillMaxWidth())
                     .padding(horizontal = 12.dp)
                     .padding(top = 12.dp)
             ) {
