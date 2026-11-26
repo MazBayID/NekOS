@@ -96,6 +96,9 @@ internal fun NekOSAlertDialog(
                                     title()
                                 }
                             }
+                            if (text != null) {
+                                SettingsBrushSeparator()
+                            }
                         }
                         if (text != null) {
                             CompositionLocalProvider(LocalContentColor provides textContentColor) {
