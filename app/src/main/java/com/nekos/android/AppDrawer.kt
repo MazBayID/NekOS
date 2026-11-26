@@ -53,7 +53,6 @@ internal fun AppDrawer(
     apps: List<InstalledApp>,
     iconBitmapCache: AppIconBitmapCache,
     launcherSurface: Color,
-    motifTintArgb: Long,
     closeThresholdPx: Float,
     modifier: Modifier = Modifier,
     onAppClick: (InstalledApp, Rect) -> Unit,
@@ -137,8 +136,8 @@ internal fun AppDrawer(
     }
 
     val drawerMotifBrush = rememberDialogMotifBrush()
-    val drawerMotifTint = remember(motifTintArgb) {
-        ColorFilter.tint(Color(motifTintArgb.toInt()), BlendMode.SrcIn)
+    val drawerMotifTint = remember(launcherSurface) {
+        ColorFilter.tint(darkenMotifColor(launcherSurface), BlendMode.SrcIn)
     }
 
     Column(
