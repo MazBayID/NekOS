@@ -88,7 +88,7 @@ private fun OfficialStorePreview(url: String) {
 }
 
 internal val SettingsInk = Color(0xFF34332F)
-internal val SettingsMuted = Color(0xFF706B63)
+internal val SettingsMuted = Color(0xFF5E574E)
 internal val SettingsAccent = Color(0xFF746657)
 internal val SettingsBorder = SettingsInk.copy(alpha = 0.13f)
 internal val SettingsCardShape = RoundedCornerShape(16.dp)
