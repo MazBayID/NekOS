@@ -1,12 +1,10 @@
 name: NekOS Release
 
 on:
-  push:
-    tags:
-      - "v*"
+  workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: nekos-release-${{ github.ref }}
@@ -14,34 +12,12 @@ concurrency:
 
 jobs:
   release:
-    name: Verify, sign, and publish APK
+    name: Build internal release candidate APK
     runs-on: ubuntu-latest
     timeout-minutes: 35
-    env:
-      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-      ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-      ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-      ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-
     steps:
       - name: Checkout tagged source
         uses: actions/checkout@v6
-
-      - name: Confirm release version and signing secrets
-        shell: bash
-        run: |
-          set -euo pipefail
-          VERSION_NAME="$(sed -n 's/^[[:space:]]*versionName = "\([^"]*\)".*/\1/p' app/build.gradle.kts)"
-          if [[ "v${VERSION_NAME}" != "${GITHUB_REF_NAME}" ]]; then
-            echo "Tag ${GITHUB_REF_NAME} does not match app version ${VERSION_NAME}."
-            exit 1
-          fi
-          for name in ANDROID_KEYSTORE_BASE64 ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_ALIAS ANDROID_KEY_PASSWORD; do
-            if [[ -z "${!name}" ]]; then
-              echo "Missing required GitHub Actions secret: ${name}"
-              exit 1
-            fi
-          done
 
       - name: Set up JDK 17
         uses: actions/setup-java@v5
@@ -60,53 +36,25 @@ jobs:
         with:
           gradle-version: '8.9'
 
-      - name: Prepare private signing key
-        shell: bash
-        run: |
-          set -euo pipefail
-          KEYSTORE_PATH="$RUNNER_TEMP/nekos-release.jks"
-          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$KEYSTORE_PATH"
-          chmod 600 "$KEYSTORE_PATH"
-          echo "ANDROID_KEYSTORE_FILE=$KEYSTORE_PATH" >> "$GITHUB_ENV"
-
-      - name: Build release APK, run unit tests, and lint
+      - name: Build unsigned release candidate, run unit tests, and lint
         run: gradle assembleRelease testDebugUnitTest lintDebug -Pandroid.aapt2FromMavenOverride="$ANDROID_HOME/build-tools/35.0.0/aapt2" --stacktrace
 
-      - name: Enable KVM for Android emulator
-        run: |
-          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-          sudo udevadm control --reload-rules
-          sudo udevadm trigger --name-match=kvm
-
-      - name: Run Compose UI tests on Android emulator
-        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
+      - name: Upload internal release candidate APK
+        if: success()
+        uses: actions/upload-artifact@v6
         with:
-          api-level: 35
-          target: google_apis
-          arch: x86_64
-          profile: pixel_2
-          disable-animations: true
-          script: gradle connectedDebugAndroidTest -Pandroid.aapt2FromMavenOverride="$ANDROID_HOME/build-tools/35.0.0/aapt2" --stacktrace
+          name: nekos-release-candidate-unsigned
+          path: app/build/outputs/apk/release/app-release-unsigned.apk
+          if-no-files-found: error
+          retention-days: 7
 
-      - name: Verify APK signature
-        shell: bash
-        run: |
-          set -euo pipefail
-          APK="app/build/outputs/apk/release/app-release.apk"
-          test -s "$APK"
-          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose --print-certs "$APK"
-          sha256sum "$APK" | tee app-release.sha256
-
-      - name: Publish GitHub Release
-        env:
-          GH_TOKEN: ${{ github.token }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          APK="app/build/outputs/apk/release/app-release.apk"
-          NOTES="docs/releases/${GITHUB_REF_NAME}.md"
-          if [[ -f "$NOTES" ]]; then
-            gh release create "$GITHUB_REF_NAME" "$APK" app-release.sha256 --title "NekOS ${GITHUB_REF_NAME#v}" --notes-file "$NOTES"
-          else
-            gh release create "$GITHUB_REF_NAME" "$APK" app-release.sha256 --title "NekOS ${GITHUB_REF_NAME#v}" --generate-notes
-          fi
+      - name: Upload reports on failure
+        if: failure()
+        uses: actions/upload-artifact@v6
+        with:
+          name: nekos-release-candidate-reports
+          path: |
+            **/build/reports/
+            **/build/test-results/
+          if-no-files-found: ignore
+          retention-days: 7
