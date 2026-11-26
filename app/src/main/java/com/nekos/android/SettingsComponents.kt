@@ -129,50 +129,48 @@ internal fun SettingsListRow(
             }
             Text("›", color = SettingsMuted, fontSize = 20.sp)
         }
-        Canvas(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 7.dp)
-                .height(4.dp)
-        ) {
-            val centerY = size.height / 2f
-            val maxThickness = 2.8.dp.toPx()
-            val halfThickness = maxThickness / 2f
-            val brushShape = Path().apply {
-                moveTo(0f, centerY)
-                cubicTo(
-                    size.width * 0.18f, centerY - halfThickness * 0.18f,
-                    size.width * 0.34f, centerY - halfThickness * 0.78f,
-                    size.width * 0.5f, centerY - halfThickness
-                )
-                cubicTo(
-                    size.width * 0.66f, centerY - halfThickness * 0.78f,
-                    size.width * 0.82f, centerY - halfThickness * 0.18f,
-                    size.width, centerY
-                )
-                cubicTo(
-                    size.width * 0.82f, centerY + halfThickness * 0.18f,
-                    size.width * 0.66f, centerY + halfThickness * 0.78f,
-                    size.width * 0.5f, centerY + halfThickness
-                )
-                cubicTo(
-                    size.width * 0.34f, centerY + halfThickness * 0.78f,
-                    size.width * 0.18f, centerY + halfThickness * 0.18f,
-                    0f, centerY
-                )
-                close()
-            }
-            val brush = Brush.horizontalGradient(
-                colorStops = arrayOf(
-                    0f to SettingsBorder.copy(alpha = 0f),
-                    0.18f to SettingsBorder.copy(alpha = 0.38f),
-                    0.5f to SettingsBorder,
-                    0.82f to SettingsBorder.copy(alpha = 0.38f),
-                    1f to SettingsBorder.copy(alpha = 0f)
-                )
-            )
-            drawPath(path = brushShape, brush = brush)
+        SettingsBrushSeparator(
+            modifier = Modifier.padding(horizontal = 7.dp)
+        )
+    }
+}
+
+
+@Composable
+internal fun SettingsBrushSeparator(modifier: Modifier = Modifier) {
+    Canvas(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(4.dp)
+    ) {
+        val centerY = size.height / 2f
+        val halfThickness = 2.8.dp.toPx() / 2f
+        val brushShape = Path().apply {
+            moveTo(0f, centerY)
+            cubicTo(size.width * 0.18f, centerY - halfThickness * 0.18f,
+                size.width * 0.34f, centerY - halfThickness * 0.78f,
+                size.width * 0.5f, centerY - halfThickness)
+            cubicTo(size.width * 0.66f, centerY - halfThickness * 0.78f,
+                size.width * 0.82f, centerY - halfThickness * 0.18f,
+                size.width, centerY)
+            cubicTo(size.width * 0.82f, centerY + halfThickness * 0.18f,
+                size.width * 0.66f, centerY + halfThickness * 0.78f,
+                size.width * 0.5f, centerY + halfThickness)
+            cubicTo(size.width * 0.34f, centerY + halfThickness * 0.78f,
+                size.width * 0.18f, centerY + halfThickness * 0.18f,
+                0f, centerY)
+            close()
         }
+        val brush = Brush.horizontalGradient(
+            colorStops = arrayOf(
+                0f to SettingsBorder.copy(alpha = 0f),
+                0.18f to SettingsBorder.copy(alpha = 0.38f),
+                0.5f to SettingsBorder,
+                0.82f to SettingsBorder.copy(alpha = 0.38f),
+                1f to SettingsBorder.copy(alpha = 0f)
+            )
+        )
+        drawPath(path = brushShape, brush = brush)
     }
 }
 
