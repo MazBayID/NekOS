@@ -106,7 +106,7 @@ fun TagManagementDialog(
                                 focusedContainerColor = Color(0xFFF4F1EA),
                                 unfocusedContainerColor = Color(0xFFF4F1EA),
                                 focusedIndicatorColor = Color(0xFF746657),
-                                unfocusedIndicatorColor = Color(0xFF8B8982).copy(alpha = 0.28f),
+                                unfocusedIndicatorColor = SettingsMuted.copy(alpha = 0.28f),
                                 cursorColor = Color(0xFF746657)
                             ),
                             modifier = Modifier.fillMaxWidth().height(48.dp)
@@ -211,7 +211,7 @@ fun TagManagementDialog(
                             Spacer(Modifier.width(8.dp))
                             Text(
                                 "$unavailableSelectedCount unavailable",
-                                color = Color(0xFF8B8982),
+                                color = SettingsMuted,
                                 style = MaterialTheme.typography.labelSmall,
                                 maxLines = 1
                             )
@@ -260,7 +260,7 @@ fun TagManagementDialog(
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
                         "${selectedPackages.size} selected",
-                        color = Color(0xFF8B8982),
+                        color = SettingsMuted,
                         style = MaterialTheme.typography.labelMedium
                     )
                     TextField(
@@ -283,7 +283,7 @@ fun TagManagementDialog(
                     if (filteredApps.isEmpty()) {
                         Text(
                             "No matching apps",
-                            color = Color(0xFF8B8982),
+                            color = SettingsMuted,
                             modifier = Modifier.padding(vertical = 12.dp)
                         )
                     } else {
