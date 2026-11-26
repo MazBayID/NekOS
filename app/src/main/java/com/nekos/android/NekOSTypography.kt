@@ -12,34 +12,34 @@ import androidx.compose.ui.unit.sp
 @OptIn(ExperimentalTextApi::class)
 internal val NekOSFontFamily = FontFamily(
     Font(
-        R.font.space_grotesk,
+        R.font.outfit,
         weight = FontWeight.W300,
         variationSettings = FontVariation.Settings(FontVariation.weight(300))
     ),
     Font(
-        R.font.space_grotesk,
+        R.font.outfit,
         weight = FontWeight.W400,
         variationSettings = FontVariation.Settings(FontVariation.weight(400))
     ),
     Font(
-        R.font.space_grotesk,
+        R.font.outfit,
         weight = FontWeight.W500,
         variationSettings = FontVariation.Settings(FontVariation.weight(500))
     ),
     Font(
-        R.font.space_grotesk,
+        R.font.outfit,
         weight = FontWeight.W600,
         variationSettings = FontVariation.Settings(FontVariation.weight(600))
     ),
     Font(
-        R.font.space_grotesk,
+        R.font.outfit,
         weight = FontWeight.W700,
         variationSettings = FontVariation.Settings(FontVariation.weight(700))
     )
 )
 
 /**
- * Shared Space Grotesk type scale for the complete NekOS interface.
+ * Shared Outfit type scale for the complete NekOS interface.
  * The established sizes and hierarchy are preserved while every Material
  * typography role uses the bundled variable font.
  */
