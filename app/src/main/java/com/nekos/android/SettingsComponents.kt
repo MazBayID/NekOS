@@ -93,6 +93,37 @@ internal fun SettingsNavigationCard(
     }
 }
 
+
+@Composable
+internal fun SettingsListRow(
+    title: String,
+    trailing: String? = null,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .defaultMinSize(minHeight = 44.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 7.dp, vertical = 9.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            title,
+            color = SettingsInk,
+            fontWeight = FontWeight.Medium,
+            fontSize = 13.sp,
+            modifier = Modifier.weight(1f)
+        )
+        if (!trailing.isNullOrBlank()) {
+            Text(trailing, color = SettingsMuted, fontSize = 10.sp)
+        }
+        Text("›", color = SettingsMuted, fontSize = 20.sp)
+    }
+}
+
 @Composable
 internal fun SettingsActionCard(
     title: String,
