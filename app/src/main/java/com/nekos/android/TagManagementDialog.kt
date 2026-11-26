@@ -126,6 +126,7 @@ fun TagManagementDialog(
                         Box(
                             modifier = Modifier
                                 .size(44.dp)
+                                .offset(x = (-20).dp)
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(Color(0xFFF4F1EA))
                                 .clickable { showTagColorPicker = true },
