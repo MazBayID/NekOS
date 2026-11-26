@@ -339,7 +339,7 @@ internal fun TagPill(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            if (tagIcon != null) Image(tagIcon!!, contentDescription = null, modifier = Modifier.size(20.dp))
+            if (tagIcon != null) Image(tagIcon!!, contentDescription = null, modifier = Modifier.size(28.dp))
             Text(
                 tag.name,
                 color = Ink,
