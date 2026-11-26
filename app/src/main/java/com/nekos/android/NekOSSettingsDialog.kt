@@ -217,7 +217,7 @@ internal fun NekOSSettingsDialog(
     val surfaceColor = launcherThemeColor(launcherThemeKey)
     val optionSurface = lerp(surfaceColor, Color.White, 0.48f)
     val motifBrush = rememberDialogMotifBrush()
-    val motifTint = ColorFilter.tint(Color(launcherUiColor.toInt()), BlendMode.SrcIn)
+    val motifTint = ColorFilter.tint(darkenMotifColor(surfaceColor), BlendMode.SrcIn)
 
     BackHandler(enabled = page != SettingsPage.MAIN) {
         page = if (page == SettingsPage.OFFICIAL_SKIN_STORE) {
