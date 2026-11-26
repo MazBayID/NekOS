@@ -14,6 +14,8 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.MaterialTheme
@@ -134,7 +136,12 @@ fun TagManagementDialog(
                                     .background(Color(selectedColor.toInt()))
                                     .border(1.dp, Color(0xFF34332F).copy(alpha = 0.16f), RoundedCornerShape(8.dp))
                             )
-                            Text("Choose", color = Color(0xFF34332F), style = MaterialTheme.typography.labelSmall)
+                            androidx.compose.material3.Icon(
+                                imageVector = Icons.Filled.Palette,
+                                contentDescription = "Choose tag color",
+                                tint = Color(0xFF34332F),
+                                modifier = Modifier.size(18.dp)
+                            )
                         }
                     }
                 }
