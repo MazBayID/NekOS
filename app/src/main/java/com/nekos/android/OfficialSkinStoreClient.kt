@@ -93,6 +93,7 @@ internal object OfficialSkinStoreClient {
             checkoutUrl=result.optString("checkout_url"),orderId=orderId)
     }
 
+    @Synchronized
     fun checkPaymentAndInstall(context: Context, skin: OfficialStoreSkin): StoreActionResult {
         val prefs=context.getSharedPreferences(PREFERENCES,Context.MODE_PRIVATE)
         val orderId=prefs.getString(PENDING_PREFIX+skin.id,null)
@@ -101,15 +102,17 @@ internal object OfficialSkinStoreClient {
             .put("app_version",appVersion(context)).put("order_id",orderId))
         if (!result.optBoolean("owned")) {
             val status=result.optString("status").lowercase()
-            if (status != "pending") prefs.edit().remove(PENDING_PREFIX + skin.id).apply()
             val failureMessage = when (status) {
-                "expire", "failed" -> "Pembayaran gagal atau kedaluwarsa. Midtrans belum mengonfirmasi pembayaran, jadi skin belum bisa dipasang. Kamu bisa mencoba membeli skin ini lagi."
+                "expire", "expired", "failed" -> "Pembayaran gagal atau kedaluwarsa. Midtrans belum mengonfirmasi pembayaran, jadi skin belum bisa dipasang. Kamu bisa mencoba membeli skin ini lagi."
                 "cancel", "cancelled" -> "Pembayaran dibatalkan. Tidak ada skin yang dipasang dan kamu bisa mencoba membeli lagi."
-                "deny" -> "Pembayaran ditolak oleh penyedia pembayaran. Silakan coba metode pembayaran lain."
+                "deny", "denied" -> "Pembayaran ditolak oleh penyedia pembayaran. Silakan coba metode pembayaran lain."
                 else -> null
             }
             if (failureMessage != null) {
-                return StoreActionResult(false, failureMessage, paymentFailed = true)
+                // Commit synchronously so concurrent checks and Store refreshes
+                // cannot resurrect this terminal order from stale preferences.
+                prefs.edit().remove(PENDING_PREFIX + skin.id).commit()
+                return StoreActionResult(false, failureMessage, orderId = orderId, paymentFailed = true)
             }
             return StoreActionResult(false,if(status=="pending")
                 "Pembayaran belum dikonfirmasi. Silakan periksa kembali beberapa saat lagi."
