@@ -381,6 +381,11 @@ internal fun HomeScreen(
                 Box(
                     modifier = Modifier.fillMaxWidth().height(122.dp)
                 ) {
+                    NekOSHomeClock(
+                        colorArgb = launcherUiColorArgb,
+                        modifier = Modifier.align(Alignment.CenterStart)
+                            .padding(start = 2.dp)
+                    )
                     Box(
                         modifier = Modifier.align(Alignment.CenterEnd)
                             .offset(x = 20.dp)
