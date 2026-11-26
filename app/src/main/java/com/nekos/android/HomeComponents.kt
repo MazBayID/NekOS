@@ -230,22 +230,7 @@ internal fun FavoriteSlot(
     }
 }
 
-private val HorizontalTagPillShape = GenericShape { size, _ ->
-    val quarterHeight = size.height * 0.25f
-    moveTo(0f, quarterHeight)
-    cubicTo(
-        size.width * 0.25f, 0f,
-        size.width * 0.75f, 0f,
-        size.width, quarterHeight
-    )
-    lineTo(size.width, size.height - quarterHeight)
-    cubicTo(
-        size.width * 0.75f, size.height,
-        size.width * 0.25f, size.height,
-        0f, size.height - quarterHeight
-    )
-    close()
-}
+private val HorizontalTagPillShape = RoundedCornerShape(8.dp)
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
