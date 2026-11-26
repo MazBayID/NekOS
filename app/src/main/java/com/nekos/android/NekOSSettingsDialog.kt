@@ -250,36 +250,28 @@ internal fun NekOSSettingsDialog(
                 when (page) {
                     SettingsPage.MAIN -> {
                         SettingsSectionTitle("APPEARANCE")
-                        SettingsActionCard(
+                        SettingsListRow(
                             title = "Wallpaper",
-                            action = "Open",
-                            surface = optionSurface,
                             onClick = { page = SettingsPage.WALLPAPER }
                         )
-                        SettingsActionCard(
+                        SettingsListRow(
                             title = "Launcher theme",
-                            action = "Open",
-                            surface = optionSurface,
                             onClick = { page = SettingsPage.LAUNCHER_THEME }
                         )
-                        SettingsActionCard(
+                        SettingsListRow(
                             title = "Skins",
-                            action = "Manage",
-                            surface = optionSurface,
+                            trailing = "Manage",
                             onClick = { page = SettingsPage.SKINS }
                         )
 
                         SettingsSectionTitle("BEHAVIOR")
-                        SettingsActionCard(
+                        SettingsListRow(
                             title = "Default launcher",
-                            action = if (isDefaultLauncher) "Active" else "Choose",
-                            surface = optionSurface,
+                            trailing = if (isDefaultLauncher) "Active" else "Choose",
                             onClick = onSetAsHome
                         )
-                        SettingsActionCard(
+                        SettingsListRow(
                             title = "Gesture hints",
-                            action = "View",
-                            surface = optionSurface,
                             onClick = onShowDrawerHint
                         )
 
