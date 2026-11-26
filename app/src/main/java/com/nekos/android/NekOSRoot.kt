@@ -139,8 +139,6 @@ internal fun NekOSRoot(
             } else if (result.success && result.installedSkinId != null) {
                 installedSkins = skinRepository.listInstalledSkins()
                 iconCatalogRepository.invalidateSkinCache()
-            } else if (!result.success && !result.message.contains("belum dikonfirmasi", ignoreCase = true)) {
-                // Keep pending orders on transient errors; the Store remains quiet.
             }
         }
         pendingStoreSkinIds = OfficialSkinStoreClient.pendingSkinIds(context)
@@ -1046,7 +1044,7 @@ internal fun NekOSRoot(
                         val result = withContext(Dispatchers.IO) { runCatching { OfficialSkinStoreClient.loadCatalog() } }
                         isOfficialStoreLoading = false
                         result.onSuccess { officialStoreSkins = it }
-                            .onFailure { Toast.makeText(context, it.message ?: "Unable to load skin store", Toast.LENGTH_LONG).show() }
+                            .onFailure { /* Keep Store refresh failures silent. */ }
                         pendingStoreSkinIds = OfficialSkinStoreClient.pendingSkinIds(context)
                     }
                 },
@@ -1062,7 +1060,7 @@ internal fun NekOSRoot(
                         storeBusySkinId = null
                         if (!result.checkoutUrl.isNullOrBlank()) {
                             runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(result.checkoutUrl))) }
-                                .onFailure { Toast.makeText(context, "Unable to open payment page", Toast.LENGTH_LONG).show() }
+                                .onFailure { /* Keep payment handoff failures silent. */ }
                         }
                         if (result.success && result.installedSkinId != null) {
                             installedSkins = skinRepository.listInstalledSkins()
