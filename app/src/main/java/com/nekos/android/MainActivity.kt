@@ -314,7 +314,7 @@ class MainActivity : ComponentActivity() {
             isAppearanceLightNavigationBars = true
         }
         setContent {
-            MaterialTheme {
+            MaterialTheme(typography = NekOSTypography) {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     NekOSRoot(
                         refreshToken = appRefreshToken,
