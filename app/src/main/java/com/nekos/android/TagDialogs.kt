@@ -168,35 +168,35 @@ fun TagActionsDialog(
     NekOSAlertDialog(
         topFrameColorArgb = launcherUiColorArgb,
         onDismissRequest = onDismiss,
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(14.dp),
         containerColor = launcherSurface,
         titleContentColor = Color(0xFF34332F),
         textContentColor = Color(0xFF34332F),
         title = {
             Text(
                 tag.name,
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleSmall
             )
         },
         text = {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(
                     modifier = Modifier.weight(1f)
                         .clip(RoundedCornerShape(11.dp))
                         .clickable(onClick = onEdit)
-                        .padding(vertical = 8.dp),
+                        .padding(vertical = 4.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Edit,
                         contentDescription = "Edit tag",
                         tint = Color(0xFF746657),
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(16.dp)
                     )
                     Text("Edit", color = Color(0xFF34332F), style = MaterialTheme.typography.labelSmall)
                 }
@@ -238,7 +238,7 @@ fun TagActionsDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text("Close", style = MaterialTheme.typography.labelMedium)
+                Text("Close", style = MaterialTheme.typography.labelSmall)
             }
         }
     )
