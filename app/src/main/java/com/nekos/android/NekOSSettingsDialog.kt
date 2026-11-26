@@ -241,7 +241,8 @@ internal fun NekOSSettingsDialog(
                                 fontWeight = FontWeight.SemiBold
                             )
                         }
-        Column(
+                        SettingsBrushSeparator()
+                        Column(
                 modifier = Modifier
                     .heightIn(max = availableDialogHeight * 0.58f)
                     .verticalScroll(rememberScrollState()),
