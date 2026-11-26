@@ -12,6 +12,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.Icon
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -163,26 +168,78 @@ fun TagActionsDialog(
     NekOSAlertDialog(
         topFrameColorArgb = launcherUiColorArgb,
         onDismissRequest = onDismiss,
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(16.dp),
         containerColor = launcherSurface,
         titleContentColor = Color(0xFF34332F),
         textContentColor = Color(0xFF34332F),
-        title = { Text(tag.name) },
+        title = {
+            Text(
+                tag.name,
+                style = MaterialTheme.typography.titleMedium
+            )
+        },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                TextButton(onClick = onEdit, modifier = Modifier.fillMaxWidth()) {
-                    Text("Edit tag")
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f)
+                        .clip(RoundedCornerShape(11.dp))
+                        .clickable(onClick = onEdit)
+                        .padding(vertical = 8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Edit,
+                        contentDescription = "Edit tag",
+                        tint = Color(0xFF746657),
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Text("Edit", color = Color(0xFF34332F), style = MaterialTheme.typography.labelSmall)
                 }
                 if (movePageLabel != null) {
-                    TextButton(onClick = onMovePage, modifier = Modifier.fillMaxWidth()) {
-                        Text(movePageLabel)
+                    Column(
+                        modifier = Modifier.weight(1f)
+                            .clip(RoundedCornerShape(11.dp))
+                            .clickable(onClick = onMovePage)
+                            .padding(vertical = 8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.SwapHoriz,
+                            contentDescription = movePageLabel,
+                            tint = Color(0xFF746657),
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Text("Move", color = Color(0xFF34332F), style = MaterialTheme.typography.labelSmall)
                     }
                 }
-                TextButton(onClick = onDelete, modifier = Modifier.fillMaxWidth()) {
-                    Text("Delete tag", color = Color(0xFFB3261E))
+                Column(
+                    modifier = Modifier.weight(1f)
+                        .clip(RoundedCornerShape(11.dp))
+                        .clickable(onClick = onDelete)
+                        .padding(vertical = 8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Close,
+                        contentDescription = "Delete tag",
+                        tint = Color(0xFFB3261E),
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Text("Delete", color = Color(0xFFB3261E), style = MaterialTheme.typography.labelSmall)
                 }
             }
         },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("Close") } }
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Close", style = MaterialTheme.typography.labelMedium)
+            }
+        }
     )
 }
