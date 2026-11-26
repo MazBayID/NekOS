@@ -95,7 +95,7 @@ internal fun SettingsNavigationCard(
             colorArgb = iconColorArgb,
             modifier = Modifier.size(23.dp)
         )
-        Text(title, color = SettingsInk, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 2)
+        Text(title, color = SettingsInk, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, maxLines = 2)
     }
 }
 
@@ -192,9 +192,9 @@ internal fun SettingsActionCard(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        Text(title, color = SettingsInk, fontWeight = FontWeight.SemiBold, fontSize = 14.sp,
+        Text(title, color = SettingsInk, fontWeight = FontWeight.SemiBold, fontSize = 13.sp,
             modifier = Modifier.weight(1f))
-        Text(action, color = SettingsAccent, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+        Text(action, color = SettingsAccent, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
     }
 }
 
