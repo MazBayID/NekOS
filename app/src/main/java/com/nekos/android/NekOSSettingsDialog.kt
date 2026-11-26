@@ -612,7 +612,7 @@ internal fun NekOSSettingsDialog(
                                 Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                                     Text(
                                         skin.name,
-                                        color = SettingsInk,
+                                        color = Color(0xFFF2F7FC),
                                         fontSize = 14.sp,
                                         fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium
                                     )
@@ -676,12 +676,23 @@ internal fun NekOSSettingsDialog(
                                 onClick = onRefreshOfficialStore,
                                 enabled = !isOfficialStoreLoading
                             ) {
-                                Text(
-                                    if (isOfficialStoreLoading) "LOADING…" else "REFRESH",
-                                    color = SettingsAccent,
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.SemiBold
-                                )
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Text(
+                                        "⟳",
+                                        color = Color(0xFF287C9B),
+                                        fontSize = 17.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        if (isOfficialStoreLoading) "LOADING…" else "REFRESH",
+                                        color = Color(0xFF287C9B),
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                }
                             }
                         }
 
@@ -716,8 +727,16 @@ internal fun NekOSSettingsDialog(
                             Row(
                                 modifier = Modifier.fillMaxWidth()
                                     .clip(RoundedCornerShape(10.dp))
-                                    .background(optionSurface.copy(alpha = 0.5f))
-                                    .border(1.dp, SettingsBorder, RoundedCornerShape(10.dp))
+                                    .background(
+                                        Brush.linearGradient(
+                                            listOf(
+                                                Color(0xFF071A33),
+                                                Color(0xFF103B60),
+                                                Color(0xFF15566D)
+                                            )
+                                        )
+                                    )
+                                    .border(1.dp, Color(0xFF326783), RoundedCornerShape(10.dp))
                                     .padding(7.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(9.dp)
@@ -737,7 +756,7 @@ internal fun NekOSSettingsDialog(
                                     )
                                     Text(
                                         "BY ${skin.author.ifBlank { "NEKOS COMMUNITY" }.uppercase()}",
-                                        color = SettingsMuted,
+                                        color = Color(0xFFB8D0E2),
                                         fontSize = 9.sp,
                                         fontWeight = FontWeight.Medium,
                                         letterSpacing = 0.35.sp,
@@ -747,7 +766,7 @@ internal fun NekOSSettingsDialog(
                                     if (skin.description.isNotBlank()) {
                                         Text(
                                             skin.description,
-                                            color = SettingsMuted,
+                                            color = Color(0xFFC5D8E7),
                                             fontSize = 10.sp,
                                             maxLines = 2,
                                             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
@@ -761,7 +780,7 @@ internal fun NekOSSettingsDialog(
                                     ) {
                                         Text(
                                             if (skin.price <= 0L) "FREE" else "Rp ${"%,d".format(skin.price)}",
-                                            color = if (skin.price <= 0L) Color(0xFF2E7D32) else Color(0xFF171717),
+                                            color = if (skin.price <= 0L) Color(0xFFB9F2A5) else Color(0xFFFFD6A6),
                                             fontSize = 11.sp,
                                             fontWeight = if (skin.price <= 0L) FontWeight.SemiBold else FontWeight.Bold,
                                             fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
