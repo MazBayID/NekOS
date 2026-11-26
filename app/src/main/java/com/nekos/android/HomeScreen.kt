@@ -265,7 +265,7 @@ internal fun HomeScreen(
                     ) {
                     Box(
                         modifier = Modifier.width(tagRailWidth).fillMaxHeight()
-                            .offset(y = (-50).dp)
+                            .offset(y = (-100).dp)
                     ) {
                         val tagFrameMiddleHeight by animateDpAsState(
                             targetValue = 20.dp + 58.dp * visibleTags.size,
@@ -450,6 +450,7 @@ internal fun HomeScreen(
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                     modifier = Modifier.fillMaxWidth()
                         .height(favoriteCellSize * 3 + 20.dp)
+                        .offset(y = (-50).dp)
                 ) {
                     itemsIndexed(
                         items = favoriteSlots,
