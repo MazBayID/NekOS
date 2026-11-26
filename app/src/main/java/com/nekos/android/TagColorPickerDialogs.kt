@@ -76,6 +76,7 @@ internal fun TagColorPickerDialog(
                         Modifier.fillMaxWidth()
                             .clip(RoundedCornerShape(12.dp))
                             .background(Color(0xFFF4F1EA))
+                            .border(1.dp, if (selected) Color(0xFF746657) else Color(0xFF34332F).copy(alpha = 0.13f), RoundedCornerShape(12.dp))
                             .clickable {
                                 onColorSelected(colorValue)
                                 onDismiss()
