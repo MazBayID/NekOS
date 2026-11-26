@@ -344,7 +344,7 @@ internal fun NekOSSettingsDialog(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(SettingsCardShape)
-                                .background(SettingsInk.copy(alpha = 0.025f))
+                                .background(SettingsInk.copy(alpha = 0.5f))
                                 .border(1.dp, SettingsBorder, SettingsCardShape)
                                 .padding(horizontal = 10.dp, vertical = 7.dp),
                             verticalAlignment = Alignment.CenterVertically,
@@ -384,7 +384,7 @@ internal fun NekOSSettingsDialog(
                                     .fillMaxWidth()
                                     .defaultMinSize(minHeight = 48.dp)
                                     .clip(SettingsCardShape)
-                                    .background(nekosBackgroundColor(key))
+                                    .background(nekosBackgroundColor(key).copy(alpha = 0.5f))
                                     .border(
                                         width = if (selected) 1.5.dp else 1.dp,
                                         color = if (selected) SettingsAccent else SettingsBorder,
@@ -411,7 +411,7 @@ internal fun NekOSSettingsDialog(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clip(SettingsCardShape)
-                                    .background(optionSurface)
+                                    .background(optionSurface.copy(alpha = 0.5f))
                                     .border(
                                         width = if (selected) 1.5.dp else 1.dp,
                                         color = if (selected) SettingsAccent else SettingsBorder,
@@ -474,7 +474,7 @@ internal fun NekOSSettingsDialog(
                                             .weight(1f)
                                             .defaultMinSize(minHeight = 48.dp)
                                             .clip(SettingsCardShape)
-                                            .background(option.color)
+                                            .background(option.color.copy(alpha = 0.5f))
                                             .border(
                                                 width = if (selected) 1.5.dp else 1.dp,
                                                 color = if (selected) SettingsAccent else SettingsBorder,
@@ -508,7 +508,7 @@ internal fun NekOSSettingsDialog(
                                             .weight(1f)
                                             .defaultMinSize(minHeight = 48.dp)
                                             .clip(SettingsCardShape)
-                                            .background(Color(0xFFF4F1EA))
+                                            .background(Color(0xFFF4F1EA).copy(alpha = 0.5f))
                                             .border(
                                                 width = if (selected) 1.5.dp else 1.dp,
                                                 color = if (selected) SettingsAccent else SettingsBorder,
@@ -663,7 +663,7 @@ internal fun NekOSSettingsDialog(
                             Row(
                                 modifier = Modifier.fillMaxWidth()
                                     .clip(RoundedCornerShape(10.dp))
-                                    .background(optionSurface.copy(alpha = 0.62f))
+                                    .background(optionSurface.copy(alpha = 0.5f))
                                     .border(1.dp, SettingsBorder, RoundedCornerShape(10.dp))
                                     .padding(7.dp),
                                 verticalAlignment = Alignment.CenterVertically,
