@@ -7,9 +7,11 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
@@ -54,6 +56,8 @@ fun TagManagementDialog(
     var showIconColorPicker by remember { mutableStateOf(false) }
     var showTagColorPicker by remember { mutableStateOf(false) }
     var appSearch by remember(tag?.id) { mutableStateOf("") }
+    var showAppPicker by remember { mutableStateOf(false) }
+    var appSelectionBeforePicker by remember { mutableStateOf<Set<String>>(emptySet()) }
     val iconCarouselState = androidx.compose.foundation.lazy.rememberLazyListState()
     LaunchedEffect(selectedIcon, catalog) {
         val index = catalog.indexOfFirst { it.id == selectedIcon }
@@ -179,72 +183,30 @@ fun TagManagementDialog(
                     }
                 }
 
-                Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                    Text("App assignment · ${selectedPackages.size} selected", color = Color(0xFF34332F), style = MaterialTheme.typography.labelMedium)
-                    if (unavailableSelectedCount > 0) {
-                        Text(
-                            "$unavailableSelectedCount saved assignment(s) are not currently visible. NekOS keeps them until their Android profile becomes available again.",
-                            color = Color(0xFF8B8982),
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
-                    TextField(
-                        value = appSearch,
-                        onValueChange = { appSearch = it },
-                        placeholder = { Text("Search apps or package") },
-                        singleLine = true,
-                        textStyle = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = TextFieldDefaults.colors(
-                            focusedTextColor = Color(0xFF34332F),
-                            unfocusedTextColor = Color(0xFF34332F),
-                            focusedContainerColor = Color(0xFFF4F1EA),
-                            unfocusedContainerColor = Color(0xFFF4F1EA),
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent,
-                            cursorColor = Color(0xFF746657)
-                        )
-                    )
-                    if (filteredApps.isEmpty()) {
-                        Text(
-                            "No matching apps",
-                            color = Color(0xFF8B8982),
-                            modifier = Modifier.padding(vertical = 12.dp)
-                        )
-                    } else {
-                        LazyColumn(Modifier.heightIn(max = 120.dp)) {
-                            items(filteredApps, key = { it.id }) { app ->
-                                Row(
-                                    Modifier.fillMaxWidth().clickable {
-                                        selectedPackages = if (app.id in selectedPackages) selectedPackages - app.id
-                                        else selectedPackages + app.id
-                                    }.padding(vertical = 4.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Checkbox(
-                                        checked = app.id in selectedPackages,
-                                        onCheckedChange = { checked ->
-                                            selectedPackages = if (checked) selectedPackages + app.id
-                                            else selectedPackages - app.id
-                                        },
-                                        colors = CheckboxDefaults.colors(
-                                            checkedColor = Color(0xFF746657),
-                                            uncheckedColor = Color(0xFF8B8982),
-                                            checkmarkColor = Color.White
-                                        )
-                                    )
-                                    TagAppIcon(app, iconBitmapCache)
-                                    Column(Modifier.weight(1f).padding(start = 10.dp)) {
-                                        Text(app.label, color = Color(0xFF34332F), maxLines = 1)
-                                        Text(
-                                            if (app.isInCurrentProfile) "Personal profile" else "Work profile",
-                                            color = Color(0xFF8B8982),
-                                            style = MaterialTheme.typography.labelSmall
-                                        )
-                                    }
-                                }
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text("App assignment", color = Color(0xFF34332F), style = MaterialTheme.typography.labelMedium)
+                    Row(
+                        modifier = Modifier.fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color(0xFFF4F1EA))
+                            .clickable {
+                                appSelectionBeforePicker = selectedPackages
+                                showAppPicker = true
+                            }
+                            .padding(horizontal = 12.dp, vertical = 11.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Text("${selectedPackages.size} apps selected", color = Color(0xFF34332F))
+                            if (unavailableSelectedCount > 0) {
+                                Text(
+                                    "$unavailableSelectedCount saved assignment(s) are unavailable right now",
+                                    color = Color(0xFF8B8982),
+                                    style = MaterialTheme.typography.labelSmall
+                                )
                             }
                         }
+                        Text("Choose apps", color = Color(0xFF746657), style = MaterialTheme.typography.labelLarge)
                     }
                 }
             }
@@ -272,6 +234,109 @@ fun TagManagementDialog(
             }
         }
     )
+
+    if (showAppPicker) {
+        NekOSAlertDialog(
+            topFrameColorArgb = launcherUiColorArgb,
+            onDismissRequest = {
+                selectedPackages = appSelectionBeforePicker
+                showAppPicker = false
+            },
+            shape = RoundedCornerShape(18.dp),
+            containerColor = launcherSurface,
+            titleContentColor = Color(0xFF34332F),
+            textContentColor = Color(0xFF34332F),
+            title = { Text("Select apps") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        "${selectedPackages.size} selected",
+                        color = Color(0xFF8B8982),
+                        style = MaterialTheme.typography.labelMedium
+                    )
+                    TextField(
+                        value = appSearch,
+                        onValueChange = { appSearch = it },
+                        placeholder = { Text("Search apps or package") },
+                        singleLine = true,
+                        textStyle = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = TextFieldDefaults.colors(
+                            focusedTextColor = Color(0xFF34332F),
+                            unfocusedTextColor = Color(0xFF34332F),
+                            focusedContainerColor = Color(0xFFF4F1EA),
+                            unfocusedContainerColor = Color(0xFFF4F1EA),
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent,
+                            cursorColor = Color(0xFF746657)
+                        )
+                    )
+                    if (filteredApps.isEmpty()) {
+                        Text(
+                            "No matching apps",
+                            color = Color(0xFF8B8982),
+                            modifier = Modifier.padding(vertical = 12.dp)
+                        )
+                    } else {
+                        LazyVerticalGrid(
+                            columns = GridCells.Fixed(3),
+                            modifier = Modifier.fillMaxWidth().heightIn(max = 320.dp),
+                            contentPadding = PaddingValues(vertical = 4.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            items(filteredApps, key = { it.id }) { app ->
+                                val selected = app.id in selectedPackages
+                                Column(
+                                    modifier = Modifier.fillMaxWidth()
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(if (selected) Color(0xFFE7E1D6) else Color.Transparent)
+                                        .clickable {
+                                            selectedPackages = if (selected) selectedPackages - app.id
+                                            else selectedPackages + app.id
+                                        }
+                                        .padding(horizontal = 3.dp, vertical = 5.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(5.dp)
+                                ) {
+                                    Box(contentAlignment = Alignment.TopEnd) {
+                                        TagAppIcon(app, iconBitmapCache)
+                                        if (selected) {
+                                            Box(
+                                                modifier = Modifier.size(17.dp)
+                                                    .clip(CircleShape)
+                                                    .background(Color(0xFF746657)),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Text("✓", color = Color.White, style = MaterialTheme.typography.labelSmall)
+                                            }
+                                        }
+                                    }
+                                    Text(
+                                        app.label,
+                                        color = Color(0xFF34332F),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        maxLines = 2,
+                                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                        modifier = Modifier.fillMaxWidth().heightIn(min = 28.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showAppPicker = false }) { Text("Done") }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    selectedPackages = appSelectionBeforePicker
+                    showAppPicker = false
+                }) { Text("Cancel") }
+            }
+        )
+    }
 
     if (showTagColorPicker) {
         TagColorPickerDialog(
