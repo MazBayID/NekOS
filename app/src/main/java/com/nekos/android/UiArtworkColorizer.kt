@@ -212,3 +212,40 @@ internal fun ThemedUiArtworkImage(
     }
 }
 
+
+
+@Composable
+internal fun SkinUiIcon(
+    fileName: String,
+    tint: androidx.compose.ui.graphics.Color,
+    contentDescription: String?,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    val resolver = remember(context) { SkinAssetResolver(context) }
+    val skinGeneration = SkinRuntimeState.generation
+    var bitmap by remember(fileName, skinGeneration) {
+        mutableStateOf<ImageBitmap?>(null)
+    }
+
+    LaunchedEffect(fileName, skinGeneration) {
+        val loadedBitmap = withContext(Dispatchers.IO) {
+            runCatching {
+                resolver.loadBitmap("icons/ui/$fileName", 96, 96)?.asImageBitmap()
+            }.getOrNull()
+        }
+        if (skinGeneration == SkinRuntimeState.generation) {
+            bitmap = loadedBitmap
+        }
+    }
+
+    bitmap?.let {
+        Image(
+            bitmap = it,
+            contentDescription = contentDescription,
+            contentScale = ContentScale.Fit,
+            colorFilter = ColorFilter.tint(tint),
+            modifier = modifier
+        )
+    }
+}

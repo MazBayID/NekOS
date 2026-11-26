@@ -13,11 +13,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.Icon
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -201,8 +196,8 @@ fun TagActionsDialog(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Filled.Edit,
+                    SkinUiIcon(
+                        fileName = "icon_pencil.webp",
                         contentDescription = "Edit tag",
                         tint = Color(0xFF746657),
                         modifier = Modifier.size(18.dp)
@@ -222,8 +217,8 @@ fun TagActionsDialog(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
-                        Icon(
-                            imageVector = Icons.Filled.ArrowForward,
+                        SkinUiIcon(
+                            fileName = "icon_arrow_right.webp",
                             contentDescription = movePageLabel,
                             tint = Color(0xFF746657),
                             modifier = Modifier.size(18.dp)
@@ -243,8 +238,8 @@ fun TagActionsDialog(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Filled.Close,
+                    SkinUiIcon(
+                        fileName = "icon_close.webp",
                         contentDescription = "Delete tag",
                         tint = Color(0xFFB3261E),
                         modifier = Modifier.size(18.dp)
