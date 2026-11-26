@@ -164,12 +164,12 @@ internal data class LauncherThemeOption(val key: String, val label: String, val 
 internal val LauncherThemeOptions = listOf(
     LauncherThemeOption("porcelain", "Porcelain", Color(0xFFFEFCF8)),
     LauncherThemeOption("sand", "Sand", Color(0xFFF5EBDD)),
-    LauncherThemeOption("sage", "Sage", Color(0xFFE8EEE5)),
-    LauncherThemeOption("mist", "Mist", Color(0xFFE8EDF2)),
-    LauncherThemeOption("lavender", "Lavender", Color(0xFFEFEAF5)),
-    LauncherThemeOption("blush", "Blush", Color(0xFFF5E8E6)),
-    LauncherThemeOption("mint", "Mint", Color(0xFFE6F1EC)),
-    LauncherThemeOption("sky", "Sky", Color(0xFFE5F0F7))
+    LauncherThemeOption("sage", "Sage", Color(0xFFA8B99F)),
+    LauncherThemeOption("mist", "Mist", Color(0xFFA8BBCB)),
+    LauncherThemeOption("lavender", "Lavender", Color(0xFFB5A5C9)),
+    LauncherThemeOption("blush", "Blush", Color(0xFFC69D98)),
+    LauncherThemeOption("mint", "Mint", Color(0xFFA2C1B1)),
+    LauncherThemeOption("sky", "Sky", Color(0xFF9FBBD0))
 )
 
 internal fun normalizeLauncherTheme(key: String?): String =
