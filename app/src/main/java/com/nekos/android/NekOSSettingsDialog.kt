@@ -58,9 +58,11 @@ import androidx.compose.ui.unit.sp
 @Composable
 private fun OfficialStorePreview(url: String) {
     val image by produceState<androidx.compose.ui.graphics.ImageBitmap?>(null, url) {
-        value = withContext(Dispatchers.IO) {
-            runCatching { URL(url).openStream().use { BitmapFactory.decodeStream(it)?.asImageBitmap() } }.getOrNull()
-        }
+        value = runCatching {
+            withContext(Dispatchers.IO) {
+                URL(url).openStream().use { BitmapFactory.decodeStream(it)?.asImageBitmap() }
+            }
+        }.getOrNull()
     }
     if (image != null) {
         Image(bitmap = image!!, contentDescription = "Skin preview",
