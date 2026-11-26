@@ -240,9 +240,9 @@ internal fun HomeScreen(
                                     },
                                     onDragEnd = {
                                         val threshold = 56.dp.toPx()
-                                        if (totalDrag <= -threshold && tagsVisible) {
+                                        if (totalDrag >= threshold && tagsVisible) {
                                             tagsVisible = false
-                                        } else if (totalDrag >= threshold && !tagsVisible) {
+                                        } else if (totalDrag <= -threshold && !tagsVisible) {
                                             tagsVisible = true
                                         }
                                         totalDrag = 0f
