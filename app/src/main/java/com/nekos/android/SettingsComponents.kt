@@ -112,6 +112,7 @@ internal fun SettingsListRow(
                 .fillMaxWidth()
                 .defaultMinSize(minHeight = 44.dp)
                 .clip(RoundedCornerShape(8.dp))
+                .border(1.dp, SettingsBorder, RoundedCornerShape(8.dp))
                 .clickable(onClick = onClick)
                 .padding(horizontal = 7.dp, vertical = 9.dp),
             verticalAlignment = Alignment.CenterVertically,
