@@ -33,7 +33,44 @@ begin
 
   if not found then return false; end if;
 
-  if coalesce(p_payload->>'gross_amount', '') !~ '^[0-9]+(\.[0-9]+)?$' then
+  if coalesce(p_payload->>'gross_amount', '') !~ '^[0-9]+([.][0-9]+)? then
+    return false;
+  end if;
+
+  v_remote_amount := (p_payload->>'gross_amount')::numeric;
+  v_remote_currency := upper(coalesce(p_payload->>'currency', ''));
+
+  if v_remote_amount <> v_order.amount
+     or v_remote_currency <> upper(v_order.currency) then
+    return false;
+  end if;
+
+  if v_order.status = 'paid' then return true; end if;
+  if v_order.status <> 'pending' then return false; end if;
+
+  update private.skin_orders
+  set status = 'paid', paid_at = now()
+  where id = p_order_id;
+
+  update private.skin_payments
+  set status = 'completed',
+      provider_payment_id = coalesce(p_provider_payment_id, provider_payment_id),
+      provider_payload = coalesce(p_payload, '{}'::jsonb),
+      updated_at = now()
+  where id = v_payment.id;
+
+  insert into private.skin_entitlements(device_id, skin_id, order_id, status)
+  values (v_order.device_id, v_order.skin_id, v_order.id, 'active')
+  on conflict (device_id, skin_id)
+  do update set status = 'active', order_id = excluded.order_id, granted_at = now();
+
+  return true;
+end;
+$$;
+
+revoke all on function public.skin_mark_paid(uuid,text,text,jsonb) from public, anon, authenticated;
+grant execute on function public.skin_mark_paid(uuid,text,text,jsonb) to service_role;
+ then
     return false;
   end if;
 
