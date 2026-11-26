@@ -5,10 +5,14 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -17,6 +21,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -94,14 +99,13 @@ internal fun NekOSHomeClock(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             modifier = Modifier.padding(top = 1.dp)
         ) {
-            androidx.compose.foundation.Canvas(
-                modifier = Modifier.padding(start = 1.dp)
-            ) {
-                drawCircle(
-                    color = accent.copy(alpha = 0.8f),
-                    radius = 2.dp.toPx()
-                )
-            }
+            Box(
+                modifier = Modifier
+                    .padding(start = 1.dp)
+                    .size(4.dp)
+                    .clip(CircleShape)
+                    .background(accent.copy(alpha = 0.8f))
+            )
             Text(
                 text = "NEKOS  /  LOCAL TIME",
                 color = accent.copy(alpha = 0.64f),
