@@ -612,7 +612,7 @@ internal fun NekOSSettingsDialog(
                                 Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                                     Text(
                                         skin.name,
-                                        color = Color(0xFFF2F7FC),
+                                        color = SettingsInk,
                                         fontSize = 14.sp,
                                         fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium
                                     )
@@ -748,7 +748,7 @@ internal fun NekOSSettingsDialog(
                                 ) {
                                     Text(
                                         skin.name,
-                                        color = SettingsInk,
+                                        color = Color.White,
                                         fontSize = 13.sp,
                                         fontWeight = FontWeight.SemiBold,
                                         maxLines = 1,
