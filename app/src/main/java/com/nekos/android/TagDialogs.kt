@@ -91,7 +91,7 @@ fun TagAppsDialog(
                 Text(
                     text = "${assignedApps.size} ${if (assignedApps.size == 1) "app" else "apps"}",
                     style = MaterialTheme.typography.labelMedium,
-                    color = Color(0xFF8B8982)
+                    color = SettingsMuted
                 )
                 if (assignedApps.isEmpty()) {
                     Column(
@@ -112,7 +112,7 @@ fun TagAppsDialog(
                             } else {
                                 "Saved app assignments are kept while their Android profile is unavailable."
                             },
-                            color = Color(0xFF8B8982),
+                            color = SettingsMuted,
                             style = MaterialTheme.typography.bodySmall
                         )
                     }
