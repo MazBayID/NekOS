@@ -80,7 +80,7 @@ fun TagManagementDialog(
         containerColor = launcherSurface,
         titleContentColor = Color(0xFF34332F),
         textContentColor = Color(0xFF34332F),
-        title = { Text(if (tag == null) "Create tag" else "Edit tag") },
+        title = { Text(if (tag == null) "Create tag" else "Edit tag", style = MaterialTheme.typography.titleSmall) },
         text = {
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
@@ -94,7 +94,7 @@ fun TagManagementDialog(
                         modifier = Modifier.weight(1f),
                         verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        Text("Tag Name", color = Color(0xFF34332F), style = MaterialTheme.typography.labelMedium)
+                        Text("Tag Name", color = Color(0xFF34332F), style = MaterialTheme.typography.labelSmall)
                         TextField(
                             value = name,
                             onValueChange = { name = it.take(24) },
@@ -116,7 +116,7 @@ fun TagManagementDialog(
                         modifier = Modifier.weight(1f),
                         verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        Text("Tag Color", color = Color(0xFF34332F), style = MaterialTheme.typography.labelMedium)
+                        Text("Tag Color", color = Color(0xFF34332F), style = MaterialTheme.typography.labelSmall)
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -134,7 +134,7 @@ fun TagManagementDialog(
                                     .background(Color(selectedColor.toInt()))
                                     .border(1.dp, Color(0xFF34332F).copy(alpha = 0.16f), RoundedCornerShape(8.dp))
                             )
-                            Text("Choose", color = Color(0xFF34332F), style = MaterialTheme.typography.bodyMedium)
+                            Text("Choose", color = Color(0xFF34332F), style = MaterialTheme.typography.labelSmall)
                         }
                     }
                 }
@@ -144,10 +144,10 @@ fun TagManagementDialog(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Tag icon", color = Color(0xFF34332F), style = MaterialTheme.typography.labelMedium,
+                        Text("Tag icon", color = Color(0xFF34332F), style = MaterialTheme.typography.labelSmall,
                             modifier = Modifier.weight(1f))
-                        TextButton(onClick = { showIconColorPicker = true }) { Text("Icon color") }
-                        TextButton(onClick = { selectedIcon = null }) { Text("Clear") }
+                        TextButton(onClick = { showIconColorPicker = true }) { Text("Icon color", style = MaterialTheme.typography.labelSmall) }
+                        TextButton(onClick = { selectedIcon = null }) { Text("Clear", style = MaterialTheme.typography.labelSmall) }
                     }
                     LazyRow(
                         state = iconCarouselState,
@@ -186,7 +186,7 @@ fun TagManagementDialog(
                 }
 
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text("App assignment", color = Color(0xFF34332F), style = MaterialTheme.typography.labelMedium)
+                    Text("App assignment", color = Color(0xFF34332F), style = MaterialTheme.typography.labelSmall)
                     Row(
                         modifier = Modifier.fillMaxWidth()
                             .clip(RoundedCornerShape(12.dp))
@@ -199,7 +199,7 @@ fun TagManagementDialog(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                            Text("${selectedPackages.size} apps selected", color = Color(0xFF34332F))
+                            Text("${selectedPackages.size} apps selected", color = Color(0xFF34332F), style = MaterialTheme.typography.labelSmall)
                             if (unavailableSelectedCount > 0) {
                                 Text(
                                     "$unavailableSelectedCount saved assignment(s) are unavailable right now",
@@ -208,7 +208,7 @@ fun TagManagementDialog(
                                 )
                             }
                         }
-                        Text("Choose apps", color = Color(0xFF746657), style = MaterialTheme.typography.labelLarge)
+                        Text("Choose apps", color = Color(0xFF746657), style = MaterialTheme.typography.labelSmall)
                     }
                 }
             }
@@ -227,12 +227,12 @@ fun TagManagementDialog(
                         ).normalized()
                     )
                 }
-            ) { Text("Save") }
+            ) { Text("Save", style = MaterialTheme.typography.labelSmall) }
         },
         dismissButton = {
             Row {
-                if (tag != null) TextButton(onClick = { onDelete(tag) }) { Text("Delete") }
-                TextButton(onClick = onDismiss) { Text("Cancel") }
+                if (tag != null) TextButton(onClick = { onDelete(tag) }) { Text("Delete", style = MaterialTheme.typography.labelSmall) }
+                TextButton(onClick = onDismiss) { Text("Cancel", style = MaterialTheme.typography.labelSmall) }
             }
         }
     )
