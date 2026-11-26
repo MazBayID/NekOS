@@ -129,9 +129,6 @@ internal fun SettingsListRow(
             }
             Text("›", color = SettingsMuted, fontSize = 21.sp)
         }
-        SettingsBrushSeparator(
-            modifier = Modifier.padding(horizontal = 7.dp)
-        )
     }
 }
 
