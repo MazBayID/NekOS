@@ -744,7 +744,6 @@ internal fun NekOSRoot(
             AppDrawer(
                 apps = apps,
                 launcherSurface = launcherSurface,
-                motifTintArgb = launcherUiColorArgb,
                 iconBitmapCache = iconBitmapCache,
                 closeThresholdPx = drawerCloseThresholdPx,
                 modifier = Modifier
@@ -828,7 +827,7 @@ internal fun NekOSRoot(
                 val popupMaxWidth = maxWidth
                 val appActionMotifBrush = rememberDialogMotifBrush()
                 val appActionMotifTint = androidx.compose.ui.graphics.ColorFilter.tint(
-                    Color(launcherUiColorArgb.toInt()),
+                    darkenMotifColor(launcherSurface),
                     androidx.compose.ui.graphics.BlendMode.SrcIn
                 )
                 val popupMaxHeight = with(LocalDensity.current) {
