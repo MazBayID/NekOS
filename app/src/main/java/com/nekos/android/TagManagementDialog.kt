@@ -14,8 +14,6 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.MaterialTheme
@@ -119,28 +117,19 @@ fun TagManagementDialog(
                         verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Text("Tag Color", color = Color(0xFF34332F), style = MaterialTheme.typography.labelSmall)
-                        Row(
+                        Box(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .height(44.dp)
+                                .size(44.dp)
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(Color(0xFFF4F1EA))
-                                .clickable { showTagColorPicker = true }
-                                .padding(horizontal = 9.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                .clickable { showTagColorPicker = true },
+                            contentAlignment = Alignment.Center
                         ) {
                             Box(
-                                Modifier.size(24.dp)
+                                Modifier.size(30.dp)
                                     .clip(RoundedCornerShape(8.dp))
                                     .background(Color(selectedColor.toInt()))
                                     .border(1.dp, Color(0xFF34332F).copy(alpha = 0.16f), RoundedCornerShape(8.dp))
-                            )
-                            androidx.compose.material3.Icon(
-                                imageVector = Icons.Filled.Palette,
-                                contentDescription = "Choose tag color",
-                                tint = Color(0xFF34332F),
-                                modifier = Modifier.size(18.dp)
                             )
                         }
                     }
