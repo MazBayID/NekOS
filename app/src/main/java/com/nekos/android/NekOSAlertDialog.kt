@@ -42,6 +42,7 @@ internal fun NekOSAlertDialog(
     titleContentColor: Color = Color(0xFF1D1B20),
     textContentColor: Color = Color(0xFF5E574E),
     topFrameColorArgb: Long = DEFAULT_LAUNCHER_UI_COLOR,
+    topFrameOffsetY: androidx.compose.ui.unit.Dp = (-6).dp,
     title: (@Composable () -> Unit)? = null,
     text: (@Composable () -> Unit)? = null,
     confirmButton: @Composable () -> Unit = {},
@@ -119,7 +120,7 @@ internal fun NekOSAlertDialog(
                 }
                 TopFrame(
                     colorArgb = topFrameColorArgb,
-                    modifier = Modifier.align(Alignment.TopCenter).offset(y = (-6).dp)
+                    modifier = Modifier.align(Alignment.TopCenter).offset(y = topFrameOffsetY)
                 )
             }
         }
