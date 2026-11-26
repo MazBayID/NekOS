@@ -76,6 +76,7 @@ fun TagManagementDialog(
         topFrameColorArgb = launcherUiColorArgb,
         onDismissRequest = onDismiss,
         shape = RoundedCornerShape(18.dp),
+        dialogWidth = 240.dp,
         containerColor = launcherSurface,
         titleContentColor = Color(0xFF34332F),
         textContentColor = Color(0xFF34332F),
