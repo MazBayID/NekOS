@@ -91,7 +91,7 @@ fun TagManagementDialog(
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     Column(
-                        modifier = Modifier.weight(1.2f),
+                        modifier = Modifier.weight(1.0f),
                         verticalArrangement = Arrangement.spacedBy(5.dp)
                     ) {
                         Text("Tag Name", color = Color(0xFF34332F), style = MaterialTheme.typography.labelSmall)
@@ -113,8 +113,8 @@ fun TagManagementDialog(
                         )
                     }
                     Column(
-                        modifier = Modifier.weight(0.8f),
-                        horizontalAlignment = Alignment.Start,
+                        modifier = Modifier.weight(1.0f),
+                        horizontalAlignment = Alignment.End,
                         verticalArrangement = Arrangement.spacedBy(5.dp)
                     ) {
                         Text(
