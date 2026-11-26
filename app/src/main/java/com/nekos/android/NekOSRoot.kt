@@ -136,6 +136,8 @@ internal fun NekOSRoot(
             }
             storeBusySkinId = null
             if (result.paymentFailed) {
+                // Ensure the Store UI immediately reflects that this order is terminal.
+                pendingStoreSkinIds = pendingStoreSkinIds - skin.id
                 failures += result.message
             } else if (result.success && result.installedSkinId != null) {
                 installedSkins = skinRepository.listInstalledSkins()
@@ -1074,6 +1076,8 @@ internal fun NekOSRoot(
                             iconCatalogRepository.invalidateSkinCache()
                         }
                         if (result.paymentFailed) {
+                            // Terminal payment status: remove the pending badge/action immediately.
+                            pendingStoreSkinIds = pendingStoreSkinIds - skin.id
                             storePaymentFailure = result.message
                         } else {
                             Toast.makeText(context, result.message, Toast.LENGTH_LONG).show()
