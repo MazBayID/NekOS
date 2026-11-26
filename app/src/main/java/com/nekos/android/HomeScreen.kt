@@ -237,6 +237,7 @@ internal fun HomeScreen(
                     }
                     Box(
                         modifier = Modifier.width(tagRailWidth).fillMaxHeight()
+                            .offset(y = (-100).dp)
                     ) {
                         val tagFrameMiddleHeight by animateDpAsState(
                             targetValue = 20.dp + 58.dp * visibleTags.size,
