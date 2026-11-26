@@ -21,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
@@ -43,6 +44,7 @@ internal fun NekOSAlertDialog(
     textContentColor: Color = Color(0xFF5E574E),
     topFrameColorArgb: Long = DEFAULT_LAUNCHER_UI_COLOR,
     topFrameOffsetY: androidx.compose.ui.unit.Dp = (-6).dp,
+    topFrameHorizontalExpansion: androidx.compose.ui.unit.Dp = 0.dp,
     title: (@Composable () -> Unit)? = null,
     text: (@Composable () -> Unit)? = null,
     confirmButton: @Composable () -> Unit = {},
@@ -120,7 +122,12 @@ internal fun NekOSAlertDialog(
                 }
                 TopFrame(
                     colorArgb = topFrameColorArgb,
-                    modifier = Modifier.align(Alignment.TopCenter).offset(y = topFrameOffsetY)
+                    modifier = Modifier.align(Alignment.TopCenter)
+                        .offset(y = topFrameOffsetY)
+                        .graphicsLayer {
+                            val expansionPx = topFrameHorizontalExpansion.toPx()
+                            scaleX = if (size.width > 0f) (size.width + expansionPx * 2f) / size.width else 1f
+                        }
                 )
             }
         }
