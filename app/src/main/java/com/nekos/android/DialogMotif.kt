@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageShader
 import androidx.compose.ui.graphics.ShaderBrush
 import androidx.compose.ui.graphics.TileMode
@@ -20,6 +21,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.io.File
+
+/** Darkens a palette color while preserving its hue for decorative motif tinting. */
+internal fun darkenMotifColor(color: Color): Color = Color(
+    red = color.red * 0.55f,
+    green = color.green * 0.55f,
+    blue = color.blue * 0.55f,
+    alpha = color.alpha
+)
 
 internal data class DialogMotifAsset(
     val relativePath: String,
