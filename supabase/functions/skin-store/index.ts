@@ -189,47 +189,74 @@ Deno.serve(async(req:Request)=>{
           return fail("midtrans_status_check_failed",503,origin);
         } else {
           let verified=await verifiedResponse.json();
-          const localAmount=Number(status.amount);
-          const remoteAmount=Number(verified.gross_amount);
-          const remoteOrderId=String(verified.order_id??"").trim();
-          const orderIdMatches=remoteOrderId===orderId;
-          const amountMatches=Number.isFinite(localAmount) && Number.isFinite(remoteAmount) &&
-            remoteAmount===localAmount;
-          if(!orderIdMatches || !amountMatches) {
-            console.error("skin_store_transaction_mismatch", JSON.stringify({
-              order_id: orderId,
-              remote_order_id: remoteOrderId,
-              local_amount: localAmount,
-              remote_amount: remoteAmount,
-              remote_status: String(verified.transaction_status??"")
+          const providerStatusCode=String(verified.status_code??"");
+          // Midtrans can return an API-level 404 inside a successful HTTP 200 response.
+          // This is the expected response when a Snap page was abandoned before a method was selected.
+          if(providerStatusCode==="404") {
+            console.info("skin_store_snap_transaction_not_created", JSON.stringify({
+              order_id:orderId,
+              expiry_reached:expiryReached,
+              status_message:String(verified.status_message??"")
             }));
-            return fail("midtrans_transaction_mismatch",502,origin);
-          }
-          let transactionStatus=String(verified.transaction_status??"");
-          if(transactionStatus==="pending" && expiryReached) {
-            const expireResponse=await fetch(midtransBase()+"/v2/"+encodeURIComponent(orderId)+"/expire",{
-              method:"POST",
-              headers:{Authorization:authHeader(),"Accept":"application/json","Content-Type":"application/json"}
-            });
-            if(!expireResponse.ok) {
-              return fail(expireResponse.status===401||expireResponse.status===403
-                ?"midtrans_expire_permission_required":"midtrans_expire_failed",503,origin);
+            if(expiryReached) {
+              await rpc("skin_update_payment_status",{
+                p_order_id:orderId,p_status:"expire",
+                p_payload:{reason:"snap_page_expired_without_payment_method",provider_response:verified,
+                  expired_at:new Date().toISOString()}
+              });
+              status=await rpc("skin_order_status",{p_order_id:orderId,p_device_hash:deviceHash});
             }
-            const expired=await expireResponse.json();
-            if(String(expired.order_id??orderId)!==orderId)return fail("midtrans_transaction_mismatch",502,origin);
-            verified=expired;
-            transactionStatus=String(verified.transaction_status??"expire");
+          } else if(providerStatusCode!=="200") {
+            console.error("skin_store_midtrans_status_error", JSON.stringify({
+              order_id:orderId,
+              http_status:verifiedResponse.status,
+              provider_status_code:providerStatusCode,
+              status_message:String(verified.status_message??"")
+            }));
+            return fail("midtrans_status_check_failed",503,origin);
+          } else {
+            const localAmount=Number(status.amount);
+            const remoteAmount=Number(verified.gross_amount);
+            const remoteOrderId=String(verified.order_id??"").trim();
+            const orderIdMatches=remoteOrderId===orderId;
+            const amountMatches=Number.isFinite(localAmount) && Number.isFinite(remoteAmount) &&
+              remoteAmount===localAmount;
+            if(!orderIdMatches || !amountMatches) {
+              console.error("skin_store_transaction_mismatch", JSON.stringify({
+                order_id: orderId,
+                remote_order_id: remoteOrderId,
+                local_amount: localAmount,
+                remote_amount: remoteAmount,
+                remote_status: String(verified.transaction_status??"")
+              }));
+              return fail("midtrans_transaction_mismatch",502,origin);
+            }
+            let transactionStatus=String(verified.transaction_status??"");
+            if(transactionStatus==="pending" && expiryReached) {
+              const expireResponse=await fetch(midtransBase()+"/v2/"+encodeURIComponent(orderId)+"/expire",{
+                method:"POST",
+                headers:{Authorization:authHeader(),"Accept":"application/json","Content-Type":"application/json"}
+              });
+              if(!expireResponse.ok) {
+                return fail(expireResponse.status===401||expireResponse.status===403
+                  ?"midtrans_expire_permission_required":"midtrans_expire_failed",503,origin);
+              }
+              const expired=await expireResponse.json();
+              if(String(expired.order_id??orderId)!==orderId)return fail("midtrans_transaction_mismatch",502,origin);
+              verified=expired;
+              transactionStatus=String(verified.transaction_status??"expire");
+            }
+            const fraud=String(verified.fraud_status??"accept").toLowerCase();
+            const paid=transactionStatus==="settlement" ||
+              (transactionStatus==="capture" && fraud==="accept");
+            if(paid && fraud==="accept") {
+              await rpc("skin_mark_paid",{p_order_id:orderId,p_provider_order_id:orderId,
+                p_provider_payment_id:String(verified.transaction_id??""),p_payload:verified});
+            } else if(["expire","cancel","deny"].includes(transactionStatus)) {
+              await rpc("skin_update_payment_status",{p_order_id:orderId,p_status:transactionStatus,p_payload:verified});
+            }
+            status=await rpc("skin_order_status",{p_order_id:orderId,p_device_hash:deviceHash});
           }
-          const fraud=String(verified.fraud_status??"accept").toLowerCase();
-          const paid=transactionStatus==="settlement" ||
-            (transactionStatus==="capture" && fraud==="accept");
-          if(paid && fraud==="accept") {
-            await rpc("skin_mark_paid",{p_order_id:orderId,p_provider_order_id:orderId,
-              p_provider_payment_id:String(verified.transaction_id??""),p_payload:verified});
-          } else if(["expire","cancel","deny"].includes(transactionStatus)) {
-            await rpc("skin_update_payment_status",{p_order_id:orderId,p_status:transactionStatus,p_payload:verified});
-          }
-          status=await rpc("skin_order_status",{p_order_id:orderId,p_device_hash:deviceHash});
         }
       }
       return json(status,200,origin);
