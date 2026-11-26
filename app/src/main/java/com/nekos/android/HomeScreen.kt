@@ -115,6 +115,7 @@ internal fun HomeScreen(
     }
     val currentOnDrawerDrag by rememberUpdatedState(onDrawerDrag)
     val currentOnDrawerDragEnd by rememberUpdatedState(onDrawerDragEnd)
+    var tagsVisible by remember { mutableStateOf(true) }
     Box(
         Modifier
             .fillMaxSize()
@@ -228,13 +229,40 @@ internal fun HomeScreen(
                     modifier = Modifier.fillMaxSize(),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    Spacer(modifier = Modifier.weight(1f).fillMaxHeight())
+                    Spacer(
+                        modifier = Modifier.weight(1f).fillMaxHeight()
+                            .pointerInput(tagsVisible) {
+                                var totalDrag = 0f
+                                detectHorizontalDragGestures(
+                                    onHorizontalDrag = { change, dragAmount ->
+                                        totalDrag += dragAmount
+                                        change.consume()
+                                    },
+                                    onDragEnd = {
+                                        val threshold = 56.dp.toPx()
+                                        if (totalDrag <= -threshold && tagsVisible) {
+                                            tagsVisible = false
+                                        } else if (totalDrag >= threshold && !tagsVisible) {
+                                            tagsVisible = true
+                                        }
+                                        totalDrag = 0f
+                                    },
+                                    onDragCancel = { totalDrag = 0f }
+                                )
+                            }
+                    )
                     val tagPageCount = ((tags.size + 4) / 5).coerceAtLeast(1)
                     val safeTagPage = activeTagPage.coerceIn(0, tagPageCount - 1)
                     val visibleTags = tags.drop(safeTagPage * 5).take(5)
                     LaunchedEffect(tagPageCount, activeTagPage) {
                         if (activeTagPage != safeTagPage) onTagPageChange(safeTagPage)
                     }
+                    AnimatedVisibility(
+                        visible = tagsVisible,
+                        enter = fadeIn(animationSpec = tween(220)) + scaleIn(initialScale = 0.96f),
+                        exit = androidx.compose.animation.fadeOut(animationSpec = tween(180)) +
+                            androidx.compose.animation.scaleOut(targetScale = 0.96f)
+                    ) {
                     Box(
                         modifier = Modifier.width(tagRailWidth).fillMaxHeight()
                             .offset(y = (-50).dp)
@@ -377,6 +405,7 @@ internal fun HomeScreen(
                                 }
                             }
                         }
+                    }
                     }
                 }
                 Box(
