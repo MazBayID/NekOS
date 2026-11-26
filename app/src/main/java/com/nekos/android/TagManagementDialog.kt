@@ -91,8 +91,8 @@ fun TagManagementDialog(
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                        modifier = Modifier.weight(1.4f),
+                        verticalArrangement = Arrangement.spacedBy(5.dp)
                     ) {
                         Text("Tag Name", color = Color(0xFF34332F), style = MaterialTheme.typography.labelSmall)
                         TextField(
@@ -109,14 +109,21 @@ fun TagManagementDialog(
                                 unfocusedIndicatorColor = Color(0xFF8B8982).copy(alpha = 0.28f),
                                 cursorColor = Color(0xFF746657)
                             ),
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth().height(48.dp)
                         )
                     }
                     Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                        modifier = Modifier.weight(0.6f),
+                        horizontalAlignment = Alignment.End,
+                        verticalArrangement = Arrangement.spacedBy(5.dp)
                     ) {
-                        Text("Tag Color", color = Color(0xFF34332F), style = MaterialTheme.typography.labelSmall)
+                        Text(
+                            "Tag Color",
+                            color = Color(0xFF34332F),
+                            style = MaterialTheme.typography.labelSmall,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.End,
+                            modifier = Modifier.fillMaxWidth()
+                        )
                         Box(
                             modifier = Modifier
                                 .size(44.dp)
@@ -191,20 +198,24 @@ fun TagManagementDialog(
                                 appSelectionBeforePicker = selectedPackages
                                 showAppPicker = true
                             }
-                            .padding(horizontal = 12.dp, vertical = 11.dp),
+                            .padding(horizontal = 12.dp, vertical = 7.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                            Text("${selectedPackages.size} apps selected", color = Color(0xFF34332F), style = MaterialTheme.typography.labelSmall)
-                            if (unavailableSelectedCount > 0) {
-                                Text(
-                                    "$unavailableSelectedCount saved assignment(s) are unavailable right now",
-                                    color = Color(0xFF8B8982),
-                                    style = MaterialTheme.typography.labelSmall
-                                )
-                            }
+                        Text(
+                            "${selectedPackages.size} apps selected",
+                            color = Color(0xFF34332F),
+                            style = MaterialTheme.typography.labelSmall,
+                            maxLines = 1
+                        )
+                        if (unavailableSelectedCount > 0) {
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                "$unavailableSelectedCount unavailable",
+                                color = Color(0xFF8B8982),
+                                style = MaterialTheme.typography.labelSmall,
+                                maxLines = 1
+                            )
                         }
-                        Text("Choose apps", color = Color(0xFF746657), style = MaterialTheme.typography.labelSmall)
                     }
                 }
             }
