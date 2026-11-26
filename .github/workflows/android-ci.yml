@@ -67,8 +67,8 @@ jobs:
         with:
           gradle-version: '8.9'
 
-      - name: Build APK, run unit tests, and lint
-        run: gradle assembleDebug testDebugUnitTest lintDebug -Pandroid.aapt2FromMavenOverride="$ANDROID_HOME/build-tools/35.0.0/aapt2" --stacktrace
+      - name: Build Debug and Release APKs, run unit tests, and lint
+        run: gradle assembleDebug assembleRelease testDebugUnitTest lintDebug -Pandroid.aapt2FromMavenOverride="$ANDROID_HOME/build-tools/35.0.0/aapt2" --stacktrace
 
       - name: Enable KVM for Android emulator
         run: |
@@ -92,6 +92,15 @@ jobs:
         with:
           name: nekos-debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload release APK
+        if: success()
+        uses: actions/upload-artifact@v6
+        with:
+          name: nekos-release-apk-unsigned
+          path: app/build/outputs/apk/release/app-release-unsigned.apk
           if-no-files-found: error
           retention-days: 14
 
