@@ -1,6 +1,7 @@
 package com.nekos.android
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.Canvas
 import androidx.compose.ui.graphics.asImageBitmap
 import android.graphics.BitmapFactory
 import androidx.compose.ui.platform.LocalContext
@@ -94,6 +95,12 @@ private fun OfficialStoreActionButton(
             .shadow(if (enabled) 3.dp else 0.dp, shape)
             .clip(shape)
             .background(Brush.horizontalGradient(colors))
+            .border(
+                1.dp,
+                if (!enabled) Color(0xFFBEB8AE)
+                else if (isInstall) Color(0xFF65B94B) else Color(0xFFE66E55),
+                shape
+            )
             .clickable(
                 enabled = enabled,
                 interactionSource = interactionSource,
@@ -103,14 +110,31 @@ private fun OfficialStoreActionButton(
             .padding(horizontal = 10.dp, vertical = 6.dp),
         contentAlignment = Alignment.Center
     ) {
-        Text(
-            label,
-            color = if (enabled) contentColor else SettingsMuted,
-            fontSize = 9.sp,
-            fontWeight = FontWeight.Bold,
-            letterSpacing = 0.25.sp,
-            maxLines = 1
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            if (label == "BUY") {
+                Canvas(modifier = Modifier.size(13.dp)) {
+                    val stroke = 1.6f
+                    drawLine(contentColor, androidx.compose.ui.geometry.Offset(size.width * 0.08f, size.height * 0.12f), androidx.compose.ui.geometry.Offset(size.width * 0.28f, size.height * 0.12f), stroke)
+                    drawLine(contentColor, androidx.compose.ui.geometry.Offset(size.width * 0.28f, size.height * 0.12f), androidx.compose.ui.geometry.Offset(size.width * 0.42f, size.height * 0.68f), stroke)
+                    drawLine(contentColor, androidx.compose.ui.geometry.Offset(size.width * 0.42f, size.height * 0.68f), androidx.compose.ui.geometry.Offset(size.width * 0.88f, size.height * 0.68f), stroke)
+                    drawLine(contentColor, androidx.compose.ui.geometry.Offset(size.width * 0.34f, size.height * 0.34f), androidx.compose.ui.geometry.Offset(size.width * 0.94f, size.height * 0.34f), stroke)
+                    drawLine(contentColor, androidx.compose.ui.geometry.Offset(size.width * 0.94f, size.height * 0.34f), androidx.compose.ui.geometry.Offset(size.width * 0.84f, size.height * 0.60f), stroke)
+                    drawCircle(contentColor, radius = size.minDimension * 0.075f, center = androidx.compose.ui.geometry.Offset(size.width * 0.50f, size.height * 0.88f))
+                    drawCircle(contentColor, radius = size.minDimension * 0.075f, center = androidx.compose.ui.geometry.Offset(size.width * 0.82f, size.height * 0.88f))
+                }
+            }
+            Text(
+                label,
+                color = if (enabled) contentColor else SettingsMuted,
+                fontSize = 9.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 0.25.sp,
+                maxLines = 1
+            )
+        }
     }
 }
 
