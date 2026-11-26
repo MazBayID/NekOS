@@ -7,6 +7,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.net.URL
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.selection.selectable
@@ -37,6 +39,8 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
@@ -46,15 +50,66 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+
+@Composable
+private fun OfficialStoreActionButton(
+    label: String,
+    enabled: Boolean,
+    isInstall: Boolean,
+    onClick: () -> Unit
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val pressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (pressed && enabled) 0.96f else 1f,
+        animationSpec = spring(dampingRatio = 0.62f, stiffness = 520f),
+        label = "storeButtonPress"
+    )
+    val shape = RoundedCornerShape(50)
+    val colors = when {
+        !enabled -> listOf(Color(0xFFE1DED7), Color(0xFFD5D0C7))
+        isInstall -> listOf(Color(0xFFB8F36B), Color(0xFF79D95B))
+        else -> listOf(Color(0xFFFFA36F), Color(0xFFFF765F))
+    }
+    val contentColor = if (enabled && isInstall) Color(0xFF172314) else Color(0xFF2A211D)
+
+    Box(
+        modifier = Modifier
+            .scale(scale)
+            .shadow(if (enabled) 3.dp else 0.dp, shape)
+            .clip(shape)
+            .background(Brush.horizontalGradient(colors))
+            .clickable(
+                enabled = enabled,
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick
+            )
+            .padding(horizontal = 10.dp, vertical = 6.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            label,
+            color = if (enabled) contentColor else SettingsMuted,
+            fontSize = 8.sp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 0.25.sp,
+            maxLines = 1
+        )
+    }
+}
 
 @Composable
 private fun OfficialStorePreview(url: String) {
@@ -654,27 +709,12 @@ internal fun NekOSSettingsDialog(
                                             fontWeight = if (skin.price <= 0L) FontWeight.SemiBold else FontWeight.Bold,
                                             fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
                                         )
-                                        Box(
-                                            modifier = Modifier
-                                                .clip(RoundedCornerShape(6.dp))
-                                                .background(
-                                                    if (actionEnabled) SettingsAccent
-                                                    else SettingsAccent.copy(alpha = 0.12f)
-                                                )
-                                                .clickable(enabled = actionEnabled) {
-                                                    onStoreAction(skin, pending)
-                                                }
-                                                .padding(horizontal = 8.dp, vertical = 5.dp),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Text(
-                                                actionLabel,
-                                                color = if (actionEnabled) Color.White else SettingsMuted,
-                                                fontSize = 8.sp,
-                                                fontWeight = FontWeight.SemiBold,
-                                                maxLines = 1
-                                            )
-                                        }
+                                        OfficialStoreActionButton(
+                                            label = actionLabel,
+                                            enabled = actionEnabled,
+                                            isInstall = skin.price <= 0L || pending,
+                                            onClick = { onStoreAction(skin, pending) }
+                                        )
                                     }
                                 }
                             }
