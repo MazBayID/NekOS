@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -129,9 +130,22 @@ internal fun SettingsListRow(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 7.dp)
-                .height(1.dp)
-                .background(SettingsBorder)
-        )
+                .height(3.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(1.dp)
+                    .background(SettingsBorder)
+            )
+            Box(
+                modifier = Modifier
+                    .width(44.dp)
+                    .height(3.dp)
+                    .background(SettingsBorder)
+            )
+        }
     }
 }
 
