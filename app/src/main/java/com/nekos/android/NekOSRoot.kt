@@ -101,6 +101,55 @@ internal fun NekOSRoot(
     var storeBusySkinId by remember { mutableStateOf<String?>(null) }
     var pendingStoreSkinIds by remember { mutableStateOf(emptySet<String>()) }
     var storePaymentFailure by remember { mutableStateOf<String?>(null) }
+
+    // Reconcile unfinished Store payments whenever NekOS returns to foreground.
+    // The checkout browser may be dismissed without a Midtrans webhook (e.g. the
+    // buyer never selects a payment method), so the client must query pending
+    // orders on resume rather than rely on a manual button.
+    LaunchedEffect(resumeToken) {
+        val pendingIds = OfficialSkinStoreClient.pendingSkinIds(context)
+        if (pendingIds.isEmpty() || storeBusySkinId != null) return@LaunchedEffect
+
+        val catalog = officialStoreSkins.ifEmpty {
+            runCatching { withContext(Dispatchers.IO) { OfficialSkinStoreClient.loadCatalog() } }
+                .getOrDefault(emptyList())
+        }
+        if (officialStoreSkins.isEmpty() && catalog.isNotEmpty()) {
+            officialStoreSkins = catalog
+        }
+
+        val skinsToCheck = pendingIds.map { id ->
+            catalog.firstOrNull { it.id == id }
+                ?: officialStoreSkins.firstOrNull { it.id == id }
+                ?: OfficialStoreSkin(
+                    id = id, skinKey = id, name = id, author = "", description = "",
+                    price = 0L, currency = "IDR", previewUrl = ""
+                )
+        }
+        val failures = mutableListOf<String>()
+        for (skin in skinsToCheck) {
+            if (storeBusySkinId != null) break
+            storeBusySkinId = skin.id
+            val result = withContext(Dispatchers.IO) {
+                runCatching { OfficialSkinStoreClient.checkPaymentAndInstall(context, skin) }
+                    .getOrElse { StoreActionResult(false, it.message ?: "Unable to check payment status.") }
+            }
+            storeBusySkinId = null
+            if (result.paymentFailed) {
+                failures += result.message
+            } else if (result.success && result.installedSkinId != null) {
+                installedSkins = skinRepository.listInstalledSkins()
+                iconCatalogRepository.invalidateSkinCache()
+            } else if (!result.success && !result.message.contains("belum dikonfirmasi", ignoreCase = true)) {
+                // Keep pending orders on transient errors and inform the user.
+                failures += result.message
+            }
+        }
+        pendingStoreSkinIds = OfficialSkinStoreClient.pendingSkinIds(context)
+        if (failures.isNotEmpty()) {
+            storePaymentFailure = failures.distinct().joinToString("\n\n")
+        }
+    }
     var apps by remember { mutableStateOf(emptyList<InstalledApp>()) }
     val initialFavoriteLoad = remember(context) { loadFavoritePackagesResult(context) }
     var favoritePackages by remember { mutableStateOf(initialFavoriteLoad.packages) }
