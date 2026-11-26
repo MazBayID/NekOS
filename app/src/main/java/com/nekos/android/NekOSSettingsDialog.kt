@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.padding
@@ -56,6 +57,7 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 private fun OfficialStorePreview(url: String) {
+    val ocean = Color(0xFF114B56)
     val imageState = remember(url) { mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null) }
     LaunchedEffect(url) {
         imageState.value = withContext(Dispatchers.IO) {
@@ -66,13 +68,20 @@ private fun OfficialStorePreview(url: String) {
     }
     val image = imageState.value
     if (image != null) {
-        Image(bitmap = image!!, contentDescription = "Skin preview",
+        Image(
+            bitmap = image!!,
+            contentDescription = "Skin preview",
             contentScale = androidx.compose.ui.layout.ContentScale.Crop,
-            modifier = Modifier.size(width = 82.dp, height = 96.dp).clip(RoundedCornerShape(10.dp)))
+            modifier = Modifier.fillMaxWidth().height(142.dp).clip(RoundedCornerShape(12.dp))
+        )
     } else {
-        Box(modifier = Modifier.size(width = 82.dp, height = 96.dp).clip(RoundedCornerShape(10.dp))
-            .background(SettingsBorder), contentAlignment = Alignment.Center) {
-            Text("NEKOS", color = SettingsMuted, fontSize = 9.sp)
+        Box(
+            modifier = Modifier.fillMaxWidth().height(142.dp)
+                .clip(RoundedCornerShape(12.dp)).background(ocean),
+            contentAlignment = Alignment.Center
+        ) {
+            Text("NEKOS", color = Color.White.copy(alpha = 0.78f),
+                fontSize = 13.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
         }
     }
 }
@@ -541,44 +550,121 @@ internal fun NekOSSettingsDialog(
                     }
 
                     SettingsPage.OFFICIAL_SKIN_STORE -> {
-                        SettingsSectionTitle("OFFICIAL COLLECTION")
-                        Text("Browse, buy, and install skins directly on this device. Purchases are locked to this device.",
-                            color = SettingsMuted, fontSize = 11.sp)
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                            TextButton(onClick = onRefreshOfficialStore, enabled = !isOfficialStoreLoading) {
-                                Text(if (isOfficialStoreLoading) "LOADING…" else "REFRESH", color = SettingsAccent, fontSize = 10.sp)
+                        val ocean = Color(0xFF114B56)
+                        val oceanDeep = Color(0xFF0B3941)
+                        val oceanSoft = Color(0xFFE8F1F2)
+                        val oceanBorder = ocean.copy(alpha = 0.18f)
+
+                        Column(
+                            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp))
+                                .background(ocean).padding(horizontal = 13.dp, vertical = 12.dp),
+                            verticalArrangement = Arrangement.spacedBy(5.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text("DISCOVER SKINS", color = Color.White,
+                                    fontSize = 13.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                                TextButton(
+                                    onClick = onRefreshOfficialStore,
+                                    enabled = !isOfficialStoreLoading
+                                ) {
+                                    Text(if (isOfficialStoreLoading) "LOADING…" else "REFRESH",
+                                        color = Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                            Text(
+                                "Explore official NekOS looks. Purchases are secured to this device.",
+                                color = Color.White.copy(alpha = 0.82f), fontSize = 10.sp
+                            )
+                        }
+
+                        if (isOfficialStoreLoading) {
+                            LinearProgressIndicator(
+                                modifier = Modifier.fillMaxWidth(),
+                                color = ocean,
+                                trackColor = ocean.copy(alpha = 0.12f)
+                            )
+                        }
+
+                        if (officialStoreSkins.isEmpty() && !isOfficialStoreLoading) {
+                            Column(
+                                modifier = Modifier.fillMaxWidth().clip(SettingsCardShape)
+                                    .background(oceanSoft).padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Text("The collection is waiting for you",
+                                    color = oceanDeep, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                                Text("No official skins have been published yet. Check back later.",
+                                    color = oceanDeep.copy(alpha = 0.72f), fontSize = 10.sp)
                             }
                         }
-                        if (officialStoreSkins.isEmpty() && !isOfficialStoreLoading) {
-                            Text("No skins are published yet.", color = SettingsMuted, fontSize = 12.sp)
-                        }
+
                         officialStoreSkins.forEach { skin ->
                             val installed = installedSkins.any { it.id == skin.skinKey || it.id == skin.id }
                             val pending = skin.id in pendingStoreSkinIds
-                            Row(modifier = Modifier.fillMaxWidth().clip(SettingsCardShape)
-                                .background(optionSurface).border(1.dp, SettingsBorder, SettingsCardShape).padding(10.dp),
-                                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            val actionEnabled = storeBusySkinId != skin.id && !installed
+                            val actionLabel = when {
+                                installed -> "INSTALLED"
+                                storeBusySkinId == skin.id -> "PLEASE WAIT…"
+                                pending -> "CHECK PAYMENT & INSTALL"
+                                skin.price <= 0L -> "INSTALL FREE"
+                                else -> "BUY NOW"
+                            }
+                            Column(
+                                modifier = Modifier.fillMaxWidth().clip(SettingsCardShape)
+                                    .background(oceanSoft)
+                                    .border(1.dp, oceanBorder, SettingsCardShape)
+                                    .padding(9.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
                                 OfficialStorePreview(skin.previewUrl)
-                                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                                    Text(skin.name, color = SettingsInk, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                                    Text(skin.description.ifBlank { "By ${skin.author}" }, color = SettingsMuted, fontSize = 10.sp)
-                                    Text(if (skin.price <= 0L) "FREE" else "Rp ${"%,d".format(skin.price)}",
-                                        color = Color(0xFF39734B), fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                                    TextButton(onClick = { onStoreAction(skin, pending) },
-                                        enabled = storeBusySkinId != skin.id && !installed) {
-                                        Text(when {
-                                            installed -> "INSTALLED"
-                                            storeBusySkinId == skin.id -> "PLEASE WAIT…"
-                                            pending -> "CHECK PAYMENT & INSTALL"
-                                            skin.price <= 0L -> "INSTALL FREE"
-                                            else -> "BUY NOW"
-                                        }, color = SettingsAccent, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                                Column(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalArrangement = Arrangement.spacedBy(3.dp)
+                                ) {
+                                    Text(skin.name, color = oceanDeep,
+                                        fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                                    Text("BY ${skin.author.ifBlank { "NEKOS COMMUNITY" }.uppercase()}",
+                                        color = ocean.copy(alpha = 0.76f),
+                                        fontSize = 9.sp, fontWeight = FontWeight.SemiBold,
+                                        letterSpacing = 0.7.sp)
+                                    if (skin.description.isNotBlank()) {
+                                        Text(skin.description, color = oceanDeep.copy(alpha = 0.76f),
+                                            fontSize = 10.sp)
+                                    }
+                                }
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        if (skin.price <= 0L) "FREE" else "Rp ${"%,d".format(skin.price)}",
+                                        color = ocean, fontSize = 12.sp, fontWeight = FontWeight.Bold
+                                    )
+                                    androidx.compose.material3.Button(
+                                        onClick = { onStoreAction(skin, pending) },
+                                        enabled = actionEnabled,
+                                        shape = RoundedCornerShape(10.dp),
+                                        colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                                            containerColor = ocean,
+                                            contentColor = Color.White,
+                                            disabledContainerColor = ocean.copy(alpha = 0.12f),
+                                            disabledContentColor = ocean
+                                        )
+                                    ) {
+                                        Text(actionLabel, fontSize = 9.sp, fontWeight = FontWeight.Bold)
                                     }
                                 }
                             }
                         }
-                        Text("Paid packages are delivered from private storage only after payment is confirmed. Temporary ZIP files are removed after installation.",
-                            color = SettingsMuted, fontSize = 10.sp)
+                        Text(
+                            "Paid packages are delivered only after payment is confirmed. Temporary ZIP files are removed after installation.",
+                            color = SettingsMuted, fontSize = 9.sp
+                        )
                     }
                 }
             }
