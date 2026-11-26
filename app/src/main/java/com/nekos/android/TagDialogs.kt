@@ -129,6 +129,7 @@ fun TagAppsDialog(
                             Column(
                                 modifier = Modifier.fillMaxWidth()
                                     .clip(RoundedCornerShape(12.dp))
+                                    .background(Color(0xFFF4F1EA).copy(alpha = 0.5f))
                                     .border(1.dp, Color(0xFF34332F).copy(alpha = 0.20f), RoundedCornerShape(12.dp))
                                     .clickable { onLaunch(app) }
                                     .padding(horizontal = 3.dp, vertical = 4.dp),
@@ -192,6 +193,7 @@ fun TagActionsDialog(
                 Column(
                     modifier = Modifier
                         .clip(RoundedCornerShape(11.dp))
+                        .background(Color(0xFFF4F1EA).copy(alpha = 0.5f))
                         .border(1.dp, SettingsBorder, RoundedCornerShape(11.dp))
                         .clickable(onClick = onEdit)
                         .padding(vertical = 4.dp),
@@ -210,6 +212,7 @@ fun TagActionsDialog(
                     Column(
                         modifier = Modifier
                             .clip(RoundedCornerShape(11.dp))
+                            .background(Color(0xFFF4F1EA).copy(alpha = 0.5f))
                             .border(1.dp, SettingsBorder, RoundedCornerShape(11.dp))
                             .clickable(onClick = onMovePage)
                             .padding(vertical = 8.dp),
