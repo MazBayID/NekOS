@@ -239,26 +239,19 @@ internal fun NekOSSettingsDialog(
             ) {
                 when (page) {
                     SettingsPage.MAIN -> {
-                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            SettingsNavigationCard(
-                                modifier = Modifier.weight(1f),
-                                iconRes = R.drawable.nekos_ui_wallpaper,
-                                iconColorArgb = launcherUiColor,
-                                surface = optionSurface,
-                                title = "Wallpaper",
-                                onClick = { page = SettingsPage.WALLPAPER }
-                            )
-                            SettingsNavigationCard(
-                                modifier = Modifier.weight(1f),
-                                iconRes = R.drawable.nekos_ui_palette,
-                                iconColorArgb = launcherUiColor,
-                                surface = optionSurface,
-                                title = "Launcher theme",
-                                onClick = { page = SettingsPage.LAUNCHER_THEME }
-                            )
-                        }
-
-                        SettingsSectionTitle("PERSONALIZATION")
+                        SettingsSectionTitle("APPEARANCE")
+                        SettingsActionCard(
+                            title = "Wallpaper",
+                            action = "Open",
+                            surface = optionSurface,
+                            onClick = { page = SettingsPage.WALLPAPER }
+                        )
+                        SettingsActionCard(
+                            title = "Launcher theme",
+                            action = "Open",
+                            surface = optionSurface,
+                            onClick = { page = SettingsPage.LAUNCHER_THEME }
+                        )
                         SettingsActionCard(
                             title = "Skins",
                             action = "Manage",
@@ -266,7 +259,7 @@ internal fun NekOSSettingsDialog(
                             onClick = { page = SettingsPage.SKINS }
                         )
 
-                        SettingsSectionTitle("HOME BEHAVIOR")
+                        SettingsSectionTitle("BEHAVIOR")
                         SettingsActionCard(
                             title = "Default launcher",
                             action = if (isDefaultLauncher) "Active" else "Choose",
@@ -281,25 +274,33 @@ internal fun NekOSSettingsDialog(
                         )
 
                         SettingsSectionTitle("ABOUT")
-                        Column(
+                        Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(SettingsCardShape)
                                 .background(SettingsInk.copy(alpha = 0.025f))
                                 .border(1.dp, SettingsBorder, SettingsCardShape)
-                                .padding(12.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                                .padding(horizontal = 10.dp, vertical = 7.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
                             Image(
                                 painter = painterResource(R.drawable.tagline_a),
                                 contentDescription = "NekOS",
                                 contentScale = androidx.compose.ui.layout.ContentScale.Fit,
-                                modifier = Modifier.fillMaxWidth().heightIn(max = 188.dp)
+                                modifier = Modifier.size(width = 76.dp, height = 42.dp)
                             )
-                            Text("Version $appVersion", color = SettingsMuted, fontSize = 12.sp)
+                            Column(
+                                modifier = Modifier.weight(1f),
+                                verticalArrangement = Arrangement.spacedBy(2.dp)
+                            ) {
+                                Text("NekOS", color = SettingsInk, fontSize = 12.sp,
+                                    fontWeight = FontWeight.SemiBold)
+                                Text("Version $appVersion", color = SettingsMuted, fontSize = 10.sp)
+                            }
                             TextButton(onClick = onOpenRepository) {
-                                Text("GitHub repository", color = SettingsAccent, fontWeight = FontWeight.SemiBold)
+                                Text("GitHub", color = SettingsAccent, fontSize = 11.sp,
+                                    fontWeight = FontWeight.SemiBold)
                             }
                         }
                     }
