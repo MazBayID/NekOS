@@ -5,7 +5,6 @@ import androidx.compose.ui.graphics.asImageBitmap
 import android.graphics.BitmapFactory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import androidx.compose.runtime.produceState
 import java.net.URL
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -57,14 +56,15 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 private fun OfficialStorePreview(url: String) {
-    val image by produceState<androidx.compose.ui.graphics.ImageBitmap?>(null, url) {
-        val loadedImage = withContext(Dispatchers.IO) {
+    val imageState = remember(url) { mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null) }
+    LaunchedEffect(url) {
+        imageState.value = withContext(Dispatchers.IO) {
             runCatching {
                 URL(url).openStream().use { BitmapFactory.decodeStream(it)?.asImageBitmap() }
             }.getOrNull()
         }
-        value = loadedImage
     }
+    val image = imageState.value
     if (image != null) {
         Image(bitmap = image!!, contentDescription = "Skin preview",
             contentScale = androidx.compose.ui.layout.ContentScale.Crop,
