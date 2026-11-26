@@ -73,6 +73,7 @@ dependencies {
     implementation("androidx.compose.foundation:foundation:1.7.8")
     implementation("sh.calvin.reorderable:reorderable:3.1.0")
     implementation("androidx.compose.material:material-icons-core:1.7.8")
+    implementation("androidx.compose.material:material-icons-extended:1.7.8")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
 
     debugImplementation("androidx.compose.ui:ui-tooling:1.7.8")
