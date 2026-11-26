@@ -51,7 +51,7 @@ internal fun NekOSAlertDialog(
     dismissButton: (@Composable () -> Unit)? = null
 ) {
     val motifBrush = rememberDialogMotifBrush()
-    val motifTint = ColorFilter.tint(Color(topFrameColorArgb.toInt()), BlendMode.SrcIn)
+    val motifTint = ColorFilter.tint(darkenMotifColor(containerColor), BlendMode.SrcIn)
 
     Dialog(
         onDismissRequest = onDismissRequest,
