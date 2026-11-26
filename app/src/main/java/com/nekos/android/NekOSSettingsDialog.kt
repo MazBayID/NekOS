@@ -162,11 +162,11 @@ internal fun nekosBackgroundColor(preset: String): Color = when (normalizeNekOSB
 internal data class LauncherThemeOption(val key: String, val label: String, val color: Color)
 
 internal val LauncherThemeOptions = listOf(
-    LauncherThemeOption("porcelain", "Porcelain", Color(0xFFFEFCF8)),
+    LauncherThemeOption("porcelain", "Porcelain", Color(0xFFBEB8AC)),
     LauncherThemeOption("sand", "Sand", Color(0xFFF5EBDD)),
-    LauncherThemeOption("sage", "Sage", Color(0xFFE8EEE5)),
+    LauncherThemeOption("sage", "Sage", Color(0xFF788873)),
     LauncherThemeOption("mist", "Mist", Color(0xFFE8EDF2)),
-    LauncherThemeOption("lavender", "Lavender", Color(0xFFEFEAF5)),
+    LauncherThemeOption("lavender", "Lavender", Color(0xFF897B9C)),
     LauncherThemeOption("blush", "Blush", Color(0xFFC69D98)),
     LauncherThemeOption("mint", "Mint", Color(0xFFA2C1B1)),
     LauncherThemeOption("sky", "Sky", Color(0xFF9FBBD0))
