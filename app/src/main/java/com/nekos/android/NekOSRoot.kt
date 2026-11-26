@@ -918,7 +918,7 @@ internal fun NekOSRoot(
                     contentAlignment = Alignment.Center) {
                     Text("×", color = Color.White, fontSize = 36.sp, lineHeight = 36.sp)
                 }
-                Text("Cancel", color = Ink, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                Text("Cancel", color = Ink, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
             }
         }
 
