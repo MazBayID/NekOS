@@ -100,7 +100,6 @@ internal fun NekOSRoot(
     var isOfficialStoreLoading by remember { mutableStateOf(false) }
     var storeBusySkinId by remember { mutableStateOf<String?>(null) }
     var pendingStoreSkinIds by remember { mutableStateOf(emptySet<String>()) }
-    var storePaymentFailure by remember { mutableStateOf<String?>(null) }
 
     // Reconcile unfinished Store payments whenever NekOS returns to foreground.
     // The checkout browser may be dismissed without a Midtrans webhook (e.g. the
@@ -126,7 +125,6 @@ internal fun NekOSRoot(
                     price = 0L, currency = "IDR", previewUrl = ""
                 )
         }
-        val failures = mutableListOf<String>()
         for (skin in skinsToCheck) {
             if (storeBusySkinId != null) break
             storeBusySkinId = skin.id
@@ -138,19 +136,14 @@ internal fun NekOSRoot(
             if (result.paymentFailed) {
                 // Ensure the Store UI immediately reflects that this order is terminal.
                 pendingStoreSkinIds = pendingStoreSkinIds - skin.id
-                failures += result.message
             } else if (result.success && result.installedSkinId != null) {
                 installedSkins = skinRepository.listInstalledSkins()
                 iconCatalogRepository.invalidateSkinCache()
             } else if (!result.success && !result.message.contains("belum dikonfirmasi", ignoreCase = true)) {
-                // Keep pending orders on transient errors and inform the user.
-                failures += result.message
+                // Keep pending orders on transient errors; the Store remains quiet.
             }
         }
         pendingStoreSkinIds = OfficialSkinStoreClient.pendingSkinIds(context)
-        if (failures.isNotEmpty()) {
-            storePaymentFailure = failures.distinct().joinToString("\n\n")
-        }
     }
     var apps by remember { mutableStateOf(emptyList<InstalledApp>()) }
     val initialFavoriteLoad = remember(context) { loadFavoritePackagesResult(context) }
@@ -1078,9 +1071,6 @@ internal fun NekOSRoot(
                         if (result.paymentFailed) {
                             // Terminal payment status: remove the pending badge/action immediately.
                             pendingStoreSkinIds = pendingStoreSkinIds - skin.id
-                            storePaymentFailure = result.message
-                        } else {
-                            Toast.makeText(context, result.message, Toast.LENGTH_LONG).show()
                         }
                         pendingStoreSkinIds = OfficialSkinStoreClient.pendingSkinIds(context)
                     }
@@ -1226,21 +1216,6 @@ internal fun NekOSRoot(
                 },
                 dismissButton = {
                     TextButton(onClick = { tagPendingDelete = null }) { Text("Cancel") }
-                }
-            )
-        }
-
-        storePaymentFailure?.let { message ->
-            NekOSAlertDialog(
-                topFrameColorArgb = launcherUiColorArgb,
-                onDismissRequest = { storePaymentFailure = null },
-                containerColor = launcherSurface,
-                title = { Text("Pembayaran gagal") },
-                text = { Text(message) },
-                confirmButton = {
-                    TextButton(onClick = { storePaymentFailure = null }) {
-                        Text("Mengerti")
-                    }
                 }
             )
         }
