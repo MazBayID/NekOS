@@ -547,14 +547,43 @@ internal fun NekOSSettingsDialog(
 
                     SettingsPage.SKINS -> {
                         val context = LocalContext.current
-                        val skinBadgeIcon = remember(context) {
-                            context.assets.open("skins/default/components/tag_badge/badge_cat.webp").use {
-                                BitmapFactory.decodeStream(it)?.asImageBitmap()
-                            }
-                        }
+                        val sharedUiTint = Color(launcherUiColor)
                         SettingsSectionTitle("INSTALLED SKINS")
                         installedSkins.forEach { skin ->
                             val selected = skin.id == activeSkinId
+                            val skinBadgeIcon = remember(context, skin.id) {
+                                if (skin.isBuiltIn) {
+                                    runCatching {
+                                        context.assets.open("skins/default/components/tag_badge/badge_cat.webp").use {
+                                            BitmapFactory.decodeStream(it)?.asImageBitmap()
+                                        }
+                                    }.getOrNull()
+                                } else {
+                                    runCatching {
+                                        val root = java.io.File(context.filesDir, "skins").canonicalFile
+                                        val skinDirectory = root.listFiles()
+                                            ?.firstOrNull { directory ->
+                                                if (!directory.isDirectory) return@firstOrNull false
+                                                val manifest = java.io.File(directory, "skin.json")
+                                                if (!manifest.isFile) return@firstOrNull false
+                                                org.json.JSONObject(manifest.readText(Charsets.UTF_8))
+                                                    .optJSONObject("skin")
+                                                    ?.optString("id") == skin.id
+                                            }
+                                            ?.canonicalFile
+                                            ?: return@runCatching null
+                                        if (skinDirectory.parentFile != root) return@runCatching null
+                                        val badgeFile = java.io.File(
+                                            skinDirectory,
+                                            "components/tag_badge/badge_cat.webp"
+                                        ).canonicalFile
+                                        if (!badgeFile.path.startsWith(skinDirectory.path + java.io.File.separator) ||
+                                            !badgeFile.isFile
+                                        ) return@runCatching null
+                                        BitmapFactory.decodeFile(badgeFile.absolutePath)?.asImageBitmap()
+                                    }.getOrNull()
+                                }
+                            }
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -573,7 +602,8 @@ internal fun NekOSSettingsDialog(
                                 if (skinBadgeIcon != null) {
                                     Image(
                                         bitmap = skinBadgeIcon,
-                                        contentDescription = "Skin thumbnail",
+                                        contentDescription = "${skin.name} badge",
+                                        colorFilter = ColorFilter.tint(sharedUiTint),
                                         modifier = Modifier
                                             .size(40.dp)
                                             .clip(RoundedCornerShape(8.dp))
