@@ -649,9 +649,10 @@ internal fun NekOSSettingsDialog(
                                     ) {
                                         Text(
                                             if (skin.price <= 0L) "FREE" else "Rp ${"%,d".format(skin.price)}",
-                                            color = SettingsAccent,
+                                            color = if (skin.price <= 0L) Color(0xFF2E7D32) else Color(0xFF171717),
                                             fontSize = 10.sp,
-                                            fontWeight = FontWeight.SemiBold
+                                            fontWeight = if (skin.price <= 0L) FontWeight.SemiBold else FontWeight.Bold,
+                                            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
                                         )
                                         Box(
                                             modifier = Modifier
