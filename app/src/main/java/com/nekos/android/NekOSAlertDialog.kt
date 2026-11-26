@@ -40,7 +40,7 @@ internal fun NekOSAlertDialog(
     dialogWidth: androidx.compose.ui.unit.Dp? = null,
     containerColor: Color = Color(0xFFFFFBFE),
     titleContentColor: Color = Color(0xFF1D1B20),
-    textContentColor: Color = Color(0xFF49454F),
+    textContentColor: Color = Color(0xFF5E574E),
     topFrameColorArgb: Long = DEFAULT_LAUNCHER_UI_COLOR,
     title: (@Composable () -> Unit)? = null,
     text: (@Composable () -> Unit)? = null,
