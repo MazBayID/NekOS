@@ -91,7 +91,7 @@ fun TagManagementDialog(
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     Column(
-                        modifier = Modifier.weight(1.4f),
+                        modifier = Modifier.weight(1.2f),
                         verticalArrangement = Arrangement.spacedBy(5.dp)
                     ) {
                         Text("Tag Name", color = Color(0xFF34332F), style = MaterialTheme.typography.labelSmall)
@@ -113,15 +113,14 @@ fun TagManagementDialog(
                         )
                     }
                     Column(
-                        modifier = Modifier.weight(0.6f),
-                        horizontalAlignment = Alignment.End,
+                        modifier = Modifier.weight(0.8f),
+                        horizontalAlignment = Alignment.Start,
                         verticalArrangement = Arrangement.spacedBy(5.dp)
                     ) {
                         Text(
                             "Tag Color",
                             color = Color(0xFF34332F),
                             style = MaterialTheme.typography.labelSmall,
-                            textAlign = androidx.compose.ui.text.style.TextAlign.End,
                             modifier = Modifier.fillMaxWidth()
                         )
                         Box(
