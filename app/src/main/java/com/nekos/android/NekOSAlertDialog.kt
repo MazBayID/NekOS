@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProvideTextStyle
@@ -61,7 +63,9 @@ internal fun NekOSAlertDialog(
         )
     ) {
         BoxWithConstraints(
-            modifier = Modifier.fillMaxSize().imePadding(),
+            modifier = Modifier.fillMaxSize().imePadding().pointerInput(onDismissRequest) {
+                detectTapGestures { onDismissRequest() }
+            },
             contentAlignment = Alignment.Center
         ) {
             val availableDialogHeight = maxHeight
