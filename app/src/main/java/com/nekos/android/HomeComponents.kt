@@ -37,6 +37,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.GenericShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -229,6 +230,23 @@ internal fun FavoriteSlot(
     }
 }
 
+private val HorizontalTagPillShape = GenericShape { size, _ ->
+    val quarterHeight = size.height * 0.25f
+    moveTo(0f, quarterHeight)
+    cubicTo(
+        size.width * 0.25f, 0f,
+        size.width * 0.75f, 0f,
+        size.width, quarterHeight
+    )
+    lineTo(size.width, size.height - quarterHeight)
+    cubicTo(
+        size.width * 0.75f, size.height,
+        size.width * 0.25f, size.height,
+        0f, size.height - quarterHeight
+    )
+    close()
+}
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun TagPill(
@@ -303,13 +321,13 @@ internal fun TagPill(
                 scaleX = dragScale
                 scaleY = dragScale
             }
-            .shadow(dragElevation, RoundedCornerShape(18.dp))
-            .clip(RoundedCornerShape(18.dp))
+            .shadow(dragElevation, HorizontalTagPillShape)
+            .clip(HorizontalTagPillShape)
             .background(Color(tag.colorArgb.toInt()))
             .border(
                 width = 1.dp,
                 color = Ink.copy(alpha = 0.18f),
-                shape = RoundedCornerShape(18.dp)
+                shape = HorizontalTagPillShape
             ),
         verticalAlignment = Alignment.CenterVertically
     ) {
