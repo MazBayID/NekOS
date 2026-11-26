@@ -316,6 +316,7 @@ internal fun NekOSSettingsDialog(
                         SettingsSectionTitle("APPEARANCE")
                         SettingsListRow(
                             title = "Wallpaper",
+                            shaded = true,
                             onClick = { page = SettingsPage.WALLPAPER }
                         )
                         SettingsListRow(
@@ -324,6 +325,7 @@ internal fun NekOSSettingsDialog(
                         )
                         SettingsListRow(
                             title = "Skins",
+                            shaded = true,
                             trailing = "Manage",
                             onClick = { page = SettingsPage.SKINS }
                         )
@@ -331,6 +333,7 @@ internal fun NekOSSettingsDialog(
                         SettingsSectionTitle("BEHAVIOR")
                         SettingsListRow(
                             title = "Default launcher",
+                            shaded = true,
                             trailing = if (isDefaultLauncher) "Active" else "Choose",
                             onClick = onSetAsHome
                         )
