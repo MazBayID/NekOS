@@ -4,8 +4,9 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -32,11 +33,11 @@ internal fun TagAppIcon(app: InstalledApp, iconBitmapCache: AppIconBitmapCache) 
         Image(
             bitmap = bitmap!!,
             contentDescription = null,
-            modifier = Modifier.size(40.dp).clip(RoundedCornerShape(11.dp))
+            modifier = Modifier.size(48.dp).clip(RoundedCornerShape(11.dp))
         )
     } else {
         Box(
-            modifier = Modifier.size(40.dp).clip(RoundedCornerShape(11.dp))
+            modifier = Modifier.size(48.dp).clip(RoundedCornerShape(11.dp))
                 .background(Color(0xFFE7E1D6))
         )
     }
@@ -111,20 +112,31 @@ fun TagAppsDialog(
                         )
                     }
                 } else {
-                    LazyColumn(Modifier.heightIn(max = 200.dp)) {
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(3),
+                        modifier = Modifier.fillMaxWidth().heightIn(max = 200.dp),
+                        contentPadding = PaddingValues(vertical = 4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
                         items(assignedApps, key = { it.id }) { app ->
-                            Row(
+                            Column(
                                 modifier = Modifier.fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp))
                                     .clickable { onLaunch(app) }
-                                    .padding(vertical = 4.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                                    .padding(horizontal = 3.dp, vertical = 4.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(5.dp)
                             ) {
                                 TagAppIcon(app, iconBitmapCache)
                                 Text(
                                     app.label,
                                     color = Color(0xFF34332F),
-                                    modifier = Modifier.weight(1f).padding(start = 10.dp),
-                                    maxLines = 1
+                                    style = MaterialTheme.typography.labelSmall,
+                                    maxLines = 2,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                    lineHeight = MaterialTheme.typography.labelSmall.lineHeight,
+                                    modifier = Modifier.fillMaxWidth().heightIn(min = 28.dp)
                                 )
                             }
                         }
