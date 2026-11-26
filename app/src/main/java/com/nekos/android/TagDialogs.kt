@@ -187,62 +187,69 @@ fun TagActionsDialog(
         text = {
             Row(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(40.dp, Alignment.CenterHorizontally),
+                horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(
                     modifier = Modifier
+                        .width(52.dp)
+                        .height(58.dp)
                         .clip(RoundedCornerShape(11.dp))
                         .background(Color(0xFFF4F1EA).copy(alpha = 0.5f))
                         .border(1.dp, SettingsBorder, RoundedCornerShape(11.dp))
-                        .clickable(onClick = onEdit)
-                        .padding(vertical = 4.dp),
+                        .clickable(onClick = onEdit),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                    verticalArrangement = Arrangement.Center
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Edit,
                         contentDescription = "Edit tag",
                         tint = Color(0xFF746657),
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(18.dp)
                     )
+                    Spacer(Modifier.height(3.dp))
                     Text("Edit", color = Color(0xFF34332F), style = MaterialTheme.typography.labelSmall)
                 }
                 if (movePageLabel != null) {
                     Column(
                         modifier = Modifier
+                            .width(52.dp)
+                            .height(58.dp)
                             .clip(RoundedCornerShape(11.dp))
                             .background(Color(0xFFF4F1EA).copy(alpha = 0.5f))
                             .border(1.dp, SettingsBorder, RoundedCornerShape(11.dp))
-                            .clickable(onClick = onMovePage)
-                            .padding(vertical = 8.dp),
+                            .clickable(onClick = onMovePage),
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                        verticalArrangement = Arrangement.Center
                     ) {
                         Icon(
                             imageVector = Icons.Filled.ArrowForward,
                             contentDescription = movePageLabel,
                             tint = Color(0xFF746657),
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(18.dp)
                         )
+                        Spacer(Modifier.height(3.dp))
                         Text("Move", color = Color(0xFF34332F), style = MaterialTheme.typography.labelSmall)
                     }
                 }
                 Column(
                     modifier = Modifier
+                        .width(52.dp)
+                        .height(58.dp)
                         .clip(RoundedCornerShape(11.dp))
+                        .background(Color(0xFFF4F1EA).copy(alpha = 0.5f))
                         .border(1.dp, SettingsBorder, RoundedCornerShape(11.dp))
-                        .clickable(onClick = onDelete)
-                        .padding(vertical = 8.dp),
+                        .clickable(onClick = onDelete),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                    verticalArrangement = Arrangement.Center
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Close,
                         contentDescription = "Delete tag",
                         tint = Color(0xFFB3261E),
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(18.dp)
                     )
+                    Spacer(Modifier.height(3.dp))
                     Text("Delete", color = Color(0xFFB3261E), style = MaterialTheme.typography.labelSmall)
                 }
             }
