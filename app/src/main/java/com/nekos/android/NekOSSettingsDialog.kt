@@ -3,6 +3,7 @@ package com.nekos.android
 import androidx.compose.foundation.Image
 import androidx.compose.ui.graphics.asImageBitmap
 import android.graphics.BitmapFactory
+import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.net.URL
@@ -545,6 +546,12 @@ internal fun NekOSSettingsDialog(
                     }
 
                     SettingsPage.SKINS -> {
+                        val context = LocalContext.current
+                        val skinBadgeIcon = remember(context) {
+                            context.assets.open("skins/default/components/tag_badge/badge_cat.webp").use {
+                                BitmapFactory.decodeStream(it)?.asImageBitmap()
+                            }
+                        }
                         SettingsSectionTitle("INSTALLED SKINS")
                         installedSkins.forEach { skin ->
                             val selected = skin.id == activeSkinId
@@ -563,6 +570,15 @@ internal fun NekOSSettingsDialog(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
+                                if (skinBadgeIcon != null) {
+                                    Image(
+                                        bitmap = skinBadgeIcon,
+                                        contentDescription = "Skin thumbnail",
+                                        modifier = Modifier
+                                            .size(40.dp)
+                                            .clip(RoundedCornerShape(8.dp))
+                                    )
+                                }
                                 Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                                     Text(
                                         skin.name,
