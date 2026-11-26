@@ -552,14 +552,14 @@ internal fun NekOSSettingsDialog(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clip(SettingsCardShape)
-                                    .background(optionSurface)
+                                    .background(optionSurface.copy(alpha = 0.5f))
                                     .border(
                                         width = if (selected) 1.5.dp else 1.dp,
                                         color = if (selected) SettingsAccent else SettingsBorder,
                                         shape = SettingsCardShape
                                     )
                                     .clickable { onSelectSkin(skin.id) }
-                                    .padding(horizontal = 10.dp, vertical = 9.dp),
+                                    .padding(horizontal = 8.dp, vertical = 7.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
@@ -580,9 +580,16 @@ internal fun NekOSSettingsDialog(
                                     Text("Active", color = SettingsAccent, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                                 }
                                 if (!skin.isBuiltIn) {
-                                    TextButton(onClick = { onDeleteSkin(skin.id) }) {
-                                        Text("Remove", color = SettingsAccent, fontSize = 12.sp)
-                                    }
+                                    Text(
+                                        "Remove",
+                                        color = SettingsAccent,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(6.dp))
+                                            .clickable { onDeleteSkin(skin.id) }
+                                            .padding(horizontal = 7.dp, vertical = 6.dp)
+                                    )
                                 }
                             }
                         }
