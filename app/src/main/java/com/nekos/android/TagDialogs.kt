@@ -129,7 +129,7 @@ fun TagAppsDialog(
                             Column(
                                 modifier = Modifier.fillMaxWidth()
                                     .clip(RoundedCornerShape(12.dp))
-                                    .border(1.dp, Color(0xFF34332F).copy(alpha = 0.13f), RoundedCornerShape(12.dp))
+                                    .border(1.dp, Color(0xFF34332F).copy(alpha = 0.20f), RoundedCornerShape(12.dp))
                                     .clickable { onLaunch(app) }
                                     .padding(horizontal = 3.dp, vertical = 4.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally,
