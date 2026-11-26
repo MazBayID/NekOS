@@ -167,6 +167,7 @@ fun TagActionsDialog(
 ) {
     NekOSAlertDialog(
         topFrameColorArgb = launcherUiColorArgb,
+        topFrameOffsetY = (-8).dp,
         onDismissRequest = onDismiss,
         shape = RoundedCornerShape(14.dp),
         dialogWidth = 240.dp,
