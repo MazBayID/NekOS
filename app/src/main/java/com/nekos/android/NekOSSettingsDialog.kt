@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.padding
@@ -72,11 +73,11 @@ private fun OfficialStorePreview(url: String) {
             bitmap = image!!,
             contentDescription = "Skin preview",
             contentScale = androidx.compose.ui.layout.ContentScale.Crop,
-            modifier = Modifier.fillMaxWidth().height(142.dp).clip(RoundedCornerShape(12.dp))
+            modifier = Modifier.fillMaxWidth().aspectRatio(3f / 4f).clip(RoundedCornerShape(12.dp))
         )
     } else {
         Box(
-            modifier = Modifier.fillMaxWidth().height(142.dp)
+            modifier = Modifier.fillMaxWidth().aspectRatio(3f / 4f)
                 .clip(RoundedCornerShape(12.dp)).background(ocean),
             contentAlignment = Alignment.Center
         ) {
