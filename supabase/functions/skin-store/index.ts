@@ -73,6 +73,11 @@ async function createPayment(order:Record<string,unknown>,orderId:string,skin:Re
   assertPaymentConfig();
   const amount=Number(order.amount);
   if(!Number.isSafeInteger(amount)||amount<1)throw new Error("invalid_order_amount");
+  // Persist the local payment attempt before calling Midtrans. A retry can
+  // safely resume this order even if the provider response or DB update is lost.
+  await rpc("skin_attach_payment",{
+    p_order_id:orderId,p_provider_order_id:orderId,p_checkout_url:null,p_provider:"midtrans"
+  });
   const response=await fetch(snapBase()+"/snap/v1/transactions",{
     method:"POST",
     headers:{Authorization:authHeader(),"Content-Type":"application/json","Accept":"application/json","Idempotency-Key":orderId},
