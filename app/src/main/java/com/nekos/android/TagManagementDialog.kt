@@ -171,13 +171,18 @@ fun TagManagementDialog(
                                 }
                             }
                             val selected = selectedIcon == icon.id
+                            val selectionAccent = Color(launcherUiColorArgb.toInt())
                             Box(
                                 Modifier.size(44.dp).clip(RoundedCornerShape(12.dp))
-                                    .background(if (selected) Color(0xFFE7E1D6) else Color(0xFFF4F1EA))
+                                    .background(
+                                        if (selected) selectionAccent.copy(alpha = 0.13f)
+                                        else Color(0xFFF4F1EA)
+                                    )
                                     .border(
-                                        if (selected) 2.dp else 1.dp,
-                                        if (selected) Color(0xFF746657) else Color(0xFF34332F).copy(alpha = 0.10f),
-                                        RoundedCornerShape(12.dp)
+                                        width = if (selected) 2.dp else 1.dp,
+                                        color = if (selected) selectionAccent
+                                        else Color(0xFF34332F).copy(alpha = 0.10f),
+                                        shape = RoundedCornerShape(12.dp)
                                     )
                                     .clickable { selectedIcon = icon.id },
                                 contentAlignment = Alignment.Center
