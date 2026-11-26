@@ -181,7 +181,7 @@ fun TagManagementDialog(
                                     .border(
                                         width = if (selected) 2.dp else 1.dp,
                                         color = if (selected) selectionAccent
-                                        else Color(0xFF34332F).copy(alpha = 0.10f),
+                                        else Color(0xFF34332F).copy(alpha = 0.18f),
                                         shape = RoundedCornerShape(12.dp)
                                     )
                                     .clickable { selectedIcon = icon.id },
@@ -200,7 +200,7 @@ fun TagManagementDialog(
                         modifier = Modifier.fillMaxWidth()
                             .clip(RoundedCornerShape(12.dp))
                             .background(Color(0xFFF4F1EA))
-                            .border(1.dp, Color(0xFF34332F).copy(alpha = 0.13f), RoundedCornerShape(12.dp))
+                            .border(1.dp, Color(0xFF34332F).copy(alpha = 0.20f), RoundedCornerShape(12.dp))
                             .clickable {
                                 appSelectionBeforePicker = selectedPackages
                                 showAppPicker = true
@@ -307,7 +307,7 @@ fun TagManagementDialog(
                                     modifier = Modifier.fillMaxWidth()
                                         .clip(RoundedCornerShape(12.dp))
                                         .background(if (selected) Color(0xFFE7E1D6) else Color(0xFFF4F1EA))
-                                        .border(1.dp, if (selected) Color(0xFF746657) else Color(0xFF34332F).copy(alpha = 0.13f), RoundedCornerShape(12.dp))
+                                        .border(1.dp, if (selected) Color(0xFF746657) else Color(0xFF34332F).copy(alpha = 0.20f), RoundedCornerShape(12.dp))
                                         .clickable {
                                             selectedPackages = if (selected) selectedPackages - app.id
                                             else selectedPackages + app.id
