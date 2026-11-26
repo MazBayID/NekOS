@@ -184,7 +184,11 @@ Deno.serve(async(req:Request)=>{
           return fail("midtrans_status_check_failed",503,origin);
         } else {
           let verified=await verifiedResponse.json();
-          if(String(verified.order_id)!==orderId || String(verified.currency)!=="IDR") {
+          const localAmount=Number(status.amount);
+          const remoteAmount=Number(verified.gross_amount);
+          if(String(verified.order_id)!==orderId ||
+             !Number.isFinite(localAmount) || !Number.isFinite(remoteAmount) ||
+             remoteAmount!==localAmount) {
             return fail("midtrans_transaction_mismatch",502,origin);
           }
           let transactionStatus=String(verified.transaction_status??"");
