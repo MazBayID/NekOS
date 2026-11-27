@@ -602,7 +602,7 @@ internal fun NekOSSettingsDialog(
                         installedSkins.chunked(2).forEach { rowSkins ->
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
                                 rowSkins.forEach { skin ->
                                     val selected = skin.id == activeSkinId
@@ -642,7 +642,7 @@ internal fun NekOSSettingsDialog(
                                     Column(
                                         modifier = Modifier
                                             .weight(1f)
-                                            .padding(horizontal = 5.dp)
+                                            .padding(horizontal = 8.dp)
                                             .clip(SettingsCardShape)
                                             .background(optionSurface.copy(alpha = 0.5f))
                                             .border(
@@ -651,9 +651,9 @@ internal fun NekOSSettingsDialog(
                                                 shape = SettingsCardShape
                                             )
                                             .clickable { if (!selected) onSelectSkin(skin.id) }
-                                            .padding(3.dp),
+                                            .padding(2.dp),
                                         horizontalAlignment = Alignment.CenterHorizontally,
-                                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                                        verticalArrangement = Arrangement.spacedBy(1.dp)
                                     ) {
                                         Box(
                                             modifier = Modifier.fillMaxWidth(),
@@ -665,34 +665,34 @@ internal fun NekOSSettingsDialog(
                                                     contentDescription = "${skin.name} preview",
                                                     colorFilter = ColorFilter.tint(sharedUiTint),
                                                     modifier = Modifier
-                                                        .size(48.dp)
+                                                        .size(40.dp)
                                                         .align(Alignment.Center)
                                                         .clip(RoundedCornerShape(12.dp))
                                                 )
                                             } else {
                                                 Box(
-                                                    Modifier.size(48.dp).clip(RoundedCornerShape(10.dp))
+                                                    Modifier.size(40.dp).clip(RoundedCornerShape(8.dp))
                                                         .background(SettingsAccent.copy(alpha = 0.12f)),
                                                     contentAlignment = Alignment.Center
                                                 ) {
-                                                    SkinUiIcon("icon_grid.webp", SettingsAccent, null, Modifier.size(28.dp))
+                                                    SkinUiIcon("icon_grid.webp", SettingsAccent, null, Modifier.size(24.dp))
                                                 }
                                             }
                                             if (selected) {
-                                                SkinUiIcon("icon_check.webp", SettingsAccent, "Active", Modifier.size(16.dp))
+                                                SkinUiIcon("icon_check.webp", SettingsAccent, "Active", Modifier.size(14.dp))
                                             } else if (!skin.isBuiltIn) {
                                                 SkinUiIcon(
                                                     "icon_trash.webp",
                                                     Color(0xFFB3261E),
                                                     "Remove skin",
-                                                    Modifier.size(16.dp).clickable { pendingSkinRemoval = skin }
+                                                    Modifier.size(14.dp).clickable { pendingSkinRemoval = skin }
                                                 )
                                             }
                                         }
                                         Text(
                                             skin.name,
                                             color = SettingsInk,
-                                            fontSize = 11.sp,
+                                            fontSize = 10.sp,
                                             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
                                             maxLines = 1,
                                             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
@@ -700,16 +700,16 @@ internal fun NekOSSettingsDialog(
                                         Text(
                                             skin.author.ifBlank { "NekOS" },
                                             color = SettingsMuted,
-                                            fontSize = 9.sp,
+                                            fontSize = 8.sp,
                                             maxLines = 1,
                                             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                                         )
                                         Text(
                                             if (selected) "ACTIVE" else "TAP TO APPLY",
                                             color = if (selected) SettingsAccent else SettingsMuted,
-                                            fontSize = 8.sp,
+                                            fontSize = 7.sp,
                                             fontWeight = FontWeight.SemiBold,
-                                            letterSpacing = 0.2.sp
+                                            letterSpacing = 0.1.sp
                                         )
                                     }
                                 }
