@@ -9,9 +9,23 @@ import kotlinx.coroutines.flow.first
 import org.json.JSONArray
 import org.json.JSONObject
 import java.util.UUID
+import kotlin.math.roundToInt
 
 private const val TAGS_KEY = "tag_collection_v1"
 internal const val DEFAULT_TAG_ICON_FRAME_COLOR: Long = 0xFF114B56L
+
+/** Creates the lighter Tag surface color from its icon frame color. */
+internal fun tagColorFromIconColor(iconColorArgb: Long): Long {
+    val argb = iconColorArgb.toInt()
+    val alpha = (argb ushr 24) and 0xFF
+    fun lighten(channel: Int): Int =
+        (channel + (255 - channel) * 0.7f).roundToInt().coerceIn(0, 255)
+
+    val red = lighten((argb ushr 16) and 0xFF)
+    val green = lighten((argb ushr 8) and 0xFF)
+    val blue = lighten(argb and 0xFF)
+    return ((alpha shl 24) or (red shl 16) or (green shl 8) or blue).toLong() and 0xFFFFFFFFL
+}
 private val tagsKey = stringPreferencesKey(TAGS_KEY)
 private val tagIconMigrationKey = booleanPreferencesKey(TAG_ICON_MIGRATION_KEY)
 
@@ -25,6 +39,7 @@ data class NekTag(
 ) {
     fun normalized(): NekTag = copy(
         name = name.trim().take(24),
+        colorArgb = tagColorFromIconColor(iconFrameColorArgb),
         appPackages = appPackages.filter(String::isNotBlank).distinct()
     )
 }
@@ -100,7 +115,7 @@ object TagStore {
                                 "iconFrameColorArgb",
                                 DEFAULT_TAG_ICON_FRAME_COLOR
                             )
-                        )
+                        ).normalized()
                     )
                 }
             }.filter { it.name.isNotBlank() }.distinctBy { it.id }
