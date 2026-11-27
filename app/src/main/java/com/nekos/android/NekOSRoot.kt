@@ -490,7 +490,10 @@ internal fun NekOSRoot(
         actionMenuPreviewApp = null
     }
 
-    suspend fun saveTags(updated: List<NekTag>): Boolean =
+    // Collection mutations are expressed as transforms and evaluated only after
+    // acquiring the mutex. This prevents queued UI actions from persisting a list
+    // calculated from an older Compose state.
+    suspend fun saveTags(transform: (List<NekTag>) -> List<NekTag>): Boolean =
         collectionWriteMutex.withLock {
             if (!tagStorageWritable) {
                 Toast.makeText(
@@ -500,7 +503,8 @@ internal fun NekOSRoot(
                 ).show()
                 return@withLock false
             }
-            val normalized = updated.distinctBy { it.id }
+            val normalized = transform(tags).distinctBy { it.id }
+            if (normalized == tags) return@withLock true
             if (TagStore.save(context, normalized)) {
                 tags = normalized
                 true
@@ -515,7 +519,7 @@ internal fun NekOSRoot(
             }
         }
 
-    suspend fun updateFavorites(updated: List<String?>): Boolean =
+    suspend fun updateFavorites(transform: (List<String?>) -> List<String?>): Boolean =
         collectionWriteMutex.withLock {
             if (!favoriteStorageWritable) {
                 Toast.makeText(
@@ -525,6 +529,8 @@ internal fun NekOSRoot(
                 ).show()
                 return@withLock false
             }
+            val updated = normalizeFavoritePackages(transform(favoritePackages))
+            if (updated == favoritePackages) return@withLock true
             if (!saveFavoritePackages(context, updated)) {
                 favoriteStorageWritable = false
                 Toast.makeText(
@@ -534,7 +540,7 @@ internal fun NekOSRoot(
                 ).show()
                 return@withLock false
             }
-            favoritePackages = normalizeFavoritePackages(updated)
+            favoritePackages = updated
             if (favoriteSnapshotsWritable) {
                 val activeFavoriteIds = updated.filterNotNull().toSet()
                 val retainedSnapshots = favoriteAppSnapshots.filterKeys { it in activeFavoriteIds }
@@ -563,16 +569,25 @@ internal fun NekOSRoot(
         }
 
     fun placeFavoriteFromDrawer(appId: String, targetIndex: Int) {
-        when (val result = placePackageInFavoriteSlot(favoritePackages, appId, targetIndex)) {
-            is FavoriteSlotOperation.Updated -> collectionScope.launch {
-                updateFavorites(result.packages)
+        collectionScope.launch {
+            var slotsFull = false
+            updateFavorites { current ->
+                when (val result = placePackageInFavoriteSlot(current, appId, targetIndex)) {
+                    is FavoriteSlotOperation.Updated -> result.packages
+                    FavoriteSlotOperation.Unchanged -> current
+                    FavoriteSlotOperation.Full -> {
+                        slotsFull = true
+                        current
+                    }
+                }
             }
-            FavoriteSlotOperation.Unchanged -> Unit
-            FavoriteSlotOperation.Full -> Toast.makeText(
-                context,
-                "Favorite slots are full",
-                Toast.LENGTH_SHORT
-            ).show()
+            if (slotsFull) {
+                Toast.makeText(
+                    context,
+                    "Favorite slots are full",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
         }
     }
 
@@ -730,7 +745,7 @@ internal fun NekOSRoot(
                     favoriteOrderSnapshot = null
                 } else {
                     collectionScope.launch {
-                        if (!updateFavorites(favoritePackages) && snapshot != null) {
+                        if (!updateFavorites { favoritePackages } && snapshot != null) {
                             favoritePackages = snapshot
                         }
                         favoriteOrderSnapshot = null
@@ -755,7 +770,7 @@ internal fun NekOSRoot(
                     tagOrderSnapshot = null
                 } else {
                     collectionScope.launch {
-                        if (!saveTags(tags) && snapshot != null) tags = snapshot
+                        if (!saveTags { tags } && snapshot != null) tags = snapshot
                         tagOrderSnapshot = null
                     }
                 }
@@ -935,9 +950,11 @@ internal fun NekOSRoot(
                             onRemoveFavorite = if (favoritePackages.any { it == app.id }) {
                                 {
                                     collectionScope.launch {
-                                        if (updateFavorites(favoritePackages.map { favoriteId ->
-                                            if (favoriteId == app.id) null else favoriteId
-                                        })) {
+                                        if (updateFavorites { current ->
+                                            current.map { favoriteId ->
+                                                if (favoriteId == app.id) null else favoriteId
+                                            }
+                                        }) {
                                             actionMenuApp = null
                                         }
                                     }
@@ -1192,7 +1209,7 @@ internal fun NekOSRoot(
                 onMovePage = {
                     targetPage?.let { page ->
                         collectionScope.launch {
-                            if (saveTags(moveTagToPage(tags, tag.id, page))) {
+                            if (saveTags { current -> moveTagToPage(current, tag.id, page) }) {
                                 activeTagPage = page
                                 actionMenuTag = null
                             }
@@ -1221,24 +1238,28 @@ internal fun NekOSRoot(
                 iconCatalogRepository = iconCatalogRepository,
                 launcherUiColorArgb = launcherUiColorArgb,
                 onSave = { saved ->
-                    val duplicateName = tags.any { it.id != saved.id && it.name.equals(saved.name, ignoreCase = true) }
-                    if (duplicateName) {
-                        Toast.makeText(context, "Tag name already exists", Toast.LENGTH_SHORT).show()
-                    } else {
-                        if (tagEditorTarget == null && tags.size >= 10) {
-                            Toast.makeText(context, "Maximum of 10 tags", Toast.LENGTH_SHORT).show()
-                        } else {
-                            val updatedTags = if (tagEditorTarget == null) {
-                                tags + saved
-                            } else {
-                                tags.map { if (it.id == saved.id) saved else it }
+                    val isNewTag = tagEditorTarget == null
+                    collectionScope.launch {
+                        var duplicateName = false
+                        var tagLimitReached = false
+                        val savedSuccessfully = saveTags { current ->
+                            duplicateName = current.any {
+                                it.id != saved.id && it.name.equals(saved.name, ignoreCase = true)
                             }
-                            collectionScope.launch {
-                                if (saveTags(updatedTags)) {
-                                    if (tagEditorTarget == null) activeTagPage = tags.size / 5
-                                    showTagEditor = false
-                                    tagEditorTarget = null
-                                }
+                            tagLimitReached = isNewTag && current.size >= 10
+                            when {
+                                duplicateName || tagLimitReached -> current
+                                isNewTag -> current + saved
+                                else -> current.map { if (it.id == saved.id) saved else it }
+                            }
+                        }
+                        when {
+                            duplicateName -> Toast.makeText(context, "Tag name already exists", Toast.LENGTH_SHORT).show()
+                            tagLimitReached -> Toast.makeText(context, "Maximum of 10 tags", Toast.LENGTH_SHORT).show()
+                            savedSuccessfully -> {
+                                if (isNewTag) activeTagPage = tags.size / 5
+                                showTagEditor = false
+                                tagEditorTarget = null
                             }
                         }
                     }
@@ -1261,7 +1282,7 @@ internal fun NekOSRoot(
                 confirmButton = {
                     TextButton(onClick = {
                         collectionScope.launch {
-                            if (saveTags(tags.filterNot { it.id == tag.id })) {
+                            if (saveTags { current -> current.filterNot { it.id == tag.id } }) {
                                 tagPendingDelete = null
                                 showTagEditor = false
                                 tagEditorTarget = null
