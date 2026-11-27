@@ -525,7 +525,7 @@ internal fun NekOSSettingsDialog(
                                             .clip(SettingsCardShape)
                                             .background(option.color.copy(alpha = 0.5f))
                                             .border(
-                                                width = if (selected) 1.5.dp else 1.dp,
+                                                width = if (selected) 1.dp else 0.6.dp,
                                                 color = if (selected) SettingsAccent else SettingsBorder,
                                                 shape = SettingsCardShape
                                             )
