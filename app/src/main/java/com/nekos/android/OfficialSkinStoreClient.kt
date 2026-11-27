@@ -64,10 +64,7 @@ internal object OfficialSkinStoreClient {
                 throw IllegalStateException(json.optString("details").ifBlank {
                     when (json.optString("error")) {
                         "payment_provider_not_configured", "midtrans_not_configured" -> "Midtrans belum dikonfigurasi di server."
-                        "duitku_not_configured" -> "Duitku belum dikonfigurasi di server."
-                        "invalid_duitku_email" -> "Masukkan alamat email yang valid untuk pembayaran Duitku."
                         "active_payment_provider_mismatch" -> "Masih ada pembayaran aktif melalui gateway lain. Selesaikan atau tunggu transaksi tersebut berakhir sebelum memilih gateway berbeda."
-                        "duitku_checkout_creation_failed" -> "Duitku gagal membuat invoice. Coba lagi beberapa saat."
                         "purchase_required" -> "This skin has not been purchased on this device."
                         "already_owned" -> "This device already owns this skin."
                         "midtrans_expire_permission_required" -> "Agar transaksi otomatis ditutup setelah 15 menit, aktifkan izin 'Expire transaction: Write' pada Access Key Midtrans."
@@ -75,8 +72,6 @@ internal object OfficialSkinStoreClient {
                         "midtrans_status_check_failed" -> "NekOS gagal memeriksa status pembayaran ke Midtrans. Coba lagi beberapa saat."
                         "midtrans_cancel_not_confirmed" -> "Midtrans belum mengonfirmasi pembatalan. Periksa status pembayaran sebelum mencoba lagi."
                         "midtrans_cancel_verification_failed" -> "NekOS belum dapat memastikan hasil pembatalan Midtrans. Periksa status pembayaran beberapa saat lagi."
-                        "duitku_status_check_failed" -> "NekOS belum dapat memverifikasi status invoice Duitku. Coba periksa lagi beberapa saat."
-                        "duitku_transaction_mismatch" -> "Data invoice Duitku tidak cocok dengan pesanan NekOS. Pembatalan tidak dilakukan."
                         else -> json.optString("error").ifBlank { "Store request failed ($code)" }
                     }
                 })
@@ -105,16 +100,13 @@ internal object OfficialSkinStoreClient {
 
     fun buy(
         context: Context,
-        skin: OfficialStoreSkin,
-        provider: String = "midtrans",
-        email: String = ""
+        skin: OfficialStoreSkin
     ): StoreActionResult {
         val body = JSONObject()
             .put("android_id",androidId(context))
             .put("app_version",appVersion(context))
             .put("skin_id",skin.id)
-            .put("provider",provider)
-        if (provider == "duitku") body.put("email",email.trim())
+            .put("provider","midtrans")
         val result = request("/purchase","POST",body)
         if (result.optBoolean("free")) return downloadAndInstall(context,skin.id)
         val orderId=result.optString("order_id")
@@ -127,7 +119,7 @@ internal object OfficialSkinStoreClient {
         }
         return StoreActionResult(true,"Complete payment in the opened payment page, then return to NekOS.",
             checkoutUrl=result.optString("checkout_url"),orderId=orderId,
-            paymentProvider=result.optString("provider",provider))
+            paymentProvider="midtrans")
     }
 
     @Synchronized
