@@ -108,7 +108,21 @@ internal object OfficialSkinStoreClient {
             .put("skin_id",skin.id)
             .put("provider","midtrans")
         val result = request("/purchase","POST",body)
-        if (result.optBoolean("free")) return downloadAndInstall(context,skin.id)
+        if (result.optBoolean("free")) {
+            // The server may return an existing ownership grant instead of a
+            // new checkout. Make this path idempotent: never download a skin
+            // that is already present on the device.
+            val installedSkin = SkinRepository(context).listInstalledSkins()
+                .firstOrNull { it.id == skin.skinKey || it.id == skin.id }
+            if (installedSkin != null) {
+                return StoreActionResult(
+                    true,
+                    "Skin is already installed.",
+                    installedSkinId = installedSkin.id
+                )
+            }
+            return downloadAndInstall(context,skin.id)
+        }
         val orderId=result.optString("order_id")
         val pendingSaved = context.getSharedPreferences(PREFERENCES,Context.MODE_PRIVATE).edit()
             .putString(PENDING_PREFIX+skin.id,orderId).commit()
