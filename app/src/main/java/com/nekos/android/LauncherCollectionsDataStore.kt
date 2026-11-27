@@ -24,19 +24,19 @@ internal class LauncherCollectionsDataStore private constructor(
     val favorites: DataStore<Preferences> = createStore(
         context = context,
         fileName = "nekos_favorites_$namespace",
-        legacyPreferencesName = if (namespace.isEmpty()) "nekos_favorites" else "$namespace-nekos_favorites"
+        legacyPreferencesName = "nekos_favorites"
     )
 
     val tags: DataStore<Preferences> = createStore(
         context = context,
         fileName = "nekos_tags_$namespace",
-        legacyPreferencesName = if (namespace.isEmpty()) "nekos_tags" else "$namespace-nekos_tags"
+        legacyPreferencesName = "nekos_tags"
     )
 
     val favoriteSnapshots: DataStore<Preferences> = createStore(
         context = context,
         fileName = "nekos_favorite_snapshots_$namespace",
-        legacyPreferencesName = if (namespace.isEmpty()) "nekos_favorite_snapshots" else "$namespace-nekos_favorite_snapshots"
+        legacyPreferencesName = "nekos_favorite_snapshots"
     )
 
     private fun createStore(
