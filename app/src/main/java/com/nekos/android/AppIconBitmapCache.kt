@@ -3,7 +3,13 @@ package com.nekos.android
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.ColorMatrix
+import android.graphics.ColorMatrixColorFilter
+import android.graphics.Paint
 import android.graphics.drawable.AdaptiveIconDrawable
+import android.graphics.drawable.BitmapDrawable
 import android.os.Build
 import android.util.LruCache
 import androidx.compose.runtime.getValue
@@ -219,25 +225,57 @@ class AppIconBitmapCache(
 
     private fun createAppIcon(app: InstalledApp, iconAppearance: IconAppearance): Bitmap =
         try {
-            val launcherIcon = app.launcherActivityInfo.getBadgedIcon(app.iconDensityDpi)
-            val monochromeDrawable = if (
-                iconAppearance.monochromeEnabled && Build.VERSION.SDK_INT >= 33
-            ) {
-                (launcherIcon as? AdaptiveIconDrawable)?.monochrome?.mutate()
+            // Read the unbadged source first: getBadgedIcon() may wrap the drawable and
+            // hide its AdaptiveIconDrawable monochrome layer from this check.
+            val sourceIcon = app.launcherActivityInfo.getIcon(app.iconDensityDpi)
+            if (iconAppearance.monochromeEnabled && Build.VERSION.SDK_INT >= 33) {
+                val adaptiveIcon = sourceIcon as? AdaptiveIconDrawable
+                val providedMonochrome = adaptiveIcon?.monochrome?.mutate()
+                val monochromeDrawable = providedMonochrome ?: createGeneratedMonochrome(sourceIcon)
+                monochromeDrawable.setTint(iconAppearance.tintArgb)
+                drawIcon(monochromeDrawable)
             } else {
-                null
-            }
-            val drawable = monochromeDrawable ?: launcherIcon
-            if (monochromeDrawable != null) {
-                drawable.setTint(iconAppearance.tintArgb)
-            }
-            drawable.setBounds(0, 0, 96, 96)
-            Bitmap.createBitmap(96, 96, Bitmap.Config.ARGB_8888).also { bitmap ->
-                drawable.draw(android.graphics.Canvas(bitmap))
+                drawIcon(app.launcherActivityInfo.getBadgedIcon(app.iconDensityDpi))
             }
         } catch (_: Exception) {
             appContext.packageManager.defaultActivityIcon.toBitmap(96, 96)
         }
+
+    /**
+     * Android Launcher3-style fallback for apps without a supplied monochrome layer.
+     * Average source luminance becomes alpha, so the final drawable can be tinted
+     * with the same Shared UI Color as an app-provided monochrome layer.
+     */
+    private fun createGeneratedMonochrome(source: android.graphics.drawable.Drawable): BitmapDrawable {
+        val sourceBitmap = Bitmap.createBitmap(96, 96, Bitmap.Config.ARGB_8888)
+        val sourceCanvas = Canvas(sourceBitmap)
+        sourceCanvas.drawColor(Color.BLACK)
+        source.setBounds(0, 0, 96, 96)
+        source.draw(sourceCanvas)
+
+        val alphaMatrix = ColorMatrix().apply {
+            set(floatArrayOf(
+                0f, 0f, 0f, 0f, 0f,
+                0f, 0f, 0f, 0f, 0f,
+                0f, 0f, 0f, 0f, 0f,
+                1f / 3f, 1f / 3f, 1f / 3f, 0f, 0f
+            ))
+        }
+        val monoBitmap = Bitmap.createBitmap(96, 96, Bitmap.Config.ARGB_8888)
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG).apply {
+            colorFilter = ColorMatrixColorFilter(alphaMatrix)
+        }
+        Canvas(monoBitmap).drawBitmap(sourceBitmap, 0f, 0f, paint)
+        sourceBitmap.recycle()
+        return BitmapDrawable(appContext.resources, monoBitmap)
+    }
+
+    private fun drawIcon(drawable: android.graphics.drawable.Drawable): Bitmap {
+        drawable.setBounds(0, 0, 96, 96)
+        return Bitmap.createBitmap(96, 96, Bitmap.Config.ARGB_8888).also { bitmap ->
+            drawable.draw(Canvas(bitmap))
+        }
+    }
 
     private fun readDiskBitmap(cacheKey: String): Bitmap? {
         val file = diskFile(cacheKey)
