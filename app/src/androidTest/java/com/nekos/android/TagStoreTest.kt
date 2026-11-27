@@ -3,15 +3,13 @@ package com.nekos.android
 import android.content.Context
 import android.content.ContextWrapper
 import androidx.test.platform.app.InstrumentationRegistry
-import androidx.datastore.preferences.core.Preferences
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
-import java.util.UUID
 import java.io.File
+import java.util.UUID
 
 class TagStoreTest {
     private val preferenceNamespace = "TagStoreTest_${UUID.randomUUID()}"
@@ -207,7 +205,7 @@ class TagStoreTest {
         assertEquals(emptyList<NekTag>(), loadResult.tags)
         assertEquals(false, loadResult.isValid)
         assertEquals(false, TagStore.save(context, listOf(NekTag(id = "new", name = "New"))))
-        assertEquals(malformed, tagsPreferences().getString("tag_collection_v1", null))
+        assertEquals(malformed, storedTagValue())
     }
 
     @Test
