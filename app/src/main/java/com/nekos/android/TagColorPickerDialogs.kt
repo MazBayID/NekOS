@@ -64,41 +64,47 @@ internal fun TagColorPickerDialog(
         title = { Text("Tag Color") },
         text = {
             LazyVerticalGrid(
-                columns = GridCells.Fixed(3),
-                modifier = Modifier.heightIn(max = 200.dp),
+                columns = GridCells.Fixed(5),
+                modifier = Modifier.heightIn(max = 100.dp),
                 contentPadding = PaddingValues(2.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
+                horizontalArrangement = Arrangement.spacedBy(7.dp),
+                verticalArrangement = Arrangement.spacedBy(7.dp)
             ) {
-                items(TagColorOptions) { (name, colorValue) ->
+                items(TagColorOptions) { (_, colorValue) ->
                     val selected = selectedColor == colorValue
-                    Column(
-                        Modifier.fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(38.dp)
+                            .clip(RoundedCornerShape(16.dp))
                             .background(Color(0xFFF4F1EA).copy(alpha = 0.5f))
-                            .border(1.dp, if (selected) Color(0xFF746657) else Color(0xFF34332F).copy(alpha = 0.20f), RoundedCornerShape(12.dp))
+                            .border(
+                                width = if (selected) 1.5.dp else 1.dp,
+                                color = if (selected) SettingsAccent else SettingsBorder,
+                                shape = RoundedCornerShape(16.dp)
+                            )
                             .clickable {
                                 onColorSelected(colorValue)
                                 onDismiss()
-                            }
-                            .padding(6.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                            },
+                        contentAlignment = Alignment.Center
                     ) {
                         Box(
-                            Modifier.fillMaxWidth()
-                                .height(34.dp)
-                                .clip(RoundedCornerShape(9.dp))
+                            modifier = Modifier
+                                .size(21.dp)
+                                .clip(CircleShape)
                                 .background(Color(colorValue.toInt()))
-                                .border(
-                                    width = if (selected) 2.dp else 1.dp,
-                                    color = if (selected) Color(0xFF746657) else Color(0xFF34332F).copy(alpha = 0.22f),
-                                    shape = RoundedCornerShape(9.dp)
+                                .border(1.dp, Color(0xFF34332F).copy(alpha = 0.16f), CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (selected) {
+                                SkinUiIcon(
+                                    "icon_check.webp",
+                                    Color(0xFF34332F),
+                                    "Selected",
+                                    Modifier.size(13.dp)
                                 )
-                        )
-                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-                            Text(name, color = Color(0xFF34332F), style = MaterialTheme.typography.labelMedium)
-                            if (selected) SkinUiIcon("icon_check.webp", SettingsAccent, "Selected", Modifier.size(13.dp))
+                            }
                         }
                     }
                 }
