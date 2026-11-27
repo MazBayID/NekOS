@@ -5,7 +5,7 @@
     "name": "NekOS Default",
     "version": "2.0.0",
     "author": "NekOS",
-    "description": "Skin bawaan NekOS. Juga referensi struktur untuk skin baru.",
+    "description": "Default NekOS skin. Also structure references for new skins.",
     "min_nekos_version": "0.0.0"
   },
   "assets": [
