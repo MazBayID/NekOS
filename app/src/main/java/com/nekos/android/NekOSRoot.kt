@@ -101,6 +101,7 @@ internal fun NekOSRoot(
     var isOfficialStoreLoading by remember { mutableStateOf(false) }
     var storeBusySkinId by remember { mutableStateOf<String?>(null) }
     var pendingStoreSkinIds by remember { mutableStateOf(emptySet<String>()) }
+    var midtransCheckout by remember { mutableStateOf<Pair<OfficialStoreSkin, String>?>(null) }
 
     // Reconcile unfinished Store payments whenever NekOS returns to foreground.
     // The checkout browser may be dismissed without a Midtrans webhook (e.g. the
@@ -459,6 +460,27 @@ internal fun NekOSRoot(
     }
 
     val skinPickerScope = rememberCoroutineScope()
+    fun closeMidtransCheckout(skin: OfficialStoreSkin) {
+        midtransCheckout = null
+        skinPickerScope.launch {
+            storeBusySkinId = skin.id
+            val result = withContext(Dispatchers.IO) {
+                runCatching { OfficialSkinStoreClient.checkPaymentAndInstall(context, skin) }
+                    .getOrElse { StoreActionResult(false, it.message ?: "Unable to check payment status.") }
+            }
+            storeBusySkinId = null
+            if (result.success && result.installedSkinId != null) {
+                installedSkins = skinRepository.listInstalledSkins()
+                iconCatalogRepository.invalidateSkinCache()
+                Toast.makeText(context, "Payment confirmed. Skin installed.", Toast.LENGTH_LONG).show()
+            } else if (result.paymentFailed) {
+                Toast.makeText(context, result.message, Toast.LENGTH_LONG).show()
+            } else {
+                Toast.makeText(context, result.message, Toast.LENGTH_SHORT).show()
+            }
+            pendingStoreSkinIds = OfficialSkinStoreClient.pendingSkinIds(context)
+        }
+    }
     val skinPicker = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument()
     ) { uri ->
@@ -1184,8 +1206,7 @@ internal fun NekOSRoot(
                         }
                         storeBusySkinId = null
                         if (!result.checkoutUrl.isNullOrBlank()) {
-                            runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(result.checkoutUrl))) }
-                                .onFailure { /* Keep payment handoff failures silent. */ }
+                            midtransCheckout = skin to result.checkoutUrl
                         }
                         if (result.success && result.installedSkinId != null) {
                             installedSkins = skinRepository.listInstalledSkins()
@@ -1372,6 +1393,14 @@ internal fun NekOSRoot(
                         showFirstLaunchTip = false
                     }) { Text("Got it") }
                 }
+            )
+        }
+
+        midtransCheckout?.let { (skin, checkoutUrl) ->
+            MidtransCheckoutDialog(
+                checkoutUrl = checkoutUrl,
+                onDismiss = { closeMidtransCheckout(skin) },
+                onPaymentFinished = { closeMidtransCheckout(skin) }
             )
         }
     }
