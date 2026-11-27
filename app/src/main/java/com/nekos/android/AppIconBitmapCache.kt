@@ -45,6 +45,17 @@ internal fun isValidCachedIconDimensions(
         width in 1..maxDimensionPx &&
         height in 1..maxDimensionPx
 
+internal fun monochromeTintFromSharedUiColor(colorArgb: Long): Int {
+    val color = colorArgb.toInt()
+    val shade = 0.72f
+    return android.graphics.Color.argb(
+        android.graphics.Color.alpha(color),
+        (android.graphics.Color.red(color) * shade).toInt(),
+        (android.graphics.Color.green(color) * shade).toInt(),
+        (android.graphics.Color.blue(color) * shade).toInt()
+    )
+}
+
 private data class IconAppearance(
     val monochromeEnabled: Boolean = false,
     val tintArgb: Int = 0xFF555555.toInt()
