@@ -461,8 +461,8 @@ internal fun NekOSRoot(
     }
 
     val skinPickerScope = rememberCoroutineScope()
-    fun closeMidtransCheckout(skin: OfficialStoreSkin) {
-        midtransCheckout = null
+    fun closeStoreCheckout(skin: OfficialStoreSkin) {
+        storeCheckout = null
         skinPickerScope.launch {
             storeBusySkinId = skin.id
             val result = withContext(Dispatchers.IO) {
