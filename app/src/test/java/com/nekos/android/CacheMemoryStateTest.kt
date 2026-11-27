@@ -3,8 +3,8 @@ package com.nekos.android
 import android.content.ComponentCallbacks2
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -18,11 +18,12 @@ class CacheMemoryStateTest {
     }
 
     @Test
-    fun criticalMemoryPressureAlsoTrimsLauncherCaches() {
-        assertTrue(shouldTrimLauncherCaches(ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL))
-        assertTrue(shouldTrimLauncherCaches(ComponentCallbacks2.TRIM_MEMORY_MODERATE))
-        assertTrue(shouldTrimLauncherCaches(ComponentCallbacks2.TRIM_MEMORY_COMPLETE))
-        assertFalse(shouldTrimLauncherCaches(ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW))
+    fun legacyCriticalAndBackgroundPressureTrimLauncherCaches() {
+        // Level 10 is the legacy RUNNING_LOW value; it must not trigger a trim.
+        assertFalse(shouldTrimLauncherCaches(10))
+        // Preserve support for the legacy RUNNING_CRITICAL callback on Android 13 and lower.
+        assertTrue(shouldTrimLauncherCaches(LEGACY_TRIM_MEMORY_RUNNING_CRITICAL))
+        assertTrue(shouldTrimLauncherCaches(ComponentCallbacks2.TRIM_MEMORY_BACKGROUND))
     }
 
     @Test
