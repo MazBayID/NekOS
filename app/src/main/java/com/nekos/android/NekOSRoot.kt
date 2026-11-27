@@ -1421,17 +1421,17 @@ internal fun NekOSRoot(
             PaymentProviderDialog(
                 skinName = skin.name,
                 onDismiss = { paymentProviderSkin = null },
-                onConfirm = { provider, email ->
+                onConfirm = {
                     paymentProviderSkin = null
                     if (storeBusySkinId == null) skinPickerScope.launch {
                         storeBusySkinId = skin.id
                         val result = withContext(Dispatchers.IO) {
-                            runCatching { OfficialSkinStoreClient.buy(context, skin, provider, email) }
+                            runCatching { OfficialSkinStoreClient.buy(context, skin) }
                                 .getOrElse { StoreActionResult(false, it.message ?: "Store action failed.") }
                         }
                         storeBusySkinId = null
                         if (!result.checkoutUrl.isNullOrBlank()) {
-                            storeCheckout = Triple(skin, result.checkoutUrl, result.paymentProvider ?: provider)
+                            storeCheckout = Triple(skin, result.checkoutUrl, result.paymentProvider ?: "midtrans")
                         }
                         pendingStoreSkinIds = OfficialSkinStoreClient.pendingSkinIds(context)
                         if (!result.success) Toast.makeText(context, result.message, Toast.LENGTH_LONG).show()
