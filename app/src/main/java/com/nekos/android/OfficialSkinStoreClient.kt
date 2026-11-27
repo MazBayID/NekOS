@@ -6,7 +6,9 @@ import org.json.JSONObject
 import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
+import java.net.URI
 import java.security.MessageDigest
+import java.util.UUID
 
 internal data class OfficialStoreSkin(
     val id: String, val skinKey: String, val name: String, val author: String,
@@ -17,6 +19,16 @@ internal data class StoreActionResult(
     val orderId: String? = null, val installedSkinId: String? = null,
     val paymentFailed: Boolean = false
 )
+
+internal fun isTrustedSkinDownloadUrl(value: String): Boolean = runCatching {
+    val uri = URI(value)
+    uri.scheme == "https" &&
+        uri.host == "vizmufbfaghqucsoukne.supabase.co" &&
+        (uri.port == -1 || uri.port == 443) &&
+        uri.userInfo == null &&
+        uri.path.startsWith("/storage/v1/object/sign/") &&
+        !uri.rawQuery.isNullOrBlank()
+}.getOrDefault(false)
 
 internal object OfficialSkinStoreClient {
     private const val API = "https://vizmufbfaghqucsoukne.supabase.co/functions/v1/skin-store"
@@ -129,13 +141,13 @@ internal object OfficialSkinStoreClient {
         val downloadUrl=grant.optString("download_url")
         val expectedHash=grant.optString("package_sha256")
         val expectedSize=grant.optLong("package_size_bytes")
-        if(downloadUrl.isBlank()||!expectedHash.matches(Regex("^[0-9a-f]{64}$"))||
+        if(!isTrustedSkinDownloadUrl(downloadUrl)||!expectedHash.matches(Regex("^[0-9a-f]{64}$"))||
             expectedSize !in 1..MAX_PACKAGE_BYTES)return StoreActionResult(false,"Invalid package delivery response.")
-        val archive=File(context.cacheDir,"nekos-skin-download.zip")
+        val archive=File(context.cacheDir,"nekos-skin-download-${UUID.randomUUID()}.zip")
         var connection:HttpURLConnection?=null
         return try {
             connection=(URL(downloadUrl).openConnection() as HttpURLConnection).apply {
-                connectTimeout=15_000;readTimeout=45_000;instanceFollowRedirects=true
+                connectTimeout=15_000;readTimeout=45_000;instanceFollowRedirects=false
             }
             if(connection.responseCode!=HttpURLConnection.HTTP_OK)
                 throw IllegalStateException("Skin download failed (HTTP ${connection.responseCode}).")
