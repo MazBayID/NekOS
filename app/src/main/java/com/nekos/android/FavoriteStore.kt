@@ -3,6 +3,7 @@ package com.nekos.android
 import android.content.Context
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.first
 
 private const val FAVORITES_KEY = "favorite_packages"
@@ -31,6 +32,7 @@ internal suspend fun loadFavoritePackagesResult(context: Context): FavoriteLoadR
         val packages = saved.split("|").map { it.ifBlank { null } }
         FavoriteLoadResult(normalizeFavoritePackages(packages), true)
     }.getOrElse {
+        if (it is CancellationException) throw it
         FavoriteLoadResult(emptyFavoriteSlots(), false)
     }
 }
@@ -41,7 +43,7 @@ internal suspend fun loadFavoritePackagesResult(context: Context): FavoriteLoadR
  */
 suspend fun saveFavoritePackages(context: Context, packages: List<String?>): Boolean {
     val normalized = normalizeFavoritePackages(packages)
-    return runCatching {
+    return try {
         LauncherCollectionsDataStore.get(context).favorites.edit { preferences ->
             val existing = preferences.asMap().entries.firstOrNull { it.key.name == FAVORITES_KEY }
             check(existing == null || existing.value is String) {
@@ -50,7 +52,11 @@ suspend fun saveFavoritePackages(context: Context, packages: List<String?>): Boo
             preferences[favoritesKey] = normalized.joinToString("|") { it.orEmpty() }
         }
         true
-    }.getOrDefault(false)
+    } catch (cancelled: CancellationException) {
+        throw cancelled
+    } catch (_: Exception) {
+        false
+    }
 }
 
 internal fun normalizeFavoritePackages(packages: List<String?>): List<String?> {
