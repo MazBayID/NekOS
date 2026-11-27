@@ -320,7 +320,7 @@ internal fun NekOSSettingsDialog(
             val availableDialogHeight = maxHeight
             Box(
                 modifier = Modifier
-                    .widthIn(max = 360.dp)
+                    .widthIn(max = if (page == SettingsPage.OFFICIAL_SKIN_STORE) 440.dp else 360.dp)
                     .fillMaxWidth()
                     .padding(horizontal = 12.dp)
                     .padding(top = 10.dp)
@@ -385,7 +385,7 @@ internal fun NekOSSettingsDialog(
                         }
                         Column(
                 modifier = Modifier
-                    .heightIn(max = availableDialogHeight * 0.58f)
+                    .heightIn(max = availableDialogHeight * if (page == SettingsPage.OFFICIAL_SKIN_STORE) 0.68f else 0.58f)
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
@@ -854,7 +854,30 @@ internal fun NekOSSettingsDialog(
                             )
                         }
 
-                        officialStoreSkins.forEach { skin ->
+                        listOf("Free", "Basic", "Premium", "Exclusive").forEach { category ->
+                            val categorySkins = officialStoreSkins.filter {
+                                it.category.equals(category, ignoreCase = true)
+                            }
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(top = 5.dp, bottom = 1.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    category.uppercase(),
+                                    color = SettingsMuted,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = 0.9.sp
+                                )
+                                Text(
+                                    categorySkins.size.toString(),
+                                    color = SettingsMuted,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                            categorySkins.forEach { skin ->
                             val installed = installedSkins.any { it.id == skin.skinKey || it.id == skin.id }
                             val pending = skin.id in pendingStoreSkinIds
                             val canReinstall = isPurchasedSkinAvailableForReinstall(skin, installed)
@@ -940,6 +963,7 @@ internal fun NekOSSettingsDialog(
                                         )
                                     }
                                 }
+                            }
                             }
                         }
                         Text(
