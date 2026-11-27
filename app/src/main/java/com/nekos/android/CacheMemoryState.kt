@@ -3,11 +3,19 @@ package com.nekos.android
 import android.content.ComponentCallbacks2
 
 /**
+ * Android 13 and lower may still report this legacy level (15).
+ * Android 14+ no longer sends it; keep the numeric value to preserve
+ * low-memory handling on older supported devices without using the
+ * API 35-deprecated framework constant.
+ */
+internal const val LEGACY_TRIM_MEMORY_RUNNING_CRITICAL = 15
+
+/**
  * Keep decoded launcher artwork through ordinary visibility changes.
  * Release it when Android places the process in the background under memory pressure.
  */
 internal fun shouldTrimLauncherCaches(level: Int): Boolean =
-    level == ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL ||
+    level == LEGACY_TRIM_MEMORY_RUNNING_CRITICAL ||
         level >= ComponentCallbacks2.TRIM_MEMORY_BACKGROUND
 
 /**
