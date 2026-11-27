@@ -61,7 +61,7 @@ private data class IconAppearance(
     val tintArgb: Int = 0xFF555555.toInt()
 ) {
     fun cacheKey(baseKey: String): String =
-        if (monochromeEnabled) "$baseKey::nekos-mono-v1::\${Integer.toHexString(tintArgb)}" else baseKey
+        if (monochromeEnabled) "$baseKey::nekos-mono-v1::${Integer.toHexString(tintArgb)}" else baseKey
 }
 
 class AppIconBitmapCache(
