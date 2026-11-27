@@ -28,6 +28,8 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -144,15 +146,28 @@ internal fun NekOSRoot(
         pendingStoreSkinIds = OfficialSkinStoreClient.pendingSkinIds(context)
     }
     var apps by remember { mutableStateOf(emptyList<InstalledApp>()) }
-    val initialFavoriteLoad = remember(context) { loadFavoritePackagesResult(context) }
-    var favoritePackages by remember { mutableStateOf(initialFavoriteLoad.packages) }
-    var favoriteStorageWritable by remember { mutableStateOf(initialFavoriteLoad.isValid) }
-    var favoriteAppSnapshots by remember {
-        mutableStateOf(FavoriteAppSnapshotStore.load(context))
+    val collectionScope = rememberCoroutineScope()
+    val collectionWriteMutex = remember { Mutex() }
+    var collectionsLoaded by remember { mutableStateOf(false) }
+    var favoritePackages by remember { mutableStateOf(List(15) { null as String? }) }
+    var favoriteStorageWritable by remember { mutableStateOf(false) }
+    var favoriteAppSnapshots by remember { mutableStateOf(emptyMap<String, FavoriteAppSnapshot>()) }
+    var favoriteSnapshotsWritable by remember { mutableStateOf(false) }
+    var tags by remember { mutableStateOf(emptyList<NekTag>()) }
+    var tagStorageWritable by remember { mutableStateOf(false) }
+
+    LaunchedEffect(context) {
+        val favoriteLoad = loadFavoritePackagesResult(context)
+        val tagLoad = TagStore.loadResult(context)
+        val snapshotLoad = FavoriteAppSnapshotStore.loadResult(context)
+        favoritePackages = favoriteLoad.packages
+        favoriteStorageWritable = favoriteLoad.isValid
+        tags = tagLoad.tags
+        tagStorageWritable = tagLoad.isValid
+        favoriteAppSnapshots = snapshotLoad.snapshots
+        favoriteSnapshotsWritable = snapshotLoad.isValid
+        collectionsLoaded = true
     }
-    val initialTagLoad = remember(context) { TagStore.loadResult(context) }
-    var tags by remember { mutableStateOf(initialTagLoad.tags) }
-    var tagStorageWritable by remember { mutableStateOf(initialTagLoad.isValid) }
     var tagEditorTarget by remember { mutableStateOf<NekTag?>(null) }
     var viewingTag by remember { mutableStateOf<NekTag?>(null) }
     var actionMenuTag by remember { mutableStateOf<NekTag?>(null) }
@@ -167,7 +182,8 @@ internal fun NekOSRoot(
 
     // Discover launchable apps while the brand splash is visible instead of
     // waiting for an artificial timer before starting initialization.
-    LaunchedEffect(refreshToken, resumeToken) {
+    LaunchedEffect(refreshToken, resumeToken, collectionsLoaded) {
+        if (!collectionsLoaded) return@LaunchedEffect
         // A normal resume must not rescan a healthy catalog. It only retries a
         // previous failed scan, covering transient package/profile service errors.
         if (refreshToken == lastAppliedRefreshToken && !catalogLoadFailed) {
@@ -201,7 +217,8 @@ internal fun NekOSRoot(
             apps = refreshedApps
         }
         lastAppliedRefreshToken = refreshToken
-        val currentProfileSerialNumber = context
+        collectionWriteMutex.withLock {
+            val currentProfileSerialNumber = context
             .getSystemService(UserManager::class.java)
             .getSerialNumberForUser(Process.myUserHandle())
         // Legacy data stored only package names because earlier versions queried
@@ -275,10 +292,11 @@ internal fun NekOSRoot(
                 ).show()
             }
         }
+        }
         isInitialLoadComplete = true
     }
 
-    if (!isInitialLoadComplete) {
+    if (!isInitialLoadComplete || !collectionsLoaded) {
         Box(
             modifier = Modifier.fillMaxSize().background(WarmBackground),
             contentAlignment = Alignment.Center
@@ -461,68 +479,81 @@ internal fun NekOSRoot(
         actionMenuPreviewApp = null
     }
 
-    fun saveTags(updated: List<NekTag>): Boolean {
-        if (!tagStorageWritable) {
-            Toast.makeText(
-                context,
-                "Tags could not be loaded. Existing data was preserved.",
-                Toast.LENGTH_LONG
-            ).show()
-            return false
-        }
-        val normalized = updated.distinctBy { it.id }
-        if (TagStore.save(context, normalized)) {
-            tags = normalized
-            return true
-        } else {
-            tagStorageWritable = false
-            Toast.makeText(
-                context,
-                "Tags could not be saved. Existing data was preserved.",
-                Toast.LENGTH_LONG
-            ).show()
-            return false
-        }
-    }
-
-    fun updateFavorites(updated: List<String?>): Boolean {
-        if (!favoriteStorageWritable) {
-            Toast.makeText(
-                context,
-                "Favorites could not be loaded. Existing data was preserved.",
-                Toast.LENGTH_LONG
-            ).show()
-            return false
-        }
-        if (!saveFavoritePackages(context, updated)) {
-            favoriteStorageWritable = false
-            Toast.makeText(
-                context,
-                "Favorites could not be saved. Existing data was preserved.",
-                Toast.LENGTH_LONG
-            ).show()
-            return false
-        }
-        favoritePackages = updated
-        val activeFavoriteIds = updated.filterNotNull().toSet()
-        val retainedSnapshots = favoriteAppSnapshots.filterKeys { it in activeFavoriteIds }
-        val refreshedSnapshots = apps
-            .filter { it.id in activeFavoriteIds }
-            .associate { app ->
-                app.id to FavoriteAppSnapshot(
-                    appId = app.id,
-                    label = app.label,
-                    iconCacheKey = app.iconCacheKey
-                )
+    suspend fun saveTags(updated: List<NekTag>): Boolean =
+        collectionWriteMutex.withLock {
+            if (!tagStorageWritable) {
+                Toast.makeText(
+                    context,
+                    "Tags could not be loaded. Existing data was preserved.",
+                    Toast.LENGTH_LONG
+                ).show()
+                return@withLock false
             }
-        favoriteAppSnapshots = retainedSnapshots + refreshedSnapshots
-        FavoriteAppSnapshotStore.save(context, favoriteAppSnapshots.values)
-        return true
-    }
+            val normalized = updated.distinctBy { it.id }
+            if (TagStore.save(context, normalized)) {
+                tags = normalized
+                true
+            } else {
+                tagStorageWritable = false
+                Toast.makeText(
+                    context,
+                    "Tags could not be saved. Existing data was preserved.",
+                    Toast.LENGTH_LONG
+                ).show()
+                false
+            }
+        }
+
+    suspend fun updateFavorites(updated: List<String?>): Boolean =
+        collectionWriteMutex.withLock {
+            if (!favoriteStorageWritable) {
+                Toast.makeText(
+                    context,
+                    "Favorites could not be loaded. Existing data was preserved.",
+                    Toast.LENGTH_LONG
+                ).show()
+                return@withLock false
+            }
+            if (!saveFavoritePackages(context, updated)) {
+                favoriteStorageWritable = false
+                Toast.makeText(
+                    context,
+                    "Favorites could not be saved. Existing data was preserved.",
+                    Toast.LENGTH_LONG
+                ).show()
+                return@withLock false
+            }
+            favoritePackages = normalizeFavoritePackages(updated)
+            if (favoriteSnapshotsWritable) {
+                val activeFavoriteIds = updated.filterNotNull().toSet()
+                val retainedSnapshots = favoriteAppSnapshots.filterKeys { it in activeFavoriteIds }
+                val refreshedSnapshots = apps
+                    .filter { it.id in activeFavoriteIds }
+                    .associate { app ->
+                        app.id to FavoriteAppSnapshot(
+                            appId = app.id,
+                            label = app.label,
+                            iconCacheKey = app.iconCacheKey
+                        )
+                    }
+                val updatedSnapshots = retainedSnapshots + refreshedSnapshots
+                if (FavoriteAppSnapshotStore.save(context, updatedSnapshots.values)) {
+                    favoriteAppSnapshots = updatedSnapshots
+                } else {
+                    favoriteSnapshotsWritable = false
+                    Toast.makeText(
+                        context,
+                        "Favorite display data could not be saved.",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+            true
+        }
 
     fun placeFavoriteFromDrawer(appId: String, targetIndex: Int) {
         when (val result = placePackageInFavoriteSlot(favoritePackages, appId, targetIndex)) {
-            is FavoriteSlotOperation.Updated -> {
+            is FavoriteSlotOperation.Updated -> collectionScope.launch {
                 updateFavorites(result.packages)
             }
             FavoriteSlotOperation.Unchanged -> Unit
