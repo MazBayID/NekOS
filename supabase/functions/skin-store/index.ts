@@ -67,13 +67,19 @@ async function rpc(name:string,args:Record<string,unknown>) {
   if(error) throw new Error(error.message);
   return data;
 }
-async function catalog(origin:string) {
+async function catalog(origin:string, deviceHash?:string, appVersion:string|null=null) {
   const {data,error}=await db.from("skins")
     .select("id,skin_key,name,author,description,category,schema_version,min_nekos_version,preview_path,price_amount,currency,package_sha256,package_size_bytes")
     .eq("status","published").order("created_at",{ascending:false}).limit(100);
   if(error)throw new Error("catalog_unavailable");
+  const ownedIds = deviceHash
+    ? new Set<string>((await rpc("skin_owned_catalog", {
+        p_device_hash:deviceHash, p_app_version:appVersion
+      }) as unknown[]).map(String))
+    : new Set<string>();
   return (data??[]).map((skin:Record<string,unknown>)=>({
     ...skin,
+    owned:ownedIds.has(String(skin.id)),
     preview_url:db.storage.from(PREVIEWS).getPublicUrl(String(skin.preview_path)).data.publicUrl,
   }));
 }
@@ -272,8 +278,9 @@ Deno.serve(async(req:Request)=>{
     if(req.method!=="POST")return fail("method_not_allowed",405,origin);
     const body=await req.json();
     const deviceHash=await hmacDevice(String(body.android_id??""));
-    if(path==="cancel")return await handleCancel(body,deviceHash,origin);
     const appVersion=String(body.app_version??"").slice(0,32)||null;
+    if(path==="catalog")return json({skins:await catalog(origin,deviceHash,appVersion)},200,origin);
+    if(path==="cancel")return await handleCancel(body,deviceHash,origin);
     if(path==="purchase") {
       const skinId=String(body.skin_id??"");
       const {data:skin,error:skinError}=await db.from("skins").select("id,skin_key,name,price_amount,currency,status").eq("id",skinId).eq("status","published").maybeSingle();
