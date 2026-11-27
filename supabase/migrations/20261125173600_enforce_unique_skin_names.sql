@@ -1,0 +1,1 @@
+create unique index if not exists skins_name_unique_idx on public.skins (lower(name));
