@@ -642,7 +642,8 @@ internal fun NekOSSettingsDialog(
                                     Column(
                                         modifier = Modifier
                                             .weight(1f)
-                                            .padding(horizontal = 8.dp)
+                                            .padding(horizontal = 14.dp)
+                                            .height(82.dp)
                                             .clip(SettingsCardShape)
                                             .background(optionSurface.copy(alpha = 0.5f))
                                             .border(
@@ -665,13 +666,13 @@ internal fun NekOSSettingsDialog(
                                                     contentDescription = "${skin.name} preview",
                                                     colorFilter = ColorFilter.tint(sharedUiTint),
                                                     modifier = Modifier
-                                                        .size(40.dp)
+                                                        .size(32.dp)
                                                         .align(Alignment.Center)
                                                         .clip(RoundedCornerShape(12.dp))
                                                 )
                                             } else {
                                                 Box(
-                                                    Modifier.size(40.dp).clip(RoundedCornerShape(8.dp))
+                                                    Modifier.size(32.dp).clip(RoundedCornerShape(8.dp))
                                                         .background(SettingsAccent.copy(alpha = 0.12f)),
                                                     contentAlignment = Alignment.Center
                                                 ) {
