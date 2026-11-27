@@ -222,7 +222,7 @@ internal fun StoreCheckoutDialog(
                     if (isDuitku)
                         "Duitku tidak menyediakan pembatalan umum untuk invoice ini. Menutup checkout tidak membatalkan invoice; invoice masih dapat dibayar sampai kedaluwarsa. NekOS akan tetap memantau pembayarannya."
                     else
-                        "NekOS akan meminta Midtrans membatalkan transaksi. Jika pembayaran ternyata sudah berhasil, pembelian tidak akan dibatalkan dan skin tetap dipasang."
+                        "NekOS akan meminta Midtrans membatalkan transaksi. Jika pembayaran ternyata sudah berhasil, pembelian tidak akan dibatalkan dan skin tetap dipasang. Jika kamu belum memilih metode pembayaran sehingga transaksi belum dibuat, sesi checkout tidak dapat dibatalkan langsung dan akan kedaluwarsa otomatis dalam 15 menit."
                 )
             },
             confirmButton = {
