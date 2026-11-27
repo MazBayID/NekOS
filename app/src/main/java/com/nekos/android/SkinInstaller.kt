@@ -25,10 +25,18 @@ internal data class SkinDirectoryFinalizeResult(
 /** Installs a skin only when its permanent identity is not already present. */
 internal fun finalizeSkinInstallation(
     staging: File,
-    destination: File
+    destination: File,
+    existingDestinationIsValid: Boolean = true
 ): SkinDirectoryFinalizeResult {
     if (destination.exists()) {
-        return SkinDirectoryFinalizeResult(false, "Skin is already installed")
+        if (existingDestinationIsValid) {
+            return SkinDirectoryFinalizeResult(false, "Skin is already installed")
+        }
+        // The repository ignores malformed/incomplete skin folders, but the
+        // filesystem still blocks installation when that stale folder remains.
+        if (!destination.deleteRecursively()) {
+            return SkinDirectoryFinalizeResult(false, "Unable to remove incomplete skin installation")
+        }
     }
     return if (staging.renameTo(destination)) {
         SkinDirectoryFinalizeResult(true)
@@ -164,7 +172,11 @@ internal class SkinInstaller(context: Context) {
                 return SkinInstallResult(false, error = "Invalid skin installation destination")
             }
             val finalized = synchronized(SkinDirectoryLock.monitor) {
-                finalizeSkinInstallation(staging, destination)
+                finalizeSkinInstallation(
+                    staging,
+                    destination,
+                    existingDestinationIsValid = isValidInstalledSkinDirectory(destination, skinId)
+                )
             }
             if (!finalized.success) {
                 return SkinInstallResult(false, error = finalized.error)
