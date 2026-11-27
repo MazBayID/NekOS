@@ -433,7 +433,7 @@ internal fun NekOSSettingsDialog(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(SettingsCardShape)
-                                .background(SettingsInk.copy(alpha = 0.5f))
+                                .background(Color(0xFFF4F1EA).copy(alpha = 0.5f))
                                 .border(1.dp, SettingsBorder, SettingsCardShape)
                                 .padding(horizontal = 10.dp, vertical = 7.dp),
                             verticalAlignment = Alignment.CenterVertically,
