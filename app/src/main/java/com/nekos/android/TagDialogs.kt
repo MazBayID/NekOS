@@ -253,7 +253,7 @@ fun TagActionsDialog(
                     verticalArrangement = Arrangement.Center
                 ) {
                     SkinUiIcon(
-                        fileName = "icon_close.webp",
+                        fileName = "icon_trash.webp",
                         contentDescription = "Delete tag",
                         tint = Color(0xFFB3261E),
                         modifier = Modifier.size(18.dp)
