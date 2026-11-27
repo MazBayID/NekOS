@@ -37,7 +37,7 @@ internal fun recoverInterruptedSkinUpdates(skinsDirectory: File): Boolean =
         recovered
     }
 
-private fun isValidInstalledSkinDirectory(directory: File, expectedId: String): Boolean =
+internal fun isValidInstalledSkinDirectory(directory: File, expectedId: String): Boolean =
     runCatching {
         if (!directory.isDirectory) return false
         val manifest = File(directory, "skin.json")
