@@ -204,13 +204,16 @@ internal val LauncherThemeOptions = listOf(
     LauncherThemeOption("sage", "Sage", Color(0xFFE8EEE5)),
     LauncherThemeOption("mist", "Mist", Color(0xFFE8EDF2)),
     LauncherThemeOption("lavender", "Lavender", Color(0xFFEFEAF5)),
-    LauncherThemeOption("blush", "Blush", Color(0xFFC69D98)),
+    LauncherThemeOption("clay", "Clay", Color(0xFFC8B6A6)),
     LauncherThemeOption("mint", "Mint", Color(0xFFA2C1B1)),
     LauncherThemeOption("sky", "Sky", Color(0xFF9FBBD0))
 )
 
 internal fun normalizeLauncherTheme(key: String?): String =
-    LauncherThemeOptions.firstOrNull { it.key == key }?.key ?: "porcelain"
+    when (key) {
+        "blush" -> "clay"
+        else -> LauncherThemeOptions.firstOrNull { it.key == key }?.key ?: "porcelain"
+    }
 
 internal fun launcherThemeColor(key: String): Color =
     LauncherThemeOptions.firstOrNull { it.key == normalizeLauncherTheme(key) }?.color
@@ -572,7 +575,7 @@ internal fun NekOSSettingsDialog(
                                             .weight(1f)
                                             .height(62.dp)
                                             .clip(SettingsCardShape)
-                                            .background(option.color.copy(alpha = 0.5f))
+                                            .background(option.color)
                                             .border(
                                                 width = if (selected) 1.5.dp else 1.dp,
                                                 color = if (selected) SettingsAccent else SettingsBorder,
