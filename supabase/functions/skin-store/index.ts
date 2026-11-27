@@ -97,7 +97,7 @@ async function createPayment(
   const amount = Number(order.amount);
   if (!Number.isSafeInteger(amount) || amount < 1) throw new Error("invalid_order_amount");
   assertPaymentConfig(provider);
-  if (provider === "duitku" && (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email) || email.length > 255)) {
+  if (provider === "duitku" && (!/^[^\s@]+@[^\\s@]+\.[^\\s@]+$/.test(email) || email.length > 255)) {
     throw new Error("invalid_duitku_email");
   }
   await rpc("skin_attach_payment", {
@@ -132,7 +132,7 @@ async function createPayment(
 
   if (provider === "duitku") {
     assertPaymentConfig("duitku");
-    if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email) || email.length > 255) {
+    if (!/^[^\s@]+@[^\\s@]+\.[^\\s@]+$/.test(email) || email.length > 255) {
       throw new Error("invalid_duitku_email");
     }
     const timestamp = String(Date.now());
@@ -218,7 +218,7 @@ async function handleDuitkuCallback(req:Request) {
   const signature=field("signature");
   if(!merchantCode||!amount||!orderId||!resultCode||!signature)return fail("invalid_duitku_callback",400);
   if(merchantCode!==DUITKU_MERCHANT_CODE)return fail("invalid_duitku_merchant",401);
-  if(!/^\\d+$/.test(amount))return fail("invalid_duitku_amount",400);
+  if(!/^\d+$/.test(amount))return fail("invalid_duitku_amount",400);
   const expected=await hmacSha256Hex(merchantCode+amount+orderId,DUITKU_API_KEY);
   if(!constantEqual(signature.toLowerCase(),expected.toLowerCase()))return fail("invalid_duitku_signature",401);
   // Persist only payment verification fields; never retain the customer's email.
@@ -276,7 +276,7 @@ Deno.serve(async(req:Request)=>{
       const provider=String(body.provider??"midtrans").trim().toLowerCase();
       if(!["midtrans","duitku"].includes(provider))return fail("unsupported_payment_provider",400,origin);
       const email=String(body.email??"").trim();
-      if(provider==="duitku"&&(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)||email.length>255))
+      if(provider==="duitku"&&(!/^[^\s@]+@[^\\s@]+\.[^\\s@]+$/.test(email)||email.length>255))
         return fail("invalid_duitku_email",400,origin);
       const order=await rpc("skin_create_order",{p_device_hash:deviceHash,p_skin_id:skinId,p_app_version:appVersion});
       const orderId=String(order.order_id);
