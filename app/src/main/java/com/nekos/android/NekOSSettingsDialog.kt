@@ -243,13 +243,16 @@ internal fun NekOSSettingsDialog(
     storeBusySkinId: String?,
     pendingStoreSkinIds: Set<String>,
     onRefreshOfficialStore: () -> Unit,
-    onStoreAction: (OfficialStoreSkin, Boolean) -> Unit,
+    onStoreAction: (OfficialStoreSkin, Boolean, (String?) -> Unit) -> Unit,
     onImportSkin: () -> Unit,
     onSelectSkin: (String) -> Unit,
     onDeleteSkin: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
     var page by remember { mutableStateOf(SettingsPage.MAIN) }
+    var managedSkin by remember { mutableStateOf<InstalledSkin?>(null) }
+    var pendingSkinRemoval by remember { mutableStateOf<InstalledSkin?>(null) }
+    var storeInstallPrompt by remember { mutableStateOf<Pair<String, String>?>(null) }
     LaunchedEffect(page) { if (page == SettingsPage.OFFICIAL_SKIN_STORE) onRefreshOfficialStore() }
     val surfaceColor = launcherThemeColor(launcherThemeKey)
     val optionSurface = lerp(surfaceColor, Color.White, 0.48f)
@@ -641,7 +644,7 @@ internal fun NekOSSettingsDialog(
                                         color = if (selected) SettingsAccent else SettingsBorder,
                                         shape = SettingsCardShape
                                     )
-                                    .clickable { onSelectSkin(skin.id) }
+                                    .clickable { managedSkin = skin }
                                     .padding(horizontal = 8.dp, vertical = 7.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -676,17 +679,13 @@ internal fun NekOSSettingsDialog(
                                         Text("Active", color = SettingsAccent, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                                     }
                                 }
-                                if (!skin.isBuiltIn) {
-                                    Row(
-                                        modifier = Modifier.clip(RoundedCornerShape(6.dp))
-                                            .clickable { onDeleteSkin(skin.id) }
-                                            .padding(horizontal = 7.dp, vertical = 6.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                    ) {
-                                        SkinUiIcon("icon_trash.webp", SettingsAccent, "Remove skin", Modifier.size(14.dp))
-                                        Text("Remove", color = SettingsAccent, fontSize = 11.sp,
-                                            fontWeight = FontWeight.Medium)
+                                TextButton(
+                                    onClick = { managedSkin = skin },
+                                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 7.dp, vertical = 4.dp)
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                                        SkinUiIcon("icon_gear.webp", SettingsAccent, "Manage skin", Modifier.size(14.dp))
+                                        Text("Manage", color = SettingsAccent, fontSize = 10.sp, fontWeight = FontWeight.SemiBold)
                                     }
                                 }
                             }
@@ -843,7 +842,11 @@ internal fun NekOSSettingsDialog(
                                             label = actionLabel,
                                             enabled = actionEnabled,
                                             isInstall = skin.price <= 0L || pending,
-                                            onClick = { onStoreAction(skin, pending) }
+                                            onClick = {
+                                                onStoreAction(skin, pending) { installedId ->
+                                                    if (installedId != null) storeInstallPrompt = installedId to skin.name
+                                                }
+                                            }
                                         )
                                     }
                                 }
@@ -892,5 +895,69 @@ internal fun NekOSSettingsDialog(
                 )
             }
         }
+    }
+    managedSkin?.let { skin ->
+        NekOSAlertDialog(
+            topFrameColorArgb = launcherUiColor,
+            onDismissRequest = { managedSkin = null },
+            containerColor = surfaceColor,
+            title = { Text(skin.name, color = SettingsInk, fontWeight = FontWeight.SemiBold) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                    Text(skin.author.ifBlank { "NekOS" } + " · v" + skin.version, color = SettingsMuted, fontSize = 11.sp)
+                    if (skin.description.isNotBlank()) Text(skin.description, color = SettingsInk, fontSize = 12.sp)
+                    Text(if (skin.id == activeSkinId) "Currently active" else "Installed · Not active",
+                        color = if (skin.id == activeSkinId) SettingsAccent else SettingsMuted, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                    if (skin.isBuiltIn) Text("The built-in skin cannot be removed.", color = SettingsMuted, fontSize = 10.sp)
+                }
+            },
+            dismissButton = {
+                if (!skin.isBuiltIn) {
+                    TextButton(onClick = { pendingSkinRemoval = skin }) {
+                        SkinUiIcon("icon_trash.webp", Color(0xFFB3261E), null, Modifier.size(14.dp))
+                        Text("Remove", color = Color(0xFFB3261E), fontSize = 12.sp)
+                    }
+                } else TextButton(onClick = { managedSkin = null }) { Text("Close", color = SettingsAccent, fontSize = 12.sp) }
+            },
+            confirmButton = {
+                TextButton(onClick = { if (skin.id != activeSkinId) onSelectSkin(skin.id); managedSkin = null }) {
+                    SkinUiIcon("icon_check.webp", SettingsAccent, null, Modifier.size(14.dp))
+                    Text(if (skin.id == activeSkinId) "Active" else "Apply", color = SettingsAccent, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                }
+            }
+        )
+    }
+
+    pendingSkinRemoval?.let { skin ->
+        NekOSAlertDialog(
+            topFrameColorArgb = launcherUiColor,
+            onDismissRequest = { pendingSkinRemoval = null },
+            containerColor = surfaceColor,
+            title = { Text("Remove skin?", color = SettingsInk) },
+            text = { Text(if (skin.id == activeSkinId) "“" + skin.name + "” will be removed. NekOS will switch back to the default skin." else "“" + skin.name + "” will be removed from this device.", color = SettingsMuted) },
+            dismissButton = { TextButton(onClick = { pendingSkinRemoval = null }) { Text("Cancel", color = SettingsAccent) } },
+            confirmButton = {
+                TextButton(onClick = { onDeleteSkin(skin.id); pendingSkinRemoval = null; managedSkin = null }) {
+                    Text("Remove", color = Color(0xFFB3261E), fontWeight = FontWeight.SemiBold)
+                }
+            }
+        )
+    }
+
+    storeInstallPrompt?.let { prompt ->
+        NekOSAlertDialog(
+            topFrameColorArgb = launcherUiColor,
+            onDismissRequest = { storeInstallPrompt = null },
+            containerColor = surfaceColor,
+            title = { Text("Skin downloaded", color = SettingsInk) },
+            text = { Text("“" + prompt.second + "” is ready. Would you like to apply it now?", color = SettingsMuted) },
+            dismissButton = { TextButton(onClick = { storeInstallPrompt = null }) { Text("Maybe later", color = SettingsAccent) } },
+            confirmButton = {
+                TextButton(onClick = { storeInstallPrompt = null; if (installedSkins.any { it.id == prompt.first }) onSelectSkin(prompt.first) }) {
+                    SkinUiIcon("icon_check.webp", SettingsAccent, null, Modifier.size(14.dp))
+                    Text("Apply", color = SettingsAccent, fontWeight = FontWeight.SemiBold)
+                }
+            }
+        )
     }
 }
