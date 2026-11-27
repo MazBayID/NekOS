@@ -5,6 +5,17 @@ import org.junit.Assert.assertSame
 import org.junit.Test
 
 class TagNormalizationTest {
+
+    @Test
+    fun derivesALighterTagColorFromIconColor() {
+        assertEquals(0xFFBED0F9L, tagColorFromIconColor(0xFF2563EBL))
+    }
+
+    @Test
+    fun preservesIconColorAlphaWhenDerivingTagColor() {
+        assertEquals(0x80BED0F9L, tagColorFromIconColor(0x802563EBL))
+    }
+
     @Test
     fun trimsTagNameAndLimitsItToTwentyFourCharacters() {
         val tag = NekTag(id = "tools", name = "  A very long collection name  ")
@@ -36,7 +47,8 @@ class TagNormalizationTest {
             name = " Creative ",
             iconId = 12,
             colorArgb = 0xFF123456,
-            appPackages = listOf("com.example.editor")
+            appPackages = listOf("com.example.editor"),
+            iconFrameColorArgb = 0xFF2563EB
         )
 
         assertEquals(
@@ -44,8 +56,9 @@ class TagNormalizationTest {
                 id = "creative",
                 name = "Creative",
                 iconId = 12,
-                colorArgb = 0xFF123456,
-                appPackages = listOf("com.example.editor")
+                colorArgb = 0xFFBED0F9,
+                appPackages = listOf("com.example.editor"),
+                iconFrameColorArgb = 0xFF2563EB
             ),
             tag.normalized()
         )
@@ -70,7 +83,7 @@ class TagNormalizationTest {
             id = "ready",
             name = "Ready",
             iconId = 3,
-            colorArgb = 0xFFABCDEF,
+            colorArgb = tagColorFromIconColor(DEFAULT_TAG_ICON_FRAME_COLOR),
             appPackages = listOf("a", "b")
         )
 
