@@ -12,7 +12,8 @@ import java.util.UUID
 
 internal data class OfficialStoreSkin(
     val id: String, val skinKey: String, val name: String, val author: String,
-    val description: String, val price: Long, val currency: String, val previewUrl: String
+    val description: String, val price: Long, val currency: String, val previewUrl: String,
+    val owned: Boolean = false
 )
 internal data class StoreActionResult(
     val success: Boolean, val message: String, val checkoutUrl: String? = null,
@@ -91,8 +92,11 @@ internal object OfficialSkinStoreClient {
     fun pendingSkinIds(context: Context): Set<String> = context.getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE)
         .all.keys.filter { it.startsWith(PENDING_PREFIX) }.map { it.removePrefix(PENDING_PREFIX) }.toSet()
 
-    fun loadCatalog(): List<OfficialStoreSkin> {
-        val array = request("").optJSONArray("skins") ?: return emptyList()
+    fun loadCatalog(context: Context): List<OfficialStoreSkin> {
+        val body = JSONObject()
+            .put("android_id", androidId(context))
+            .put("app_version", appVersion(context))
+        val array = request("/catalog", "POST", body).optJSONArray("skins") ?: return emptyList()
         return buildList {
             for (index in 0 until array.length()) {
                 val item = array.optJSONObject(index) ?: continue
@@ -100,11 +104,15 @@ internal object OfficialSkinStoreClient {
                     id=item.optString("id"), skinKey=item.optString("skin_key"),
                     name=item.optString("name"), author=item.optString("author","Community"),
                     description=item.optString("description"), price=item.optDouble("price_amount",0.0).toLong(),
-                    currency=item.optString("currency","IDR"), previewUrl=item.optString("preview_url")
+                    currency=item.optString("currency","IDR"), previewUrl=item.optString("preview_url"),
+                    owned=item.optBoolean("owned", false)
                 ))
             }
         }
     }
+
+    fun reinstall(context: Context, skin: OfficialStoreSkin): StoreActionResult =
+        downloadAndInstall(context, skin.id)
 
     fun buy(
         context: Context,
