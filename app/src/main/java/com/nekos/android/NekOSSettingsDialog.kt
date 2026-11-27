@@ -13,8 +13,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -312,9 +310,13 @@ internal fun NekOSSettingsDialog(
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
         BoxWithConstraints(
-            modifier = Modifier.fillMaxSize().pointerInput(onDismiss) {
-                detectTapGestures { onDismiss() }
-            },
+            modifier = Modifier
+                .fillMaxSize()
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = onDismiss
+                ),
             contentAlignment = Alignment.Center
         ) {
             val availableDialogHeight = maxHeight
@@ -324,11 +326,21 @@ internal fun NekOSSettingsDialog(
                     .fillMaxWidth()
                     .padding(horizontal = 12.dp)
                     .padding(top = 10.dp)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = {}
+                    )
             ) {
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 32.dp)
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = {}
+                        )
                         .heightIn(max = availableDialogHeight * 0.78f - 10.dp),
                     shape = RoundedCornerShape(18.dp),
                     color = surfaceColor,
