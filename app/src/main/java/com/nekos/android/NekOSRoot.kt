@@ -397,9 +397,9 @@ internal fun NekOSRoot(
     DisposableEffect(context, iconBitmapCache, iconCatalogRepository) {
         val memoryCallbacks = object : ComponentCallbacks2 {
             override fun onTrimMemory(level: Int) {
-                // Keep launcher bitmaps through ordinary background transitions.
-                // Release them only when Android reports critical memory pressure.
-                if (level >= ComponentCallbacks2.TRIM_MEMORY_BACKGROUND) {
+                // TRIM_MEMORY_BACKGROUND is normal when the launcher is hidden.
+                // Keep artwork warm until Android reports substantial memory pressure.
+                if (shouldTrimLauncherCaches(level)) {
                     iconBitmapCache.trimMemory()
                     iconCatalogRepository.trimMemory()
                     SkinAssetResolver.trimAllCaches()
