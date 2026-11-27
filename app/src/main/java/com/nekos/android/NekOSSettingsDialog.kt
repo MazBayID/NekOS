@@ -352,16 +352,25 @@ internal fun NekOSSettingsDialog(
                 when (page) {
                     SettingsPage.MAIN -> {
                         SettingsSectionTitle("APPEARANCE")
-                        SettingsListRow(
-                            title = "Wallpaper",
-                            iconFileName = "icon_image.webp",
-                            onClick = { page = SettingsPage.WALLPAPER }
-                        )
-                        SettingsListRow(
-                            title = "Launcher theme",
-                            iconFileName = "icon_palette.webp",
-                            onClick = { page = SettingsPage.LAUNCHER_THEME }
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Box(modifier = Modifier.weight(1f)) {
+                                SettingsListRow(
+                                    title = "Wallpaper",
+                                    iconFileName = "icon_image.webp",
+                                    onClick = { page = SettingsPage.WALLPAPER }
+                                )
+                            }
+                            Box(modifier = Modifier.weight(1f)) {
+                                SettingsListRow(
+                                    title = "Launcher theme",
+                                    iconFileName = "icon_palette.webp",
+                                    onClick = { page = SettingsPage.LAUNCHER_THEME }
+                                )
+                            }
+                        }
                         SettingsListRow(
                             title = "Skins",
                             iconFileName = "icon_grid.webp",
