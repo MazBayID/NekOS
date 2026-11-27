@@ -642,6 +642,7 @@ internal fun NekOSSettingsDialog(
                                     Column(
                                         modifier = Modifier
                                             .weight(1f)
+                                            .padding(horizontal = 5.dp)
                                             .clip(SettingsCardShape)
                                             .background(optionSurface.copy(alpha = 0.5f))
                                             .border(
@@ -650,9 +651,9 @@ internal fun NekOSSettingsDialog(
                                                 shape = SettingsCardShape
                                             )
                                             .clickable { if (!selected) onSelectSkin(skin.id) }
-                                            .padding(4.dp),
+                                            .padding(3.dp),
                                         horizontalAlignment = Alignment.CenterHorizontally,
-                                        verticalArrangement = Arrangement.spacedBy(5.dp)
+                                        verticalArrangement = Arrangement.spacedBy(2.dp)
                                     ) {
                                         Box(
                                             modifier = Modifier.fillMaxWidth(),
@@ -664,13 +665,13 @@ internal fun NekOSSettingsDialog(
                                                     contentDescription = "${skin.name} preview",
                                                     colorFilter = ColorFilter.tint(sharedUiTint),
                                                     modifier = Modifier
-                                                        .size(64.dp)
+                                                        .size(48.dp)
                                                         .align(Alignment.Center)
                                                         .clip(RoundedCornerShape(12.dp))
                                                 )
                                             } else {
                                                 Box(
-                                                    Modifier.size(64.dp).clip(RoundedCornerShape(12.dp))
+                                                    Modifier.size(48.dp).clip(RoundedCornerShape(10.dp))
                                                         .background(SettingsAccent.copy(alpha = 0.12f)),
                                                     contentAlignment = Alignment.Center
                                                 ) {
@@ -691,7 +692,7 @@ internal fun NekOSSettingsDialog(
                                         Text(
                                             skin.name,
                                             color = SettingsInk,
-                                            fontSize = 12.sp,
+                                            fontSize = 11.sp,
                                             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
                                             maxLines = 1,
                                             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
@@ -699,16 +700,16 @@ internal fun NekOSSettingsDialog(
                                         Text(
                                             skin.author.ifBlank { "NekOS" },
                                             color = SettingsMuted,
-                                            fontSize = 10.sp,
+                                            fontSize = 9.sp,
                                             maxLines = 1,
                                             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                                         )
                                         Text(
                                             if (selected) "ACTIVE" else "TAP TO APPLY",
                                             color = if (selected) SettingsAccent else SettingsMuted,
-                                            fontSize = 9.sp,
+                                            fontSize = 8.sp,
                                             fontWeight = FontWeight.SemiBold,
-                                            letterSpacing = 0.3.sp
+                                            letterSpacing = 0.2.sp
                                         )
                                     }
                                 }
