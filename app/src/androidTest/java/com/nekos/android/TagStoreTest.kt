@@ -42,7 +42,7 @@ class TagStoreTest {
     }
 
     @Test
-    fun saveAndLoadPreservesTagFields() = runBlocking {
+    fun saveAndLoadPreservesTagFieldsWithDerivedTagColors() = runBlocking {
         val tags = listOf(
             NekTag(
                 id = "tag-work",
@@ -56,7 +56,7 @@ class TagStoreTest {
 
         TagStore.save(context, tags)
 
-        assertEquals(tags, TagStore.load(context))
+        assertEquals(tags.map { it.normalized() }, TagStore.load(context))
     }
 
     @Test
@@ -80,7 +80,7 @@ class TagStoreTest {
 
         TagStore.save(context, tags)
 
-        assertEquals(tags, TagStore.load(context))
+        assertEquals(tags.map { it.normalized() }, TagStore.load(context))
     }
 
     @Test
@@ -93,6 +93,7 @@ class TagStoreTest {
         val loaded = TagStore.load(context).single()
 
         assertEquals(DEFAULT_TAG_ICON_FRAME_COLOR, loaded.iconFrameColorArgb)
+        assertEquals(tagColorFromIconColor(DEFAULT_TAG_ICON_FRAME_COLOR), loaded.colorArgb)
     }
 
     @Test
