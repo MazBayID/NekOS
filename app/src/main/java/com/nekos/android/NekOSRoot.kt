@@ -103,6 +103,7 @@ internal fun NekOSRoot(
     var pendingStoreSkinIds by remember { mutableStateOf(emptySet<String>()) }
     var storeCheckout by remember { mutableStateOf<Triple<OfficialStoreSkin, String, String>?>(null) }
     var paymentProviderSkin by remember { mutableStateOf<OfficialStoreSkin?>(null) }
+    var paymentProviderInstallCallback by remember { mutableStateOf<((String?) -> Unit)?>(null) }
 
     // Reconcile unfinished Store payments whenever NekOS returns to foreground.
     // The checkout page may be closed without a Midtrans webhook (e.g. the buyer
@@ -1219,7 +1220,10 @@ internal fun NekOSRoot(
                 },
                 onStoreAction = { skin, checkPayment, onInstalled ->
                     if (!checkPayment && skin.price > 0L) {
-                        if (storeBusySkinId == null) paymentProviderSkin = skin
+                        if (storeBusySkinId == null) {
+                            paymentProviderSkin = skin
+                            paymentProviderInstallCallback = onInstalled
+                        }
                     } else if (storeBusySkinId == null) skinPickerScope.launch {
                         storeBusySkinId = skin.id
                         val result = withContext(Dispatchers.IO) {
@@ -1432,9 +1436,14 @@ internal fun NekOSRoot(
         paymentProviderSkin?.let { skin ->
             PaymentProviderDialog(
                 skinName = skin.name,
-                onDismiss = { paymentProviderSkin = null },
+                onDismiss = {
+                    paymentProviderSkin = null
+                    paymentProviderInstallCallback = null
+                },
                 onConfirm = {
                     paymentProviderSkin = null
+                    val installCallback = paymentProviderInstallCallback
+                    paymentProviderInstallCallback = null
                     if (storeBusySkinId == null) skinPickerScope.launch {
                         storeBusySkinId = skin.id
                         val result = withContext(Dispatchers.IO) {
@@ -1444,6 +1453,11 @@ internal fun NekOSRoot(
                         storeBusySkinId = null
                         if (!result.checkoutUrl.isNullOrBlank()) {
                             storeCheckout = Triple(skin, result.checkoutUrl, result.paymentProvider ?: "midtrans")
+                        }
+                        if (result.success && result.installedSkinId != null) {
+                            installedSkins = skinRepository.listInstalledSkins()
+                            iconCatalogRepository.invalidateSkinCache()
+                            installCallback?.invoke(result.installedSkinId)
                         }
                         pendingStoreSkinIds = OfficialSkinStoreClient.pendingSkinIds(context)
                         if (!result.success) Toast.makeText(context, result.message, Toast.LENGTH_LONG).show()
