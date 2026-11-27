@@ -30,6 +30,11 @@ internal fun findInstalledStoreSkin(
     it.id == skin.skinKey || it.id == skin.id
 }
 
+internal fun isPurchasedSkinAvailableForReinstall(
+    skin: OfficialStoreSkin,
+    isInstalled: Boolean
+): Boolean = skin.owned && skin.price > 0L && !isInstalled
+
 internal fun isTrustedSkinDownloadUrl(value: String): Boolean = runCatching {
     val uri = URI(value)
     uri.scheme == "https" &&
