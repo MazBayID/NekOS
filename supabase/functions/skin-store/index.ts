@@ -77,6 +77,23 @@ async function catalog(origin:string) {
     preview_url:db.storage.from(PREVIEWS).getPublicUrl(String(skin.preview_path)).data.publicUrl,
   }));
 }
+function midtransExpiryStartTime(date = new Date()) {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Jakarta",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23"
+  }).formatToParts(date);
+  const values = Object.fromEntries(
+    parts.filter(part => part.type !== "literal").map(part => [part.type, part.value])
+  );
+  return `${values.year}-${values.month}-${values.day} ${values.hour}:${values.minute}:${values.second} +0700`;
+}
+
 async function createPayment(
   order:Record<string,unknown>, orderId:string, skin:Record<string,unknown>
 ) {
@@ -97,7 +114,7 @@ async function createPayment(
         error:"https://mazbayid.github.io/skin-payment-return/",
         pending:"https://mazbayid.github.io/skin-payment-return/"
       },
-      expiry:{start_time:new Date().toISOString().replace("Z","+0000"),unit:"minutes",duration:15}
+      expiry:{start_time:midtransExpiryStartTime(),unit:"minutes",duration:15}
     })
   });
   const data=await response.json();
