@@ -3,9 +3,13 @@ import { createClient } from "npm:@supabase/supabase-js@2.119.1";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const DEVICE_SECRET = Deno.env.get("SKIN_DEVICE_HMAC_SECRET") ?? "";
-const MIDTRANS_KEY = Deno.env.get("MIDTRANS_SERVER_KEY") ?? "";
-const MIDTRANS_SIGNATURE_SECRET = Deno.env.get("MIDTRANS_SIGNATURE_SECRET") ?? "";
-const MIDTRANS_ENV = (Deno.env.get("MIDTRANS_ENVIRONMENT") ?? "").trim().toLowerCase();
+const MIDTRANS_ENV = (Deno.env.get("MIDTRANS_ENVIRONMENT") ?? "production").trim().toLowerCase();
+const MIDTRANS_KEY = MIDTRANS_ENV === "sandbox"
+  ? Deno.env.get("MIDTRANS_SANDBOX_SERVER_KEY") ?? ""
+  : Deno.env.get("MIDTRANS_SERVER_KEY") ?? "";
+const MIDTRANS_SIGNATURE_SECRET = MIDTRANS_ENV === "sandbox"
+  ? Deno.env.get("MIDTRANS_SANDBOX_SIGNATURE_SECRET") ?? ""
+  : Deno.env.get("MIDTRANS_SIGNATURE_SECRET") ?? "";
 const DUITKU_MERCHANT_CODE = Deno.env.get("DUITKU_MERCHANT_CODE") ?? "";
 const DUITKU_API_KEY = Deno.env.get("DUITKU_API_KEY") ?? "";
 const DUITKU_ENV = (Deno.env.get("DUITKU_ENVIRONMENT") ?? "sandbox").trim().toLowerCase();
