@@ -148,7 +148,13 @@ object TagStore {
         }
         val store = LauncherCollectionsDataStore.get(context).tags
         if (!loadResult(context).isValid) return false
-        val validatedPreferences = runCatching { store.data.first() }.getOrNull() ?: return false
+        val validatedPreferences = try {
+            store.data.first()
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (_: Exception) {
+            return false
+        }
         val validatedRaw = validatedPreferences.asMap().entries
             .firstOrNull { it.key.name == TAGS_KEY }?.value
         val validatedMigrationMarker = validatedPreferences.asMap().entries
