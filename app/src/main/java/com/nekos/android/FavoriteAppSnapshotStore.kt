@@ -3,6 +3,7 @@ package com.nekos.android
 import android.content.Context
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.first
 import org.json.JSONArray
 import org.json.JSONObject
@@ -61,6 +62,8 @@ internal object FavoriteAppSnapshotStore {
                 }
             }
             FavoriteAppSnapshotLoadResult(snapshots, true)
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (_: Exception) {
             FavoriteAppSnapshotLoadResult(emptyMap(), false)
         }
@@ -82,7 +85,7 @@ internal object FavoriteAppSnapshotStore {
                     .put("iconCacheKey", snapshot.iconCacheKey)
             )
         }
-        return runCatching {
+        return try {
             LauncherCollectionsDataStore.get(context).favoriteSnapshots.edit { preferences ->
                 val stored = preferences.asMap().entries
                     .firstOrNull { it.key.name == KEY_SNAPSHOTS }
@@ -94,6 +97,10 @@ internal object FavoriteAppSnapshotStore {
                 preferences[snapshotsKey] = array.toString()
             }
             true
-        }.getOrDefault(false)
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (_: Exception) {
+            false
+        }
     }
 }
