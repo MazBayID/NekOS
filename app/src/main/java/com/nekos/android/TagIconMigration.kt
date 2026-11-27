@@ -1,7 +1,6 @@
 package com.nekos.android
 
 import android.content.Context
-import android.content.SharedPreferences
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -50,19 +49,15 @@ internal fun legacyTagIconIdMap(context: Context): Map<Int, Int> =
         buildLegacyTagIconIdMap(json)
     }.getOrDefault(emptyMap())
 
-internal fun persistMigratedTagIconIds(
-    preferences: SharedPreferences,
+internal fun migrateTagIconIds(
     tags: JSONArray,
     idMap: Map<Int, Int>
-) {
+): JSONArray {
     for (index in 0 until tags.length()) {
         val item = tags.optJSONObject(index) ?: continue
         if (item.isNull("iconId")) continue
         val oldId = item.optInt("iconId")
         item.put("iconId", idMap[oldId] ?: oldId)
     }
-    preferences.edit()
-        .putString("tag_collection_v1", tags.toString())
-        .putBoolean(TAG_ICON_MIGRATION_KEY, true)
-        .apply()
+    return tags
 }
