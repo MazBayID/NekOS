@@ -49,13 +49,11 @@ fun TagManagementDialog(
     }
     var name by remember(tag?.id) { mutableStateOf(tag?.name.orEmpty()) }
     var selectedIcon by remember(tag?.id) { mutableStateOf(tag?.iconId) }
-    var selectedColor by remember(tag?.id) { mutableLongStateOf(tag?.colorArgb ?: 0xFFE7E1D6) }
     var selectedIconFrameColor by remember(tag?.id) {
         mutableLongStateOf(tag?.iconFrameColorArgb ?: DEFAULT_TAG_ICON_FRAME_COLOR)
     }
     var selectedPackages by remember(tag?.id, tag?.appPackages) { mutableStateOf(tag?.appPackages?.toSet().orEmpty()) }
     var showIconColorPicker by remember { mutableStateOf(false) }
-    var showTagColorPicker by remember { mutableStateOf(false) }
     var appSearch by remember(tag?.id) { mutableStateOf("") }
     var showAppPicker by remember { mutableStateOf(false) }
     var appSelectionBeforePicker by remember { mutableStateOf<Set<String>>(emptySet()) }
@@ -86,60 +84,27 @@ fun TagManagementDialog(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(5.dp)
             ) {
-                Row(
+                Column(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    verticalArrangement = Arrangement.spacedBy(5.dp)
                 ) {
-                    Column(
-                        modifier = Modifier.weight(1.2f),
-                        verticalArrangement = Arrangement.spacedBy(5.dp)
-                    ) {
-                        Text("Tag Name", color = Color(0xFF34332F), style = MaterialTheme.typography.labelSmall)
-                        TextField(
-                            value = name,
-                            onValueChange = { name = it.take(24) },
-                            singleLine = true,
-                            textStyle = MaterialTheme.typography.bodySmall,
-                            colors = TextFieldDefaults.colors(
-                                focusedTextColor = Color(0xFF34332F),
-                                unfocusedTextColor = Color(0xFF34332F),
-                                focusedContainerColor = Color(0xFFF4F1EA),
-                                unfocusedContainerColor = Color(0xFFF4F1EA),
-                                focusedIndicatorColor = Color(0xFF746657),
-                                unfocusedIndicatorColor = SettingsMuted.copy(alpha = 0.28f),
-                                cursorColor = Color(0xFF746657)
-                            ),
-                            modifier = Modifier.fillMaxWidth().height(48.dp)
-                        )
-                    }
-                    Column(
-                        modifier = Modifier.weight(0.8f),
-                        horizontalAlignment = Alignment.End,
-                        verticalArrangement = Arrangement.spacedBy(5.dp)
-                    ) {
-                        Text(
-                            "Tag Color",
-                            color = Color(0xFF34332F),
-                            style = MaterialTheme.typography.labelSmall,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        Box(
-                            modifier = Modifier
-                                .size(44.dp)
-                                .offset(x = (-20).dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(Color(0xFFF4F1EA).copy(alpha = 0.5f))
-                                .clickable { showTagColorPicker = true },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Box(
-                                Modifier.size(30.dp)
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(Color(selectedColor.toInt()))
-                                    .border(1.dp, Color(0xFF34332F).copy(alpha = 0.16f), RoundedCornerShape(8.dp))
-                            )
-                        }
-                    }
+                    Text("Tag Name", color = Color(0xFF34332F), style = MaterialTheme.typography.labelSmall)
+                    TextField(
+                        value = name,
+                        onValueChange = { name = it.take(24) },
+                        singleLine = true,
+                        textStyle = MaterialTheme.typography.bodySmall,
+                        colors = TextFieldDefaults.colors(
+                            focusedTextColor = Color(0xFF34332F),
+                            unfocusedTextColor = Color(0xFF34332F),
+                            focusedContainerColor = Color(0xFFF4F1EA),
+                            unfocusedContainerColor = Color(0xFFF4F1EA),
+                            focusedIndicatorColor = Color(0xFF746657),
+                            unfocusedIndicatorColor = SettingsMuted.copy(alpha = 0.28f),
+                            cursorColor = Color(0xFF746657)
+                        ),
+                        modifier = Modifier.fillMaxWidth().height(48.dp)
+                    )
                 }
 
                 SettingsBrushSeparator()
@@ -255,7 +220,6 @@ fun TagManagementDialog(
                         (tag ?: NekTag(name = name.trim())).copy(
                             name = name.trim(),
                             iconId = selectedIcon,
-                            colorArgb = selectedColor,
                             appPackages = selectedPackages.toList(),
                             iconFrameColorArgb = selectedIconFrameColor
                         ).normalized()
@@ -400,16 +364,6 @@ fun TagManagementDialog(
                     }
                 }
             }
-        )
-    }
-
-    if (showTagColorPicker) {
-        TagColorPickerDialog(
-            selectedColor = selectedColor,
-            launcherSurface = launcherSurface,
-            launcherUiColorArgb = launcherUiColorArgb,
-            onColorSelected = { selectedColor = it },
-            onDismiss = { showTagColorPicker = false }
         )
     }
 
