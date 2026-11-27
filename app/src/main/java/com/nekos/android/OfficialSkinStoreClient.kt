@@ -160,8 +160,16 @@ internal object OfficialSkinStoreClient {
                 }
                 if(total!=expectedSize)throw IllegalStateException("Skin archive size mismatch.")
             }}
-            val digest=MessageDigest.getInstance("SHA-256").digest(archive.readBytes())
-                .joinToString(""){"%02x".format(it.toInt() and 0xff)}
+            val messageDigest = MessageDigest.getInstance("SHA-256")
+            archive.inputStream().use { input ->
+                val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+                while (true) {
+                    val count = input.read(buffer)
+                    if (count < 0) break
+                    messageDigest.update(buffer, 0, count)
+                }
+            }
+            val digest = messageDigest.digest().joinToString("") { "%02x".format(it.toInt() and 0xff) }
             if(!digest.equals(expectedHash,true))throw IllegalStateException("Skin package integrity verification failed.")
             val installed=archive.inputStream().use{SkinInstaller(context).install(it)}
             if(!installed.success)throw IllegalStateException(installed.error?:"Skin installation failed.")
