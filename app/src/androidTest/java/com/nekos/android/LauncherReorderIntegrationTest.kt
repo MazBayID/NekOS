@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.grid.items as gridItems
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -35,6 +36,8 @@ import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyGridState
 import sh.calvin.reorderable.rememberReorderableLazyListState
 import java.util.UUID
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 class LauncherReorderIntegrationTest {
     @get:Rule
@@ -57,12 +60,13 @@ class LauncherReorderIntegrationTest {
 
         drag("favorite-A", "favorite-C")
 
+        composeRule.waitUntil {
+            runBlocking {
+                loadFavoritePackages(context).filterNotNull() == listOf("C", "B", "A", "D")
+            }
+        }
         composeRule.runOnIdle {
             assertEquals(listOf("C", "B", "A", "D"), state.order.value)
-            assertEquals(
-                listOf("C", "B", "A", "D"),
-                loadFavoritePackages(context).filterNotNull()
-            )
         }
         composeRule.onNodeWithTag("favorite-order")
             .assertTextEquals("C,B,A,D")
@@ -76,9 +80,13 @@ class LauncherReorderIntegrationTest {
 
         drag("tag-a", "tag-b")
 
+        composeRule.waitUntil {
+            runBlocking {
+                TagStore.load(context).map { it.id } == listOf("b", "a", "c")
+            }
+        }
         composeRule.runOnIdle {
             assertEquals(listOf("b", "a", "c"), state.tags.value.map { it.id })
-            assertEquals(listOf("b", "a", "c"), TagStore.load(context).map { it.id })
         }
         composeRule.onNodeWithTag("tag-order")
             .assertTextEquals("b,a,c")
@@ -88,7 +96,7 @@ class LauncherReorderIntegrationTest {
     fun cancellingFavoriteGridDragRestoresOriginalOrderAndDoesNotPersistPartialMove() {
         val context = isolatedContext()
         val state = FavoriteReorderState(context)
-        saveFavoritePackages(context, state.order.value)
+        runBlocking { saveFavoritePackages(context, state.order.value) }
         composeRule.setContent { FavoriteReorderHarness(state) }
 
         val source = composeRule.onNodeWithTag("favorite-A").fetchSemanticsNode()
@@ -103,12 +111,13 @@ class LauncherReorderIntegrationTest {
             cancel()
         }
 
+        composeRule.waitUntil {
+            runBlocking {
+                loadFavoritePackages(context).filterNotNull() == listOf("A", "B", "C", "D")
+            }
+        }
         composeRule.runOnIdle {
             assertEquals(listOf("A", "B", "C", "D"), state.order.value)
-            assertEquals(
-                listOf("A", "B", "C", "D"),
-                loadFavoritePackages(context).filterNotNull()
-            )
         }
     }
 
@@ -146,6 +155,7 @@ private class TagReorderState(val context: Context) {
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun FavoriteReorderHarness(state: FavoriteReorderState) {
+    val coroutineScope = rememberCoroutineScope()
     val gridState = androidx.compose.foundation.lazy.grid.rememberLazyGridState()
     val reorderState = rememberReorderableLazyGridState(gridState) { from, to ->
         val updated = state.order.value.toMutableList()
@@ -176,7 +186,9 @@ private fun FavoriteReorderHarness(state: FavoriteReorderState) {
                                     if (cancelled) {
                                         state.snapshot?.let { state.order.value = it }
                                     } else {
-                                        saveFavoritePackages(state.context, state.order.value)
+                                        coroutineScope.launch {
+                                            saveFavoritePackages(state.context, state.order.value)
+                                        }
                                     }
                                     state.snapshot = null
                                 }
@@ -198,6 +210,7 @@ private fun FavoriteReorderHarness(state: FavoriteReorderState) {
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun TagReorderHarness(state: TagReorderState) {
+    val coroutineScope = rememberCoroutineScope()
     val listState = androidx.compose.foundation.lazy.rememberLazyListState()
     val reorderState = rememberReorderableLazyListState(listState) { from, to ->
         val sourceId = state.tags.value.getOrNull(from.index)?.id
@@ -228,7 +241,9 @@ private fun TagReorderHarness(state: TagReorderState) {
                                     if (cancelled) {
                                         state.snapshot?.let { state.tags.value = it }
                                     } else {
-                                        TagStore.save(state.context, state.tags.value)
+                                        coroutineScope.launch {
+                                            TagStore.save(state.context, state.tags.value)
+                                        }
                                     }
                                     state.snapshot = null
                                 }
