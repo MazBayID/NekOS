@@ -45,11 +45,7 @@ private const val MIDTRANS_FINISH_PATH = "/skin-payment-return/"
 private fun isTrustedStoreCheckout(value: String, provider: String): Boolean = runCatching {
     val uri = Uri.parse(value)
     val host = uri.host?.lowercase().orEmpty()
-    val allowedHosts = when (provider.lowercase()) {
-        "midtrans" -> setOf("app.midtrans.com", "app.sandbox.midtrans.com")
-        "duitku" -> setOf("app-prod.duitku.com", "app-sandbox.duitku.com")
-        else -> emptySet()
-    }
+    val allowedHosts = setOf("app.midtrans.com", "app.sandbox.midtrans.com")
     uri.scheme?.lowercase() == "https" && host in allowedHosts &&
         uri.userInfo == null && (uri.port == -1 || uri.port == 443)
 }.getOrDefault(false)
@@ -199,9 +195,7 @@ internal fun StoreCheckoutDialog(
                     ) {
                         TextButton(onClick = { showCancelConfirmation = true }) {
                             Text(
-                                if (provider.equals("duitku", ignoreCase = true))
-                                    "TUTUP CHECKOUT"
-                                else "BATALKAN PEMBELIAN",
+                                "BATALKAN PEMBELIAN",
                                 color = Color(0xFF9B3D35),
                                 fontSize = 11.sp
                             )
@@ -213,23 +207,19 @@ internal fun StoreCheckoutDialog(
     }
 
     if (showCancelConfirmation) {
-        val isDuitku = provider.equals("duitku", ignoreCase = true)
         AlertDialog(
             onDismissRequest = { showCancelConfirmation = false },
-            title = { Text(if (isDuitku) "Tutup checkout?" else "Batalkan pembelian?") },
+            title = { Text("Batalkan pembelian?") },
             text = {
                 Text(
-                    if (isDuitku)
-                        "Duitku tidak menyediakan pembatalan umum untuk invoice ini. Menutup checkout tidak membatalkan invoice; invoice masih dapat dibayar sampai kedaluwarsa. NekOS akan tetap memantau pembayarannya."
-                    else
-                        "NekOS akan meminta Midtrans membatalkan transaksi. Jika pembayaran ternyata sudah berhasil, pembelian tidak akan dibatalkan dan skin tetap dipasang. Jika kamu belum memilih metode pembayaran sehingga transaksi belum dibuat, sesi checkout tidak dapat dibatalkan langsung dan akan kedaluwarsa otomatis dalam 15 menit."
+                    "NekOS akan meminta Midtrans membatalkan transaksi. Jika pembayaran ternyata sudah berhasil, pembelian tidak akan dibatalkan dan skin tetap dipasang. Jika kamu belum memilih metode pembayaran sehingga transaksi belum dibuat, sesi checkout tidak dapat dibatalkan langsung dan akan kedaluwarsa otomatis dalam 15 menit."
                 )
             },
             confirmButton = {
                 TextButton(onClick = {
                     showCancelConfirmation = false
                     onCancelPurchase()
-                }) { Text(if (isDuitku) "TUTUP CHECKOUT" else "YA, BATALKAN") }
+                }) { Text("YA, BATALKAN") }
             },
             dismissButton = {
                 TextButton(onClick = { showCancelConfirmation = false }) { Text("KEMBALI") }
