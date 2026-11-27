@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.sp
 internal fun PaymentProviderDialog(
     skinName: String,
     onDismiss: () -> Unit,
-    onConfirm: (provider: String, email: String) -> Unit
+    onConfirm: () -> Unit
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -37,7 +37,7 @@ internal fun PaymentProviderDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = { onConfirm("midtrans", "") }) {
+            TextButton(onClick = onConfirm) {
                 Text("LANJUTKAN")
             }
         },
