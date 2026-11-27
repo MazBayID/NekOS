@@ -27,7 +27,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -149,7 +148,7 @@ internal fun NekOSRoot(
     val collectionScope = rememberCoroutineScope()
     val collectionWriteMutex = remember { Mutex() }
     // Prevent catalog cleanup from overlapping index-based reorder gestures.
-    val collectionMutationGate = remember { Mutex() }
+    val collectionMutationGate = remember { LauncherCollectionMutationGate() }
     var collectionsLoaded by remember { mutableStateOf(false) }
     var favoritePackages by remember { mutableStateOf(List(15) { null as String? }) }
     var favoriteStorageWritable by remember { mutableStateOf(false) }
@@ -219,7 +218,7 @@ internal fun NekOSRoot(
             apps = refreshedApps
         }
         lastAppliedRefreshToken = refreshToken
-        collectionMutationGate.withLock {
+        collectionMutationGate.withCatalogRefresh {
         collectionWriteMutex.withLock {
             val currentProfileSerialNumber = context
             .getSystemService(UserManager::class.java)
@@ -644,7 +643,7 @@ internal fun NekOSRoot(
                     favoriteOrderSnapshot = null
                     val owner = favoriteReorderOwner
                     favoriteReorderOwner = null
-                    if (owner != null) collectionMutationGate.unlock(owner)
+                    if (owner != null) collectionMutationGate.endReorder(owner)
                 }
                 if (tagReorderOwner != null && !tagReorderSaving) {
                     tagOrderSnapshot?.let { tags = it }
@@ -753,7 +752,7 @@ internal fun NekOSRoot(
             },
             onFavoriteReorderStart = {
                 val owner = Any()
-                if (collectionMutationGate.tryLock(owner)) {
+                if (collectionMutationGate.tryBeginReorder(owner)) {
                     favoriteReorderOwner = owner
                     favoriteReorderSaving = false
                     favoriteOrderSnapshot = favoritePackages.toList()
