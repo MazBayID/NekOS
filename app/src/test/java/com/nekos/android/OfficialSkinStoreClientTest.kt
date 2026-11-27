@@ -1,10 +1,63 @@
 package com.nekos.android
 
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class OfficialSkinStoreClientTest {
+    @Test
+    fun resolvesInstalledSkinByPackageKeyOrCatalogId() {
+        val packageSkin = InstalledSkin(
+            id = "package-skin-key",
+            name = "Purchased skin",
+            version = "1.0.0",
+            author = "",
+            description = "",
+            isBuiltIn = false
+        )
+        val catalogSkin = OfficialStoreSkin(
+            id = "catalog-row-id",
+            skinKey = "package-skin-key",
+            name = "Purchased skin",
+            author = "",
+            description = "",
+            price = 5000L,
+            currency = "IDR",
+            previewUrl = ""
+        )
+
+        assertEquals(
+            packageSkin,
+            findInstalledStoreSkin(listOf(packageSkin), catalogSkin)
+        )
+    }
+
+    @Test
+    fun returnsNullWhenStoreSkinIsNotInstalled() {
+        val otherSkin = InstalledSkin(
+            id = "different-skin",
+            name = "Other skin",
+            version = "1.0.0",
+            author = "",
+            description = "",
+            isBuiltIn = false
+        )
+        val catalogSkin = OfficialStoreSkin(
+            id = "catalog-row-id",
+            skinKey = "package-skin-key",
+            name = "Purchased skin",
+            author = "",
+            description = "",
+            price = 5000L,
+            currency = "IDR",
+            previewUrl = ""
+        )
+
+        assertNull(findInstalledStoreSkin(listOf(otherSkin), catalogSkin))
+    }
+
     @Test
     fun acceptsOnlyHttpsSupabaseSignedStorageUrls() {
         assertTrue(
