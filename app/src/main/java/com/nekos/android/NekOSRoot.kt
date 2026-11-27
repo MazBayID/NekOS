@@ -1200,8 +1200,20 @@ internal fun NekOSRoot(
                         storeBusySkinId = skin.id
                         val result = withContext(Dispatchers.IO) {
                             runCatching {
-                                if (checkPayment) OfficialSkinStoreClient.checkPaymentAndInstall(context, skin)
-                                else OfficialSkinStoreClient.buy(context, skin)
+                                if (checkPayment) {
+                                    val status = OfficialSkinStoreClient.checkPaymentAndInstall(context, skin)
+                                    if (!status.success && !status.paymentFailed &&
+                                        status.message.contains("belum dikonfirmasi", ignoreCase = true)
+                                    ) {
+                                        // The server reuses the existing pending order and returns
+                                        // its original Snap checkout URL, reopening payment in NekOS.
+                                        OfficialSkinStoreClient.buy(context, skin)
+                                    } else {
+                                        status
+                                    }
+                                } else {
+                                    OfficialSkinStoreClient.buy(context, skin)
+                                }
                             }.getOrElse { StoreActionResult(false, it.message ?: "Store action failed.") }
                         }
                         storeBusySkinId = null
