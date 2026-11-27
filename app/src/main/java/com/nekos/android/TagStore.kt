@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.first
 import org.json.JSONArray
 import org.json.JSONObject
@@ -119,6 +120,8 @@ object TagStore {
                 }
             }
             TagLoadResult(parsed, true)
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (_: Exception) {
             TagLoadResult(emptyList(), false)
         }
@@ -151,7 +154,7 @@ object TagStore {
         val validatedMigrationMarker = validatedPreferences.asMap().entries
             .firstOrNull { it.key.name == TAG_ICON_MIGRATION_KEY }?.value
 
-        return runCatching {
+        return try {
             store.edit { preferences ->
                 val storedTags = preferences.asMap().entries
                     .firstOrNull { it.key.name == TAGS_KEY }
@@ -173,7 +176,11 @@ object TagStore {
                 preferences[tagIconMigrationKey] = true
             }
             true
-        }.getOrDefault(false)
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (_: Exception) {
+            false
+        }
     }
 }
 
