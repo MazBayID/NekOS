@@ -18,6 +18,8 @@ import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
@@ -155,19 +157,21 @@ class MainActivity : ComponentActivity() {
         val profileSerial = getSystemService(UserManager::class.java).getSerialNumberForUser(user)
         if (profileSerial < 0L) return
         val appId = launcherAppId(packageName, profileSerial)
-        if (!hasLaunchableActivities && appId !in temporarilyUnavailableAppIds &&
-            !hasSavedLauncherReference(appId)
-        ) {
-            return
+        lifecycleScope.launch {
+            if (!hasLaunchableActivities && appId !in temporarilyUnavailableAppIds &&
+                !hasSavedLauncherReference(appId)
+            ) {
+                return@launch
+            }
+            updateTemporarilyUnavailableApps(
+                listOf(packageName),
+                user,
+                unavailable = !hasLaunchableActivities
+            )
         }
-        updateTemporarilyUnavailableApps(
-            listOf(packageName),
-            user,
-            unavailable = !hasLaunchableActivities
-        )
     }
 
-    private fun hasSavedLauncherReference(appId: String): Boolean {
+    private suspend fun hasSavedLauncherReference(appId: String): Boolean {
         if (appId in loadFavoritePackagesResult(this).packages) return true
         return TagStore.loadResult(this).tags.any { appId in it.appPackages }
     }

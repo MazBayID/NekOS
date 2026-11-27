@@ -1,13 +1,19 @@
 package com.nekos.android
 
 import android.content.Context
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.first
 import org.json.JSONArray
 import org.json.JSONObject
 import java.util.UUID
 
-private const val TAGS_PREFS = "nekos_tags"
 private const val TAGS_KEY = "tag_collection_v1"
 internal const val DEFAULT_TAG_ICON_FRAME_COLOR: Long = 0xFF114B56L
+private val tagsKey = stringPreferencesKey(TAGS_KEY)
+private val tagIconMigrationKey = booleanPreferencesKey(TAG_ICON_MIGRATION_KEY)
 
 data class NekTag(
     val id: String = UUID.randomUUID().toString(),
@@ -28,38 +34,36 @@ internal data class TagLoadResult(
     val isValid: Boolean
 )
 
-/** Small local persistence boundary for user-created tag collections. */
+/** Asynchronous local persistence boundary for user-created tag collections. */
 object TagStore {
-    fun load(context: Context): List<NekTag> = loadResult(context).tags
+    suspend fun load(context: Context): List<NekTag> = loadResult(context).tags
 
     /**
-     * Keeps malformed or unreadable persisted data distinguishable from a genuinely
-     * empty collection, so callers can avoid overwriting data that could not be read.
+     * Keeps malformed, wrong-typed, or unreadable values non-writable.
+     * Legacy icon IDs are migrated transactionally with the migration marker.
      */
-    internal fun loadResult(context: Context): TagLoadResult {
-        val preferences = runCatching {
-            context.getSharedPreferences(TAGS_PREFS, Context.MODE_PRIVATE)
-        }.getOrNull() ?: return TagLoadResult(emptyList(), false)
+    internal suspend fun loadResult(context: Context): TagLoadResult {
+        return try {
+            val store = LauncherCollectionsDataStore.get(context).tags
+            val preferences = store.data.first()
+            val storedTags = preferences.asMap().entries.firstOrNull { it.key.name == TAGS_KEY }
+            val raw = when {
+                storedTags == null -> null
+                storedTags.value is String -> storedTags.value as String
+                else -> return TagLoadResult(emptyList(), false)
+            }
+            val migrationEntry = preferences.asMap().entries
+                .firstOrNull { it.key.name == TAG_ICON_MIGRATION_KEY }
+            val migrationComplete = when {
+                migrationEntry == null -> false
+                migrationEntry.value is Boolean -> migrationEntry.value as Boolean
+                else -> return TagLoadResult(emptyList(), false)
+            }
+            if (raw == null) return TagLoadResult(emptyList(), true)
 
-        val hasStoredValue = runCatching {
-            preferences.contains(TAGS_KEY)
-        }.getOrElse {
-            return TagLoadResult(emptyList(), false)
-        }
-        if (!hasStoredValue) {
-            return TagLoadResult(emptyList(), true)
-        }
-
-        val raw = try {
-            preferences.getString(TAGS_KEY, null)
-        } catch (_: ClassCastException) {
-            return TagLoadResult(emptyList(), false)
-        } ?: return TagLoadResult(emptyList(), false)
-
-        return runCatching {
-            val array = JSONArray(raw)
-            val shouldMigrateIcons = !preferences.getBoolean(TAG_ICON_MIGRATION_KEY, false)
+            val shouldMigrateIcons = !migrationComplete
             val iconIdMap = if (shouldMigrateIcons) legacyTagIconIdMap(context) else emptyMap()
+            val array = JSONArray(raw)
             val parsed = buildList {
                 for (i in 0 until array.length()) {
                     val item = array.getJSONObject(i)
@@ -100,22 +104,34 @@ object TagStore {
                     )
                 }
             }.filter { it.name.isNotBlank() }.distinctBy { it.id }
+
             if (shouldMigrateIcons && iconIdMap.isNotEmpty()) {
-                persistMigratedTagIconIds(preferences, array, iconIdMap)
+                val migratedJson = migrateTagIconIds(array, iconIdMap).toString()
+                store.edit { current ->
+                    val currentRaw = current.asMap().entries
+                        .firstOrNull { it.key.name == TAGS_KEY }?.value
+                    val currentFlag = current.asMap().entries
+                        .firstOrNull { it.key.name == TAG_ICON_MIGRATION_KEY }?.value
+                    check(currentRaw == raw && (currentFlag == null || currentFlag == false)) {
+                        "Tag data changed during icon migration"
+                    }
+                    current[tagsKey] = migratedJson
+                    current[tagIconMigrationKey] = true
+                }
             }
             TagLoadResult(parsed, true)
-        }.getOrElse {
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (_: Exception) {
             TagLoadResult(emptyList(), false)
         }
     }
 
     /**
-     * Refuses to replace persisted content when the current value cannot be read.
-     * Returns false so the UI can keep the in-memory state unchanged and notify the user.
+     * Writes tags and the icon-migration marker in one durable DataStore transaction.
+     * Refuses to replace malformed or wrong-typed stored values.
      */
-    fun save(context: Context, tags: List<NekTag>): Boolean {
-        if (!loadResult(context).isValid) return false
-
+    suspend fun save(context: Context, tags: List<NekTag>): Boolean {
         val array = JSONArray()
         tags.distinctBy { it.id }.forEach { tag ->
             val normalized = tag.normalized()
@@ -130,13 +146,47 @@ object TagStore {
                     .put("apps", JSONArray(normalized.appPackages))
             )
         }
-        return runCatching {
-            context.getSharedPreferences(TAGS_PREFS, Context.MODE_PRIVATE)
-                .edit()
-                .putString(TAGS_KEY, array.toString())
-                .apply()
+        val store = LauncherCollectionsDataStore.get(context).tags
+        if (!loadResult(context).isValid) return false
+        val validatedPreferences = try {
+            store.data.first()
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (_: Exception) {
+            return false
+        }
+        val validatedRaw = validatedPreferences.asMap().entries
+            .firstOrNull { it.key.name == TAGS_KEY }?.value
+        val validatedMigrationMarker = validatedPreferences.asMap().entries
+            .firstOrNull { it.key.name == TAG_ICON_MIGRATION_KEY }?.value
+
+        return try {
+            store.edit { preferences ->
+                val storedTags = preferences.asMap().entries
+                    .firstOrNull { it.key.name == TAGS_KEY }
+                val migrationEntry = preferences.asMap().entries
+                    .firstOrNull { it.key.name == TAG_ICON_MIGRATION_KEY }
+                check(storedTags?.value == validatedRaw) {
+                    "Tag data changed before the save transaction"
+                }
+                check(migrationEntry?.value == validatedMigrationMarker) {
+                    "Tag migration state changed before the save transaction"
+                }
+                check(storedTags == null || storedTags.value is String) {
+                    "Stored Tags value has an unexpected type"
+                }
+                check(migrationEntry == null || migrationEntry.value is Boolean) {
+                    "Tag icon migration marker has an unexpected type"
+                }
+                preferences[tagsKey] = array.toString()
+                preferences[tagIconMigrationKey] = true
+            }
             true
-        }.getOrDefault(false)
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (_: Exception) {
+            false
+        }
     }
 }
 
@@ -157,7 +207,6 @@ internal fun moveTag(tags: List<NekTag>, tagId: String, direction: Int): List<Ne
     }
 }
 
-
 /** Moves a tag directly to a target index while preserving all other tag data. */
 internal fun moveTagToIndex(tags: List<NekTag>, tagId: String, targetIndex: Int): List<NekTag> {
     val sourceIndex = tags.indexOfFirst { it.id == tagId }
@@ -167,7 +216,6 @@ internal fun moveTagToIndex(tags: List<NekTag>, tagId: String, targetIndex: Int)
         reordered.add(targetIndex, moved)
     }
 }
-
 
 /** Moves a tag to the adjacent page while preserving the order of all other tags. */
 internal fun moveTagToPage(
@@ -191,7 +239,6 @@ internal fun moveTagToPage(
         reordered.add(insertionIndex, moved)
     }
 }
-
 
 /** Converts an item index within a paged tag list to its index in the full list. */
 internal fun tagPageItemIndex(pageIndex: Int, itemIndex: Int, pageSize: Int = 5): Int {

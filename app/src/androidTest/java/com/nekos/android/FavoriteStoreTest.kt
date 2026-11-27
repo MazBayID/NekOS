@@ -2,11 +2,17 @@ package com.nekos.android
 
 import android.content.Context
 import android.content.ContextWrapper
+import androidx.datastore.preferences.core.Preferences
 import androidx.test.platform.app.InstrumentationRegistry
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import java.io.File
 import java.util.UUID
 
 class FavoriteStoreTest {
@@ -14,6 +20,10 @@ class FavoriteStoreTest {
     private val context: Context by lazy {
         val target = InstrumentationRegistry.getInstrumentation().targetContext
         object : ContextWrapper(target) {
+            override fun getApplicationContext(): Context = this
+            override fun getFilesDir(): File =
+                File(target.filesDir, preferenceNamespace).apply { mkdirs() }
+
             override fun getSharedPreferences(name: String, mode: Int) =
                 super.getSharedPreferences("$preferenceNamespace-$name", mode)
         }
@@ -30,15 +40,15 @@ class FavoriteStoreTest {
     }
 
     @Test
-    fun emptyStorageReturnsFifteenEmptySlots() {
+    fun emptyStorageReturnsFifteenEmptySlots() = runBlocking {
         assertEquals(List(15) { null }, loadFavoritePackages(context))
     }
 
     @Test
-    fun savedPackagesAreRestoredAndPaddedToFifteenSlots() {
+    fun savedPackagesAreRestoredAndPaddedToFifteenSlots() = runBlocking {
         val packages = listOf("com.example.alpha", null, "com.example.beta")
 
-        saveFavoritePackages(context, packages)
+        assertTrue(saveFavoritePackages(context, packages))
 
         assertEquals(
             packages + List(12) { null },
@@ -47,17 +57,17 @@ class FavoriteStoreTest {
     }
 
     @Test
-    fun valuesBeyondFifteenSlotsAreDiscarded() {
+    fun valuesBeyondFifteenSlotsAreDiscarded() = runBlocking {
         val packages = (1..18).map { "com.example.app$it" }
 
-        saveFavoritePackages(context, packages)
+        assertTrue(saveFavoritePackages(context, packages))
 
         assertEquals(packages.take(15), loadFavoritePackages(context).filterNotNull())
         assertEquals(15, loadFavoritePackages(context).size)
     }
 
     @Test
-    fun blankEntriesBecomeEmptySlots() {
+    fun blankEntriesBecomeEmptySlots() = runBlocking {
         favoritesPreferences().edit()
             .putString("favorite_packages", "com.example.alpha||   |com.example.beta")
             .commit()
@@ -70,7 +80,7 @@ class FavoriteStoreTest {
     }
 
     @Test
-    fun duplicatePackageNamesKeepOnlyTheirFirstSlot() {
+    fun duplicatePackageNamesKeepOnlyTheirFirstSlot() = runBlocking {
         val packages = listOf(
             "com.example.alpha",
             "com.example.beta",
@@ -79,7 +89,7 @@ class FavoriteStoreTest {
             "com.example.beta"
         )
 
-        saveFavoritePackages(context, packages)
+        assertTrue(saveFavoritePackages(context, packages))
 
         assertEquals(
             listOf("com.example.alpha", "com.example.beta", null, "com.example.gamma", null) +
@@ -89,7 +99,7 @@ class FavoriteStoreTest {
     }
 
     @Test
-    fun duplicateValuesAlreadyInStorageAreNormalizedOnLoad() {
+    fun duplicateValuesAlreadyInStorageAreNormalizedOnLoad() = runBlocking {
         favoritesPreferences().edit()
             .putString(
                 "favorite_packages",
@@ -105,25 +115,30 @@ class FavoriteStoreTest {
     }
 
     @Test
-    fun wrongPreferenceValueTypeIsUnreadableAndCannotBeOverwritten() {
+    fun wrongPreferenceValueTypeIsUnreadableAndCannotBeOverwritten() = runBlocking {
         favoritesPreferences().edit().putInt("favorite_packages", 42).commit()
 
         val loadResult = loadFavoritePackagesResult(context)
 
         assertEquals(List(15) { null }, loadResult.packages)
-        assertEquals(false, loadResult.isValid)
-        assertEquals(false, saveFavoritePackages(context, listOf("com.example.new")))
-        assertEquals(42, favoritesPreferences().getInt("favorite_packages", -1))
+        assertFalse(loadResult.isValid)
+        assertFalse(saveFavoritePackages(context, listOf("com.example.new")))
+        val storedValue = LauncherCollectionsDataStore.get(context)
+            .favorites.data.first().valueFor("favorite_packages")
+        assertEquals(42, storedValue)
     }
 
     @Test
-    fun missingStorageIsAValidEmptyFavoriteCollection() {
+    fun missingStorageIsAValidEmptyFavoriteCollection() = runBlocking {
         val loadResult = loadFavoritePackagesResult(context)
 
         assertEquals(List(15) { null }, loadResult.packages)
-        assertEquals(true, loadResult.isValid)
+        assertTrue(loadResult.isValid)
     }
 
     private fun favoritesPreferences() =
         context.getSharedPreferences("nekos_favorites", Context.MODE_PRIVATE)
+
+    private fun Preferences.valueFor(name: String): Any? =
+        asMap().entries.firstOrNull { it.key.name == name }?.value
 }

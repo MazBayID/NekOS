@@ -1,5 +1,6 @@
 package com.nekos.android
 
+import android.content.ComponentCallbacks2
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -10,6 +11,19 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
 class CacheMemoryStateTest {
+    @Test
+    fun ordinaryBackgroundTransitionsDoNotTrimLauncherCaches() {
+        assertFalse(shouldTrimLauncherCaches(ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN))
+        assertFalse(shouldTrimLauncherCaches(ComponentCallbacks2.TRIM_MEMORY_BACKGROUND))
+    }
+
+    @Test
+    fun substantialMemoryPressureTrimsLauncherCaches() {
+        assertTrue(shouldTrimLauncherCaches(ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL))
+        assertTrue(shouldTrimLauncherCaches(ComponentCallbacks2.TRIM_MEMORY_MODERATE))
+        assertTrue(shouldTrimLauncherCaches(ComponentCallbacks2.TRIM_MEMORY_COMPLETE))
+    }
+
     @Test
     fun loadStartedBeforeTrimCannotRepopulateCache() {
         val state = CacheMemoryState()

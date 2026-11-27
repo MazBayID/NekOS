@@ -3,10 +3,13 @@ package com.nekos.android
 import android.content.Context
 import android.content.ContextWrapper
 import androidx.test.platform.app.InstrumentationRegistry
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
+import java.io.File
 import java.util.UUID
 
 class TagStoreTest {
@@ -14,6 +17,10 @@ class TagStoreTest {
     private val context: Context by lazy {
         val target = InstrumentationRegistry.getInstrumentation().targetContext
         object : ContextWrapper(target) {
+            override fun getApplicationContext(): Context = this
+            override fun getFilesDir(): File =
+                File(target.filesDir, preferenceNamespace).apply { mkdirs() }
+
             override fun getSharedPreferences(name: String, mode: Int) =
                 super.getSharedPreferences("$preferenceNamespace-$name", mode)
         }
@@ -30,12 +37,12 @@ class TagStoreTest {
     }
 
     @Test
-    fun emptyStorageReturnsNoTags() {
+    fun emptyStorageReturnsNoTags() = runBlocking {
         assertEquals(emptyList<NekTag>(), TagStore.load(context))
     }
 
     @Test
-    fun saveAndLoadPreservesTagFields() {
+    fun saveAndLoadPreservesTagFields() = runBlocking {
         val tags = listOf(
             NekTag(
                 id = "tag-work",
@@ -53,7 +60,7 @@ class TagStoreTest {
     }
 
     @Test
-    fun sameIconCanKeepDifferentFrameColorsForDifferentTags() {
+    fun sameIconCanKeepDifferentFrameColorsForDifferentTags() = runBlocking {
         val tags = listOf(
             NekTag(
                 id = "tag-one",
@@ -77,7 +84,7 @@ class TagStoreTest {
     }
 
     @Test
-    fun legacyTagsDefaultIconFrameColorToOcean() {
+    fun legacyTagsDefaultIconFrameColorToOcean() = runBlocking {
         tagsPreferences().edit().putString(
             "tag_collection_v1",
             """[{"id":"legacy","name":"Legacy","iconId":7,"apps":[]}]"""
@@ -89,7 +96,7 @@ class TagStoreTest {
     }
 
     @Test
-    fun saveTrimsNamesAndRemovesBlankAndDuplicatePackages() {
+    fun saveTrimsNamesAndRemovesBlankAndDuplicatePackages() = runBlocking {
         val tag = NekTag(
             id = "tag-normalized",
             name = "  Productivity  ",
@@ -115,7 +122,7 @@ class TagStoreTest {
     }
 
     @Test
-    fun namesAreLimitedToTwentyFourCharacters() {
+    fun namesAreLimitedToTwentyFourCharacters() = runBlocking {
         val longName = "123456789012345678901234567890"
 
         TagStore.save(context, listOf(NekTag(id = "tag-long", name = longName)))
@@ -124,7 +131,7 @@ class TagStoreTest {
     }
 
     @Test
-    fun blankNamesAreNotPersisted() {
+    fun blankNamesAreNotPersisted() = runBlocking {
         TagStore.save(
             context,
             listOf(
@@ -137,7 +144,7 @@ class TagStoreTest {
     }
 
     @Test
-    fun duplicateIdsKeepTheFirstTag() {
+    fun duplicateIdsKeepTheFirstTag() = runBlocking {
         TagStore.save(
             context,
             listOf(
@@ -157,14 +164,14 @@ class TagStoreTest {
     }
 
     @Test
-    fun malformedJsonReturnsEmptyList() {
+    fun malformedJsonReturnsEmptyList() = runBlocking {
         tagsPreferences().edit().putString("tag_collection_v1", "[not-json").commit()
 
         assertEquals(emptyList<NekTag>(), TagStore.load(context))
     }
 
     @Test
-    fun malformedJsonIsReportedAsUnreadableAndCannotBeOverwritten() {
+    fun malformedJsonIsReportedAsUnreadableAndCannotBeOverwritten() = runBlocking {
         val malformed = "[not-json"
         tagsPreferences().edit().putString("tag_collection_v1", malformed).commit()
 
@@ -173,11 +180,11 @@ class TagStoreTest {
         assertEquals(emptyList<NekTag>(), loadResult.tags)
         assertEquals(false, loadResult.isValid)
         assertEquals(false, TagStore.save(context, listOf(NekTag(id = "new", name = "New"))))
-        assertEquals(malformed, tagsPreferences().getString("tag_collection_v1", null))
+        assertEquals(malformed, storedTagValue())
     }
 
     @Test
-    fun malformedAppsFieldIsUnreadableAndCannotBeOverwritten() {
+    fun malformedAppsFieldIsUnreadableAndCannotBeOverwritten() = runBlocking {
         val malformed = """[{"id":"tag-one","name":"Work","apps":"com.example.mail"}]"""
         tagsPreferences().edit().putString("tag_collection_v1", malformed).commit()
 
@@ -186,11 +193,11 @@ class TagStoreTest {
         assertEquals(emptyList<NekTag>(), loadResult.tags)
         assertEquals(false, loadResult.isValid)
         assertEquals(false, TagStore.save(context, listOf(NekTag(id = "new", name = "New"))))
-        assertEquals(malformed, tagsPreferences().getString("tag_collection_v1", null))
+        assertEquals(malformed, storedTagValue())
     }
 
     @Test
-    fun nonStringAppReferenceIsUnreadableAndCannotBeOverwritten() {
+    fun nonStringAppReferenceIsUnreadableAndCannotBeOverwritten() = runBlocking {
         val malformed = """[{"id":"tag-one","name":"Work","apps":["com.example.mail",42]}]"""
         tagsPreferences().edit().putString("tag_collection_v1", malformed).commit()
 
@@ -199,11 +206,11 @@ class TagStoreTest {
         assertEquals(emptyList<NekTag>(), loadResult.tags)
         assertEquals(false, loadResult.isValid)
         assertEquals(false, TagStore.save(context, listOf(NekTag(id = "new", name = "New"))))
-        assertEquals(malformed, tagsPreferences().getString("tag_collection_v1", null))
+        assertEquals(malformed, storedTagValue())
     }
 
     @Test
-    fun wrongPreferenceValueTypeIsUnreadableAndCannotBeOverwritten() {
+    fun wrongPreferenceValueTypeIsUnreadableAndCannotBeOverwritten() = runBlocking {
         tagsPreferences().edit().putInt("tag_collection_v1", 42).commit()
 
         val loadResult = TagStore.loadResult(context)
@@ -211,11 +218,11 @@ class TagStoreTest {
         assertEquals(emptyList<NekTag>(), loadResult.tags)
         assertEquals(false, loadResult.isValid)
         assertEquals(false, TagStore.save(context, listOf(NekTag(id = "new", name = "New"))))
-        assertEquals(42, tagsPreferences().getInt("tag_collection_v1", -1))
+        assertEquals(42, storedTagValue())
     }
 
     @Test
-    fun missingStorageIsAValidEmptyCollection() {
+    fun missingStorageIsAValidEmptyCollection() = runBlocking {
         val loadResult = TagStore.loadResult(context)
 
         assertEquals(emptyList<NekTag>(), loadResult.tags)
@@ -224,4 +231,8 @@ class TagStoreTest {
 
     private fun tagsPreferences() =
         context.getSharedPreferences("nekos_tags", Context.MODE_PRIVATE)
+
+    private suspend fun storedTagValue(): Any? =
+        LauncherCollectionsDataStore.get(context).tags.data.first()
+            .asMap().entries.firstOrNull { it.key.name == "tag_collection_v1" }?.value
 }

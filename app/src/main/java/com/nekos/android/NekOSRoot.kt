@@ -27,7 +27,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -144,21 +145,40 @@ internal fun NekOSRoot(
         pendingStoreSkinIds = OfficialSkinStoreClient.pendingSkinIds(context)
     }
     var apps by remember { mutableStateOf(emptyList<InstalledApp>()) }
-    val initialFavoriteLoad = remember(context) { loadFavoritePackagesResult(context) }
-    var favoritePackages by remember { mutableStateOf(initialFavoriteLoad.packages) }
-    var favoriteStorageWritable by remember { mutableStateOf(initialFavoriteLoad.isValid) }
-    var favoriteAppSnapshots by remember {
-        mutableStateOf(FavoriteAppSnapshotStore.load(context))
+    val collectionScope = rememberCoroutineScope()
+    val collectionWriteMutex = remember { Mutex() }
+    // Prevent catalog cleanup from overlapping index-based reorder gestures.
+    val collectionMutationGate = remember { LauncherCollectionMutationGate() }
+    var collectionsLoaded by remember { mutableStateOf(false) }
+    var favoritePackages by remember { mutableStateOf(List(15) { null as String? }) }
+    var favoriteStorageWritable by remember { mutableStateOf(false) }
+    var favoriteAppSnapshots by remember { mutableStateOf(emptyMap<String, FavoriteAppSnapshot>()) }
+    var favoriteSnapshotsWritable by remember { mutableStateOf(false) }
+    var tags by remember { mutableStateOf(emptyList<NekTag>()) }
+    var tagStorageWritable by remember { mutableStateOf(false) }
+
+    LaunchedEffect(context) {
+        val favoriteLoad = loadFavoritePackagesResult(context)
+        val tagLoad = TagStore.loadResult(context)
+        val snapshotLoad = FavoriteAppSnapshotStore.loadResult(context)
+        favoritePackages = favoriteLoad.packages
+        favoriteStorageWritable = favoriteLoad.isValid
+        tags = tagLoad.tags
+        tagStorageWritable = tagLoad.isValid
+        favoriteAppSnapshots = snapshotLoad.snapshots
+        favoriteSnapshotsWritable = snapshotLoad.isValid
+        collectionsLoaded = true
     }
-    val initialTagLoad = remember(context) { TagStore.loadResult(context) }
-    var tags by remember { mutableStateOf(initialTagLoad.tags) }
-    var tagStorageWritable by remember { mutableStateOf(initialTagLoad.isValid) }
     var tagEditorTarget by remember { mutableStateOf<NekTag?>(null) }
     var viewingTag by remember { mutableStateOf<NekTag?>(null) }
     var actionMenuTag by remember { mutableStateOf<NekTag?>(null) }
     var tagPendingDelete by remember { mutableStateOf<NekTag?>(null) }
     var favoriteOrderSnapshot by remember { mutableStateOf<List<String?>?>(null) }
     var tagOrderSnapshot by remember { mutableStateOf<List<NekTag>?>(null) }
+    var favoriteReorderOwner by remember { mutableStateOf<Any?>(null) }
+    var tagReorderOwner by remember { mutableStateOf<Any?>(null) }
+    var favoriteReorderSaving by remember { mutableStateOf(false) }
+    var tagReorderSaving by remember { mutableStateOf(false) }
     var activeTagPage by remember { mutableIntStateOf(0) }
     // Restored launcher tasks render Home immediately while the app catalog refreshes.
     var isInitialLoadComplete by remember { mutableStateOf(skipStartupSplash) }
@@ -167,7 +187,8 @@ internal fun NekOSRoot(
 
     // Discover launchable apps while the brand splash is visible instead of
     // waiting for an artificial timer before starting initialization.
-    LaunchedEffect(refreshToken, resumeToken) {
+    LaunchedEffect(refreshToken, resumeToken, collectionsLoaded) {
+        if (!collectionsLoaded) return@LaunchedEffect
         // A normal resume must not rescan a healthy catalog. It only retries a
         // previous failed scan, covering transient package/profile service errors.
         if (refreshToken == lastAppliedRefreshToken && !catalogLoadFailed) {
@@ -187,13 +208,9 @@ internal fun NekOSRoot(
             if (!isInitialLoadComplete) isInitialLoadComplete = true
             return@LaunchedEffect
         }
-        // Do not mutate Favorite or Tag collections while a reorder gesture is
-        // still using index-based positions and a pre-refresh rollback snapshot.
-        // The gesture completion commits or restores its state before cleanup runs.
-        snapshotFlow {
-            favoriteOrderSnapshot == null && tagOrderSnapshot == null
-        }.first { reorderFinished -> reorderFinished }
-
+        // The mutation gate is acquired before the collection mutex. A reorder
+        // gesture holds this gate from start through durable save/rollback, while
+        // catalog cleanup holds it for its complete reconciliation transaction.
         catalogLoadFailed = false
         val refreshedApps = refreshedCatalog.apps
         // Keep the current list and decoded icon cache when a refresh finds no catalog changes.
@@ -201,7 +218,9 @@ internal fun NekOSRoot(
             apps = refreshedApps
         }
         lastAppliedRefreshToken = refreshToken
-        val currentProfileSerialNumber = context
+        collectionMutationGate.withCatalogRefresh {
+        collectionWriteMutex.withLock {
+            val currentProfileSerialNumber = context
             .getSystemService(UserManager::class.java)
             .getSerialNumberForUser(Process.myUserHandle())
         // Legacy data stored only package names because earlier versions queried
@@ -256,8 +275,19 @@ internal fun NekOSRoot(
                         iconCacheKey = app.iconCacheKey
                     )
                 }
-            favoriteAppSnapshots = retainedSnapshots + refreshedSnapshots
-            FavoriteAppSnapshotStore.save(context, favoriteAppSnapshots.values)
+            if (favoriteSnapshotsWritable) {
+                val updatedSnapshots = retainedSnapshots + refreshedSnapshots
+                if (FavoriteAppSnapshotStore.save(context, updatedSnapshots.values)) {
+                    favoriteAppSnapshots = updatedSnapshots
+                } else {
+                    favoriteSnapshotsWritable = false
+                    Toast.makeText(
+                        context,
+                        "Favorite display data could not be saved.",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
         }
         if (tagStorageWritable && cleanedReferences.tags != tags) {
             if (TagStore.save(context, cleanedReferences.tags)) {
@@ -275,10 +305,12 @@ internal fun NekOSRoot(
                 ).show()
             }
         }
+        }
+        }
         isInitialLoadComplete = true
     }
 
-    if (!isInitialLoadComplete) {
+    if (!isInitialLoadComplete || !collectionsLoaded) {
         Box(
             modifier = Modifier.fillMaxSize().background(WarmBackground),
             contentAlignment = Alignment.Center
@@ -365,9 +397,9 @@ internal fun NekOSRoot(
     DisposableEffect(context, iconBitmapCache, iconCatalogRepository) {
         val memoryCallbacks = object : ComponentCallbacks2 {
             override fun onTrimMemory(level: Int) {
-                // Keep launcher bitmaps through ordinary background transitions.
-                // Release them only when Android reports critical memory pressure.
-                if (level >= ComponentCallbacks2.TRIM_MEMORY_BACKGROUND) {
+                // TRIM_MEMORY_BACKGROUND is normal when the launcher is hidden.
+                // Keep artwork warm until Android reports substantial memory pressure.
+                if (shouldTrimLauncherCaches(level)) {
                     iconBitmapCache.trimMemory()
                     iconCatalogRepository.trimMemory()
                     SkinAssetResolver.trimAllCaches()
@@ -461,76 +493,104 @@ internal fun NekOSRoot(
         actionMenuPreviewApp = null
     }
 
-    fun saveTags(updated: List<NekTag>): Boolean {
-        if (!tagStorageWritable) {
-            Toast.makeText(
-                context,
-                "Tags could not be loaded. Existing data was preserved.",
-                Toast.LENGTH_LONG
-            ).show()
-            return false
-        }
-        val normalized = updated.distinctBy { it.id }
-        if (TagStore.save(context, normalized)) {
-            tags = normalized
-            return true
-        } else {
-            tagStorageWritable = false
-            Toast.makeText(
-                context,
-                "Tags could not be saved. Existing data was preserved.",
-                Toast.LENGTH_LONG
-            ).show()
-            return false
-        }
-    }
-
-    fun updateFavorites(updated: List<String?>): Boolean {
-        if (!favoriteStorageWritable) {
-            Toast.makeText(
-                context,
-                "Favorites could not be loaded. Existing data was preserved.",
-                Toast.LENGTH_LONG
-            ).show()
-            return false
-        }
-        if (!saveFavoritePackages(context, updated)) {
-            favoriteStorageWritable = false
-            Toast.makeText(
-                context,
-                "Favorites could not be saved. Existing data was preserved.",
-                Toast.LENGTH_LONG
-            ).show()
-            return false
-        }
-        favoritePackages = updated
-        val activeFavoriteIds = updated.filterNotNull().toSet()
-        val retainedSnapshots = favoriteAppSnapshots.filterKeys { it in activeFavoriteIds }
-        val refreshedSnapshots = apps
-            .filter { it.id in activeFavoriteIds }
-            .associate { app ->
-                app.id to FavoriteAppSnapshot(
-                    appId = app.id,
-                    label = app.label,
-                    iconCacheKey = app.iconCacheKey
-                )
+    // Collection mutations are expressed as transforms and evaluated only after
+    // acquiring the mutex. This prevents queued UI actions from persisting a list
+    // calculated from an older Compose state.
+    suspend fun saveTags(transform: (List<NekTag>) -> List<NekTag>): Boolean =
+        collectionWriteMutex.withLock {
+            if (!tagStorageWritable) {
+                Toast.makeText(
+                    context,
+                    "Tags could not be loaded. Existing data was preserved.",
+                    Toast.LENGTH_LONG
+                ).show()
+                return@withLock false
             }
-        favoriteAppSnapshots = retainedSnapshots + refreshedSnapshots
-        FavoriteAppSnapshotStore.save(context, favoriteAppSnapshots.values)
-        return true
-    }
+            val normalized = transform(tags).distinctBy { it.id }
+            if (normalized == tags) return@withLock true
+            if (TagStore.save(context, normalized)) {
+                tags = normalized
+                true
+            } else {
+                tagStorageWritable = false
+                Toast.makeText(
+                    context,
+                    "Tags could not be saved. Existing data was preserved.",
+                    Toast.LENGTH_LONG
+                ).show()
+                false
+            }
+        }
+
+    suspend fun updateFavorites(transform: (List<String?>) -> List<String?>): Boolean =
+        collectionWriteMutex.withLock {
+            if (!favoriteStorageWritable) {
+                Toast.makeText(
+                    context,
+                    "Favorites could not be loaded. Existing data was preserved.",
+                    Toast.LENGTH_LONG
+                ).show()
+                return@withLock false
+            }
+            val updated = normalizeFavoritePackages(transform(favoritePackages))
+            if (updated == favoritePackages) return@withLock true
+            if (!saveFavoritePackages(context, updated)) {
+                favoriteStorageWritable = false
+                Toast.makeText(
+                    context,
+                    "Favorites could not be saved. Existing data was preserved.",
+                    Toast.LENGTH_LONG
+                ).show()
+                return@withLock false
+            }
+            favoritePackages = updated
+            if (favoriteSnapshotsWritable) {
+                val activeFavoriteIds = updated.filterNotNull().toSet()
+                val retainedSnapshots = favoriteAppSnapshots.filterKeys { it in activeFavoriteIds }
+                val refreshedSnapshots = apps
+                    .filter { it.id in activeFavoriteIds }
+                    .associate { app ->
+                        app.id to FavoriteAppSnapshot(
+                            appId = app.id,
+                            label = app.label,
+                            iconCacheKey = app.iconCacheKey
+                        )
+                    }
+                val updatedSnapshots = retainedSnapshots + refreshedSnapshots
+                if (FavoriteAppSnapshotStore.save(context, updatedSnapshots.values)) {
+                    favoriteAppSnapshots = updatedSnapshots
+                } else {
+                    favoriteSnapshotsWritable = false
+                    Toast.makeText(
+                        context,
+                        "Favorite display data could not be saved.",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+            true
+        }
 
     fun placeFavoriteFromDrawer(appId: String, targetIndex: Int) {
-        when (val result = placePackageInFavoriteSlot(favoritePackages, appId, targetIndex)) {
-            is FavoriteSlotOperation.Updated -> {
-                updateFavorites(result.packages)
+        collectionScope.launch {
+            var slotsFull = false
+            updateFavorites { current ->
+                when (val result = placePackageInFavoriteSlot(current, appId, targetIndex)) {
+                    is FavoriteSlotOperation.Updated -> result.packages
+                    FavoriteSlotOperation.Unchanged -> current
+                    FavoriteSlotOperation.Full -> {
+                        slotsFull = true
+                        current
+                    }
+                }
             }
-            FavoriteSlotOperation.Unchanged -> Unit
-            FavoriteSlotOperation.Full -> Toast.makeText(
-                context,
-                "Favorite slots are full",
-                Toast.LENGTH_SHORT
-            ).show()
+            if (slotsFull) {
+                Toast.makeText(
+                    context,
+                    "Favorite slots are full",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
         }
     }
 
@@ -578,10 +638,20 @@ internal fun NekOSRoot(
                 favoriteDrag = null
                 cancelDropBounds = null
 
-                favoriteOrderSnapshot?.let { favoritePackages = it }
-                favoriteOrderSnapshot = null
-                tagOrderSnapshot?.let { tags = it }
-                tagOrderSnapshot = null
+                if (favoriteReorderOwner != null && !favoriteReorderSaving) {
+                    favoriteOrderSnapshot?.let { favoritePackages = it }
+                    favoriteOrderSnapshot = null
+                    val owner = favoriteReorderOwner
+                    favoriteReorderOwner = null
+                    if (owner != null) collectionMutationGate.endReorder(owner)
+                }
+                if (tagReorderOwner != null && !tagReorderSaving) {
+                    tagOrderSnapshot?.let { tags = it }
+                    tagOrderSnapshot = null
+                    val owner = tagReorderOwner
+                    tagReorderOwner = null
+                    if (owner != null) collectionMutationGate.endReorder(owner)
+                }
 
                 actionMenuApp = null
                 clearActionMenuPreview()
@@ -670,7 +740,9 @@ internal fun NekOSRoot(
             onFavoriteSlotBounds = { index, bounds -> favoriteSlotBounds[index] = bounds },
             favoriteDropTarget = favoriteDrag?.takeIf { it.hasMoved }?.targetIndex,
             onFavoriteReorder = { fromIndex, toIndex ->
-                if (fromIndex != toIndex && fromIndex in 0 until 15 && toIndex in 0 until 15) {
+                if (favoriteReorderOwner != null &&
+                    fromIndex != toIndex && fromIndex in 0 until 15 && toIndex in 0 until 15
+                ) {
                     val updated = MutableList(15) { favoritePackages.getOrNull(it) }
                     val moved = updated[fromIndex]
                     updated[fromIndex] = updated[toIndex]
@@ -679,36 +751,86 @@ internal fun NekOSRoot(
                 }
             },
             onFavoriteReorderStart = {
-                favoriteOrderSnapshot = favoritePackages.toList()
+                val owner = Any()
+                if (collectionMutationGate.tryBeginReorder(owner)) {
+                    favoriteReorderOwner = owner
+                    favoriteReorderSaving = false
+                    favoriteOrderSnapshot = favoritePackages.toList()
+                } else {
+                    favoriteReorderOwner = null
+                    favoriteOrderSnapshot = null
+                }
             },
             onFavoriteReorderEnd = { cancelled ->
+                val owner = favoriteReorderOwner
                 val snapshot = favoriteOrderSnapshot
-                if (cancelled) {
+                if (owner != null && cancelled) {
                     if (snapshot != null) favoritePackages = snapshot
-                } else if (!updateFavorites(favoritePackages)) {
-                    if (snapshot != null) favoritePackages = snapshot
+                    favoriteOrderSnapshot = null
+                    favoriteReorderOwner = null
+                    collectionMutationGate.endReorder(owner)
+                } else if (owner != null) {
+                    favoriteReorderSaving = true
+                    collectionScope.launch {
+                        try {
+                            if (!updateFavorites { favoritePackages } && snapshot != null) {
+                                favoritePackages = snapshot
+                            }
+                        } finally {
+                            if (favoriteReorderOwner === owner) {
+                                favoriteOrderSnapshot = null
+                                favoriteReorderOwner = null
+                                favoriteReorderSaving = false
+                                collectionMutationGate.endReorder(owner)
+                            }
+                        }
+                    }
                 }
-                favoriteOrderSnapshot = null
             },
             onTagClick = { tag -> viewingTag = tag },
             onTagOptionsClick = { tag -> actionMenuTag = tag },
             onTagReorder = { fromIndex, toIndex ->
-                val sourceId = tags.getOrNull(fromIndex)?.id
-                if (sourceId != null) {
-                    tags = moveTagToIndex(tags, sourceId, toIndex)
+                if (tagReorderOwner != null) {
+                    val sourceId = tags.getOrNull(fromIndex)?.id
+                    if (sourceId != null) {
+                        tags = moveTagToIndex(tags, sourceId, toIndex)
+                    }
                 }
             },
             onTagReorderStart = {
-                tagOrderSnapshot = tags.toList()
+                val owner = Any()
+                if (collectionMutationGate.tryBeginReorder(owner)) {
+                    tagReorderOwner = owner
+                    tagReorderSaving = false
+                    tagOrderSnapshot = tags.toList()
+                } else {
+                    tagReorderOwner = null
+                    tagOrderSnapshot = null
+                }
             },
             onTagReorderEnd = { cancelled ->
+                val owner = tagReorderOwner
                 val snapshot = tagOrderSnapshot
-                if (cancelled) {
+                if (owner != null && cancelled) {
                     if (snapshot != null) tags = snapshot
-                } else if (!saveTags(tags)) {
-                    if (snapshot != null) tags = snapshot
+                    tagOrderSnapshot = null
+                    tagReorderOwner = null
+                    collectionMutationGate.endReorder(owner)
+                } else if (owner != null) {
+                    tagReorderSaving = true
+                    collectionScope.launch {
+                        try {
+                            if (!saveTags { tags } && snapshot != null) tags = snapshot
+                        } finally {
+                            if (tagReorderOwner === owner) {
+                                tagOrderSnapshot = null
+                                tagReorderOwner = null
+                                tagReorderSaving = false
+                                collectionMutationGate.endReorder(owner)
+                            }
+                        }
+                    }
                 }
-                tagOrderSnapshot = null
             },
             onAddTag = {
                 if (tags.size >= 10) {
@@ -884,10 +1006,14 @@ internal fun NekOSRoot(
                             },
                             onRemoveFavorite = if (favoritePackages.any { it == app.id }) {
                                 {
-                                    if (updateFavorites(favoritePackages.map { favoriteId ->
-                                        if (favoriteId == app.id) null else favoriteId
-                                    })) {
-                                        actionMenuApp = null
+                                    collectionScope.launch {
+                                        if (updateFavorites { current ->
+                                            current.map { favoriteId ->
+                                                if (favoriteId == app.id) null else favoriteId
+                                            }
+                                        }) {
+                                            actionMenuApp = null
+                                        }
                                     }
                                 }
                             } else null,
@@ -1139,9 +1265,11 @@ internal fun NekOSRoot(
                 movePageLabel = targetPage?.let { "Move to page ${it + 1}" },
                 onMovePage = {
                     targetPage?.let { page ->
-                        if (saveTags(moveTagToPage(tags, tag.id, page))) {
-                            activeTagPage = page
-                            actionMenuTag = null
+                        collectionScope.launch {
+                            if (saveTags { current -> moveTagToPage(current, tag.id, page) }) {
+                                activeTagPage = page
+                                actionMenuTag = null
+                            }
                         }
                     }
                 },
@@ -1167,20 +1295,26 @@ internal fun NekOSRoot(
                 iconCatalogRepository = iconCatalogRepository,
                 launcherUiColorArgb = launcherUiColorArgb,
                 onSave = { saved ->
-                    val duplicateName = tags.any { it.id != saved.id && it.name.equals(saved.name, ignoreCase = true) }
-                    if (duplicateName) {
-                        Toast.makeText(context, "Tag name already exists", Toast.LENGTH_SHORT).show()
-                    } else {
-                        if (tagEditorTarget == null && tags.size >= 10) {
-                            Toast.makeText(context, "Maximum of 10 tags", Toast.LENGTH_SHORT).show()
-                        } else {
-                            val updatedTags = if (tagEditorTarget == null) {
-                                tags + saved
-                            } else {
-                                tags.map { if (it.id == saved.id) saved else it }
+                    val isNewTag = tagEditorTarget == null
+                    collectionScope.launch {
+                        var duplicateName = false
+                        var tagLimitReached = false
+                        val savedSuccessfully = saveTags { current ->
+                            duplicateName = current.any {
+                                it.id != saved.id && it.name.equals(saved.name, ignoreCase = true)
                             }
-                            if (saveTags(updatedTags)) {
-                                if (tagEditorTarget == null) activeTagPage = tags.size / 5
+                            tagLimitReached = isNewTag && current.size >= 10
+                            when {
+                                duplicateName || tagLimitReached -> current
+                                isNewTag -> current + saved
+                                else -> current.map { if (it.id == saved.id) saved else it }
+                            }
+                        }
+                        when {
+                            duplicateName -> Toast.makeText(context, "Tag name already exists", Toast.LENGTH_SHORT).show()
+                            tagLimitReached -> Toast.makeText(context, "Maximum of 10 tags", Toast.LENGTH_SHORT).show()
+                            savedSuccessfully -> {
+                                if (isNewTag) activeTagPage = tags.size / 5
                                 showTagEditor = false
                                 tagEditorTarget = null
                             }
@@ -1204,10 +1338,12 @@ internal fun NekOSRoot(
                 text = { Text("Only the tag is removed. Your apps are not affected.") },
                 confirmButton = {
                     TextButton(onClick = {
-                        if (saveTags(tags.filterNot { it.id == tag.id })) {
-                            tagPendingDelete = null
-                            showTagEditor = false
-                            tagEditorTarget = null
+                        collectionScope.launch {
+                            if (saveTags { current -> current.filterNot { it.id == tag.id } }) {
+                                tagPendingDelete = null
+                                showTagEditor = false
+                                tagEditorTarget = null
+                            }
                         }
                     }) { Text("Delete", color = Color(0xFFB3261E)) }
                 },

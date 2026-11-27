@@ -1,6 +1,10 @@
 package com.nekos.android
 
 import android.content.Context
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.first
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -16,6 +20,11 @@ internal data class FavoriteAppSnapshot(
     val iconCacheKey: String
 )
 
+internal data class FavoriteAppSnapshotLoadResult(
+    val snapshots: Map<String, FavoriteAppSnapshot>,
+    val isValid: Boolean
+)
+
 /**
  * Snapshot metadata may only follow the persisted Favorite list. If Favorite
  * references changed but their save failed, keep the previous snapshots intact.
@@ -26,18 +35,22 @@ internal fun shouldPersistFavoriteSnapshots(
 ): Boolean = !favoritesChanged || favoriteSaveSucceeded
 
 internal object FavoriteAppSnapshotStore {
-    private const val PREFS_NAME = "nekos_favorite_snapshots"
     private const val KEY_SNAPSHOTS = "favorite_app_snapshots_v1"
+    private val snapshotsKey = stringPreferencesKey(KEY_SNAPSHOTS)
 
-    fun load(context: Context): Map<String, FavoriteAppSnapshot> {
-        val raw = runCatching {
-            context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-                .getString(KEY_SNAPSHOTS, null)
-        }.getOrNull() ?: return emptyMap()
+    suspend fun load(context: Context): Map<String, FavoriteAppSnapshot> =
+        loadResult(context).snapshots
 
-        return runCatching {
+    internal suspend fun loadResult(context: Context): FavoriteAppSnapshotLoadResult {
+        return try {
+            val preferences = LauncherCollectionsDataStore.get(context)
+                .favoriteSnapshots.data.first()
+            val stored = preferences.asMap().entries.firstOrNull { it.key.name == KEY_SNAPSHOTS }
+                ?: return FavoriteAppSnapshotLoadResult(emptyMap(), true)
+            val raw = stored.value as? String
+                ?: return FavoriteAppSnapshotLoadResult(emptyMap(), false)
             val array = JSONArray(raw)
-            buildMap {
+            val snapshots = buildMap {
                 for (index in 0 until array.length()) {
                     val item = array.optJSONObject(index) ?: continue
                     val appId = item.optString("appId")
@@ -48,10 +61,18 @@ internal object FavoriteAppSnapshotStore {
                     }
                 }
             }
-        }.getOrDefault(emptyMap())
+            FavoriteAppSnapshotLoadResult(snapshots, true)
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (_: Exception) {
+            FavoriteAppSnapshotLoadResult(emptyMap(), false)
+        }
     }
 
-    fun save(context: Context, snapshots: Collection<FavoriteAppSnapshot>) {
+    suspend fun save(
+        context: Context,
+        snapshots: Collection<FavoriteAppSnapshot>
+    ): Boolean {
         val array = JSONArray()
         snapshots.distinctBy { it.appId }.forEach { snapshot ->
             if (snapshot.appId.isBlank() || snapshot.label.isBlank() || snapshot.iconCacheKey.isBlank()) {
@@ -64,9 +85,22 @@ internal object FavoriteAppSnapshotStore {
                     .put("iconCacheKey", snapshot.iconCacheKey)
             )
         }
-        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            .edit()
-            .putString(KEY_SNAPSHOTS, array.toString())
-            .apply()
+        return try {
+            LauncherCollectionsDataStore.get(context).favoriteSnapshots.edit { preferences ->
+                val stored = preferences.asMap().entries
+                    .firstOrNull { it.key.name == KEY_SNAPSHOTS }
+                check(stored == null || stored.value is String) {
+                    "Stored Favorite snapshots value has an unexpected type"
+                }
+                val existing = stored?.value as? String
+                if (existing != null) JSONArray(existing)
+                preferences[snapshotsKey] = array.toString()
+            }
+            true
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (_: Exception) {
+            false
+        }
     }
 }

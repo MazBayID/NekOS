@@ -1,5 +1,16 @@
 package com.nekos.android
 
+import android.content.ComponentCallbacks2
+
+/**
+ * Android reports TRIM_MEMORY_BACKGROUND during an ordinary background transition.
+ * Keep launcher artwork cached at that level; release it only for substantial
+ * memory pressure while visible or when a background process is under pressure.
+ */
+internal fun shouldTrimLauncherCaches(level: Int): Boolean =
+    level == ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL ||
+        level >= ComponentCallbacks2.TRIM_MEMORY_MODERATE
+
 /**
  * Coordinates cache state transitions with in-flight bitmap loads.
  * A trim or resume invalidates earlier load epochs, preventing stale decodes

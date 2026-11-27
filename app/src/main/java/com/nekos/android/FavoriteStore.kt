@@ -1,56 +1,62 @@
 package com.nekos.android
 
 import android.content.Context
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.first
 
-private const val FAVORITES_PREFS = "nekos_favorites"
 private const val FAVORITES_KEY = "favorite_packages"
 private const val FAVORITE_SLOT_COUNT = 15
+private val favoritesKey = stringPreferencesKey(FAVORITES_KEY)
 
 internal data class FavoriteLoadResult(
     val packages: List<String?>,
     val isValid: Boolean
 )
 
-fun loadFavoritePackages(context: Context): List<String?> =
+suspend fun loadFavoritePackages(context: Context): List<String?> =
     loadFavoritePackagesResult(context).packages
 
 /**
- * Distinguishes a genuinely missing Favorite setting from data that could not
- * be read, so a later save cannot silently replace an unreadable value.
+ * Reads the migrated Preferences value without coercing a wrong-typed legacy value.
+ * Missing storage is a valid empty collection; unreadable data remains non-writable.
  */
-internal fun loadFavoritePackagesResult(context: Context): FavoriteLoadResult {
-    val preferences = runCatching {
-        context.getSharedPreferences(FAVORITES_PREFS, Context.MODE_PRIVATE)
-    }.getOrNull() ?: return FavoriteLoadResult(emptyFavoriteSlots(), false)
-
-    val hasStoredValue = runCatching {
-        preferences.contains(FAVORITES_KEY)
+internal suspend fun loadFavoritePackagesResult(context: Context): FavoriteLoadResult {
+    return runCatching {
+        val preferences = LauncherCollectionsDataStore.get(context).favorites.data.first()
+        val stored = preferences.asMap().entries.firstOrNull { it.key.name == FAVORITES_KEY }
+            ?: return FavoriteLoadResult(emptyFavoriteSlots(), true)
+        val saved = stored.value as? String
+            ?: return FavoriteLoadResult(emptyFavoriteSlots(), false)
+        val packages = saved.split("|").map { it.ifBlank { null } }
+        FavoriteLoadResult(normalizeFavoritePackages(packages), true)
     }.getOrElse {
-        return FavoriteLoadResult(emptyFavoriteSlots(), false)
+        if (it is CancellationException) throw it
+        FavoriteLoadResult(emptyFavoriteSlots(), false)
     }
-    if (!hasStoredValue) {
-        return FavoriteLoadResult(emptyFavoriteSlots(), true)
-    }
-
-    val saved = runCatching {
-        preferences.getString(FAVORITES_KEY, null)
-    }.getOrNull() ?: return FavoriteLoadResult(emptyFavoriteSlots(), false)
-
-    val packages = saved.split("|").map { it.ifBlank { null } }
-    return FavoriteLoadResult(normalizeFavoritePackages(packages), true)
 }
 
-fun saveFavoritePackages(context: Context, packages: List<String?>): Boolean {
-    if (!loadFavoritePackagesResult(context).isValid) return false
-
+/**
+ * DataStore serializes edits and completes only after the new Preferences value is persisted.
+ * The current value is checked inside the transaction to prevent overwriting unreadable data.
+ */
+suspend fun saveFavoritePackages(context: Context, packages: List<String?>): Boolean {
     val normalized = normalizeFavoritePackages(packages)
-    return runCatching {
-        context.getSharedPreferences(FAVORITES_PREFS, Context.MODE_PRIVATE)
-            .edit()
-            .putString(FAVORITES_KEY, normalized.joinToString("|") { it.orEmpty() })
-            .apply()
+    return try {
+        LauncherCollectionsDataStore.get(context).favorites.edit { preferences ->
+            val existing = preferences.asMap().entries.firstOrNull { it.key.name == FAVORITES_KEY }
+            check(existing == null || existing.value is String) {
+                "Stored Favorites value has an unexpected type"
+            }
+            preferences[favoritesKey] = normalized.joinToString("|") { it.orEmpty() }
+        }
         true
-    }.getOrDefault(false)
+    } catch (cancelled: CancellationException) {
+        throw cancelled
+    } catch (_: Exception) {
+        false
+    }
 }
 
 internal fun normalizeFavoritePackages(packages: List<String?>): List<String?> {
