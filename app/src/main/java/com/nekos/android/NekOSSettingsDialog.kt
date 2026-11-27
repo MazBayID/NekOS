@@ -857,11 +857,13 @@ internal fun NekOSSettingsDialog(
                         officialStoreSkins.forEach { skin ->
                             val installed = installedSkins.any { it.id == skin.skinKey || it.id == skin.id }
                             val pending = skin.id in pendingStoreSkinIds
+                            val canReinstall = skin.owned && skin.price > 0L
                             val actionEnabled = storeBusySkinId != skin.id && !installed
                             val actionLabel = when {
                                 installed -> "INSTALLED"
                                 storeBusySkinId == skin.id -> "PLEASE WAIT…"
                                 pending -> "CHECK & INSTALL"
+                                canReinstall -> "REINSTALL"
                                 skin.price <= 0L -> "INSTALL"
                                 else -> "BUY"
                             }
@@ -929,7 +931,7 @@ internal fun NekOSSettingsDialog(
                                         OfficialStoreActionButton(
                                             label = actionLabel,
                                             enabled = actionEnabled,
-                                            isInstall = skin.price <= 0L || pending,
+                                            isInstall = skin.price <= 0L || pending || canReinstall,
                                             onClick = {
                                                 onStoreAction(skin, pending) { installedId ->
                                                     if (installedId != null) storeInstallPrompt = installedId to skin.name
