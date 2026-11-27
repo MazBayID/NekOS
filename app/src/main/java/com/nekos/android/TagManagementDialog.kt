@@ -142,6 +142,8 @@ fun TagManagementDialog(
                     }
                 }
 
+                SettingsBrushSeparator()
+
                 Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -205,6 +207,8 @@ fun TagManagementDialog(
                         }
                     }
                 }
+
+                SettingsBrushSeparator()
 
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
