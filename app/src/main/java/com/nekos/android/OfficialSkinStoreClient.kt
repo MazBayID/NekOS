@@ -13,6 +13,7 @@ import java.util.UUID
 internal data class OfficialStoreSkin(
     val id: String, val skinKey: String, val name: String, val author: String,
     val description: String, val price: Long, val currency: String, val previewUrl: String,
+    val category: String = "Basic",
     val owned: Boolean = false
 )
 internal data class StoreActionResult(
@@ -110,6 +111,7 @@ internal object OfficialSkinStoreClient {
                     name=item.optString("name"), author=item.optString("author","Community"),
                     description=item.optString("description"), price=item.optDouble("price_amount",0.0).toLong(),
                     currency=item.optString("currency","IDR"), previewUrl=item.optString("preview_url"),
+                    category=item.optString("category","Basic"),
                     owned=item.optBoolean("owned", false)
                 ))
             }
