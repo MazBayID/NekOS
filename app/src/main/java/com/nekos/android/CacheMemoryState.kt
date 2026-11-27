@@ -3,12 +3,12 @@ package com.nekos.android
 import android.content.ComponentCallbacks2
 
 /**
- * Release decoded launcher artwork as soon as the launcher is hidden.
- * Artwork is loaded again from its existing sources when the launcher resumes.
+ * Keep decoded launcher artwork through ordinary visibility changes.
+ * Release it when Android places the process in the background under memory pressure.
  */
 internal fun shouldTrimLauncherCaches(level: Int): Boolean =
     level == ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL ||
-        level >= ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN
+        level >= ComponentCallbacks2.TRIM_MEMORY_BACKGROUND
 
 /**
  * Coordinates cache state transitions with in-flight bitmap loads.
