@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.unit.dp
 
 private val TagColorOptions = listOf(
@@ -64,47 +65,41 @@ internal fun TagColorPickerDialog(
         title = { Text("Tag Color") },
         text = {
             LazyVerticalGrid(
-                columns = GridCells.Fixed(5),
-                modifier = Modifier.heightIn(max = 100.dp),
+                columns = GridCells.Fixed(3),
+                modifier = Modifier.heightIn(max = 200.dp),
                 contentPadding = PaddingValues(2.dp),
                 horizontalArrangement = Arrangement.spacedBy(7.dp),
                 verticalArrangement = Arrangement.spacedBy(7.dp)
             ) {
-                items(TagColorOptions) { (_, colorValue) ->
+                items(TagColorOptions) { (name, colorValue) ->
                     val selected = selectedColor == colorValue
-                    Box(
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(38.dp)
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(Color(0xFFF4F1EA).copy(alpha = 0.5f))
+                            .height(62.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color(colorValue.toInt()).copy(alpha = 0.5f))
                             .border(
                                 width = if (selected) 1.5.dp else 1.dp,
                                 color = if (selected) SettingsAccent else SettingsBorder,
-                                shape = RoundedCornerShape(16.dp)
+                                shape = RoundedCornerShape(12.dp)
                             )
                             .clickable {
                                 onColorSelected(colorValue)
                                 onDismiss()
-                            },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(21.dp)
-                                .clip(CircleShape)
-                                .background(Color(colorValue.toInt()))
-                                .border(1.dp, Color(0xFF34332F).copy(alpha = 0.16f), CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            if (selected) {
-                                SkinUiIcon(
-                                    "icon_check.webp",
-                                    Color(0xFF34332F),
-                                    "Selected",
-                                    Modifier.size(13.dp)
-                                )
                             }
+                            .padding(vertical = 5.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            name,
+                            color = SettingsInk,
+                            style = MaterialTheme.typography.labelSmall,
+                            maxLines = 1
+                        )
+                        if (selected) {
+                            SkinUiIcon("icon_check.webp", SettingsAccent, "Selected", Modifier.size(13.dp))
                         }
                     }
                 }
@@ -139,44 +134,49 @@ internal fun TagIconFrameColorPickerDialog(
         title = { Text("Icon Color") },
         text = {
             LazyVerticalGrid(
-                columns = GridCells.Fixed(3),
-                modifier = Modifier.heightIn(max = 200.dp),
-                contentPadding = PaddingValues(4.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalArrangement = Arrangement.spacedBy(5.dp)
+                columns = GridCells.Fixed(5),
+                modifier = Modifier.heightIn(max = 100.dp),
+                contentPadding = PaddingValues(2.dp),
+                horizontalArrangement = Arrangement.spacedBy(7.dp),
+                verticalArrangement = Arrangement.spacedBy(7.dp)
             ) {
-                items(TagIconFrameColors) { (name, colorValue) ->
+                items(TagIconFrameColors) { (_, colorValue) ->
                     val selected = selectedColor == colorValue
-                    Row(
-                        Modifier.fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(Color(0xFFF4F1EA))
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(38.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(Color(0xFFF4F1EA).copy(alpha = 0.5f))
+                            .border(
+                                width = if (selected) 1.5.dp else 1.dp,
+                                color = if (selected) SettingsAccent else SettingsBorder,
+                                shape = RoundedCornerShape(16.dp)
+                            )
                             .clickable {
                                 onColorSelected(colorValue)
                                 onDismiss()
-                            }
-                            .padding(6.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(7.dp)
+                            },
+                        contentAlignment = Alignment.Center
                     ) {
+                        val swatchColor = Color(colorValue.toInt())
                         Box(
-                            Modifier.size(18.dp)
+                            modifier = Modifier
+                                .size(21.dp)
                                 .clip(CircleShape)
-                                .background(Color(colorValue.toInt()))
-                                .border(
-                                    width = if (selected) 2.dp else 1.dp,
-                                    color = if (selected) Color(0xFF34332F) else Color(0xFF34332F).copy(alpha = 0.24f),
-                                    shape = CircleShape
+                                .background(swatchColor)
+                                .border(1.dp, Color(0xFF34332F).copy(alpha = 0.16f), CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (selected) {
+                                SkinUiIcon(
+                                    "icon_check.webp",
+                                    if (swatchColor.luminance() > 0.5f) Color(0xFF34332F) else Color.White,
+                                    "Selected",
+                                    Modifier.size(13.dp)
                                 )
-                        )
-                        Text(
-                            name,
-                            color = Color(0xFF34332F),
-                            style = MaterialTheme.typography.labelMedium,
-                            maxLines = 1,
-                            modifier = Modifier.weight(1f)
-                        )
-                        if (selected) SkinUiIcon("icon_check.webp", SettingsAccent, "Selected", Modifier.size(13.dp))
+                            }
+                        }
                     }
                 }
             }
