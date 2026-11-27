@@ -12,8 +12,8 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 class CacheMemoryStateTest {
     @Test
-    fun hiddenLauncherReleasesArtworkCaches() {
-        assertTrue(shouldTrimLauncherCaches(ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN))
+    fun ordinaryUiHiddenTransitionKeepsArtworkCaches() {
+        assertFalse(shouldTrimLauncherCaches(ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN))
         assertTrue(shouldTrimLauncherCaches(ComponentCallbacks2.TRIM_MEMORY_BACKGROUND))
     }
 
