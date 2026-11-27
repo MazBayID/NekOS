@@ -96,6 +96,10 @@ async function createPayment(
 ) {
   const amount = Number(order.amount);
   if (!Number.isSafeInteger(amount) || amount < 1) throw new Error("invalid_order_amount");
+  assertPaymentConfig(provider);
+  if (provider === "duitku" && (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email) || email.length > 255)) {
+    throw new Error("invalid_duitku_email");
+  }
   await rpc("skin_attach_payment", {
     p_order_id:orderId, p_provider_order_id:orderId, p_checkout_url:null, p_provider:provider
   });
