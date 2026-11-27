@@ -114,14 +114,24 @@ internal object OfficialSkinStoreClient {
             // that is already present on the device.
             val installedSkin = SkinRepository(context).listInstalledSkins()
                 .firstOrNull { it.id == skin.skinKey || it.id == skin.id }
+            val preferences = context.getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE)
             if (installedSkin != null) {
+                // This ownership response supersedes any stale checkout record.
+                preferences.edit().remove(PENDING_PREFIX + skin.id).commit()
                 return StoreActionResult(
                     true,
                     "Skin is already installed.",
                     installedSkinId = installedSkin.id
                 )
             }
-            return downloadAndInstall(context,skin.id)
+            val installed = downloadAndInstall(context,skin.id)
+            if (installed.success) {
+                // The server has confirmed ownership and the package is now local.
+                // Clear an older pending-order marker so resume reconciliation
+                // cannot start a second installation for the same skin.
+                preferences.edit().remove(PENDING_PREFIX + skin.id).commit()
+            }
+            return installed
         }
         val orderId=result.optString("order_id")
         val pendingSaved = context.getSharedPreferences(PREFERENCES,Context.MODE_PRIVATE).edit()
