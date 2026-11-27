@@ -8,6 +8,28 @@ import org.junit.Test
 
 class OfficialSkinStoreClientTest {
     @Test
+    fun purchasedSkinCanBeReinstalledOnlyWhenMissingLocally() {
+        val purchasedSkin = OfficialStoreSkin(
+            id = "catalog-row-id",
+            skinKey = "package-skin-key",
+            name = "Purchased skin",
+            author = "",
+            description = "",
+            price = 5000L,
+            currency = "IDR",
+            previewUrl = "",
+            owned = true
+        )
+        val unownedSkin = purchasedSkin.copy(owned = false)
+        val freeSkin = purchasedSkin.copy(price = 0L)
+
+        assertTrue(isPurchasedSkinAvailableForReinstall(purchasedSkin, isInstalled = false))
+        assertFalse(isPurchasedSkinAvailableForReinstall(purchasedSkin, isInstalled = true))
+        assertFalse(isPurchasedSkinAvailableForReinstall(unownedSkin, isInstalled = false))
+        assertFalse(isPurchasedSkinAvailableForReinstall(freeSkin, isInstalled = false))
+    }
+
+    @Test
     fun resolvesInstalledSkinByPackageKeyOrCatalogId() {
         val packageSkin = InstalledSkin(
             id = "package-skin-key",
