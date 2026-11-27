@@ -75,6 +75,9 @@ async function hmacSha256Hex(message:string, secret:string) {
 function duitkuBase() {
   return DUITKU_ENV === "production" ? "https://api-prod.duitku.com" : "https://api-sandbox.duitku.com";
 }
+function duitkuTransactionStatusBase() {
+  return DUITKU_ENV === "production" ? "https://passport.duitku.com" : "https://sandbox.duitku.com";
+}
 async function rpc(name:string,args:Record<string,unknown>) {
   const {data,error}=await db.rpc(name,args);
   if(error) throw new Error(error.message);
@@ -173,6 +176,140 @@ async function createPayment(
   }
   throw new Error("unsupported_payment_provider");
 }
+
+async function handleCancel(body:Record<string,unknown>, deviceHash:string, origin:string) {
+  const orderId=String(body.order_id??"").trim();
+  if(!orderId)return fail("invalid_order_id",400,origin);
+  const status=await rpc("skin_order_status",{p_order_id:orderId,p_device_hash:deviceHash});
+  if(!status)return fail("order_not_found",404,origin);
+  if(status.owned||status.status==="paid") {
+    return json({success:true,paid:true,cancelled:false,message:"Pembayaran sudah berhasil. NekOS akan menyelesaikan pemasangan skin."},200,origin);
+  }
+  const active=status.active_payment??null;
+  if(!active) {
+    const terminal=["cancelled","failed","expired","expire","deny","denied"].includes(String(status.status??"").toLowerCase());
+    return json({success:true,cancelled:terminal,checkout_active:false,
+      message:terminal?"Pembelian ini sudah tidak aktif.":"Tidak ada checkout aktif untuk pesanan ini."},200,origin);
+  }
+  const provider=String(active.provider??"");
+  if(provider==="duitku") {
+    assertPaymentConfig("duitku");
+    const signature=await hmacSha256Hex(DUITKU_MERCHANT_CODE+orderId,DUITKU_API_KEY);
+    const duitkuResponse=await fetch(duitkuTransactionStatusBase()+"/webapi/api/merchant/transactionStatus",{
+      method:"POST",
+      headers:{"Content-Type":"application/json","Accept":"application/json"},
+      body:JSON.stringify({merchantCode:DUITKU_MERCHANT_CODE,merchantOrderId:orderId,signature})
+    });
+    if(!duitkuResponse.ok)return fail("duitku_status_check_failed",503,origin);
+    const verified=await duitkuResponse.json();
+    if(String(verified.merchantOrderId??"")!==orderId||
+       !Number.isFinite(Number(verified.amount))||
+       Number(verified.amount)!==Number(status.amount)) {
+      return fail("duitku_transaction_mismatch",502,origin);
+    }
+    const duitkuStatus=String(verified.statusCode??"");
+    if(duitkuStatus==="00") {
+      const granted=await rpc("skin_mark_paid",{
+        p_provider:"duitku",p_provider_order_id:orderId,
+        p_provider_payment_id:String(verified.reference??""),
+        p_payload:{gross_amount:String(verified.amount),currency:"IDR",
+          merchantOrderId:orderId,reference:String(verified.reference??"")}
+      });
+      if(!granted)return fail("duitku_entitlement_grant_failed",500,origin);
+      return json({success:true,paid:true,cancelled:false,
+        message:"Duitku mengonfirmasi pembayaran berhasil. Skin akan tetap dipasang."},200,origin);
+    }
+    if(duitkuStatus==="02") {
+      await rpc("skin_update_payment_status",{p_provider:"duitku",p_provider_order_id:orderId,
+        p_status:"02",p_payload:{statusCode:duitkuStatus,statusMessage:String(verified.statusMessage??"")}});
+      return json({success:true,cancelled:true,checkout_active:false,
+        message:"Invoice Duitku sudah gagal atau kedaluwarsa. Kamu bisa membeli skin ini kembali."},200,origin);
+    }
+    if(duitkuStatus==="01") {
+      return json({success:true,cancelled:false,checkout_active:true,can_close_checkout:true,
+        message:"Pembayaran Duitku masih menunggu. API Duitku tidak menyediakan pembatalan umum untuk invoice ini. Checkout dapat ditutup, tetapi invoice masih bisa dibayar sampai kedaluwarsa (maksimal 60 menit sejak dibuat). NekOS akan tetap memantau status pembayaran."},200,origin);
+    }
+    return fail("duitku_status_check_failed",503,origin);
+  }
+  if(provider!=="midtrans")return fail("unsupported_payment_provider",400,origin);
+  assertPaymentConfig("midtrans");
+  const providerOrderId=String(active.provider_order_id??orderId);
+  const statusUrl=midtransBase()+"/v2/"+encodeURIComponent(providerOrderId)+"/status";
+  const fetchStatus=()=>fetch(statusUrl,{headers:{Authorization:authHeader(),"Accept":"application/json"}});
+  let response=await fetchStatus();
+  if(response.status===404) {
+    return json({success:true,cancelled:false,checkout_active:true,can_close_checkout:true,
+      message:"Checkout Midtrans belum membuat transaksi pembayaran. Halamannya dapat ditutup, tetapi sesi Snap masih mungkin digunakan sampai kedaluwarsa otomatis dalam 15 menit. NekOS akan tetap memantau statusnya."},200,origin);
+  }
+  if(!response.ok)return fail("midtrans_status_check_failed",503,origin);
+  let verified=await response.json();
+  if(String(verified.status_code??"")==="404") {
+    return json({success:true,cancelled:false,checkout_active:true,can_close_checkout:true,
+      message:"Checkout Midtrans belum membuat transaksi pembayaran. Halamannya dapat ditutup, tetapi sesi Snap masih mungkin digunakan sampai kedaluwarsa otomatis dalam 15 menit. NekOS akan tetap memantau statusnya."},200,origin);
+  }
+  if(String(verified.status_code??"")!=="200"||
+     String(verified.order_id??"")!==providerOrderId||
+     String(verified.currency??"").toUpperCase()!=="IDR"||
+     Number(verified.gross_amount)!==Number(status.amount)) {
+    return fail("midtrans_transaction_mismatch",502,origin);
+  }
+  let transactionStatus=String(verified.transaction_status??"").toLowerCase();
+  const fraud=String(verified.fraud_status??"accept").toLowerCase();
+  const markPaid=async(payload:Record<string,unknown>)=>{
+    const granted=await rpc("skin_mark_paid",{
+      p_provider:"midtrans",p_provider_order_id:providerOrderId,
+      p_provider_payment_id:String(payload.transaction_id??""),p_payload:payload
+    });
+    if(!granted)throw new Error("entitlement_grant_failed");
+  };
+  if(transactionStatus==="settlement"||(transactionStatus==="capture"&&fraud==="accept")) {
+    await markPaid(verified);
+    return json({success:true,paid:true,cancelled:false,message:"Pembayaran sudah berhasil. Skin tidak dibatalkan dan akan dipasang."},200,origin);
+  }
+  if(["cancel","expire","deny"].includes(transactionStatus)) {
+    await rpc("skin_update_payment_status",{p_provider:"midtrans",p_provider_order_id:providerOrderId,
+      p_status:transactionStatus,p_payload:verified});
+    return json({success:true,cancelled:true,checkout_active:false,
+      message:"Transaksi Midtrans sudah tidak aktif. Kamu bisa membeli skin ini kembali."},200,origin);
+  }
+  if(!["pending","authorize","capture"].includes(transactionStatus)) {
+    return fail("midtrans_transaction_not_cancellable",409,origin);
+  }
+  const cancelResponse=await fetch(midtransBase()+"/v2/"+encodeURIComponent(providerOrderId)+"/cancel",{
+    method:"POST",
+    headers:{Authorization:authHeader(),"Accept":"application/json","Content-Type":"application/json"}
+  });
+  let cancelResult:Record<string,unknown>={};
+  if(cancelResponse.ok)cancelResult=await cancelResponse.json();
+  response=await fetchStatus();
+  if(!response.ok)return fail("midtrans_cancel_verification_failed",503,origin);
+  verified=await response.json();
+  if(String(verified.status_code??"")!=="200"||
+     String(verified.order_id??"")!==providerOrderId||
+     Number(verified.gross_amount)!==Number(status.amount)||
+     String(verified.currency??"").toUpperCase()!=="IDR") {
+    return fail("midtrans_cancel_verification_failed",503,origin);
+  }
+  transactionStatus=String(verified.transaction_status??"").toLowerCase();
+  const verifiedFraud=String(verified.fraud_status??"accept").toLowerCase();
+  if(transactionStatus==="settlement"||(transactionStatus==="capture"&&verifiedFraud==="accept")) {
+    await markPaid(verified);
+    return json({success:true,paid:true,cancelled:false,message:"Pembayaran berhasil tepat saat pembatalan diproses. Skin akan tetap dipasang."},200,origin);
+  }
+  if(transactionStatus!=="cancel") {
+    console.error("skin_store_midtrans_cancel_not_confirmed",JSON.stringify({
+      order_id:orderId,http_status:cancelResponse.status,
+      cancel_status_code:String(cancelResult.status_code??""),
+      transaction_status:transactionStatus
+    }));
+    return fail("midtrans_cancel_not_confirmed",409,origin);
+  }
+  await rpc("skin_update_payment_status",{p_provider:"midtrans",p_provider_order_id:providerOrderId,
+    p_status:"cancel",p_payload:verified});
+  return json({success:true,cancelled:true,checkout_active:false,
+    message:"Pembelian berhasil dibatalkan. Kamu bisa membeli skin ini kembali."},200,origin);
+}
+
 async function handleWebhook(req:Request) {
   try { assertPaymentConfig("midtrans"); } catch { return fail("midtrans_not_configured",503); }
   const body=await req.json();
@@ -264,6 +401,7 @@ Deno.serve(async(req:Request)=>{
     if(req.method!=="POST")return fail("method_not_allowed",405,origin);
     const body=await req.json();
     const deviceHash=await hmacDevice(String(body.android_id??""));
+    if(path==="cancel")return await handleCancel(body,deviceHash,origin);
     const appVersion=String(body.app_version??"").slice(0,32)||null;
     if(path==="purchase") {
       const skinId=String(body.skin_id??"");

@@ -482,6 +482,27 @@ internal fun NekOSRoot(
             pendingStoreSkinIds = OfficialSkinStoreClient.pendingSkinIds(context)
         }
     }
+    fun cancelStoreCheckout(skin: OfficialStoreSkin) {
+        storeCheckout = null
+        skinPickerScope.launch {
+            storeBusySkinId = skin.id
+            val result = withContext(Dispatchers.IO) {
+                runCatching { OfficialSkinStoreClient.cancelPurchase(context, skin) }
+                    .getOrElse { StoreActionResult(false, it.message ?: "Unable to cancel this purchase.") }
+            }
+            storeBusySkinId = null
+            if (result.success && result.installedSkinId != null) {
+                installedSkins = skinRepository.listInstalledSkins()
+                iconCatalogRepository.invalidateSkinCache()
+                Toast.makeText(context, "Payment confirmed. Skin installed.", Toast.LENGTH_LONG).show()
+            } else if (result.paymentFailed) {
+                Toast.makeText(context, result.message, Toast.LENGTH_LONG).show()
+            } else {
+                Toast.makeText(context, result.message, Toast.LENGTH_LONG).show()
+            }
+            pendingStoreSkinIds = OfficialSkinStoreClient.pendingSkinIds(context)
+        }
+    }
     val skinPicker = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument()
     ) { uri ->
@@ -1424,7 +1445,8 @@ internal fun NekOSRoot(
                 checkoutUrl = checkoutUrl,
                 provider = provider,
                 onDismiss = { closeStoreCheckout(skin) },
-                onPaymentFinished = { closeStoreCheckout(skin) }
+                onPaymentFinished = { closeStoreCheckout(skin) },
+                onCancelPurchase = { cancelStoreCheckout(skin) }
             )
         }
     }

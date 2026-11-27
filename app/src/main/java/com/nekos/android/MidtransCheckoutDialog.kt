@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -72,9 +73,11 @@ internal fun StoreCheckoutDialog(
     checkoutUrl: String,
     provider: String,
     onDismiss: () -> Unit,
-    onPaymentFinished: () -> Unit
+    onPaymentFinished: () -> Unit,
+    onCancelPurchase: () -> Unit
 ) {
     var paymentWebView by remember { mutableStateOf<WebView?>(null) }
+    var showCancelConfirmation by remember { mutableStateOf(false) }
     val trustedUrl = remember(checkoutUrl, provider) { isTrustedStoreCheckout(checkoutUrl, provider) }
 
     BackHandler {
@@ -129,7 +132,7 @@ internal fun StoreCheckoutDialog(
 
                 if (!trustedUrl) {
                     Column(
-                        modifier = Modifier.fillMaxSize().padding(24.dp),
+                        modifier = Modifier.weight(1f).fillMaxWidth().padding(24.dp),
                         verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
@@ -142,7 +145,7 @@ internal fun StoreCheckoutDialog(
                     }
                 } else {
                     AndroidView(
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier.weight(1f).fillMaxWidth(),
                         factory = { context ->
                             WebView(context).apply {
                                 paymentWebView = this
@@ -190,8 +193,47 @@ internal fun StoreCheckoutDialog(
                             }
                         }
                     )
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        TextButton(onClick = { showCancelConfirmation = true }) {
+                            Text(
+                                if (provider.equals("duitku", ignoreCase = true))
+                                    "TUTUP CHECKOUT"
+                                else "BATALKAN PEMBELIAN",
+                                color = Color(0xFF9B3D35),
+                                fontSize = 11.sp
+                            )
+                        }
+                    }
                 }
             }
         }
+    }
+
+    if (showCancelConfirmation) {
+        val isDuitku = provider.equals("duitku", ignoreCase = true)
+        AlertDialog(
+            onDismissRequest = { showCancelConfirmation = false },
+            title = { Text(if (isDuitku) "Tutup checkout?" else "Batalkan pembelian?") },
+            text = {
+                Text(
+                    if (isDuitku)
+                        "Duitku tidak menyediakan pembatalan umum untuk invoice ini. Menutup checkout tidak membatalkan invoice; invoice masih dapat dibayar sampai kedaluwarsa. NekOS akan tetap memantau pembayarannya."
+                    else
+                        "NekOS akan meminta Midtrans membatalkan transaksi. Jika pembayaran ternyata sudah berhasil, pembelian tidak akan dibatalkan dan skin tetap dipasang. Jika kamu belum memilih metode pembayaran sehingga transaksi belum dibuat, sesi checkout tidak dapat dibatalkan langsung dan akan kedaluwarsa otomatis dalam 15 menit."
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    showCancelConfirmation = false
+                    onCancelPurchase()
+                }) { Text(if (isDuitku) "TUTUP CHECKOUT" else "YA, BATALKAN") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showCancelConfirmation = false }) { Text("KEMBALI") }
+            }
+        )
     }
 }

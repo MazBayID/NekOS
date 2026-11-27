@@ -73,6 +73,10 @@ internal object OfficialSkinStoreClient {
                         "midtrans_expire_permission_required" -> "Agar transaksi otomatis ditutup setelah 15 menit, aktifkan izin 'Expire transaction: Write' pada Access Key Midtrans."
                         "midtrans_expire_failed" -> "Midtrans belum berhasil menutup transaksi. Silakan periksa kembali status pembayaran."
                         "midtrans_status_check_failed" -> "NekOS gagal memeriksa status pembayaran ke Midtrans. Coba lagi beberapa saat."
+                        "midtrans_cancel_not_confirmed" -> "Midtrans belum mengonfirmasi pembatalan. Periksa status pembayaran sebelum mencoba lagi."
+                        "midtrans_cancel_verification_failed" -> "NekOS belum dapat memastikan hasil pembatalan Midtrans. Periksa status pembayaran beberapa saat lagi."
+                        "duitku_status_check_failed" -> "NekOS belum dapat memverifikasi status invoice Duitku. Coba periksa lagi beberapa saat."
+                        "duitku_transaction_mismatch" -> "Data invoice Duitku tidak cocok dengan pesanan NekOS. Pembatalan tidak dilakukan."
                         else -> json.optString("error").ifBlank { "Store request failed ($code)" }
                     }
                 })
@@ -124,6 +128,33 @@ internal object OfficialSkinStoreClient {
         return StoreActionResult(true,"Complete payment in the opened payment page, then return to NekOS.",
             checkoutUrl=result.optString("checkout_url"),orderId=orderId,
             paymentProvider=result.optString("provider",provider))
+    }
+
+    @Synchronized
+    fun cancelPurchase(context: Context, skin: OfficialStoreSkin): StoreActionResult {
+        val prefs=context.getSharedPreferences(PREFERENCES,Context.MODE_PRIVATE)
+        val orderId=prefs.getString(PENDING_PREFIX+skin.id,null)
+            ?: return StoreActionResult(false,"Tidak ada pembelian tertunda untuk skin ini.")
+        val result=request("/cancel","POST",JSONObject()
+            .put("android_id",androidId(context))
+            .put("app_version",appVersion(context))
+            .put("order_id",orderId))
+        if(result.optBoolean("paid")) return checkPaymentAndInstall(context,skin)
+        if(result.optBoolean("cancelled")) {
+            val cleared=prefs.edit().remove(PENDING_PREFIX+skin.id).commit()
+            return StoreActionResult(
+                false,
+                if(cleared) result.optString("message","Pembelian dibatalkan.")
+                else "Pembelian sudah dibatalkan di server, tetapi catatan lokal belum dapat dibersihkan. NekOS akan menyinkronkannya kembali.",
+                orderId=orderId,
+                paymentFailed=cleared
+            )
+        }
+        return StoreActionResult(
+            false,
+            result.optString("message","Checkout ditutup. Status pembayaran tetap dipantau NekOS."),
+            orderId=orderId
+        )
     }
 
     @Synchronized
