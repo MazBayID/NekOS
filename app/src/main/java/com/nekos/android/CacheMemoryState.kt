@@ -4,7 +4,7 @@ import android.content.ComponentCallbacks2
 
 /**
  * Release decoded launcher artwork as soon as the launcher is hidden.
- * Artwork is restored from the existing disk-backed caches when the launcher resumes.
+ * Artwork is loaded again from its existing sources when the launcher resumes.
  */
 internal fun shouldTrimLauncherCaches(level: Int): Boolean =
     level == ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL ||
