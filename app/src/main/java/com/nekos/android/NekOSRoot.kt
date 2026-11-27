@@ -148,6 +148,8 @@ internal fun NekOSRoot(
     var apps by remember { mutableStateOf(emptyList<InstalledApp>()) }
     val collectionScope = rememberCoroutineScope()
     val collectionWriteMutex = remember { Mutex() }
+    // Prevent catalog cleanup from overlapping index-based reorder gestures.
+    val collectionMutationGate = remember { Mutex() }
     var collectionsLoaded by remember { mutableStateOf(false) }
     var favoritePackages by remember { mutableStateOf(List(15) { null as String? }) }
     var favoriteStorageWritable by remember { mutableStateOf(false) }
@@ -174,6 +176,10 @@ internal fun NekOSRoot(
     var tagPendingDelete by remember { mutableStateOf<NekTag?>(null) }
     var favoriteOrderSnapshot by remember { mutableStateOf<List<String?>?>(null) }
     var tagOrderSnapshot by remember { mutableStateOf<List<NekTag>?>(null) }
+    var favoriteReorderOwner by remember { mutableStateOf<Any?>(null) }
+    var tagReorderOwner by remember { mutableStateOf<Any?>(null) }
+    var favoriteReorderSaving by remember { mutableStateOf(false) }
+    var tagReorderSaving by remember { mutableStateOf(false) }
     var activeTagPage by remember { mutableIntStateOf(0) }
     // Restored launcher tasks render Home immediately while the app catalog refreshes.
     var isInitialLoadComplete by remember { mutableStateOf(skipStartupSplash) }
@@ -203,13 +209,9 @@ internal fun NekOSRoot(
             if (!isInitialLoadComplete) isInitialLoadComplete = true
             return@LaunchedEffect
         }
-        // Do not mutate Favorite or Tag collections while a reorder gesture is
-        // still using index-based positions and a pre-refresh rollback snapshot.
-        // The gesture completion commits or restores its state before cleanup runs.
-        snapshotFlow {
-            favoriteOrderSnapshot == null && tagOrderSnapshot == null
-        }.first { reorderFinished -> reorderFinished }
-
+        // The mutation gate is acquired before the collection mutex. A reorder
+        // gesture holds this gate from start through durable save/rollback, while
+        // catalog cleanup holds it for its complete reconciliation transaction.
         catalogLoadFailed = false
         val refreshedApps = refreshedCatalog.apps
         // Keep the current list and decoded icon cache when a refresh finds no catalog changes.
@@ -217,6 +219,7 @@ internal fun NekOSRoot(
             apps = refreshedApps
         }
         lastAppliedRefreshToken = refreshToken
+        collectionMutationGate.withLock {
         collectionWriteMutex.withLock {
             val currentProfileSerialNumber = context
             .getSystemService(UserManager::class.java)
@@ -302,6 +305,7 @@ internal fun NekOSRoot(
                     Toast.LENGTH_LONG
                 ).show()
             }
+        }
         }
         }
         isInitialLoadComplete = true
@@ -635,10 +639,20 @@ internal fun NekOSRoot(
                 favoriteDrag = null
                 cancelDropBounds = null
 
-                favoriteOrderSnapshot?.let { favoritePackages = it }
-                favoriteOrderSnapshot = null
-                tagOrderSnapshot?.let { tags = it }
-                tagOrderSnapshot = null
+                if (favoriteReorderOwner != null && !favoriteReorderSaving) {
+                    favoriteOrderSnapshot?.let { favoritePackages = it }
+                    favoriteOrderSnapshot = null
+                    val owner = favoriteReorderOwner
+                    favoriteReorderOwner = null
+                    if (owner != null) collectionMutationGate.unlock(owner)
+                }
+                if (tagReorderOwner != null && !tagReorderSaving) {
+                    tagOrderSnapshot?.let { tags = it }
+                    tagOrderSnapshot = null
+                    val owner = tagReorderOwner
+                    tagReorderOwner = null
+                    if (owner != null) collectionMutationGate.unlock(owner)
+                }
 
                 actionMenuApp = null
                 clearActionMenuPreview()
@@ -727,7 +741,9 @@ internal fun NekOSRoot(
             onFavoriteSlotBounds = { index, bounds -> favoriteSlotBounds[index] = bounds },
             favoriteDropTarget = favoriteDrag?.takeIf { it.hasMoved }?.targetIndex,
             onFavoriteReorder = { fromIndex, toIndex ->
-                if (fromIndex != toIndex && fromIndex in 0 until 15 && toIndex in 0 until 15) {
+                if (favoriteReorderOwner != null &&
+                    fromIndex != toIndex && fromIndex in 0 until 15 && toIndex in 0 until 15
+                ) {
                     val updated = MutableList(15) { favoritePackages.getOrNull(it) }
                     val moved = updated[fromIndex]
                     updated[fromIndex] = updated[toIndex]
@@ -736,42 +752,84 @@ internal fun NekOSRoot(
                 }
             },
             onFavoriteReorderStart = {
-                favoriteOrderSnapshot = favoritePackages.toList()
+                val owner = Any()
+                if (collectionMutationGate.tryLock(owner)) {
+                    favoriteReorderOwner = owner
+                    favoriteReorderSaving = false
+                    favoriteOrderSnapshot = favoritePackages.toList()
+                } else {
+                    favoriteReorderOwner = null
+                    favoriteOrderSnapshot = null
+                }
             },
             onFavoriteReorderEnd = { cancelled ->
+                val owner = favoriteReorderOwner
                 val snapshot = favoriteOrderSnapshot
-                if (cancelled) {
+                if (owner != null && cancelled) {
                     if (snapshot != null) favoritePackages = snapshot
                     favoriteOrderSnapshot = null
-                } else {
+                    favoriteReorderOwner = null
+                    collectionMutationGate.unlock(owner)
+                } else if (owner != null) {
+                    favoriteReorderSaving = true
                     collectionScope.launch {
-                        if (!updateFavorites { favoritePackages } && snapshot != null) {
-                            favoritePackages = snapshot
+                        try {
+                            if (!updateFavorites { favoritePackages } && snapshot != null) {
+                                favoritePackages = snapshot
+                            }
+                        } finally {
+                            if (favoriteReorderOwner === owner) {
+                                favoriteOrderSnapshot = null
+                                favoriteReorderOwner = null
+                                favoriteReorderSaving = false
+                                collectionMutationGate.unlock(owner)
+                            }
                         }
-                        favoriteOrderSnapshot = null
                     }
                 }
             },
             onTagClick = { tag -> viewingTag = tag },
             onTagOptionsClick = { tag -> actionMenuTag = tag },
             onTagReorder = { fromIndex, toIndex ->
-                val sourceId = tags.getOrNull(fromIndex)?.id
-                if (sourceId != null) {
-                    tags = moveTagToIndex(tags, sourceId, toIndex)
+                if (tagReorderOwner != null) {
+                    val sourceId = tags.getOrNull(fromIndex)?.id
+                    if (sourceId != null) {
+                        tags = moveTagToIndex(tags, sourceId, toIndex)
+                    }
                 }
             },
             onTagReorderStart = {
-                tagOrderSnapshot = tags.toList()
+                val owner = Any()
+                if (collectionMutationGate.tryLock(owner)) {
+                    tagReorderOwner = owner
+                    tagReorderSaving = false
+                    tagOrderSnapshot = tags.toList()
+                } else {
+                    tagReorderOwner = null
+                    tagOrderSnapshot = null
+                }
             },
             onTagReorderEnd = { cancelled ->
+                val owner = tagReorderOwner
                 val snapshot = tagOrderSnapshot
-                if (cancelled) {
+                if (owner != null && cancelled) {
                     if (snapshot != null) tags = snapshot
                     tagOrderSnapshot = null
-                } else {
+                    tagReorderOwner = null
+                    collectionMutationGate.unlock(owner)
+                } else if (owner != null) {
+                    tagReorderSaving = true
                     collectionScope.launch {
-                        if (!saveTags { tags } && snapshot != null) tags = snapshot
-                        tagOrderSnapshot = null
+                        try {
+                            if (!saveTags { tags } && snapshot != null) tags = snapshot
+                        } finally {
+                            if (tagReorderOwner === owner) {
+                                tagOrderSnapshot = null
+                                tagReorderOwner = null
+                                tagReorderSaving = false
+                                collectionMutationGate.unlock(owner)
+                            }
+                        }
                     }
                 }
             },
