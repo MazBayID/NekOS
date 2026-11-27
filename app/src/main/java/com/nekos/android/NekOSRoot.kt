@@ -196,8 +196,8 @@ internal fun NekOSRoot(
 
         catalogLoadFailed = false
         val refreshedApps = refreshedCatalog.apps
-        // This effect runs only for initial load or a real package/profile refresh.
-        if (refreshToken != lastAppliedRefreshToken || !hasSameAppCatalog(apps, refreshedApps)) {
+        // Keep the current list and decoded icon cache when a refresh finds no catalog changes.
+        if (!hasSameAppCatalog(apps, refreshedApps)) {
             apps = refreshedApps
         }
         lastAppliedRefreshToken = refreshToken
