@@ -136,7 +136,7 @@ internal object OfficialSkinStoreClient {
         if (!result.optBoolean("owned")) {
             val status=result.optString("status").lowercase()
             val failureMessage = when (status) {
-                "expire", "expired", "failed" -> "Pembayaran gagal atau kedaluwarsa. Midtrans belum mengonfirmasi pembayaran, jadi skin belum bisa dipasang. Kamu bisa mencoba membeli skin ini lagi."
+                "expire", "expired", "failed" -> "Pembayaran gagal atau kedaluwarsa. Penyedia pembayaran belum mengonfirmasi pembayaran, jadi skin belum bisa dipasang. Kamu bisa mencoba membeli skin ini lagi."
                 "cancel", "cancelled" -> "Pembayaran dibatalkan. Tidak ada skin yang dipasang dan kamu bisa mencoba membeli lagi."
                 "deny", "denied" -> "Pembayaran ditolak oleh penyedia pembayaran. Silakan coba metode pembayaran lain."
                 else -> null
