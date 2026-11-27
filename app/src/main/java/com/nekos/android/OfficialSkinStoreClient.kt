@@ -75,6 +75,8 @@ internal object OfficialSkinStoreClient {
                         "midtrans_status_check_failed" -> "NekOS gagal memeriksa status pembayaran ke Midtrans. Coba lagi beberapa saat."
                         "midtrans_cancel_not_confirmed" -> "Midtrans belum mengonfirmasi pembatalan. Periksa status pembayaran sebelum mencoba lagi."
                         "midtrans_cancel_verification_failed" -> "NekOS belum dapat memastikan hasil pembatalan Midtrans. Periksa status pembayaran beberapa saat lagi."
+                        "duitku_status_check_failed" -> "NekOS belum dapat memverifikasi status invoice Duitku. Coba periksa lagi beberapa saat."
+                        "duitku_transaction_mismatch" -> "Data invoice Duitku tidak cocok dengan pesanan NekOS. Pembatalan tidak dilakukan."
                         else -> json.optString("error").ifBlank { "Store request failed ($code)" }
                     }
                 })
