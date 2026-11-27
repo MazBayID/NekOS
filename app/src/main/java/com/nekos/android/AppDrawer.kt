@@ -189,6 +189,9 @@ internal fun AppDrawer(
             value = searchQuery,
             onValueChange = { searchQuery = it },
             placeholder = { Text("Search apps", color = Muted) },
+            leadingIcon = {
+                SkinUiIcon("icon_search.webp", Muted, "Search apps", Modifier.size(18.dp))
+            },
             singleLine = true,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
             keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() }),
@@ -207,7 +210,11 @@ internal fun AppDrawer(
             trailingIcon = {
                 if (searchQuery.isNotEmpty()) {
                     TextButton(onClick = { searchQuery = "" }) {
-                        Text("Clear", color = Muted)
+                        Row(verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                            SkinUiIcon("icon_close.webp", Muted, null, Modifier.size(14.dp))
+                            Text("Clear", color = Muted)
+                        }
                     }
                 }
             },

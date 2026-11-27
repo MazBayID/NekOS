@@ -147,8 +147,22 @@ fun TagAppsDialog(
                 }
             }
         },
-        confirmButton = { TextButton(onClick = onEdit) { Text("Edit tag") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Close") } }
+        confirmButton = {
+            TextButton(onClick = onEdit) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    SkinUiIcon("icon_pencil.webp", SettingsAccent, null, Modifier.size(15.dp))
+                    Text("Edit tag")
+                }
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    SkinUiIcon("icon_close.webp", SettingsAccent, null, Modifier.size(15.dp))
+                    Text("Close")
+                }
+            }
+        }
     )
 }
 
@@ -251,7 +265,10 @@ fun TagActionsDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text("Close", style = MaterialTheme.typography.labelSmall)
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    SkinUiIcon("icon_close.webp", SettingsAccent, null, Modifier.size(14.dp))
+                    Text("Close", style = MaterialTheme.typography.labelSmall)
+                }
             }
         }
     )

@@ -126,6 +126,16 @@ private fun OfficialStoreActionButton(
                     drawCircle(contentColor, radius = size.minDimension * 0.075f, center = androidx.compose.ui.geometry.Offset(size.width * 0.82f, size.height * 0.88f))
                 }
             }
+            SkinUiIcon(
+                fileName = when (label) {
+                    "INSTALLED" -> "icon_check.webp"
+                    "PLEASE WAIT…" -> "icon_refresh.webp"
+                    else -> "icon_download.webp"
+                },
+                tint = if (enabled) contentColor else SettingsMuted,
+                contentDescription = null,
+                modifier = Modifier.size(13.dp)
+            )
             Text(
                 label,
                 color = if (enabled) contentColor else SettingsMuted,
@@ -301,11 +311,11 @@ internal fun NekOSSettingsDialog(
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             if (page != SettingsPage.MAIN) {
-                                Text(
-                                    "‹",
-                                    color = SettingsAccent,
-                                    fontSize = 30.sp,
-                                    modifier = Modifier.clickable {
+                                SkinUiIcon(
+                                    fileName = "icon_arrow_left.webp",
+                                    tint = SettingsAccent,
+                                    contentDescription = "Back",
+                                    modifier = Modifier.size(21.dp).clickable {
                                         page = if (page == SettingsPage.OFFICIAL_SKIN_STORE) {
                                             SettingsPage.SKINS
                                         } else {
@@ -341,14 +351,17 @@ internal fun NekOSSettingsDialog(
                         SettingsSectionTitle("APPEARANCE")
                         SettingsListRow(
                             title = "Wallpaper",
+                            iconFileName = "icon_image.webp",
                             onClick = { page = SettingsPage.WALLPAPER }
                         )
                         SettingsListRow(
                             title = "Launcher theme",
+                            iconFileName = "icon_palette.webp",
                             onClick = { page = SettingsPage.LAUNCHER_THEME }
                         )
                         SettingsListRow(
                             title = "Skins",
+                            iconFileName = "icon_grid.webp",
                             trailing = "Manage",
                             onClick = { page = SettingsPage.SKINS }
                         )
@@ -356,11 +369,13 @@ internal fun NekOSSettingsDialog(
                         SettingsSectionTitle("BEHAVIOR")
                         SettingsListRow(
                             title = "Default launcher",
+                            iconFileName = "icon_home.webp",
                             trailing = if (isDefaultLauncher) "Active" else "Choose",
                             onClick = onSetAsHome
                         )
                         SettingsListRow(
                             title = "Gesture hints",
+                            iconFileName = "icon_help.webp",
                             onClick = onShowDrawerHint
                         )
 
@@ -390,8 +405,12 @@ internal fun NekOSSettingsDialog(
                                 Text("Version $appVersion", color = SettingsMuted, fontSize = 11.sp)
                             }
                             TextButton(onClick = onOpenRepository) {
-                                Text("GitHub", color = SettingsAccent, fontSize = 12.sp,
-                                    fontWeight = FontWeight.SemiBold)
+                                Row(verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    SkinUiIcon("icon_share.webp", SettingsAccent, null, Modifier.size(15.dp))
+                                    Text("GitHub", color = SettingsAccent, fontSize = 12.sp,
+                                        fontWeight = FontWeight.SemiBold)
+                                }
                             }
                         }
                     }
@@ -426,7 +445,7 @@ internal fun NekOSSettingsDialog(
                             ) {
                                 Text(label, color = SettingsInk, fontSize = 13.sp,
                                     fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal)
-                                if (selected) Text("✓", color = SettingsAccent, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                                if (selected) SkinUiIcon("icon_check.webp", SettingsAccent, "Selected", Modifier.size(17.dp))
                             }
                         }
                         SettingsSectionTitle("BUILT-IN WALLPAPERS")
@@ -467,7 +486,7 @@ internal fun NekOSSettingsDialog(
                                     )
                                 }
                                 if (selected) {
-                                    Text("✓", color = SettingsAccent, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                                    SkinUiIcon("icon_check.webp", SettingsAccent, "Selected", Modifier.size(20.dp))
                                 }
                             }
                         }
@@ -475,6 +494,7 @@ internal fun NekOSSettingsDialog(
                         SettingsActionCard(
                             title = if (hasWallpaper) "Change wallpaper" else "Choose from gallery",
                             action = "Choose",
+                            iconFileName = "icon_image.webp",
                             surface = optionSurface,
                             onClick = onChooseWallpaper
                         )
@@ -482,6 +502,7 @@ internal fun NekOSSettingsDialog(
                             SettingsActionCard(
                                 title = "Remove photo",
                                 action = "Remove",
+                                iconFileName = "icon_trash.webp",
                                 surface = optionSurface,
                                 onClick = onClearWallpaper
                             )
@@ -516,7 +537,7 @@ internal fun NekOSSettingsDialog(
                                     ) {
                                         Text(option.label, color = SettingsInk, fontSize = 13.sp,
                                             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal)
-                                        if (selected) Text("✓", color = SettingsAccent, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+                                        if (selected) SkinUiIcon("icon_check.webp", SettingsAccent, "Selected", Modifier.size(16.dp))
                                     }
                                 }
                                 if (pair.size == 1) Spacer(Modifier.weight(1f))
@@ -560,8 +581,10 @@ internal fun NekOSSettingsDialog(
                                             color = SettingsInk,
                                             fontSize = 12.sp,
                                             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
-                                            maxLines = 1
+                                            maxLines = 1,
+                                            modifier = Modifier.weight(1f)
                                         )
+                                        if (selected) SkinUiIcon("icon_check.webp", SettingsAccent, "Selected", Modifier.size(15.dp))
                                     }
                                 }
                                 if (pair.size < 3) repeat(3 - pair.size) { Spacer(Modifier.weight(1f)) }
@@ -647,19 +670,24 @@ internal fun NekOSSettingsDialog(
                                     )
                                 }
                                 if (selected) {
-                                    Text("Active", color = SettingsAccent, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                                    Row(verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                                        SkinUiIcon("icon_check.webp", SettingsAccent, "Active", Modifier.size(13.dp))
+                                        Text("Active", color = SettingsAccent, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                                    }
                                 }
                                 if (!skin.isBuiltIn) {
-                                    Text(
-                                        "Remove",
-                                        color = SettingsAccent,
-                                        fontSize = 11.sp,
-                                        fontWeight = FontWeight.Medium,
-                                        modifier = Modifier
-                                            .clip(RoundedCornerShape(6.dp))
+                                    Row(
+                                        modifier = Modifier.clip(RoundedCornerShape(6.dp))
                                             .clickable { onDeleteSkin(skin.id) }
-                                            .padding(horizontal = 7.dp, vertical = 6.dp)
-                                    )
+                                            .padding(horizontal = 7.dp, vertical = 6.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        SkinUiIcon("icon_trash.webp", SettingsAccent, "Remove skin", Modifier.size(14.dp))
+                                        Text("Remove", color = SettingsAccent, fontSize = 11.sp,
+                                            fontWeight = FontWeight.Medium)
+                                    }
                                 }
                             }
                         }
@@ -667,12 +695,14 @@ internal fun NekOSSettingsDialog(
                         SettingsActionCard(
                             title = "Browse official skins",
                             action = "Explore",
+                            iconFileName = "icon_cloud.webp",
                             surface = optionSurface,
                             onClick = { page = SettingsPage.OFFICIAL_SKIN_STORE }
                         )
                         SettingsActionCard(
                             title = "Import skin ZIP",
                             action = "Import",
+                            iconFileName = "icon_upload.webp",
                             surface = optionSurface,
                             onClick = onImportSkin
                         )
@@ -704,11 +734,11 @@ internal fun NekOSSettingsDialog(
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                                 ) {
-                                    Text(
-                                        "⟳",
-                                        color = Color(0xFF287C9B),
-                                        fontSize = 17.sp,
-                                        fontWeight = FontWeight.Bold
+                                    SkinUiIcon(
+                                        "icon_refresh.webp",
+                                        Color(0xFF287C9B),
+                                        "Refresh skins",
+                                        Modifier.size(16.dp)
                                     )
                                     Text(
                                         if (isOfficialStoreLoading) "LOADING…" else "REFRESH",
@@ -838,11 +868,20 @@ internal fun NekOSSettingsDialog(
                                     else -> ({ page = SettingsPage.MAIN })
                                 }
                             ) {
-                                Text(
-                                    if (page == SettingsPage.MAIN) "Done" else "Back",
-                                    color = SettingsAccent,
-                                    fontWeight = FontWeight.SemiBold
-                                )
+                                Row(verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    SkinUiIcon(
+                                        if (page == SettingsPage.MAIN) "icon_check.webp" else "icon_arrow_left.webp",
+                                        SettingsAccent,
+                                        null,
+                                        Modifier.size(16.dp)
+                                    )
+                                    Text(
+                                        if (page == SettingsPage.MAIN) "Done" else "Back",
+                                        color = SettingsAccent,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                }
                             }
                         }
                     }

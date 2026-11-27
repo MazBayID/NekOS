@@ -103,6 +103,7 @@ internal fun SettingsNavigationCard(
 @Composable
 internal fun SettingsListRow(
     title: String,
+    iconFileName: String,
     trailing: String? = null,
     onClick: () -> Unit
 ) {
@@ -119,6 +120,12 @@ internal fun SettingsListRow(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            SkinUiIcon(
+                fileName = iconFileName,
+                tint = SettingsAccent,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp)
+            )
             Text(
                 title,
                 color = SettingsInk,
@@ -129,7 +136,12 @@ internal fun SettingsListRow(
             if (!trailing.isNullOrBlank()) {
                 Text(trailing, color = SettingsMuted, fontSize = 11.sp)
             }
-            Text("›", color = SettingsMuted, fontSize = 21.sp)
+            SkinUiIcon(
+                fileName = "icon_chevron_right.webp",
+                tint = SettingsMuted,
+                contentDescription = null,
+                modifier = Modifier.size(16.dp)
+            )
         }
     }
 }
@@ -177,6 +189,7 @@ internal fun SettingsBrushSeparator(modifier: Modifier = Modifier) {
 internal fun SettingsActionCard(
     title: String,
     action: String,
+    iconFileName: String,
     surface: Color,
     onClick: () -> Unit
 ) {
@@ -191,6 +204,12 @@ internal fun SettingsActionCard(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
+        SkinUiIcon(
+            fileName = iconFileName,
+            tint = SettingsAccent,
+            contentDescription = null,
+            modifier = Modifier.size(19.dp)
+        )
         Text(title, color = SettingsInk, fontWeight = FontWeight.SemiBold, fontSize = 13.sp,
             modifier = Modifier.weight(1f))
         Text(action, color = SettingsAccent, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)

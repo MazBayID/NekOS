@@ -148,10 +148,23 @@ fun TagManagementDialog(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Tag icon", color = Color(0xFF34332F), style = MaterialTheme.typography.labelSmall,
-                            modifier = Modifier.weight(1f))
-                        TextButton(onClick = { showIconColorPicker = true }) { Text("Icon color", style = MaterialTheme.typography.labelSmall) }
-                        TextButton(onClick = { selectedIcon = null }) { Text("Clear", style = MaterialTheme.typography.labelSmall) }
+                        Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            SkinUiIcon("icon_tag.webp", SettingsAccent, null, Modifier.size(14.dp))
+                            Text("Tag icon", color = Color(0xFF34332F), style = MaterialTheme.typography.labelSmall)
+                        }
+                        TextButton(onClick = { showIconColorPicker = true }) {
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                                SkinUiIcon("icon_palette.webp", SettingsAccent, null, Modifier.size(13.dp))
+                                Text("Icon color", style = MaterialTheme.typography.labelSmall)
+                            }
+                        }
+                        TextButton(onClick = { selectedIcon = null }) {
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                                SkinUiIcon("icon_close.webp", SettingsAccent, null, Modifier.size(13.dp))
+                                Text("Clear", style = MaterialTheme.typography.labelSmall)
+                            }
+                        }
                     }
                     LazyRow(
                         state = iconCarouselState,
@@ -195,7 +208,10 @@ fun TagManagementDialog(
                 }
 
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text("App assignment", color = Color(0xFF34332F), style = MaterialTheme.typography.labelSmall)
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        SkinUiIcon("icon_grid.webp", SettingsAccent, null, Modifier.size(14.dp))
+                        Text("App assignment", color = Color(0xFF34332F), style = MaterialTheme.typography.labelSmall)
+                    }
                     Row(
                         modifier = Modifier.fillMaxWidth()
                             .clip(RoundedCornerShape(12.dp))
@@ -208,6 +224,7 @@ fun TagManagementDialog(
                             .padding(horizontal = 12.dp, vertical = 7.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        SkinUiIcon("icon_plus.webp", SettingsAccent, null, Modifier.size(16.dp))
                         Text(
                             "${selectedPackages.size} apps selected",
                             color = Color(0xFF34332F),
@@ -241,12 +258,27 @@ fun TagManagementDialog(
                         ).normalized()
                     )
                 }
-            ) { Text("Save", style = MaterialTheme.typography.labelSmall) }
+             ) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    SkinUiIcon("icon_check.webp", SettingsAccent, null, Modifier.size(14.dp))
+                    Text("Save", style = MaterialTheme.typography.labelSmall)
+                }
+            }
         },
         dismissButton = {
             Row {
-                if (tag != null) TextButton(onClick = { onDelete(tag) }) { Text("Delete", style = MaterialTheme.typography.labelSmall) }
-                TextButton(onClick = onDismiss) { Text("Cancel", style = MaterialTheme.typography.labelSmall) }
+                if (tag != null) TextButton(onClick = { onDelete(tag) }) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        SkinUiIcon("icon_trash.webp", Color(0xFFB3261E), null, Modifier.size(14.dp))
+                        Text("Delete", style = MaterialTheme.typography.labelSmall)
+                    }
+                }
+                TextButton(onClick = onDismiss) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        SkinUiIcon("icon_close.webp", SettingsAccent, null, Modifier.size(14.dp))
+                        Text("Cancel", style = MaterialTheme.typography.labelSmall)
+                    }
+                }
             }
         }
     )
@@ -274,6 +306,9 @@ fun TagManagementDialog(
                         value = appSearch,
                         onValueChange = { appSearch = it },
                         placeholder = { Text("Search apps or package") },
+                        leadingIcon = {
+                            SkinUiIcon("icon_search.webp", SettingsMuted, "Search apps", Modifier.size(17.dp))
+                        },
                         singleLine = true,
                         textStyle = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.fillMaxWidth(),
@@ -344,13 +379,23 @@ fun TagManagementDialog(
                 }
             },
             confirmButton = {
-                TextButton(onClick = { showAppPicker = false }) { Text("Done") }
+                TextButton(onClick = { showAppPicker = false }) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        SkinUiIcon("icon_check.webp", SettingsAccent, null, Modifier.size(15.dp))
+                        Text("Done")
+                    }
+                }
             },
             dismissButton = {
                 TextButton(onClick = {
                     selectedPackages = appSelectionBeforePicker
                     showAppPicker = false
-                }) { Text("Cancel") }
+                }) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        SkinUiIcon("icon_close.webp", SettingsAccent, null, Modifier.size(15.dp))
+                        Text("Cancel")
+                    }
+                }
             }
         )
     }

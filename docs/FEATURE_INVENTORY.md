@@ -49,6 +49,12 @@ A feature is marked **implemented** only when matching source code exists. This 
 - **Home behavior:** show the App Drawer hint again.
 - **About:** version, MIT license, copyright, and repository link.
 
+### UI icon consistency
+- Settings navigation rows and action cards use semantic skin UI glyphs for wallpaper, themes, skins, launcher selection, gesture hints, photo actions, skin import/store, and navigation.
+- Tag management and picker dialogs use UI glyphs for edit, color, app assignment, save, delete, cancel, close, search, and selection confirmation.
+- App Drawer search and clear controls use search/close glyphs; Home settings/add-tag controls and app action menu retain their existing UI glyphs.
+- Color and wallpaper choices keep their visual swatches/previews as the primary affordance; selected states use the shared check glyph.
+
 ### Accessibility and interaction
 - Favorite slots and drawer items expose button semantics; app items offer a TalkBack custom action for the action menu.
 - Gesture handling distinguishes tap, long-press, drag, completed drag, and cancellation.
