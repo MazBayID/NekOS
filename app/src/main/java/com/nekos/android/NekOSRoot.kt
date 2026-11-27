@@ -432,10 +432,10 @@ internal fun NekOSRoot(
         iconBitmapCache.resumeAfterBackground()
         iconCatalogRepository.resumeAfterBackground()
     }
-    LaunchedEffect(apps) {
+    LaunchedEffect(apps.size) {
         if (apps.isNotEmpty()) {
+            // Size the cache for the catalog, but load icons only when visible UI requests them.
             iconBitmapCache.configureForAppCount(apps.size)
-            iconBitmapCache.preload(apps)
         }
     }
     val wallpaperPickerScope = rememberCoroutineScope()
