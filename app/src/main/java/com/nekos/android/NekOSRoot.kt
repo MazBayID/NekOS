@@ -273,8 +273,19 @@ internal fun NekOSRoot(
                         iconCacheKey = app.iconCacheKey
                     )
                 }
-            favoriteAppSnapshots = retainedSnapshots + refreshedSnapshots
-            FavoriteAppSnapshotStore.save(context, favoriteAppSnapshots.values)
+            if (favoriteSnapshotsWritable) {
+                val updatedSnapshots = retainedSnapshots + refreshedSnapshots
+                if (FavoriteAppSnapshotStore.save(context, updatedSnapshots.values)) {
+                    favoriteAppSnapshots = updatedSnapshots
+                } else {
+                    favoriteSnapshotsWritable = false
+                    Toast.makeText(
+                        context,
+                        "Favorite display data could not be saved.",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
         }
         if (tagStorageWritable && cleanedReferences.tags != tags) {
             if (TagStore.save(context, cleanedReferences.tags)) {
@@ -716,10 +727,15 @@ internal fun NekOSRoot(
                 val snapshot = favoriteOrderSnapshot
                 if (cancelled) {
                     if (snapshot != null) favoritePackages = snapshot
-                } else if (!updateFavorites(favoritePackages)) {
-                    if (snapshot != null) favoritePackages = snapshot
+                    favoriteOrderSnapshot = null
+                } else {
+                    collectionScope.launch {
+                        if (!updateFavorites(favoritePackages) && snapshot != null) {
+                            favoritePackages = snapshot
+                        }
+                        favoriteOrderSnapshot = null
+                    }
                 }
-                favoriteOrderSnapshot = null
             },
             onTagClick = { tag -> viewingTag = tag },
             onTagOptionsClick = { tag -> actionMenuTag = tag },
@@ -736,10 +752,13 @@ internal fun NekOSRoot(
                 val snapshot = tagOrderSnapshot
                 if (cancelled) {
                     if (snapshot != null) tags = snapshot
-                } else if (!saveTags(tags)) {
-                    if (snapshot != null) tags = snapshot
+                    tagOrderSnapshot = null
+                } else {
+                    collectionScope.launch {
+                        if (!saveTags(tags) && snapshot != null) tags = snapshot
+                        tagOrderSnapshot = null
+                    }
                 }
-                tagOrderSnapshot = null
             },
             onAddTag = {
                 if (tags.size >= 10) {
@@ -915,10 +934,12 @@ internal fun NekOSRoot(
                             },
                             onRemoveFavorite = if (favoritePackages.any { it == app.id }) {
                                 {
-                                    if (updateFavorites(favoritePackages.map { favoriteId ->
-                                        if (favoriteId == app.id) null else favoriteId
-                                    })) {
-                                        actionMenuApp = null
+                                    collectionScope.launch {
+                                        if (updateFavorites(favoritePackages.map { favoriteId ->
+                                            if (favoriteId == app.id) null else favoriteId
+                                        })) {
+                                            actionMenuApp = null
+                                        }
                                     }
                                 }
                             } else null,
@@ -1170,9 +1191,11 @@ internal fun NekOSRoot(
                 movePageLabel = targetPage?.let { "Move to page ${it + 1}" },
                 onMovePage = {
                     targetPage?.let { page ->
-                        if (saveTags(moveTagToPage(tags, tag.id, page))) {
-                            activeTagPage = page
-                            actionMenuTag = null
+                        collectionScope.launch {
+                            if (saveTags(moveTagToPage(tags, tag.id, page))) {
+                                activeTagPage = page
+                                actionMenuTag = null
+                            }
                         }
                     }
                 },
@@ -1210,10 +1233,12 @@ internal fun NekOSRoot(
                             } else {
                                 tags.map { if (it.id == saved.id) saved else it }
                             }
-                            if (saveTags(updatedTags)) {
-                                if (tagEditorTarget == null) activeTagPage = tags.size / 5
-                                showTagEditor = false
-                                tagEditorTarget = null
+                            collectionScope.launch {
+                                if (saveTags(updatedTags)) {
+                                    if (tagEditorTarget == null) activeTagPage = tags.size / 5
+                                    showTagEditor = false
+                                    tagEditorTarget = null
+                                }
                             }
                         }
                     }
@@ -1235,10 +1260,12 @@ internal fun NekOSRoot(
                 text = { Text("Only the tag is removed. Your apps are not affected.") },
                 confirmButton = {
                     TextButton(onClick = {
-                        if (saveTags(tags.filterNot { it.id == tag.id })) {
-                            tagPendingDelete = null
-                            showTagEditor = false
-                            tagEditorTarget = null
+                        collectionScope.launch {
+                            if (saveTags(tags.filterNot { it.id == tag.id })) {
+                                tagPendingDelete = null
+                                showTagEditor = false
+                                tagEditorTarget = null
+                            }
                         }
                     }) { Text("Delete", color = Color(0xFFB3261E)) }
                 },
