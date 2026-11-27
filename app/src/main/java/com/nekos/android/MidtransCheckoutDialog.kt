@@ -41,13 +41,16 @@ import androidx.compose.ui.window.DialogProperties
 private const val MIDTRANS_FINISH_HOST = "mazbayid.github.io"
 private const val MIDTRANS_FINISH_PATH = "/skin-payment-return/"
 
-private fun isTrustedMidtransCheckout(value: String): Boolean = runCatching {
+private fun isTrustedStoreCheckout(value: String, provider: String): Boolean = runCatching {
     val uri = Uri.parse(value)
     val host = uri.host?.lowercase().orEmpty()
-    uri.scheme?.lowercase() == "https" && host in setOf(
-        "app.midtrans.com",
-        "app.sandbox.midtrans.com"
-    )
+    val allowedHosts = when (provider.lowercase()) {
+        "midtrans" -> setOf("app.midtrans.com", "app.sandbox.midtrans.com")
+        "duitku" -> setOf("app-prod.duitku.com", "app-sandbox.duitku.com")
+        else -> emptySet()
+    }
+    uri.scheme?.lowercase() == "https" && host in allowedHosts &&
+        uri.userInfo == null && (uri.port == -1 || uri.port == 443)
 }.getOrDefault(false)
 
 private fun isPaymentAppLink(uri: Uri): Boolean {
@@ -65,13 +68,14 @@ private fun isPaymentAppLink(uri: Uri): Boolean {
 }
 
 @Composable
-internal fun MidtransCheckoutDialog(
+internal fun StoreCheckoutDialog(
     checkoutUrl: String,
+    provider: String,
     onDismiss: () -> Unit,
     onPaymentFinished: () -> Unit
 ) {
     var paymentWebView by remember { mutableStateOf<WebView?>(null) }
-    val trustedUrl = remember(checkoutUrl) { isTrustedMidtransCheckout(checkoutUrl) }
+    val trustedUrl = remember(checkoutUrl, provider) { isTrustedStoreCheckout(checkoutUrl, provider) }
 
     BackHandler {
         val webView = paymentWebView
@@ -114,7 +118,7 @@ internal fun MidtransCheckoutDialog(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        "PEMBAYARAN MIDTRANS",
+                        "PEMBAYARAN ${provider.uppercase()}",
                         color = Color.White,
                         fontSize = 13.sp
                     )
