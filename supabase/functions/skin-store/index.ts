@@ -221,10 +221,19 @@ async function handleDuitkuCallback(req:Request) {
   if(!/^\\d+$/.test(amount))return fail("invalid_duitku_amount",400);
   const expected=await hmacSha256Hex(merchantCode+amount+orderId,DUITKU_API_KEY);
   if(!constantEqual(signature.toLowerCase(),expected.toLowerCase()))return fail("invalid_duitku_signature",401);
+  // Persist only payment verification fields; never retain the customer's email.
   const payload={
-    ...Object.fromEntries(form.entries()),
     gross_amount:amount,
-    currency:"IDR"
+    currency:"IDR",
+    merchantCode,
+    merchantOrderId:orderId,
+    reference,
+    resultCode,
+    paymentCode:field("paymentCode"),
+    publisherOrderId:field("publisherOrderId"),
+    settlementDate:field("settlementDate"),
+    transactionState:field("transactionState"),
+    transactionStateStatus:field("transactionStateStatus")
   };
   if(resultCode==="00") {
     const granted=await rpc("skin_mark_paid",{
