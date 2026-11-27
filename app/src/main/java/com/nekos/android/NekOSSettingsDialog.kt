@@ -263,6 +263,8 @@ internal fun NekOSSettingsDialog(
     backgroundPreset: String,
     launcherThemeKey: String,
     launcherUiColor: Long,
+    monochromeAppIconsEnabled: Boolean,
+    onMonochromeAppIconsChange: (Boolean) -> Unit,
     onLauncherThemeChange: (String) -> Unit,
     onLauncherUiColorChange: (Long) -> Unit,
     hasWallpaper: Boolean,
@@ -411,6 +413,21 @@ internal fun NekOSSettingsDialog(
                                 )
                             }
                         }
+                        SettingsListRow(
+                            title = "Monochrome app icons",
+                            iconFileName = "icon_palette.webp",
+                            trailing = if (monochromeAppIconsEnabled) "On" else "Off",
+                            onClick = {
+                                onMonochromeAppIconsChange(!monochromeAppIconsEnabled)
+                            }
+                        )
+                        Text(
+                            "On Android 13+, NekOS uses monochrome layers supplied by apps. Apps without one keep their original icons.",
+                            color = SettingsMuted,
+                            fontSize = 10.sp,
+                            lineHeight = 13.sp,
+                            modifier = Modifier.padding(horizontal = 10.dp)
+                        )
                         SettingsListRow(
                             title = "Skins",
                             iconFileName = "icon_grid.webp",

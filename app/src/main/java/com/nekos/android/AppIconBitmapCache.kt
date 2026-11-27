@@ -3,6 +3,8 @@ package com.nekos.android
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.drawable.AdaptiveIconDrawable
+import android.os.Build
 import android.util.LruCache
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -43,6 +45,25 @@ internal fun isValidCachedIconDimensions(
         width in 1..maxDimensionPx &&
         height in 1..maxDimensionPx
 
+internal fun monochromeTintFromSharedUiColor(colorArgb: Long): Int {
+    val color = colorArgb.toInt()
+    val shade = 0.72f
+    return android.graphics.Color.argb(
+        android.graphics.Color.alpha(color),
+        (android.graphics.Color.red(color) * shade).toInt(),
+        (android.graphics.Color.green(color) * shade).toInt(),
+        (android.graphics.Color.blue(color) * shade).toInt()
+    )
+}
+
+private data class IconAppearance(
+    val monochromeEnabled: Boolean = false,
+    val tintArgb: Int = 0xFF555555.toInt()
+) {
+    fun cacheKey(baseKey: String): String =
+        if (monochromeEnabled) "$baseKey::nekos-mono-v1::${Integer.toHexString(tintArgb)}" else baseKey
+}
+
 class AppIconBitmapCache(
     context: Context,
     maxSizeKb: Int = 4 * 1024,
@@ -63,8 +84,25 @@ class AppIconBitmapCache(
     var generation by mutableIntStateOf(0)
         private set
 
-    operator fun get(cacheKey: String): ImageBitmap? =
-        memoryState.ifEnabled { memoryCache.get(cacheKey) }
+    @Volatile
+    private var appearance = IconAppearance()
+
+    /** Update the shared icon style and make every visible launcher item reload its bitmap. */
+    fun configureAppearance(monochromeEnabled: Boolean, tintArgb: Int) {
+        val next = IconAppearance(
+            monochromeEnabled = monochromeEnabled,
+            tintArgb = if (monochromeEnabled) tintArgb else 0xFF555555.toInt()
+        )
+        if (appearance != next) {
+            appearance = next
+            generation++
+        }
+    }
+
+    operator fun get(cacheKey: String): ImageBitmap? {
+        val styledKey = appearance.cacheKey(cacheKey)
+        return memoryState.ifEnabled { memoryCache.get(styledKey) }
+    }
 
     /**
      * Size the RAM cache for the current catalog, while keeping it within a
@@ -82,22 +120,23 @@ class AppIconBitmapCache(
     }
 
     suspend fun getCached(cacheKey: String): ImageBitmap? {
-        memoryState.ifEnabled { memoryCache.get(cacheKey) }?.let { return it }
+        val styledKey = appearance.cacheKey(cacheKey)
+        memoryState.ifEnabled { memoryCache.get(styledKey) }?.let { return it }
 
-        return keyLocks.withLock(cacheKey) {
-            memoryState.ifEnabled { memoryCache.get(cacheKey) }?.let {
+        return keyLocks.withLock(styledKey) {
+            memoryState.ifEnabled { memoryCache.get(styledKey) }?.let {
                 return@withLock it
             }
             loadSemaphore.withPermit {
-                memoryState.ifEnabled { memoryCache.get(cacheKey) }?.let {
+                memoryState.ifEnabled { memoryCache.get(styledKey) }?.let {
                     return@withPermit it
                 }
                 val loadEpoch = memoryState.beginLoad() ?: return@withPermit null
                 val bitmap = withContext(Dispatchers.IO) {
-                    readDiskBitmap(cacheKey)?.asImageBitmap()
+                    readDiskBitmap(styledKey)?.asImageBitmap()
                 } ?: return@withPermit null
                 memoryState.storeIfCurrent(loadEpoch) {
-                    memoryCache.put(cacheKey, bitmap)
+                    memoryCache.put(styledKey, bitmap)
                     bitmap
                 }
             }
@@ -105,30 +144,31 @@ class AppIconBitmapCache(
     }
 
     suspend fun getOrLoad(app: InstalledApp): ImageBitmap? {
-        memoryState.ifEnabled { memoryCache.get(app.iconCacheKey) }?.let { return it }
+        val currentAppearance = appearance
+        val styledKey = currentAppearance.cacheKey(app.iconCacheKey)
+        memoryState.ifEnabled { memoryCache.get(styledKey) }?.let { return it }
 
-        val cacheKey = app.iconCacheKey
-        return keyLocks.withLock(cacheKey) {
-            memoryState.ifEnabled { memoryCache.get(cacheKey) }?.let {
+        return keyLocks.withLock(styledKey) {
+            memoryState.ifEnabled { memoryCache.get(styledKey) }?.let {
                 return@withLock it
             }
 
             loadSemaphore.withPermit {
-                memoryState.ifEnabled { memoryCache.get(cacheKey) }?.let {
+                memoryState.ifEnabled { memoryCache.get(styledKey) }?.let {
                     return@withPermit it
                 }
                 val loadEpoch = memoryState.beginLoad() ?: return@withPermit null
 
                 val bitmap = withContext(Dispatchers.IO) {
-                    val diskBitmap = readDiskBitmap(cacheKey)
-                    val decodedBitmap = diskBitmap ?: createAppIcon(app).also {
-                        writeDiskBitmap(cacheKey, it)
+                    val diskBitmap = readDiskBitmap(styledKey)
+                    val decodedBitmap = diskBitmap ?: createAppIcon(app, currentAppearance).also {
+                        writeDiskBitmap(styledKey, it)
                     }
                     decodedBitmap.asImageBitmap()
                 }
 
                 memoryState.storeIfCurrent(loadEpoch) {
-                    memoryCache.put(cacheKey, bitmap)
+                    memoryCache.put(styledKey, bitmap)
                     bitmap
                 }
             }
@@ -177,9 +217,24 @@ class AppIconBitmapCache(
         }
     }
 
-    private fun createAppIcon(app: InstalledApp): Bitmap =
+    private fun createAppIcon(app: InstalledApp, iconAppearance: IconAppearance): Bitmap =
         try {
-            app.launcherActivityInfo.getBadgedIcon(app.iconDensityDpi).toBitmap(96, 96)
+            val launcherIcon = app.launcherActivityInfo.getBadgedIcon(app.iconDensityDpi)
+            val monochromeDrawable = if (
+                iconAppearance.monochromeEnabled && Build.VERSION.SDK_INT >= 33
+            ) {
+                (launcherIcon as? AdaptiveIconDrawable)?.monochrome?.mutate()
+            } else {
+                null
+            }
+            val drawable = monochromeDrawable ?: launcherIcon
+            if (monochromeDrawable != null) {
+                drawable.setTint(iconAppearance.tintArgb)
+            }
+            drawable.setBounds(0, 0, 96, 96)
+            Bitmap.createBitmap(96, 96, Bitmap.Config.ARGB_8888).also { bitmap ->
+                drawable.draw(android.graphics.Canvas(bitmap))
+            }
         } catch (_: Exception) {
             appContext.packageManager.defaultActivityIcon.toBitmap(96, 96)
         }
