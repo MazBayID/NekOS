@@ -1,5 +1,10 @@
 package com.nekos.android
 
+import java.io.File
+import java.io.FileOutputStream
+import java.util.zip.ZipEntry
+import java.util.zip.ZipFile
+import java.util.zip.ZipOutputStream
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -42,4 +47,24 @@ class SkinInstallerValidationTest {
         assertFalse(SkinInstaller.isValidSkinId("default"))
         assertTrue(SkinInstaller.skinDirectoryName("../custom skin").matches(Regex("^[0-9a-f-]{36}$")))
     }
+    @Test
+    fun rejectsArchivesWithTooManyEntriesBeforeEnumeratingThem() {
+        val archive = File.createTempFile("nekos-skin-entry-limit", ".zip")
+        try {
+            ZipOutputStream(FileOutputStream(archive)).use { output ->
+                repeat(401) { index ->
+                    output.putNextEntry(ZipEntry("README$index.md"))
+                    output.closeEntry()
+                }
+            }
+
+            ZipFile(archive).use { zip ->
+                assertFalse(isSkinArchiveEntryCountAllowed(zip, 400))
+                assertTrue(isSkinArchiveEntryCountAllowed(zip, 401))
+            }
+        } finally {
+            archive.delete()
+        }
+    }
+
 }
