@@ -645,12 +645,12 @@ internal fun NekOSSettingsDialog(
                                             .clip(SettingsCardShape)
                                             .background(optionSurface.copy(alpha = 0.5f))
                                             .border(
-                                                width = if (selected) 1.5.dp else 1.dp,
+                                                width = if (selected) 1.dp else 0.5.dp,
                                                 color = if (selected) SettingsAccent else SettingsBorder,
                                                 shape = SettingsCardShape
                                             )
                                             .clickable { if (!selected) onSelectSkin(skin.id) }
-                                            .padding(8.dp),
+                                            .padding(6.dp),
                                         horizontalAlignment = Alignment.CenterHorizontally,
                                         verticalArrangement = Arrangement.spacedBy(5.dp)
                                     ) {
