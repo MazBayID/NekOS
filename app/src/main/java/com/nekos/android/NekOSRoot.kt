@@ -101,7 +101,8 @@ internal fun NekOSRoot(
     var isOfficialStoreLoading by remember { mutableStateOf(false) }
     var storeBusySkinId by remember { mutableStateOf<String?>(null) }
     var pendingStoreSkinIds by remember { mutableStateOf(emptySet<String>()) }
-    var midtransCheckout by remember { mutableStateOf<Pair<OfficialStoreSkin, String>?>(null) }
+    var storeCheckout by remember { mutableStateOf<Triple<OfficialStoreSkin, String, String>?>(null) }
+    var paymentProviderSkin by remember { mutableStateOf<OfficialStoreSkin?>(null) }
 
     // Reconcile unfinished Store payments whenever NekOS returns to foreground.
     // The checkout page may be closed without a Midtrans webhook (e.g. the buyer
@@ -1196,39 +1197,26 @@ internal fun NekOSRoot(
                     }
                 },
                 onStoreAction = { skin, checkPayment, onInstalled ->
-                    if (storeBusySkinId == null) skinPickerScope.launch {
+                    if (!checkPayment && skin.price > 0L) {
+                        if (storeBusySkinId == null) paymentProviderSkin = skin
+                    } else if (storeBusySkinId == null) skinPickerScope.launch {
                         storeBusySkinId = skin.id
                         val result = withContext(Dispatchers.IO) {
                             runCatching {
-                                if (checkPayment) {
-                                    val status = OfficialSkinStoreClient.checkPaymentAndInstall(context, skin)
-                                    if (!status.success && !status.paymentFailed &&
-                                        status.message.contains("belum dikonfirmasi", ignoreCase = true)
-                                    ) {
-                                        // The server reuses the existing pending order and returns
-                                        // its original Snap checkout URL, reopening payment in NekOS.
-                                        OfficialSkinStoreClient.buy(context, skin)
-                                    } else {
-                                        status
-                                    }
-                                } else {
-                                    OfficialSkinStoreClient.buy(context, skin)
-                                }
+                                if (checkPayment) OfficialSkinStoreClient.checkPaymentAndInstall(context, skin)
+                                else OfficialSkinStoreClient.buy(context, skin)
                             }.getOrElse { StoreActionResult(false, it.message ?: "Store action failed.") }
                         }
                         storeBusySkinId = null
                         if (!result.checkoutUrl.isNullOrBlank()) {
-                            midtransCheckout = skin to result.checkoutUrl
+                            storeCheckout = Triple(skin, result.checkoutUrl, result.paymentProvider ?: "midtrans")
                         }
                         if (result.success && result.installedSkinId != null) {
                             installedSkins = skinRepository.listInstalledSkins()
                             iconCatalogRepository.invalidateSkinCache()
                             onInstalled(result.installedSkinId)
                         }
-                        if (result.paymentFailed) {
-                            // Terminal payment status: remove the pending badge/action immediately.
-                            pendingStoreSkinIds = pendingStoreSkinIds - skin.id
-                        }
+                        if (result.paymentFailed) pendingStoreSkinIds = pendingStoreSkinIds - skin.id
                         pendingStoreSkinIds = OfficialSkinStoreClient.pendingSkinIds(context)
                     }
                 },
@@ -1408,11 +1396,35 @@ internal fun NekOSRoot(
             )
         }
 
-        midtransCheckout?.let { (skin, checkoutUrl) ->
-            MidtransCheckoutDialog(
+        paymentProviderSkin?.let { skin ->
+            PaymentProviderDialog(
+                skinName = skin.name,
+                onDismiss = { paymentProviderSkin = null },
+                onConfirm = { provider, email ->
+                    paymentProviderSkin = null
+                    if (storeBusySkinId == null) skinPickerScope.launch {
+                        storeBusySkinId = skin.id
+                        val result = withContext(Dispatchers.IO) {
+                            runCatching { OfficialSkinStoreClient.buy(context, skin, provider, email) }
+                                .getOrElse { StoreActionResult(false, it.message ?: "Store action failed.") }
+                        }
+                        storeBusySkinId = null
+                        if (!result.checkoutUrl.isNullOrBlank()) {
+                            storeCheckout = Triple(skin, result.checkoutUrl, result.paymentProvider ?: provider)
+                        }
+                        pendingStoreSkinIds = OfficialSkinStoreClient.pendingSkinIds(context)
+                        if (!result.success) Toast.makeText(context, result.message, Toast.LENGTH_LONG).show()
+                    }
+                }
+            )
+        }
+
+        storeCheckout?.let { (skin, checkoutUrl, provider) ->
+            StoreCheckoutDialog(
                 checkoutUrl = checkoutUrl,
-                onDismiss = { closeMidtransCheckout(skin) },
-                onPaymentFinished = { closeMidtransCheckout(skin) }
+                provider = provider,
+                onDismiss = { closeStoreCheckout(skin) },
+                onPaymentFinished = { closeStoreCheckout(skin) }
             )
         }
     }
