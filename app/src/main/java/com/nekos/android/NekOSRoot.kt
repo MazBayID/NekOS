@@ -1173,7 +1173,7 @@ internal fun NekOSRoot(
                         pendingStoreSkinIds = OfficialSkinStoreClient.pendingSkinIds(context)
                     }
                 },
-                onStoreAction = { skin, checkPayment ->
+                onStoreAction = { skin, checkPayment, onInstalled ->
                     if (storeBusySkinId == null) skinPickerScope.launch {
                         storeBusySkinId = skin.id
                         val result = withContext(Dispatchers.IO) {
@@ -1190,6 +1190,7 @@ internal fun NekOSRoot(
                         if (result.success && result.installedSkinId != null) {
                             installedSkins = skinRepository.listInstalledSkins()
                             iconCatalogRepository.invalidateSkinCache()
+                            onInstalled(result.installedSkinId)
                         }
                         if (result.paymentFailed) {
                             // Terminal payment status: remove the pending badge/action immediately.
