@@ -21,6 +21,14 @@ internal data class StoreActionResult(
     val paymentProvider: String? = null
 )
 
+/** Resolves a Store item against its permanent package identity and catalog identity. */
+internal fun findInstalledStoreSkin(
+    installedSkins: List<InstalledSkin>,
+    skin: OfficialStoreSkin
+): InstalledSkin? = installedSkins.firstOrNull {
+    it.id == skin.skinKey || it.id == skin.id
+}
+
 internal fun isTrustedSkinDownloadUrl(value: String): Boolean = runCatching {
     val uri = URI(value)
     uri.scheme == "https" &&
@@ -112,8 +120,10 @@ internal object OfficialSkinStoreClient {
             // The server may return an existing ownership grant instead of a
             // new checkout. Make this path idempotent: never download a skin
             // that is already present on the device.
-            val installedSkin = SkinRepository(context).listInstalledSkins()
-                .firstOrNull { it.id == skin.skinKey || it.id == skin.id }
+            val installedSkin = findInstalledStoreSkin(
+                SkinRepository(context).listInstalledSkins(),
+                skin
+            )
             val preferences = context.getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE)
             if (installedSkin != null) {
                 // This ownership response supersedes any stale checkout record.
@@ -207,8 +217,10 @@ internal object OfficialSkinStoreClient {
                 paymentProvider = provider
             )
         }
-        val installedSkin = SkinRepository(context).listInstalledSkins()
-            .firstOrNull { it.id == skin.skinKey || it.id == skin.id }
+        val installedSkin = findInstalledStoreSkin(
+            SkinRepository(context).listInstalledSkins(),
+            skin
+        )
         if (installedSkin != null) {
             val cleared = prefs.edit().remove(PENDING_PREFIX + skin.id).commit()
             return if (cleared) {
