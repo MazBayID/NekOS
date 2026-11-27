@@ -284,9 +284,10 @@ Deno.serve(async(req:Request)=>{
       const orderId=String(body.order_id??"");
       let status=await rpc("skin_order_status",{p_order_id:orderId,p_device_hash:deviceHash});
       if(!status)return fail("order_not_found",404,origin);
-      if(status.status==="pending") {
-        assertPaymentConfig();
-        const createdAt=Date.parse(String(activePayment?.created_at??status.created_at??""));
+      const activePayment=status.active_payment??null;
+      if(status.status==="pending" && activePayment?.provider==="midtrans") {
+        assertPaymentConfig("midtrans");
+        const createdAt=Date.parse(String(activePayment.created_at??status.created_at??""));
         const expiryReached=Number.isFinite(createdAt) && Date.now()-createdAt>=15*60*1000;
         const statusUrl=midtransBase()+"/v2/"+encodeURIComponent(orderId)+"/status";
         const verifiedResponse=await fetch(statusUrl,{
@@ -322,7 +323,7 @@ Deno.serve(async(req:Request)=>{
             }));
             if(expiryReached) {
               await rpc("skin_update_payment_status",{
-                p_order_id:orderId,p_status:"expire",
+                p_provider:"midtrans",p_provider_order_id:orderId,p_status:"expire",
                 p_payload:{reason:"snap_page_expired_without_payment_method",provider_response:verified,
                   expired_at:new Date().toISOString()}
               });
@@ -372,7 +373,7 @@ Deno.serve(async(req:Request)=>{
             const paid=transactionStatus==="settlement" ||
               (transactionStatus==="capture" && fraud==="accept");
             if(paid && fraud==="accept") {
-              const granted=await rpc("skin_mark_paid",{p_order_id:orderId,p_provider_order_id:orderId,
+              const granted=await rpc("skin_mark_paid",{p_provider:"midtrans",p_provider_order_id:orderId,
                 p_provider_payment_id:String(verified.transaction_id??""),p_payload:verified});
               if(!granted)return fail("entitlement_grant_failed",500,origin);
             } else if(["expire","cancel","deny"].includes(transactionStatus)) {
