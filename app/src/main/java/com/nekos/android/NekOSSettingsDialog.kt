@@ -560,18 +560,21 @@ internal fun NekOSSettingsDialog(
 
                     SettingsPage.LAUNCHER_THEME -> {
                         SettingsSectionTitle("COLOR PALETTE")
-                        LauncherThemeOptions.chunked(2).forEach { pair ->
-                            Row(horizontalArrangement = Arrangement.spacedBy(9.dp)) {
+                        LauncherThemeOptions.chunked(3).forEach { pair ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(7.dp)
+                            ) {
                                 pair.forEach { option ->
                                     val selected = launcherThemeKey == option.key
-                                    Row(
+                                    Column(
                                         modifier = Modifier
                                             .weight(1f)
-                                            .defaultMinSize(minHeight = 48.dp)
+                                            .height(62.dp)
                                             .clip(SettingsCardShape)
                                             .background(option.color.copy(alpha = 0.5f))
                                             .border(
-                                                width = if (selected) 1.dp else 0.6.dp,
+                                                width = if (selected) 1.5.dp else 1.dp,
                                                 color = if (selected) SettingsAccent else SettingsBorder,
                                                 shape = SettingsCardShape
                                             )
@@ -580,28 +583,38 @@ internal fun NekOSSettingsDialog(
                                                 role = Role.RadioButton,
                                                 onClick = { onLauncherThemeChange(option.key) }
                                             )
-                                            .padding(horizontal = 7.dp, vertical = 4.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.SpaceBetween
+                                            .padding(vertical = 5.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.Center
                                     ) {
-                                        Text(option.label, color = SettingsInk, fontSize = 13.sp,
-                                            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal)
-                                        if (selected) SkinUiIcon("icon_check.webp", SettingsAccent, "Selected", Modifier.size(16.dp))
+                                        Text(
+                                            option.label,
+                                            color = SettingsInk,
+                                            fontSize = 11.sp,
+                                            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+                                            maxLines = 1
+                                        )
+                                        if (selected) {
+                                            SkinUiIcon("icon_check.webp", SettingsAccent, "Selected", Modifier.size(13.dp))
+                                        }
                                     }
                                 }
-                                if (pair.size == 1) Spacer(Modifier.weight(1f))
+                                if (pair.size < 3) repeat(3 - pair.size) { Spacer(Modifier.weight(1f)) }
                             }
                         }
 
                         SettingsSectionTitle("SHARED UI COLOR")
-                        LauncherUiColorOptions.chunked(3).forEach { pair ->
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        LauncherUiColorOptions.chunked(5).forEach { pair ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(7.dp)
+                            ) {
                                 pair.forEach { option ->
                                     val selected = launcherUiColor == option.argb
-                                    Row(
+                                    Box(
                                         modifier = Modifier
                                             .weight(1f)
-                                            .defaultMinSize(minHeight = 48.dp)
+                                            .height(38.dp)
                                             .clip(SettingsCardShape)
                                             .background(Color(0xFFF4F1EA).copy(alpha = 0.5f))
                                             .border(
@@ -613,30 +626,29 @@ internal fun NekOSSettingsDialog(
                                                 selected = selected,
                                                 role = Role.RadioButton,
                                                 onClick = { onLauncherUiColorChange(option.argb) }
-                                            )
-                                            .padding(horizontal = 5.dp, vertical = 4.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                            ),
+                                        contentAlignment = Alignment.Center
                                     ) {
                                         Box(
-                                            Modifier
-                                                .size(17.dp)
+                                            modifier = Modifier
+                                                .size(21.dp)
                                                 .clip(RoundedCornerShape(50))
                                                 .background(Color(option.argb))
-                                                .border(1.dp, SettingsInk.copy(alpha = 0.12f), RoundedCornerShape(50))
-                                        )
-                                        Text(
-                                            option.name,
-                                            color = SettingsInk,
-                                            fontSize = 12.sp,
-                                            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
-                                            maxLines = 1,
-                                            modifier = Modifier.weight(1f)
-                                        )
-                                        if (selected) SkinUiIcon("icon_check.webp", SettingsAccent, "Selected", Modifier.size(15.dp))
+                                                .border(1.dp, SettingsInk.copy(alpha = 0.16f), RoundedCornerShape(50)),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            if (selected) {
+                                                SkinUiIcon(
+                                                    "icon_check.webp",
+                                                    if (option.argb == android.graphics.Color.WHITE.toLong() || option.argb == 0xFFFFFFFFL) SettingsInk else Color.White,
+                                                    "Selected",
+                                                    Modifier.size(13.dp)
+                                                )
+                                            }
+                                        }
                                     }
                                 }
-                                if (pair.size < 3) repeat(3 - pair.size) { Spacer(Modifier.weight(1f)) }
+                                if (pair.size < 5) repeat(5 - pair.size) { Spacer(Modifier.weight(1f)) }
                             }
                         }
                     }
