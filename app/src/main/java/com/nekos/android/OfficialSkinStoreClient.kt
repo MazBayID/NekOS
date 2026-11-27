@@ -99,8 +99,13 @@ internal object OfficialSkinStoreClient {
             .put("android_id",androidId(context)).put("app_version",appVersion(context)).put("skin_id",skin.id))
         if (result.optBoolean("free")) return downloadAndInstall(context,skin.id)
         val orderId=result.optString("order_id")
-        context.getSharedPreferences(PREFERENCES,Context.MODE_PRIVATE).edit()
-            .putString(PENDING_PREFIX+skin.id,orderId).apply()
+        val pendingSaved = context.getSharedPreferences(PREFERENCES,Context.MODE_PRIVATE).edit()
+            .putString(PENDING_PREFIX+skin.id,orderId).commit()
+        if (!pendingSaved) {
+            // Do not hand the customer to checkout unless the order can be
+            // recovered after process death.
+            return StoreActionResult(false,"Unable to save the pending payment. Please try again.")
+        }
         return StoreActionResult(true,"Complete payment in the opened payment page, then return to NekOS.",
             checkoutUrl=result.optString("checkout_url"),orderId=orderId)
     }
@@ -130,8 +135,27 @@ internal object OfficialSkinStoreClient {
                 "Pembayaran belum dikonfirmasi. Silakan periksa kembali beberapa saat lagi."
                 else "Status pembayaran: $status")
         }
+        val installedSkin = SkinRepository(context).listInstalledSkins()
+            .firstOrNull { it.id == skin.skinKey || it.id == skin.id }
+        if (installedSkin != null) {
+            val cleared = prefs.edit().remove(PENDING_PREFIX + skin.id).commit()
+            return if (cleared) {
+                StoreActionResult(true,"Skin is already installed.",installedSkinId=installedSkin.id)
+            } else {
+                StoreActionResult(false,"Skin is installed, but its pending payment record could not be cleared.")
+            }
+        }
+
         val installed=downloadAndInstall(context,skin.id)
-        if(installed.success)prefs.edit().remove(PENDING_PREFIX+skin.id).apply()
+        if (installed.success && !prefs.edit().remove(PENDING_PREFIX + skin.id).commit()) {
+            // The next reconciliation detects the installed skin and retries
+            // only the preference cleanup, not the archive download.
+            return StoreActionResult(
+                true,
+                "Skin installed. Payment record cleanup will be retried.",
+                installedSkinId = installed.installedSkinId
+            )
+        }
         return installed
     }
 
