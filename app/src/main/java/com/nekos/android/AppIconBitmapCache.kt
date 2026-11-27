@@ -89,7 +89,10 @@ class AppIconBitmapCache(
 
     /** Update the shared icon style and make every visible launcher item reload its bitmap. */
     fun configureAppearance(monochromeEnabled: Boolean, tintArgb: Int) {
-        val next = IconAppearance(monochromeEnabled, tintArgb)
+        val next = IconAppearance(
+            monochromeEnabled = monochromeEnabled,
+            tintArgb = if (monochromeEnabled) tintArgb else 0xFF555555.toInt()
+        )
         if (appearance != next) {
             appearance = next
             generation++
