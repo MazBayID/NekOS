@@ -122,13 +122,7 @@ fun TagManagementDialog(
                         TextButton(onClick = { showIconColorPicker = true }) {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
                                 SkinUiIcon("icon_palette.webp", SettingsAccent, null, Modifier.size(13.dp))
-                                Text("Icon color", style = MaterialTheme.typography.labelSmall)
-                            }
-                        }
-                        TextButton(onClick = { selectedIcon = null }) {
-                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-                                SkinUiIcon("icon_close.webp", SettingsAccent, null, Modifier.size(13.dp))
-                                Text("Clear", style = MaterialTheme.typography.labelSmall)
+                                Text("Tag color", style = MaterialTheme.typography.labelSmall)
                             }
                         }
                     }
