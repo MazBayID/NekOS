@@ -245,7 +245,8 @@ Deno.serve(async(req:Request)=>{
     "Access-Control-Allow-Methods":"GET, POST, OPTIONS","Vary":"Origin"
   }});
   try {
-    if(path==="webhook"&&req.method==="POST")return await handleWebhook(req);\n    if(path==="duitku-callback"&&req.method==="POST")return await handleDuitkuCallback(req);
+    if(path==="webhook"&&req.method==="POST")return await handleWebhook(req);
+    if(path==="duitku-callback"&&req.method==="POST")return await handleDuitkuCallback(req);
     if(req.method==="GET")return json({skins:await catalog(origin)},200,origin);
     if(req.method!=="POST")return fail("method_not_allowed",405,origin);
     const body=await req.json();
