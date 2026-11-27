@@ -26,6 +26,30 @@ class SkinInstallerIdentityTest {
         }
     }
 
+
+    @Test
+    fun replacesAnInvalidStaleDirectoryWhenReinstallingSkin() {
+        val root = createTempDir(prefix = "nekos-skin-stale-directory-test")
+        try {
+            val stale = File(root, "skin-id").apply { mkdirs() }
+            File(stale, "partial.txt").writeText("incomplete")
+            val staging = File(root, "staging").apply { mkdirs() }
+            File(staging, "skin.json").writeText("""{"schema_version":1}""")
+
+            val result = finalizeSkinInstallation(
+                staging,
+                stale,
+                existingDestinationIsValid = false
+            )
+
+            assertTrue(result.success)
+            assertTrue(File(stale, "skin.json").isFile)
+            assertFalse(File(stale, "partial.txt").exists())
+        } finally {
+            root.deleteRecursively()
+        }
+    }
+
     @Test
     fun installsNewDirectoryWithoutCreatingBackup() {
         val root = createTempDir(prefix = "nekos-skin-install-test")
