@@ -650,7 +650,7 @@ internal fun NekOSRoot(
                     tagOrderSnapshot = null
                     val owner = tagReorderOwner
                     tagReorderOwner = null
-                    if (owner != null) collectionMutationGate.unlock(owner)
+                    if (owner != null) collectionMutationGate.endReorder(owner)
                 }
 
                 actionMenuApp = null
@@ -768,7 +768,7 @@ internal fun NekOSRoot(
                     if (snapshot != null) favoritePackages = snapshot
                     favoriteOrderSnapshot = null
                     favoriteReorderOwner = null
-                    collectionMutationGate.unlock(owner)
+                    collectionMutationGate.endReorder(owner)
                 } else if (owner != null) {
                     favoriteReorderSaving = true
                     collectionScope.launch {
@@ -781,7 +781,7 @@ internal fun NekOSRoot(
                                 favoriteOrderSnapshot = null
                                 favoriteReorderOwner = null
                                 favoriteReorderSaving = false
-                                collectionMutationGate.unlock(owner)
+                                collectionMutationGate.endReorder(owner)
                             }
                         }
                     }
@@ -799,7 +799,7 @@ internal fun NekOSRoot(
             },
             onTagReorderStart = {
                 val owner = Any()
-                if (collectionMutationGate.tryLock(owner)) {
+                if (collectionMutationGate.tryBeginReorder(owner)) {
                     tagReorderOwner = owner
                     tagReorderSaving = false
                     tagOrderSnapshot = tags.toList()
@@ -815,7 +815,7 @@ internal fun NekOSRoot(
                     if (snapshot != null) tags = snapshot
                     tagOrderSnapshot = null
                     tagReorderOwner = null
-                    collectionMutationGate.unlock(owner)
+                    collectionMutationGate.endReorder(owner)
                 } else if (owner != null) {
                     tagReorderSaving = true
                     collectionScope.launch {
@@ -826,7 +826,7 @@ internal fun NekOSRoot(
                                 tagOrderSnapshot = null
                                 tagReorderOwner = null
                                 tagReorderSaving = false
-                                collectionMutationGate.unlock(owner)
+                                collectionMutationGate.endReorder(owner)
                             }
                         }
                     }
