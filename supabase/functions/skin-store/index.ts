@@ -69,7 +69,7 @@ async function rpc(name:string,args:Record<string,unknown>) {
 }
 async function catalog(origin:string) {
   const {data,error}=await db.from("skins")
-    .select("id,skin_key,name,author,description,schema_version,min_nekos_version,preview_path,price_amount,currency,package_sha256,package_size_bytes")
+    .select("id,skin_key,name,author,description,category,schema_version,min_nekos_version,preview_path,price_amount,currency,package_sha256,package_size_bytes")
     .eq("status","published").order("created_at",{ascending:false}).limit(100);
   if(error)throw new Error("catalog_unavailable");
   return (data??[]).map((skin:Record<string,unknown>)=>({
