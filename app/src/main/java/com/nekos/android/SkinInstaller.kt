@@ -10,6 +10,9 @@ import java.util.Locale
 import java.util.UUID
 import java.util.zip.ZipFile
 
+internal fun isSkinArchiveEntryCountAllowed(zip: ZipFile, maxEntries: Int): Boolean =
+    maxEntries > 0 && zip.size() in 1..maxEntries
+
 internal object SkinDirectoryLock {
     val monitor = Any()
 }
@@ -80,8 +83,12 @@ internal class SkinInstaller(context: Context) {
             }
 
             ZipFile(archive).use { zip ->
+                // Check the central-directory entry count before allocating ZipEntry objects.
+                if (!isSkinArchiveEntryCountAllowed(zip, MAX_ARCHIVE_ENTRIES)) {
+                    return SkinInstallResult(false, error = "Invalid file count in skin archive")
+                }
                 val entries = zip.entries().asSequence().filterNot { it.isDirectory }.toList()
-                if (entries.isEmpty() || entries.size > MAX_FILES) {
+                if (entries.isEmpty()) {
                     return SkinInstallResult(false, error = "Invalid file count in skin archive")
                 }
 
@@ -222,7 +229,7 @@ internal class SkinInstaller(context: Context) {
     }.getOrNull()
 
     companion object {
-        private const val MAX_FILES = 400
+        private const val MAX_ARCHIVE_ENTRIES = 400
         private const val MAX_FILE_BYTES = 8L * 1024L * 1024L
         private const val MAX_TOTAL_BYTES = 32L * 1024L * 1024L
         private const val MAX_ARCHIVE_BYTES = 32L * 1024L * 1024L
