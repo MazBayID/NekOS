@@ -143,12 +143,26 @@ object TagStore {
                     .put("apps", JSONArray(normalized.appPackages))
             )
         }
+        val store = LauncherCollectionsDataStore.get(context).tags
+        if (!loadResult(context).isValid) return false
+        val validatedPreferences = runCatching { store.data.first() }.getOrNull() ?: return false
+        val validatedRaw = validatedPreferences.asMap().entries
+            .firstOrNull { it.key.name == TAGS_KEY }?.value
+        val validatedMigrationMarker = validatedPreferences.asMap().entries
+            .firstOrNull { it.key.name == TAG_ICON_MIGRATION_KEY }?.value
+
         return runCatching {
-            LauncherCollectionsDataStore.get(context).tags.edit { preferences ->
+            store.edit { preferences ->
                 val storedTags = preferences.asMap().entries
                     .firstOrNull { it.key.name == TAGS_KEY }
                 val migrationEntry = preferences.asMap().entries
                     .firstOrNull { it.key.name == TAG_ICON_MIGRATION_KEY }
+                check(storedTags?.value == validatedRaw) {
+                    "Tag data changed before the save transaction"
+                }
+                check(migrationEntry?.value == validatedMigrationMarker) {
+                    "Tag migration state changed before the save transaction"
+                }
                 check(storedTags == null || storedTags.value is String) {
                     "Stored Tags value has an unexpected type"
                 }
