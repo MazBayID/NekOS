@@ -599,95 +599,120 @@ internal fun NekOSSettingsDialog(
                         val context = LocalContext.current
                         val sharedUiTint = Color(launcherUiColor)
                         SettingsSectionTitle("INSTALLED SKINS")
-                        installedSkins.forEach { skin ->
-                            val selected = skin.id == activeSkinId
-                            val skinBadgeIcon = remember(context, skin.id) {
-                                if (skin.isBuiltIn) {
-                                    runCatching {
-                                        context.assets.open("skins/default/components/tag_badge/badge_cat.webp").use {
-                                            BitmapFactory.decodeStream(it)?.asImageBitmap()
-                                        }
-                                    }.getOrNull()
-                                } else {
-                                    runCatching {
-                                        val root = java.io.File(context.filesDir, "skins").canonicalFile
-                                        val skinDirectory = root.listFiles()
-                                            ?.firstOrNull { directory ->
-                                                if (!directory.isDirectory) return@firstOrNull false
-                                                val manifest = java.io.File(directory, "skin.json")
-                                                if (!manifest.isFile) return@firstOrNull false
-                                                org.json.JSONObject(manifest.readText(Charsets.UTF_8))
-                                                    .optJSONObject("skin")
-                                                    ?.optString("id") == skin.id
-                                            }
-                                            ?.canonicalFile
-                                            ?: return@runCatching null
-                                        if (skinDirectory.parentFile != root) return@runCatching null
-                                        val badgeFile = java.io.File(
-                                            skinDirectory,
-                                            "components/tag_badge/badge_cat.webp"
-                                        ).canonicalFile
-                                        if (!badgeFile.path.startsWith(skinDirectory.path + java.io.File.separator) ||
-                                            !badgeFile.isFile
-                                        ) return@runCatching null
-                                        BitmapFactory.decodeFile(badgeFile.absolutePath)?.asImageBitmap()
-                                    }.getOrNull()
-                                }
-                            }
+                        installedSkins.chunked(2).forEach { rowSkins ->
                             Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(SettingsCardShape)
-                                    .background(optionSurface.copy(alpha = 0.5f))
-                                    .border(
-                                        width = if (selected) 1.5.dp else 1.dp,
-                                        color = if (selected) SettingsAccent else SettingsBorder,
-                                        shape = SettingsCardShape
-                                    )
-                                    .clickable { managedSkin = skin }
-                                    .padding(horizontal = 8.dp, vertical = 7.dp),
-                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                if (skinBadgeIcon != null) {
-                                    Image(
-                                        bitmap = skinBadgeIcon,
-                                        contentDescription = "${skin.name} badge",
-                                        colorFilter = ColorFilter.tint(sharedUiTint),
+                                rowSkins.forEach { skin ->
+                                    val selected = skin.id == activeSkinId
+                                    val skinBadgeIcon = remember(context, skin.id) {
+                                        if (skin.isBuiltIn) {
+                                            runCatching {
+                                                context.assets.open("skins/default/components/tag_badge/badge_cat.webp").use {
+                                                    BitmapFactory.decodeStream(it)?.asImageBitmap()
+                                                }
+                                            }.getOrNull()
+                                        } else {
+                                            runCatching {
+                                                val root = java.io.File(context.filesDir, "skins").canonicalFile
+                                                val skinDirectory = root.listFiles()
+                                                    ?.firstOrNull { directory ->
+                                                        if (!directory.isDirectory) return@firstOrNull false
+                                                        val manifest = java.io.File(directory, "skin.json")
+                                                        if (!manifest.isFile) return@firstOrNull false
+                                                        org.json.JSONObject(manifest.readText(Charsets.UTF_8))
+                                                            .optJSONObject("skin")
+                                                            ?.optString("id") == skin.id
+                                                    }
+                                                    ?.canonicalFile
+                                                    ?: return@runCatching null
+                                                if (skinDirectory.parentFile != root) return@runCatching null
+                                                val badgeFile = java.io.File(
+                                                    skinDirectory,
+                                                    "components/tag_badge/badge_cat.webp"
+                                                ).canonicalFile
+                                                if (!badgeFile.path.startsWith(skinDirectory.path + java.io.File.separator) ||
+                                                    !badgeFile.isFile
+                                                ) return@runCatching null
+                                                BitmapFactory.decodeFile(badgeFile.absolutePath)?.asImageBitmap()
+                                            }.getOrNull()
+                                        }
+                                    }
+                                    Column(
                                         modifier = Modifier
-                                            .size(40.dp)
-                                            .clip(RoundedCornerShape(8.dp))
-                                    )
-                                }
-                                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                    Text(
-                                        skin.name,
-                                        color = SettingsInk,
-                                        fontSize = 14.sp,
-                                        fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium
-                                    )
-                                    Text(
-                                        "${skin.author.ifBlank { "NekOS" }} · v${skin.version}",
-                                        color = SettingsMuted,
-                                        fontSize = 11.sp
-                                    )
-                                }
-                                if (selected) {
-                                    Row(verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-                                        SkinUiIcon("icon_check.webp", SettingsAccent, "Active", Modifier.size(13.dp))
-                                        Text("Active", color = SettingsAccent, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                                            .weight(1f)
+                                            .clip(SettingsCardShape)
+                                            .background(optionSurface.copy(alpha = 0.5f))
+                                            .border(
+                                                width = if (selected) 1.5.dp else 1.dp,
+                                                color = if (selected) SettingsAccent else SettingsBorder,
+                                                shape = SettingsCardShape
+                                            )
+                                            .clickable { if (!selected) onSelectSkin(skin.id) }
+                                            .padding(8.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.spacedBy(5.dp)
+                                    ) {
+                                        Box(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            contentAlignment = Alignment.TopEnd
+                                        ) {
+                                            if (skinBadgeIcon != null) {
+                                                Image(
+                                                    bitmap = skinBadgeIcon,
+                                                    contentDescription = "${skin.name} preview",
+                                                    colorFilter = ColorFilter.tint(sharedUiTint),
+                                                    modifier = Modifier
+                                                        .size(64.dp)
+                                                        .align(Alignment.Center)
+                                                        .clip(RoundedCornerShape(12.dp))
+                                                )
+                                            } else {
+                                                Box(
+                                                    Modifier.size(64.dp).clip(RoundedCornerShape(12.dp))
+                                                        .background(SettingsAccent.copy(alpha = 0.12f)),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    SkinUiIcon("icon_grid.webp", SettingsAccent, null, Modifier.size(28.dp))
+                                                }
+                                            }
+                                            if (selected) {
+                                                SkinUiIcon("icon_check.webp", SettingsAccent, "Active", Modifier.size(16.dp))
+                                            } else if (!skin.isBuiltIn) {
+                                                SkinUiIcon(
+                                                    "icon_trash.webp",
+                                                    Color(0xFFB3261E),
+                                                    "Remove skin",
+                                                    Modifier.size(16.dp).clickable { pendingSkinRemoval = skin }
+                                                )
+                                            }
+                                        }
+                                        Text(
+                                            skin.name,
+                                            color = SettingsInk,
+                                            fontSize = 12.sp,
+                                            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+                                            maxLines = 1,
+                                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                        )
+                                        Text(
+                                            skin.author.ifBlank { "NekOS" },
+                                            color = SettingsMuted,
+                                            fontSize = 10.sp,
+                                            maxLines = 1,
+                                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                        )
+                                        Text(
+                                            if (selected) "ACTIVE" else "TAP TO APPLY",
+                                            color = if (selected) SettingsAccent else SettingsMuted,
+                                            fontSize = 9.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            letterSpacing = 0.3.sp
+                                        )
                                     }
                                 }
-                                TextButton(
-                                    onClick = { managedSkin = skin },
-                                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 7.dp, vertical = 4.dp)
-                                ) {
-                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-                                        SkinUiIcon("icon_gear.webp", SettingsAccent, "Manage skin", Modifier.size(14.dp))
-                                        Text("Manage", color = SettingsAccent, fontSize = 10.sp, fontWeight = FontWeight.SemiBold)
-                                    }
-                                }
+                                if (rowSkins.size == 1) Spacer(Modifier.weight(1f))
                             }
                         }
                         SettingsSectionTitle("OFFICIAL STORE")
@@ -896,38 +921,6 @@ internal fun NekOSSettingsDialog(
             }
         }
     }
-    managedSkin?.let { skin ->
-        NekOSAlertDialog(
-            topFrameColorArgb = launcherUiColor,
-            onDismissRequest = { managedSkin = null },
-            containerColor = surfaceColor,
-            title = { Text(skin.name, color = SettingsInk, fontWeight = FontWeight.SemiBold) },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                    Text(skin.author.ifBlank { "NekOS" } + " · v" + skin.version, color = SettingsMuted, fontSize = 11.sp)
-                    if (skin.description.isNotBlank()) Text(skin.description, color = SettingsInk, fontSize = 12.sp)
-                    Text(if (skin.id == activeSkinId) "Currently active" else "Installed · Not active",
-                        color = if (skin.id == activeSkinId) SettingsAccent else SettingsMuted, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
-                    if (skin.isBuiltIn) Text("The built-in skin cannot be removed.", color = SettingsMuted, fontSize = 10.sp)
-                }
-            },
-            dismissButton = {
-                if (!skin.isBuiltIn) {
-                    TextButton(onClick = { pendingSkinRemoval = skin }) {
-                        SkinUiIcon("icon_trash.webp", Color(0xFFB3261E), null, Modifier.size(14.dp))
-                        Text("Remove", color = Color(0xFFB3261E), fontSize = 12.sp)
-                    }
-                } else TextButton(onClick = { managedSkin = null }) { Text("Close", color = SettingsAccent, fontSize = 12.sp) }
-            },
-            confirmButton = {
-                TextButton(onClick = { if (skin.id != activeSkinId) onSelectSkin(skin.id); managedSkin = null }) {
-                    SkinUiIcon("icon_check.webp", SettingsAccent, null, Modifier.size(14.dp))
-                    Text(if (skin.id == activeSkinId) "Active" else "Apply", color = SettingsAccent, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                }
-            }
-        )
-    }
-
     pendingSkinRemoval?.let { skin ->
         NekOSAlertDialog(
             topFrameColorArgb = launcherUiColor,
