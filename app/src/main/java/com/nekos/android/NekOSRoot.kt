@@ -114,7 +114,7 @@ internal fun NekOSRoot(
         if (pendingIds.isEmpty() || storeBusySkinId != null) return@LaunchedEffect
 
         val catalog = officialStoreSkins.ifEmpty {
-            runCatching { withContext(Dispatchers.IO) { OfficialSkinStoreClient.loadCatalog() } }
+            runCatching { withContext(Dispatchers.IO) { OfficialSkinStoreClient.loadCatalog(context) } }
                 .getOrDefault(emptyList())
         }
         if (officialStoreSkins.isEmpty() && catalog.isNotEmpty()) {
@@ -1211,7 +1211,7 @@ internal fun NekOSRoot(
                 onRefreshOfficialStore = {
                     if (!isOfficialStoreLoading) skinPickerScope.launch {
                         isOfficialStoreLoading = true
-                        val result = withContext(Dispatchers.IO) { runCatching { OfficialSkinStoreClient.loadCatalog() } }
+                        val result = withContext(Dispatchers.IO) { runCatching { OfficialSkinStoreClient.loadCatalog(context) } }
                         isOfficialStoreLoading = false
                         result.onSuccess { officialStoreSkins = it }
                             .onFailure { /* Keep Store refresh failures silent. */ }
@@ -1219,7 +1219,7 @@ internal fun NekOSRoot(
                     }
                 },
                 onStoreAction = { skin, checkPayment, onInstalled ->
-                    if (!checkPayment && skin.price > 0L) {
+                    if (!checkPayment && skin.price > 0L && !skin.owned) {
                         if (storeBusySkinId == null) {
                             paymentProviderSkin = skin
                             paymentProviderInstallCallback = onInstalled
@@ -1239,6 +1239,8 @@ internal fun NekOSRoot(
                                     } else {
                                         status
                                     }
+                                } else if (skin.owned && skin.price > 0L) {
+                                    OfficialSkinStoreClient.reinstall(context, skin)
                                 } else {
                                     OfficialSkinStoreClient.buy(context, skin)
                                 }
