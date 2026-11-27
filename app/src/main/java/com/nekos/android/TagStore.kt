@@ -33,7 +33,7 @@ data class NekTag(
     val id: String = UUID.randomUUID().toString(),
     val name: String,
     val iconId: Int? = null,
-    val colorArgb: Long = 0xFFE7E1D6,
+    val colorArgb: Long = tagColorFromIconColor(DEFAULT_TAG_ICON_FRAME_COLOR),
     val appPackages: List<String> = emptyList(),
     val iconFrameColorArgb: Long = DEFAULT_TAG_ICON_FRAME_COLOR
 ) {
