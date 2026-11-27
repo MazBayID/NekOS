@@ -355,6 +355,15 @@ internal fun NekOSRoot(
             )
         )
     }
+    var monochromeAppIconsEnabled by remember {
+        mutableStateOf(preferences.getBoolean("monochrome_app_icons", false))
+    }
+    LaunchedEffect(iconBitmapCache, monochromeAppIconsEnabled, launcherUiColorArgb) {
+        iconBitmapCache.configureAppearance(
+            monochromeEnabled = monochromeAppIconsEnabled,
+            tintArgb = monochromeTintFromSharedUiColor(launcherUiColorArgb)
+        )
+    }
     var backgroundPreset by remember {
         mutableStateOf(
             normalizeNekOSBackgroundPreset(preferences.getString("background_preset", "warm"))
@@ -1076,6 +1085,11 @@ internal fun NekOSRoot(
                 backgroundPreset = backgroundPreset,
                 launcherThemeKey = launcherThemeKey,
                 launcherUiColor = launcherUiColorArgb,
+                monochromeAppIconsEnabled = monochromeAppIconsEnabled,
+                onMonochromeAppIconsChange = { enabled ->
+                    monochromeAppIconsEnabled = enabled
+                    preferences.edit().putBoolean("monochrome_app_icons", enabled).apply()
+                },
                 onLauncherThemeChange = { key ->
                     launcherThemeKey = normalizeLauncherTheme(key)
                     preferences.edit().putString("launcher_theme", launcherThemeKey).apply()
