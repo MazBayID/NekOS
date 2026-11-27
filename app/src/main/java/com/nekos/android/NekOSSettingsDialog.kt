@@ -227,7 +227,7 @@ private fun SettingsGridOptionCard(
             .fillMaxWidth()
             .height(54.dp)
             .clip(SettingsCardShape)
-            .background(SettingsBorder.copy(alpha = 0.12f))
+            .background(Color(0xFFF4F1EA).copy(alpha = 0.5f))
             .border(1.dp, SettingsBorder, SettingsCardShape)
             .clickable(onClick = onClick)
             .padding(horizontal = 9.dp, vertical = 7.dp),
