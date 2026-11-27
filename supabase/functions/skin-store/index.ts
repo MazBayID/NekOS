@@ -161,7 +161,7 @@ async function handleCancel(body:Record<string,unknown>, deviceHash:string, orig
     return json({success:true,cancelled:false,checkout_active:true,can_close_checkout:true,
       message:"Checkout Midtrans belum membuat transaksi pembayaran. Halamannya dapat ditutup, tetapi sesi Snap masih mungkin digunakan sampai kedaluwarsa otomatis dalam 15 menit. NekOS akan tetap memantau statusnya."},200,origin);
   }
-  if(String(verified.status_code??"")!=="200"||
+  if(!["200","201"].includes(String(verified.status_code??""))||
      String(verified.order_id??"")!==providerOrderId||
      String(verified.currency??"").toUpperCase()!=="IDR"||
      Number(verified.gross_amount)!==Number(status.amount)) {
@@ -198,7 +198,7 @@ async function handleCancel(body:Record<string,unknown>, deviceHash:string, orig
   response=await fetchStatus();
   if(!response.ok)return fail("midtrans_cancel_verification_failed",503,origin);
   verified=await response.json();
-  if(String(verified.status_code??"")!=="200"||
+  if(!["200","201"].includes(String(verified.status_code??""))||
      String(verified.order_id??"")!==providerOrderId||
      Number(verified.gross_amount)!==Number(status.amount)||
      String(verified.currency??"").toUpperCase()!=="IDR") {
@@ -348,7 +348,7 @@ Deno.serve(async(req:Request)=>{
               });
               status=await rpc("skin_order_status",{p_order_id:orderId,p_device_hash:deviceHash});
             }
-          } else if(providerStatusCode!=="200") {
+          } else if(!["200","201"].includes(providerStatusCode)) {
             console.error("skin_store_midtrans_status_error", JSON.stringify({
               order_id:orderId,
               http_status:verifiedResponse.status,
