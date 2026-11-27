@@ -176,7 +176,12 @@ internal fun TagIconFrameColorPickerDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = onDismiss) { Text("Done") }
+            TextButton(onClick = onDismiss) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    SkinUiIcon("icon_check.webp", SettingsAccent, null, Modifier.size(15.dp))
+                    Text("Done")
+                }
+            }
         }
     )
 }

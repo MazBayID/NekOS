@@ -360,7 +360,7 @@ fun TagManagementDialog(
                                                     .background(Color(0xFF746657)),
                                                 contentAlignment = Alignment.Center
                                             ) {
-                                                Text("✓", color = Color.White, style = MaterialTheme.typography.labelSmall)
+                                                SkinUiIcon("icon_check.webp", Color.White, "Selected", Modifier.size(12.dp))
                                             }
                                         }
                                     }
