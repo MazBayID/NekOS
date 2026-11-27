@@ -31,6 +31,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -92,8 +95,13 @@ internal fun MidtransCheckoutDialog(
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
         Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = Color(0xFFF7F8FA)
+            modifier = Modifier
+                .fillMaxWidth(0.94f)
+                .widthIn(max = 460.dp)
+                .fillMaxHeight(0.88f),
+            shape = RoundedCornerShape(24.dp),
+            color = Color(0xFFF7F8FA),
+            shadowElevation = 20.dp
         ) {
             Column(Modifier.fillMaxSize()) {
                 Row(
