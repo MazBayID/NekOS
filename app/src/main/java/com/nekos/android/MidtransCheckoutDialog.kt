@@ -40,7 +40,8 @@ private const val MIDTRANS_FINISH_PATH = "/skin-payment-return/"
 
 private fun isTrustedMidtransCheckout(value: String): Boolean = runCatching {
     val uri = Uri.parse(value)
-    uri.scheme == "https" && uri.host in setOf(
+    val host = uri.host?.lowercase().orEmpty()
+    uri.scheme?.lowercase() == "https" && host in setOf(
         "app.midtrans.com",
         "app.sandbox.midtrans.com"
     )
@@ -48,7 +49,8 @@ private fun isTrustedMidtransCheckout(value: String): Boolean = runCatching {
 
 private fun isPaymentAppLink(uri: Uri): Boolean {
     val host = uri.host?.lowercase().orEmpty()
-    return uri.scheme !in setOf("http", "https") ||
+    val scheme = uri.scheme?.lowercase().orEmpty()
+    return (scheme != "http" && scheme != "https") ||
         host in setOf(
             "gojek.link",
             "gopay.co.id",
