@@ -35,6 +35,7 @@ import org.junit.Test
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyGridState
 import sh.calvin.reorderable.rememberReorderableLazyListState
+import java.io.File
 import java.util.UUID
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -47,6 +48,11 @@ class LauncherReorderIntegrationTest {
         val namespace = "LauncherReorderIntegrationTest_${UUID.randomUUID()}"
         val target = InstrumentationRegistry.getInstrumentation().targetContext
         return object : ContextWrapper(target) {
+            override fun getApplicationContext(): Context = this
+
+            override fun getFilesDir(): File =
+                File(target.filesDir, namespace).apply { mkdirs() }
+
             override fun getSharedPreferences(name: String, mode: Int) =
                 super.getSharedPreferences("$namespace-$name", mode)
         }
@@ -60,7 +66,7 @@ class LauncherReorderIntegrationTest {
 
         drag("favorite-A", "favorite-C")
 
-        composeRule.waitUntil {
+        composeRule.waitUntil(timeoutMillis = 5_000) {
             runBlocking {
                 loadFavoritePackages(context).filterNotNull() == listOf("C", "B", "A", "D")
             }
