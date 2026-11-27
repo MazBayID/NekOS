@@ -20,18 +20,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.unit.dp
 
-private val TagColorOptions = listOf(
-    "Sand" to 0xFFE7E1D6L,
-    "Blue" to 0xFFDCE8F8L,
-    "Lavender" to 0xFFE8DFF5L,
-    "Rose" to 0xFFF5DDE3L,
-    "Peach" to 0xFFF6E1D2L,
-    "Amber" to 0xFFF4E8C9L,
-    "Mint" to 0xFFD9EEE6L,
-    "Sage" to 0xFFE0E9D8L,
-    "Slate" to 0xFFE1E5E9L
-)
-
 private val TagIconFrameColors = listOf(
     "Ocean" to 0xFF114B56L,
     "Blue" to 0xFF2563EBL,
@@ -46,75 +34,6 @@ private val TagIconFrameColors = listOf(
     "Silver" to 0xFFA1A1AAL,
     "Dark" to 0xFF27272AL
 )
-
-@Composable
-internal fun TagColorPickerDialog(
-    selectedColor: Long,
-    launcherSurface: Color,
-    launcherUiColorArgb: Long,
-    onColorSelected: (Long) -> Unit,
-    onDismiss: () -> Unit
-) {
-    NekOSAlertDialog(
-        topFrameColorArgb = launcherUiColorArgb,
-        onDismissRequest = onDismiss,
-        shape = RoundedCornerShape(18.dp),
-        containerColor = launcherSurface,
-        titleContentColor = Color(0xFF34332F),
-        textContentColor = Color(0xFF34332F),
-        title = { Text("Tag Color") },
-        text = {
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(3),
-                modifier = Modifier.heightIn(max = 200.dp),
-                contentPadding = PaddingValues(2.dp),
-                horizontalArrangement = Arrangement.spacedBy(7.dp),
-                verticalArrangement = Arrangement.spacedBy(7.dp)
-            ) {
-                items(TagColorOptions) { (name, colorValue) ->
-                    val selected = selectedColor == colorValue
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(62.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(Color(colorValue.toInt()).copy(alpha = 0.5f))
-                            .border(
-                                width = if (selected) 1.5.dp else 1.dp,
-                                color = if (selected) SettingsAccent else SettingsBorder,
-                                shape = RoundedCornerShape(12.dp)
-                            )
-                            .clickable {
-                                onColorSelected(colorValue)
-                                onDismiss()
-                            }
-                            .padding(vertical = 5.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            name,
-                            color = SettingsInk,
-                            style = MaterialTheme.typography.labelSmall,
-                            maxLines = 1
-                        )
-                        if (selected) {
-                            SkinUiIcon("icon_check.webp", SettingsAccent, "Selected", Modifier.size(13.dp))
-                        }
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    SkinUiIcon("icon_check.webp", SettingsAccent, null, Modifier.size(15.dp))
-                    Text("Done")
-                }
-            }
-        }
-    )
-}
 
 @Composable
 internal fun TagIconFrameColorPickerDialog(
