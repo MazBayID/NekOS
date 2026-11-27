@@ -216,6 +216,43 @@ internal fun launcherThemeColor(key: String): Color =
     LauncherThemeOptions.firstOrNull { it.key == normalizeLauncherTheme(key) }?.color
         ?: Color(0xFFFEFCF8)
 
+@Composable
+private fun SettingsGridOptionCard(
+    title: String,
+    iconFileName: String,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(54.dp)
+            .clip(SettingsCardShape)
+            .background(SettingsBorder.copy(alpha = 0.12f))
+            .border(1.dp, SettingsBorder, SettingsCardShape)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 9.dp, vertical = 7.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(7.dp)
+    ) {
+        SkinUiIcon(
+            fileName = iconFileName,
+            tint = SettingsAccent,
+            contentDescription = null,
+            modifier = Modifier.size(18.dp)
+        )
+        Text(
+            text = title,
+            color = SettingsInk,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Medium,
+            maxLines = 2,
+            lineHeight = 13.sp,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+
 private enum class SettingsPage { MAIN, WALLPAPER, LAUNCHER_THEME, SKINS, OFFICIAL_SKIN_STORE }
 
 @Composable
@@ -357,14 +394,14 @@ internal fun NekOSSettingsDialog(
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             Box(modifier = Modifier.weight(1f)) {
-                                SettingsListRow(
+                                SettingsGridOptionCard(
                                     title = "Wallpaper",
                                     iconFileName = "icon_image.webp",
                                     onClick = { page = SettingsPage.WALLPAPER }
                                 )
                             }
                             Box(modifier = Modifier.weight(1f)) {
-                                SettingsListRow(
+                                SettingsGridOptionCard(
                                     title = "Launcher theme",
                                     iconFileName = "icon_palette.webp",
                                     onClick = { page = SettingsPage.LAUNCHER_THEME }
