@@ -104,8 +104,8 @@ internal fun NekOSRoot(
     var midtransCheckout by remember { mutableStateOf<Pair<OfficialStoreSkin, String>?>(null) }
 
     // Reconcile unfinished Store payments whenever NekOS returns to foreground.
-    // The checkout browser may be dismissed without a Midtrans webhook (e.g. the
-    // buyer never selects a payment method), so the client must query pending
+    // The checkout page may be closed without a Midtrans webhook (e.g. the buyer
+    // never selects a payment method), so the client must query pending
     // orders on resume rather than rely on a manual button.
     LaunchedEffect(resumeToken) {
         val pendingIds = OfficialSkinStoreClient.pendingSkinIds(context)
