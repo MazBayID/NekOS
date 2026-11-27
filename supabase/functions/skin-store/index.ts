@@ -75,6 +75,9 @@ async function hmacSha256Hex(message:string, secret:string) {
 function duitkuBase() {
   return DUITKU_ENV === "production" ? "https://api-prod.duitku.com" : "https://api-sandbox.duitku.com";
 }
+function duitkuTransactionStatusBase() {
+  return DUITKU_ENV === "production" ? "https://passport.duitku.com" : "https://sandbox.duitku.com";
+}
 async function rpc(name:string,args:Record<string,unknown>) {
   const {data,error}=await db.rpc(name,args);
   if(error) throw new Error(error.message);
@@ -190,8 +193,43 @@ async function handleCancel(body:Record<string,unknown>, deviceHash:string, orig
   }
   const provider=String(active.provider??"");
   if(provider==="duitku") {
-    return json({success:true,cancelled:false,checkout_active:true,can_close_checkout:true,
-      message:"Invoice Duitku tidak menyediakan pembatalan umum melalui API. Checkout dapat ditutup, tetapi invoice masih bisa dibayar sampai kedaluwarsa (maksimal 60 menit sejak dibuat). NekOS akan tetap memantau status pembayaran."},200,origin);
+    assertPaymentConfig("duitku");
+    const signature=await hmacSha256Hex(DUITKU_MERCHANT_CODE+orderId,DUITKU_API_KEY);
+    const duitkuResponse=await fetch(duitkuTransactionStatusBase()+"/webapi/api/merchant/transactionStatus",{
+      method:"POST",
+      headers:{"Content-Type":"application/json","Accept":"application/json"},
+      body:JSON.stringify({merchantCode:DUITKU_MERCHANT_CODE,merchantOrderId:orderId,signature})
+    });
+    if(!duitkuResponse.ok)return fail("duitku_status_check_failed",503,origin);
+    const verified=await duitkuResponse.json();
+    if(String(verified.merchantOrderId??"")!==orderId||
+       !Number.isFinite(Number(verified.amount))||
+       Number(verified.amount)!==Number(status.amount)) {
+      return fail("duitku_transaction_mismatch",502,origin);
+    }
+    const duitkuStatus=String(verified.statusCode??"");
+    if(duitkuStatus==="00") {
+      const granted=await rpc("skin_mark_paid",{
+        p_provider:"duitku",p_provider_order_id:orderId,
+        p_provider_payment_id:String(verified.reference??""),
+        p_payload:{gross_amount:String(verified.amount),currency:"IDR",
+          merchantOrderId:orderId,reference:String(verified.reference??"")}
+      });
+      if(!granted)return fail("duitku_entitlement_grant_failed",500,origin);
+      return json({success:true,paid:true,cancelled:false,
+        message:"Duitku mengonfirmasi pembayaran berhasil. Skin akan tetap dipasang."},200,origin);
+    }
+    if(duitkuStatus==="02") {
+      await rpc("skin_update_payment_status",{p_provider:"duitku",p_provider_order_id:orderId,
+        p_status:"02",p_payload:{statusCode:duitkuStatus,statusMessage:String(verified.statusMessage??"")}});
+      return json({success:true,cancelled:true,checkout_active:false,
+        message:"Invoice Duitku sudah gagal atau kedaluwarsa. Kamu bisa membeli skin ini kembali."},200,origin);
+    }
+    if(duitkuStatus==="01") {
+      return json({success:true,cancelled:false,checkout_active:true,can_close_checkout:true,
+        message:"Pembayaran Duitku masih menunggu. API Duitku tidak menyediakan pembatalan umum untuk invoice ini. Checkout dapat ditutup, tetapi invoice masih bisa dibayar sampai kedaluwarsa (maksimal 60 menit sejak dibuat). NekOS akan tetap memantau status pembayaran."},200,origin);
+    }
+    return fail("duitku_status_check_failed",503,origin);
   }
   if(provider!=="midtrans")return fail("unsupported_payment_provider",400,origin);
   assertPaymentConfig("midtrans");
