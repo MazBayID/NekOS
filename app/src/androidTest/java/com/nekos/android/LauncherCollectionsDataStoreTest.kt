@@ -143,7 +143,7 @@ class LauncherCollectionsDataStoreTest {
 
     @Test
     fun wrongTypedTagMigrationMarkerIsUnreadableAndPreserved() = runBlocking {
-        val tags = """[{\"id\":\"tag-one\",\"name\":\"Work\",\"apps\":[]}]"""
+        val tags = """[{"id":"tag-one","name":"Work","apps":[]}]"""
         context.getSharedPreferences("nekos_tags", Context.MODE_PRIVATE)
             .edit()
             .putString("tag_collection_v1", tags)
