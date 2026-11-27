@@ -10,9 +10,6 @@ const MIDTRANS_KEY = MIDTRANS_ENV === "sandbox"
 const MIDTRANS_SIGNATURE_SECRET = MIDTRANS_ENV === "sandbox"
   ? Deno.env.get("MIDTRANS_SANDBOX_SIGNATURE_SECRET") ?? ""
   : Deno.env.get("MIDTRANS_SIGNATURE_SECRET") ?? "";
-const DUITKU_MERCHANT_CODE = Deno.env.get("DUITKU_MERCHANT_CODE") ?? "";
-const DUITKU_API_KEY = Deno.env.get("DUITKU_API_KEY") ?? "";
-const DUITKU_ENV = (Deno.env.get("DUITKU_ENVIRONMENT") ?? "sandbox").trim().toLowerCase();
 const ORIGIN = "https://mazbayid.github.io";
 const PREVIEWS = "skin-previews";
 const db = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
@@ -56,12 +53,6 @@ function assertPaymentConfig(provider = "midtrans") {
     }
     return;
   }
-  if (provider === "duitku") {
-    if (!DUITKU_MERCHANT_CODE || !DUITKU_API_KEY || !["production","sandbox"].includes(DUITKU_ENV)) {
-      throw new Error("duitku_not_configured");
-    }
-    return;
-  }
   throw new Error("unsupported_payment_provider");
 }
 function midtransBase() {
@@ -71,17 +62,6 @@ function snapBase() {
   return MIDTRANS_ENV === "production" ? "https://app.midtrans.com" : "https://app.sandbox.midtrans.com";
 }
 function authHeader() { return "Basic " + btoa(MIDTRANS_KEY + ":"); }
-async function hmacSha256Hex(message:string, secret:string) {
-  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret),
-    {name:"HMAC", hash:"SHA-256"}, false, ["sign"]);
-  return hex(new Uint8Array(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(message))));
-}
-function duitkuBase() {
-  return DUITKU_ENV === "production" ? "https://api-prod.duitku.com" : "https://api-sandbox.duitku.com";
-}
-function duitkuTransactionStatusBase() {
-  return DUITKU_ENV === "production" ? "https://passport.duitku.com" : "https://sandbox.duitku.com";
-}
 async function rpc(name:string,args:Record<string,unknown>) {
   const {data,error}=await db.rpc(name,args);
   if(error) throw new Error(error.message);
@@ -98,87 +78,41 @@ async function catalog(origin:string) {
   }));
 }
 async function createPayment(
-  order:Record<string,unknown>, orderId:string, skin:Record<string,unknown>,
-  provider:string, email:string
+  order:Record<string,unknown>, orderId:string, skin:Record<string,unknown>
 ) {
   const amount = Number(order.amount);
   if (!Number.isSafeInteger(amount) || amount < 1) throw new Error("invalid_order_amount");
-  assertPaymentConfig(provider);
-  if (provider === "duitku" && (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 255)) {
-    throw new Error("invalid_duitku_email");
-  }
+  assertPaymentConfig("midtrans");
   await rpc("skin_attach_payment", {
-    p_order_id:orderId, p_provider_order_id:orderId, p_checkout_url:null, p_provider:provider
+    p_order_id:orderId, p_provider_order_id:orderId, p_checkout_url:null, p_provider:"midtrans"
   });
-
-  if (provider === "midtrans") {
-    assertPaymentConfig("midtrans");
-    const response = await fetch(snapBase()+"/snap/v1/transactions", {
-      method:"POST",
-      headers:{Authorization:authHeader(),"Content-Type":"application/json","Accept":"application/json","Idempotency-Key":orderId},
-      body:JSON.stringify({
-        transaction_details:{order_id:orderId,gross_amount:amount},
-        item_details:[{id:String(skin.id),price:amount,quantity:1,name:String(skin.name).slice(0,50)}],
-        callbacks:{
-          finish:"https://mazbayid.github.io/skin-payment-return/",
-          error:"https://mazbayid.github.io/skin-payment-return/",
-          pending:"https://mazbayid.github.io/skin-payment-return/"
-        },
-        page_expiry:{unit:"minute",duration:15},
-        expiry:{
-          start_time:new Date(Date.now()+7*60*60*1000).toISOString().replace("T"," ").slice(0,19)+" +0700",
-          unit:"minute",duration:15
-        }
-      })
-    });
-    const data=await response.json();
-    if(!response.ok||!data.redirect_url)throw new Error("midtrans_checkout_creation_failed");
-    await rpc("skin_attach_payment",{p_order_id:orderId,p_provider_order_id:orderId,p_checkout_url:data.redirect_url,p_provider:"midtrans"});
-    return {checkout_url:data.redirect_url,token:data.token,order_id:orderId,provider:"midtrans"};
-  }
-
-  if (provider === "duitku") {
-    assertPaymentConfig("duitku");
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 255) {
-      throw new Error("invalid_duitku_email");
-    }
-    const timestamp = String(Date.now());
-    const signature = await hmacSha256Hex(DUITKU_MERCHANT_CODE + timestamp, DUITKU_API_KEY);
-    const response = await fetch(duitkuBase()+"/api/merchant/createInvoice", {
-      method:"POST",
-      headers:{
-        "Content-Type":"application/json",
-        "x-duitku-merchantcode":DUITKU_MERCHANT_CODE,
-        "x-duitku-timestamp":timestamp,
-        "x-duitku-signature":signature
+  const response = await fetch(snapBase()+"/snap/v1/transactions", {
+    method:"POST",
+    headers:{Authorization:authHeader(),"Content-Type":"application/json","Accept":"application/json","Idempotency-Key":orderId},
+    body:JSON.stringify({
+      transaction_details:{order_id:orderId,gross_amount:amount},
+      item_details:[{id:String(skin.id),price:amount,quantity:1,name:String(skin.name).slice(0,50)}],
+      callbacks:{
+        finish:"https://mazbayid.github.io/skin-payment-return/",
+        error:"https://mazbayid.github.io/skin-payment-return/",
+        pending:"https://mazbayid.github.io/skin-payment-return/"
       },
-      body:JSON.stringify({
-        paymentAmount:amount,
-        merchantOrderId:orderId,
-        productDetails:"NekOS Skin - "+String(skin.name).slice(0,200),
-        email,
-        customerVaName:"NekOS User",
-        callbackUrl:SUPABASE_URL+"/functions/v1/skin-store/duitku-callback",
-        returnUrl:"https://mazbayid.github.io/skin-payment-return/",
-        expiryPeriod:60,
-        itemDetails:[{name:String(skin.name).slice(0,50),price:amount,quantity:1}]
-      })
-    });
-    const data=await response.json();
-    if(!response.ok||String(data.statusCode)!=="00"||!data.paymentUrl||!data.reference) {
-      console.error("skin_store_duitku_invoice_failed",JSON.stringify({http_status:response.status,status_code:data.statusCode,status_message:data.statusMessage}));
-      throw new Error("duitku_checkout_creation_failed");
-    }
-    const paymentUrl=String(data.paymentUrl);
-    const parsed=new URL(paymentUrl);
-    const allowedHosts=DUITKU_ENV==="production"?["app-prod.duitku.com"]:["app-sandbox.duitku.com"];
-    if(parsed.protocol!=="https:"||!allowedHosts.includes(parsed.hostname))throw new Error("invalid_duitku_checkout_url");
-    await rpc("skin_attach_payment",{
-      p_order_id:orderId,p_provider_order_id:orderId,p_checkout_url:paymentUrl,p_provider:"duitku"
-    });
-    return {checkout_url:paymentUrl,order_id:orderId,provider:"duitku",provider_reference:String(data.reference)};
+      expiry:{start_time:new Date().toISOString().replace("Z","+0000"),unit:"minutes",duration:15}
+    })
+  });
+  const data=await response.json();
+  if(!response.ok||!data.token||!data.redirect_url) {
+    console.error("skin_store_midtrans_snap_failed",JSON.stringify({http_status:response.status,status_code:data.error_messages}));
+    throw new Error("midtrans_checkout_creation_failed");
   }
-  throw new Error("unsupported_payment_provider");
+  const checkoutUrl=String(data.redirect_url);
+  const parsed=new URL(checkoutUrl);
+  const allowedHosts=MIDTRANS_ENV==="production"?["app.midtrans.com"]:["app.sandbox.midtrans.com"];
+  if(parsed.protocol!=="https:"||!allowedHosts.includes(parsed.hostname))throw new Error("invalid_midtrans_checkout_url");
+  await rpc("skin_attach_payment",{
+    p_order_id:orderId,p_provider_order_id:orderId,p_checkout_url:checkoutUrl,p_provider:"midtrans"
+  });
+  return {checkout_url:checkoutUrl,order_id:orderId,provider:"midtrans"};
 }
 
 async function handleCancel(body:Record<string,unknown>, deviceHash:string, origin:string) {
@@ -195,47 +129,6 @@ async function handleCancel(body:Record<string,unknown>, deviceHash:string, orig
     return json({success:true,cancelled:terminal,checkout_active:false,
       message:terminal?"Pembelian ini sudah tidak aktif.":"Tidak ada checkout aktif untuk pesanan ini."},200,origin);
   }
-  const provider=String(active.provider??"");
-  if(provider==="duitku") {
-    assertPaymentConfig("duitku");
-    const signature=await hmacSha256Hex(DUITKU_MERCHANT_CODE+orderId,DUITKU_API_KEY);
-    const duitkuResponse=await fetch(duitkuTransactionStatusBase()+"/webapi/api/merchant/transactionStatus",{
-      method:"POST",
-      headers:{"Content-Type":"application/json","Accept":"application/json"},
-      body:JSON.stringify({merchantCode:DUITKU_MERCHANT_CODE,merchantOrderId:orderId,signature})
-    });
-    if(!duitkuResponse.ok)return fail("duitku_status_check_failed",503,origin);
-    const verified=await duitkuResponse.json();
-    if(String(verified.merchantOrderId??"")!==orderId||
-       !Number.isFinite(Number(verified.amount))||
-       Number(verified.amount)!==Number(status.amount)) {
-      return fail("duitku_transaction_mismatch",502,origin);
-    }
-    const duitkuStatus=String(verified.statusCode??"");
-    if(duitkuStatus==="00") {
-      const granted=await rpc("skin_mark_paid",{
-        p_provider:"duitku",p_provider_order_id:orderId,
-        p_provider_payment_id:String(verified.reference??""),
-        p_payload:{gross_amount:String(verified.amount),currency:"IDR",
-          merchantOrderId:orderId,reference:String(verified.reference??"")}
-      });
-      if(!granted)return fail("duitku_entitlement_grant_failed",500,origin);
-      return json({success:true,paid:true,cancelled:false,
-        message:"Duitku mengonfirmasi pembayaran berhasil. Skin akan tetap dipasang."},200,origin);
-    }
-    if(duitkuStatus==="02") {
-      await rpc("skin_update_payment_status",{p_provider:"duitku",p_provider_order_id:orderId,
-        p_status:"02",p_payload:{statusCode:duitkuStatus,statusMessage:String(verified.statusMessage??"")}});
-      return json({success:true,cancelled:true,checkout_active:false,
-        message:"Invoice Duitku sudah gagal atau kedaluwarsa. Kamu bisa membeli skin ini kembali."},200,origin);
-    }
-    if(duitkuStatus==="01") {
-      return json({success:true,cancelled:false,checkout_active:true,can_close_checkout:true,
-        message:"Pembayaran Duitku masih menunggu. API Duitku tidak menyediakan pembatalan umum untuk invoice ini. Checkout dapat ditutup, tetapi invoice masih bisa dibayar sampai kedaluwarsa (maksimal 60 menit sejak dibuat). NekOS akan tetap memantau status pembayaran."},200,origin);
-    }
-    return fail("duitku_status_check_failed",503,origin);
-  }
-  if(provider!=="midtrans")return fail("unsupported_payment_provider",400,origin);
   assertPaymentConfig("midtrans");
   const providerOrderId=String(active.provider_order_id??orderId);
   const statusUrl=midtransBase()+"/v2/"+encodeURIComponent(providerOrderId)+"/status";
@@ -347,48 +240,6 @@ async function handleWebhook(req:Request) {
   }
   return json({success:true});
 }
-async function handleDuitkuCallback(req:Request) {
-  try { assertPaymentConfig("duitku"); } catch { return fail("duitku_not_configured",503); }
-  const form=await req.formData();
-  const field=(name:string)=>String(form.get(name)??"");
-  const merchantCode=field("merchantCode");
-  const amount=field("amount");
-  const orderId=field("merchantOrderId");
-  const reference=field("reference");
-  const resultCode=field("resultCode");
-  const signature=field("signature");
-  if(!merchantCode||!amount||!orderId||!resultCode||!signature)return fail("invalid_duitku_callback",400);
-  if(merchantCode!==DUITKU_MERCHANT_CODE)return fail("invalid_duitku_merchant",401);
-  if(!/^\d+$/.test(amount))return fail("invalid_duitku_amount",400);
-  const expected=await hmacSha256Hex(merchantCode+amount+orderId,DUITKU_API_KEY);
-  if(!constantEqual(signature.toLowerCase(),expected.toLowerCase()))return fail("invalid_duitku_signature",401);
-  // Persist only payment verification fields; never retain the customer's email.
-  const payload={
-    gross_amount:amount,
-    currency:"IDR",
-    merchantCode,
-    merchantOrderId:orderId,
-    reference,
-    resultCode,
-    paymentCode:field("paymentCode"),
-    publisherOrderId:field("publisherOrderId"),
-    settlementDate:field("settlementDate"),
-    transactionState:field("transactionState"),
-    transactionStateStatus:field("transactionStateStatus")
-  };
-  if(resultCode==="00") {
-    const granted=await rpc("skin_mark_paid",{
-      p_provider:"duitku",p_provider_order_id:orderId,
-      p_provider_payment_id:reference||null,p_payload:payload
-    });
-    if(!granted)return fail("duitku_entitlement_grant_failed",500);
-  } else if(resultCode==="02"||resultCode==="01") {
-    await rpc("skin_update_payment_status",{
-      p_provider:"duitku",p_provider_order_id:orderId,p_status:"02",p_payload:payload
-    });
-  }
-  return json({success:true});
-}
 Deno.serve(async(req:Request)=>{
   if(!validOrigin(req))return fail("origin_not_allowed",403);
   const origin=req.headers.get("origin")??"";
@@ -400,7 +251,6 @@ Deno.serve(async(req:Request)=>{
   }});
   try {
     if(path==="webhook"&&req.method==="POST")return await handleWebhook(req);
-    if(path==="duitku-callback"&&req.method==="POST")return await handleDuitkuCallback(req);
     if(req.method==="GET")return json({skins:await catalog(origin)},200,origin);
     if(req.method!=="POST")return fail("method_not_allowed",405,origin);
     const body=await req.json();
@@ -415,11 +265,7 @@ Deno.serve(async(req:Request)=>{
       if(existingAccess) return json({success:true,free:true,owned:true,skin_id:skinId},200,origin);
       if(Number(skin.price_amount)===0) return fail("package_not_available",503,origin);
       if(String(skin.currency)!=="IDR"||!Number.isSafeInteger(Number(skin.price_amount)))return fail("unsupported_price_currency",400,origin);
-      const provider=String(body.provider??"midtrans").trim().toLowerCase();
-      if(!["midtrans","duitku"].includes(provider))return fail("unsupported_payment_provider",400,origin);
-      const email=String(body.email??"").trim();
-      if(provider==="duitku"&&(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||email.length>255))
-        return fail("invalid_duitku_email",400,origin);
+      const provider="midtrans";
       const order=await rpc("skin_create_order",{p_device_hash:deviceHash,p_skin_id:skinId,p_app_version:appVersion});
       const orderId=String(order.order_id);
       const active=await rpc("skin_active_payment_attempt",{p_order_id:orderId});
@@ -433,7 +279,7 @@ Deno.serve(async(req:Request)=>{
             order_id:orderId,provider,reused:true},200,origin);
         }
       }
-      const payment=await createPayment(order,orderId,skin,provider,email);
+      const payment=await createPayment(order,orderId,skin);
       return json({success:true,free:false,...payment,reused:Boolean(order.reused)},201,origin);
     }
     if(path==="status") {
@@ -557,7 +403,7 @@ Deno.serve(async(req:Request)=>{
       message,
       stack: error instanceof Error ? error.stack : undefined
     }));
-    const status=message==="midtrans_not_configured"||message==="duitku_not_configured"?503:
+    const status=message==="midtrans_not_configured"?503:
       message==="already_owned"?409:
       message==="skin_not_found"?404:400;
     return fail(message,status,origin);
