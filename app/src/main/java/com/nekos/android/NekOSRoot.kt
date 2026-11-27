@@ -890,17 +890,21 @@ internal fun NekOSRoot(
         if (drawerVisible) {
             // A lightweight dark scrim separates the drawer from Home without
             // rendering a second, blurred copy of the wallpaper.
-            Box(
-                Modifier
-                    .fillMaxSize()
-                    .graphicsLayer {
-                        alpha = 0.32f * (1f - drawerProgress.floatValue)
-                    }
-                    .background(Color.Black)
-                    .clickable {
-                        closeDrawer()
-                    }
-            )
+            // Do not leave a full-screen clickable layer over Home when the
+            // drawer is fully closed (for example, after returning from another app).
+            if (drawerProgress.floatValue < 0.999f) {
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .graphicsLayer {
+                            alpha = 0.32f * (1f - drawerProgress.floatValue)
+                        }
+                        .background(Color.Black)
+                        .clickable {
+                            closeDrawer()
+                        }
+                )
+            }
 
             // The panel uses roughly 75% of the available screen height and
             // still adapts when the keyboard is visible.
