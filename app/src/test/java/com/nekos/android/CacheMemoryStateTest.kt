@@ -12,16 +12,17 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 class CacheMemoryStateTest {
     @Test
-    fun ordinaryBackgroundTransitionsDoNotTrimLauncherCaches() {
-        assertFalse(shouldTrimLauncherCaches(ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN))
-        assertFalse(shouldTrimLauncherCaches(ComponentCallbacks2.TRIM_MEMORY_BACKGROUND))
+    fun hiddenLauncherReleasesArtworkCaches() {
+        assertTrue(shouldTrimLauncherCaches(ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN))
+        assertTrue(shouldTrimLauncherCaches(ComponentCallbacks2.TRIM_MEMORY_BACKGROUND))
     }
 
     @Test
-    fun substantialMemoryPressureTrimsLauncherCaches() {
+    fun criticalMemoryPressureAlsoTrimsLauncherCaches() {
         assertTrue(shouldTrimLauncherCaches(ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL))
         assertTrue(shouldTrimLauncherCaches(ComponentCallbacks2.TRIM_MEMORY_MODERATE))
         assertTrue(shouldTrimLauncherCaches(ComponentCallbacks2.TRIM_MEMORY_COMPLETE))
+        assertFalse(shouldTrimLauncherCaches(ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW))
     }
 
     @Test
