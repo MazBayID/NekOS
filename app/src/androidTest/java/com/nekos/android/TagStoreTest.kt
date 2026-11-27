@@ -194,7 +194,7 @@ class TagStoreTest {
         assertEquals(emptyList<NekTag>(), loadResult.tags)
         assertEquals(false, loadResult.isValid)
         assertEquals(false, TagStore.save(context, listOf(NekTag(id = "new", name = "New"))))
-        assertEquals(malformed, tagsPreferences().getString("tag_collection_v1", null))
+        assertEquals(malformed, storedTagValue())
     }
 
     @Test
