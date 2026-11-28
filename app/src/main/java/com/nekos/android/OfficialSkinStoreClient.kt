@@ -81,8 +81,9 @@ internal object OfficialSkinStoreClient {
                 throw IllegalStateException(json.optString("details").ifBlank {
                     when (json.optString("error")) {
                         "payment_provider_not_configured", "midtrans_not_configured" -> "Midtrans belum dikonfigurasi di server."
-                        "payment_provider_inactive" -> "Midtrans sementara nonaktif. Silakan gunakan PayPal."
-                        "active_payment_provider_mismatch" -> "Masih ada pembayaran aktif melalui gateway lain. Selesaikan atau tunggu transaksi tersebut berakhir sebelum memilih gateway berbeda."
+                        "active_payment_provider_mismatch" -> "Masih ada pembayaran aktif melalui gateway lain. Selesaikan atau rekonsiliasi transaksi tersebut sebelum memilih gateway berbeda."
+                        "payment_switch_blocked" -> "Transaksi lama masih aktif. NekOS belum membuat pembayaran baru."
+                        "paypal_checkout_still_active" -> "Order PayPal masih aktif dan belum dapat dibatalkan. Tunggu sampai PayPal menyatakan order tidak aktif."
                         "purchase_required" -> "This skin has not been purchased on this device."
                         "already_owned" -> "This device already owns this skin."
                         "midtrans_expire_permission_required" -> "Agar transaksi otomatis ditutup setelah 15 menit, aktifkan izin 'Expire transaction: Write' pada Access Key Midtrans."
@@ -171,10 +172,66 @@ internal object OfficialSkinStoreClient {
             // recovered after process death.
             return StoreActionResult(false,"Unable to save the pending payment. Please try again.")
         }
-        return StoreActionResult(true,"Lanjutkan pembayaran melalui Midtrans, lalu kembali ke NekOS untuk verifikasi otomatis.",
+        return StoreActionResult(true,
+            if (provider.equals("paypal", true)) "Lanjutkan pembayaran melalui PayPal, lalu kembali ke NekOS untuk verifikasi otomatis."
+            else "Lanjutkan pembayaran melalui Midtrans, lalu kembali ke NekOS untuk verifikasi otomatis.",
             checkoutUrl=result.optString("checkout_url"),orderId=orderId,
             paymentProvider=provider.lowercase(),
             providerOrderId=result.optString("provider_order_id").takeIf { it.isNotBlank() })
+    }
+
+
+    @Synchronized
+    fun switchPaymentProvider(
+        context: Context,
+        skin: OfficialStoreSkin,
+        provider: String
+    ): StoreActionResult {
+        val prefs = context.getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE)
+        val currentOrderId = prefs.getString(PENDING_PREFIX + skin.id, null)
+            ?: return buy(context, skin, provider)
+
+        val result = request("/switch", "POST", JSONObject()
+            .put("android_id", androidId(context))
+            .put("app_version", appVersion(context))
+            .put("skin_id", skin.id)
+            .put("order_id", currentOrderId)
+            .put("provider", provider.lowercase())
+        )
+        if (result.optBoolean("paid") || result.optBoolean("owned")) {
+            return checkPaymentAndInstall(context, skin)
+        }
+
+        val nextOrderId = result.optString("order_id").ifBlank { currentOrderId }
+        val checkoutUrl = result.optString("checkout_url")
+        if (!result.optBoolean("success") || checkoutUrl.isBlank()) {
+            return StoreActionResult(
+                false,
+                result.optString("message", "NekOS belum dapat mengganti metode pembayaran."),
+                orderId = currentOrderId
+            )
+        }
+
+        if (!prefs.edit().putString(PENDING_PREFIX + skin.id, nextOrderId).commit()) {
+            return StoreActionResult(
+                false,
+                "Metode pembayaran sudah disiapkan di server, tetapi catatan pemulihannya gagal disimpan. Buka kembali Store untuk melanjutkan.",
+                orderId = nextOrderId
+            )
+        }
+
+        val selectedProvider = result.optString("provider", provider).lowercase()
+        return StoreActionResult(
+            true,
+            if (selectedProvider == "paypal")
+                "Lanjutkan pembayaran melalui PayPal."
+            else
+                "Lanjutkan pembayaran melalui Midtrans.",
+            checkoutUrl = checkoutUrl,
+            orderId = nextOrderId,
+            paymentProvider = selectedProvider,
+            providerOrderId = result.optString("provider_order_id").takeIf { it.isNotBlank() }
+        )
     }
 
     @Synchronized
