@@ -1244,6 +1244,7 @@ internal fun NekOSRoot(
                 isOfficialStoreLoading = isOfficialStoreLoading,
                 storeBusySkinId = storeBusySkinId,
                 pendingStoreSkinIds = pendingStoreSkinIds,
+                onCancelStorePayment = { skin -> cancelStoreCheckout(skin) },
                 onRefreshOfficialStore = {
                     if (!isOfficialStoreLoading) skinPickerScope.launch {
                         isOfficialStoreLoading = true
