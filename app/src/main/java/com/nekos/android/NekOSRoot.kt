@@ -1284,6 +1284,9 @@ internal fun NekOSRoot(
                             }.getOrElse { StoreActionResult(false, it.message ?: "Store action failed.") }
                         }
                         storeBusySkinId = null
+                        if (!result.success && result.message.isNotBlank()) {
+                            Toast.makeText(context, result.message, Toast.LENGTH_LONG).show()
+                        }
                         if (result.paymentProvider == "paypal" &&
                             !result.providerOrderId.isNullOrBlank() &&
                             !result.checkoutUrl.isNullOrBlank()
