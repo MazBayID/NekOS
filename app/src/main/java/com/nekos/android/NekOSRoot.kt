@@ -1500,7 +1500,17 @@ internal fun NekOSRoot(
                                 .getOrElse { StoreActionResult(false, it.message ?: "Store action failed.") }
                         }
                         storeBusySkinId = null
-                        if (!result.checkoutUrl.isNullOrBlank()) {
+                        if (result.paymentProvider == "paypal" &&
+                            !result.providerOrderId.isNullOrBlank() &&
+                            !result.checkoutUrl.isNullOrBlank()
+                        ) {
+                            (context as? MainActivity)?.startPayPalCheckout(
+                                result.providerOrderId,
+                                result.checkoutUrl
+                            ) ?: run {
+                                storeCheckout = Triple(skin, result.checkoutUrl, "paypal")
+                            }
+                        } else if (!result.checkoutUrl.isNullOrBlank()) {
                             storeCheckout = Triple(skin, result.checkoutUrl, result.paymentProvider ?: "midtrans")
                         }
                         if (result.success && result.installedSkinId != null) {
