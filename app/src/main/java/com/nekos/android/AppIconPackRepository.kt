@@ -37,8 +37,10 @@ internal class AppIconPackRepository(context: Context) {
     fun loadIcon(packageName: String, label: String): ResolvedAppIcon? {
         val entry = entries[packageName]
         entry?.iconPath?.let { path ->
-            decode(path)?.let { return ResolvedAppIcon(it, isGlyph = false) }
-            reportOnce(packageName, label, "full-icon-decode-failed", path)
+            decode(path)?.let {
+                reportOnce(packageName, label, "manifest-full-icon", path)
+                return ResolvedAppIcon(it, isGlyph = false)
+            }
         }
 
         if (entry != null) {
@@ -46,7 +48,7 @@ internal class AppIconPackRepository(context: Context) {
                 reportOnce(packageName, label, "manifest-glyph", entry.glyph)
                 return ResolvedAppIcon(it, isGlyph = true)
             }
-            reportOnce(packageName, label, "manifest-glyph-decode-failed", entry.glyph)
+
         }
 
         val keywordGlyph = resolveKeywordGlyph(packageName, label)
@@ -55,7 +57,7 @@ internal class AppIconPackRepository(context: Context) {
                 reportOnce(packageName, label, "keyword-fallback", keywordGlyph)
                 return ResolvedAppIcon(it, isGlyph = true)
             }
-            reportOnce(packageName, label, "keyword-glyph-decode-failed", keywordGlyph)
+
         }
 
         val fallback = defaultGlyph
@@ -69,7 +71,13 @@ internal class AppIconPackRepository(context: Context) {
 
     private fun reportOnce(packageName: String, label: String, reason: String, detail: String) {
         if (!reportedPackages.add(packageName)) return
-        Log.w(TAG, "Icon resolution: package=$packageName label=$label source=$reason detail=$detail")
+        val summary = diagnosticSummary()
+        val level = if (reason == "default-fallback" || reason == "icon-resolution-failed") Log.WARN else Log.INFO
+        if (level == Log.WARN) {
+            Log.w(TAG, "Icon resolution: package=$packageName label=$label source=$reason detail=$detail; $summary")
+        } else {
+            Log.i(TAG, "Icon resolution: package=$packageName label=$label source=$reason detail=$detail; $summary")
+        }
     }
 
     internal fun diagnosticSummary(): String =
