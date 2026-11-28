@@ -1,7 +1,6 @@
 package com.nekos.android
 
 import android.content.Context
-import android.content.pm.LauncherApps
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.drawable.BitmapDrawable
@@ -191,8 +190,8 @@ class AppIconBitmapCache(
 
         if (packedIcon != null) {
             return runCatching {
-                appContext.getSystemService(LauncherApps::class.java)
-                    .getBadgedDrawableForUser(
+                appContext.packageManager
+                    .getUserBadgedIcon(
                         BitmapDrawable(appContext.resources, packedIcon),
                         app.user
                     )
