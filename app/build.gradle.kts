@@ -62,6 +62,7 @@ android {
     sourceSets {
         getByName("main") {
             assets.srcDir("../main_assets/icon_pack")
+            assets.exclude("tools/**", "LICENSES/**", "preview_*.png", "README.md")
         }
     }
 
