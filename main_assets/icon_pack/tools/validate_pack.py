@@ -89,7 +89,9 @@ for item in apps:
     glyph = item.get("glyph")
     if not re.fullmatch(r"[A-Za-z][A-Za-z0-9_]*(\.[A-Za-z0-9_]+)+", package):
         ERRORS.append(f"package tidak valid: {package}")
-    if glyph is not None and glyph not in glyphs:
+    if glyph is None:
+        ERRORS.append(f"{package}: exact mapping harus memiliki glyph")
+    elif glyph not in glyphs:
         ERRORS.append(f"{package}: glyph '{glyph}' tidak ada")
     if not item.get("name"):
         ERRORS.append(f"{package}: tanpa nama")
