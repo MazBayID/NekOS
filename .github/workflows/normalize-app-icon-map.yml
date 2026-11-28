@@ -3,10 +3,12 @@ name: Normalize app icon catalog
 on:
   push:
     branches:
+      - main
       - fix/app-icon-catalog-v2
     paths:
       - ".github/workflows/normalize-app-icon-map.yml"
       - "main_assets/icon_pack-v2/tools/normalize_app_icon_map.py"
+      - "main_assets/icon_pack-v2/app_icon_map.json"
 
 permissions:
   contents: write
