@@ -35,15 +35,17 @@ Pulihkan alur pembayaran sampai skin terunduh dan terpasang, dengan transaksi ny
 
 ## Checkpoint 1 — temuan yang perlu ditelusuri
 - Kode backend `skin-store` sama dengan source produksi v48; RPC payment sudah dibatasi ke service_role.
-- Android `NekOSPayPalCheckout.kt` mengunci `CoreEnvironment.SANDBOX`, sedangkan backend `PAYPAL_MODE` dapat `sandbox` atau `live`. Mode dan client ID SDK belum disinkronkan dari konfigurasi backend; ini berisiko mismatch saat backend live.
+- Backend PayPal produksi saat ini menggunakan Sandbox (dibuktikan dari host checkout URL `www.sandbox.paypal.com` pada seluruh order PayPal yang tercatat). Android SDK juga mengunci `CoreEnvironment.SANDBOX`, sehingga mode saat ini cocok. Namun konfigurasi ini akan mismatch jika backend kelak diubah ke Live tanpa pembaruan aplikasi.
 - PayPal return URL web diarahkan ke halaman instruksi statis; pemasangan tetap harus dilanjutkan dari aplikasi.
 - Android mengirim order ID ke `/status`; backend akan capture bila PayPal order `APPROVED`, dan entitlement hanya diberikan setelah capture `COMPLETED` serta validasi amount/currency/reference.
+- Riwayat database: 6 order PayPal sebelumnya sudah `paid` dengan entitlement; order Aurum `USD 1.49` adalah satu-satunya PayPal order terbaru yang masih `pending`. Ini menunjukkan PayPal Sandbox dan capture pernah berhasil, sehingga belum ada bukti kegagalan menyeluruh provider.
+- Order Aurum memiliki checkout URL Sandbox dan belum menyimpan `provider_payment_id` maupun `provider_payload`; belum ada bukti capture sukses. Karena secret PayPal tidak dapat dibaca melalui connector, status remote (CREATED/APPROVED/COMPLETED) belum dapat diambil langsung.
 - Log 28 Nov: 53 request `/status` HTTP 200, 7 `/purchase` HTTP 201, 8 `/download` HTTP 200; tidak ada request POST ke `/webhook` maupun `/paypal-webhook` pada rentang log yang diperiksa.
 - `skin_payment_events` kosong dan webhook tidak menyimpan event. Status polling tetap tersedia sebagai jalur rekonsiliasi.
-- Midtrans Snap membuat payment attempt sebelum memanggil API provider; retry dapat memakai order yang sama dan attach payment di-upsert. Midtrans status/webhook memverifikasi status provider, order ID, nominal, mata uang, dan signature.
+- Midtrans Snap membuat payment attempt sebelum memanggil API provider; retry dapat memakai order yang sama dan attach payment di-upsert. Midtrans status/webhook memverifikasi status provider, order ID, nominal, mata uang, dan signature. Snap 404 sebelum metode pembayaran dipilih dan expiry 15 menit ditangani di status/cancel flow.
 - Koneksi Supabase saat ini tidak menyediakan pembacaan daftar secret Edge Function; nilai/keberadaan secret dan mode aktif belum dapat diverifikasi tanpa endpoint diagnostik aman atau akses dashboard.
 - Migrasi lama `20261127160000_skin_store_reject_late_cancelled_payment.sql` tidak boleh diterapkan langsung: provider allowlist-nya masih `midtrans,duitku` dan dapat menimpa fungsi terbaru.
 - Belum ditemukan test integrasi otomatis untuk alur transaksi provider; test Android yang ada hanya mencakup pemilihan provider dan validasi installer.
 
 ## Status
-Tahap 1 audit kode dan database selesai; verifikasi secret aktif masih terbatas oleh akses connector. Belum ada kode aplikasi, konfigurasi, database, deployment, atau transaksi produksi yang diubah. Berikutnya: Tahap 2 — audit dan uji Midtrans sandbox.
+Tahap 1 audit fondasi selesai. Tahap 2 review kode Midtrans selesai, tetapi sandbox end-to-end belum bisa diuji karena secret tidak dapat dibaca lewat connector. Tahap 3 review kode PayPal selesai; enam transaksi Sandbox terdahulu sukses, sedangkan Aurum masih pending dan status provider remote belum dapat dibuktikan. Belum ada kode aplikasi, konfigurasi, database, deployment, atau transaksi produksi yang diubah.
