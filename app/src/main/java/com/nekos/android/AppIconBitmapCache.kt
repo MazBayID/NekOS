@@ -3,6 +3,12 @@ package com.nekos.android
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffColorFilter
+import android.graphics.RectF
 import android.util.LruCache
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -50,6 +56,8 @@ class AppIconBitmapCache(
 ) {
     private val appContext = context.applicationContext
     private val diskDirectory = File(appContext.filesDir, "icon_cache")
+    private val iconPackRepository = AppIconPackRepository(appContext)
+    @Volatile private var iconBadgeColorArgb: Int = DEFAULT_LAUNCHER_UI_COLOR.toInt()
     private val memoryCache = object : LruCache<String, ImageBitmap>(maxSizeKb) {
         override fun sizeOf(key: String, bitmap: ImageBitmap): Int =
             (bitmap.width * bitmap.height * 4 / 1024).coerceAtLeast(1)
@@ -65,6 +73,20 @@ class AppIconBitmapCache(
 
     operator fun get(cacheKey: String): ImageBitmap? =
         memoryState.ifEnabled { memoryCache.get(cacheKey) }
+
+    /** Stable cache identity for the active built-in icon pack and badge color. */
+    fun cacheKey(app: InstalledApp): String =
+        "${app.iconCacheKey}::nekos-icon-pack-v2::${Integer.toHexString(iconBadgeColorArgb)}"
+
+    /** Update the shared icon badge color without allowing old-color bitmaps to reappear. */
+    @Synchronized
+    fun setIconBadgeColor(colorArgb: Long) {
+        val nextColor = normalizeLauncherUiColor(colorArgb).toInt()
+        if (nextColor == iconBadgeColorArgb) return
+        iconBadgeColorArgb = nextColor
+        memoryCache.evictAll()
+        generation++
+    }
 
     /**
      * Size the RAM cache for the current catalog, while keeping it within a
@@ -105,9 +127,9 @@ class AppIconBitmapCache(
     }
 
     suspend fun getOrLoad(app: InstalledApp): ImageBitmap? {
-        memoryState.ifEnabled { memoryCache.get(app.iconCacheKey) }?.let { return it }
+        val cacheKey = cacheKey(app)
+        memoryState.ifEnabled { memoryCache.get(cacheKey) }?.let { return it }
 
-        val cacheKey = app.iconCacheKey
         return keyLocks.withLock(cacheKey) {
             memoryState.ifEnabled { memoryCache.get(cacheKey) }?.let {
                 return@withLock it
@@ -177,12 +199,40 @@ class AppIconBitmapCache(
         }
     }
 
-    private fun createAppIcon(app: InstalledApp): Bitmap =
-        try {
+    private fun createAppIcon(app: InstalledApp): Bitmap {
+        val packIcon = runCatching {
+            iconPackRepository.loadIcon(app.packageName, app.label)
+        }.getOrNull()
+
+        if (packIcon != null) {
+            return try {
+                renderIconBadge(packIcon, iconBadgeColorArgb)
+            } finally {
+                packIcon.recycle()
+            }
+        }
+
+        return try {
             app.launcherActivityInfo.getBadgedIcon(app.iconDensityDpi).toBitmap(96, 96)
         } catch (_: Exception) {
             appContext.packageManager.defaultActivityIcon.toBitmap(96, 96)
         }
+    }
+
+    private fun renderIconBadge(source: Bitmap, badgeColor: Int): Bitmap {
+        val output = Bitmap.createBitmap(96, 96, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(output)
+        val badgePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = badgeColor
+        }
+        canvas.drawRoundRect(RectF(4f, 4f, 92f, 92f), 22f, 22f, badgePaint)
+
+        val glyphPaint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG).apply {
+            colorFilter = PorterDuffColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN)
+        }
+        canvas.drawBitmap(source, null, RectF(14f, 14f, 82f, 82f), glyphPaint)
+        return output
+    }
 
     private fun readDiskBitmap(cacheKey: String): Bitmap? {
         val file = diskFile(cacheKey)
