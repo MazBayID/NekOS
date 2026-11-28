@@ -17,6 +17,15 @@ internal data class OfficialStoreSkin(
     val owned: Boolean = false,
     val priceUsd: Double = 0.0
 )
+internal class StoreApiException(
+    val errorCode: String,
+    message: String
+) : IllegalStateException(message)
+
+internal fun isMissingStoreOrderError(errorCode: String): Boolean =
+    errorCode.equals("order_not_found", ignoreCase = true) ||
+        errorCode.equals("not_found_order", ignoreCase = true)
+
 internal data class StoreActionResult(
     val success: Boolean, val message: String, val checkoutUrl: String? = null,
     val orderId: String? = null, val installedSkinId: String? = null,
@@ -88,8 +97,9 @@ internal object OfficialSkinStoreClient {
                 throw IllegalStateException("Store server returned an invalid response ($code)")
             }
             if (code !in 200..299) {
-                throw IllegalStateException(json.optString("details").ifBlank {
-                    when (json.optString("error")) {
+                val errorCode = json.optString("error")
+                throw StoreApiException(errorCode, json.optString("details").ifBlank {
+                    when (errorCode) {
                         "payment_provider_not_configured", "midtrans_not_configured" -> "Midtrans belum dikonfigurasi di server."
                         "active_payment_provider_mismatch" -> "Masih ada pembayaran aktif melalui gateway lain. Selesaikan atau rekonsiliasi transaksi tersebut sebelum memilih gateway berbeda."
                         "payment_switch_blocked" -> "Transaksi lama masih aktif. NekOS belum membuat pembayaran baru."
@@ -276,8 +286,23 @@ internal object OfficialSkinStoreClient {
         val prefs=context.getSharedPreferences(PREFERENCES,Context.MODE_PRIVATE)
         val orderId=prefs.getString(PENDING_PREFIX+skin.id,null)
             ?: return StoreActionResult(false,"No pending payment found for this skin.")
-        val result=request("/status","POST",JSONObject().put("android_id",androidId(context))
-            .put("app_version",appVersion(context)).put("order_id",orderId))
+        val result = try {
+            request("/status", "POST", JSONObject().put("android_id", androidId(context))
+                .put("app_version", appVersion(context)).put("order_id", orderId))
+        } catch (error: StoreApiException) {
+            if (!isMissingStoreOrderError(error.errorCode)) throw error
+            val cleared = prefs.edit().remove(PENDING_PREFIX + skin.id).commit()
+            return StoreActionResult(
+                false,
+                if (cleared) {
+                    "Pesanan sebelumnya tidak ditemukan. Tombol BUY tersedia kembali untuk memulai pembelian baru."
+                } else {
+                    "Pesanan tidak ditemukan, tetapi catatan pembelian lokal gagal dibersihkan. Coba CHECK & INSTALL lagi."
+                },
+                orderId = orderId,
+                paymentFailed = cleared
+            )
+        }
         if (!result.optBoolean("owned")) {
             val status=result.optString("status").lowercase()
             val failureMessage = when (status) {
