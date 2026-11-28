@@ -16,6 +16,11 @@ internal data class AppIconKeywordRule(
     val glyph: String
 )
 
+internal data class ResolvedAppIcon(
+    val bitmap: Bitmap,
+    val isGlyph: Boolean
+)
+
 /**
  * Reads the bundled icon_pack-v2 manifest and resolves package names to either
  * a full app artwork file or a catalog glyph. This repository is deliberately
@@ -27,14 +32,14 @@ internal class AppIconPackRepository(context: Context) {
     private val defaultGlyph by lazy(LazyThreadSafetyMode.SYNCHRONIZED) { loadDefaultGlyph() }
     private val keywordRules by lazy(LazyThreadSafetyMode.SYNCHRONIZED) { loadKeywordRules() }
 
-    fun loadIcon(packageName: String, label: String): Bitmap? {
+    fun loadIcon(packageName: String, label: String): ResolvedAppIcon? {
         val entry = entries[packageName]
         entry?.iconPath?.let { path ->
-            decode(path)?.let { return it }
+            decode(path)?.let { return ResolvedAppIcon(it, isGlyph = false) }
         }
 
         val glyph = entry?.glyph ?: resolveKeywordGlyph(packageName, label) ?: defaultGlyph
-        return decode(glyphAssetPath(glyph))
+        return decode(glyphAssetPath(glyph))?.let { ResolvedAppIcon(it, isGlyph = true) }
     }
 
     private fun resolveKeywordGlyph(packageName: String, label: String): String? {
