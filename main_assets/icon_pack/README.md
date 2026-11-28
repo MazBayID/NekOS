@@ -1,72 +1,141 @@
-# NekOS Icon Pack · Essentials (v3)
+# NekOS App Icon Pack
 
-Ikon aplikasi bawaan NekOS: monochrome (mask putih + alpha), bisa di-tint, ringan. Dua lapis:
+Kumpulan ikon merek dan glyph kategori untuk rancangan sistem ikon aplikasi NekOS. Paket ini berisi data, aturan pencocokan, serta alat pembuat dan validator mapping.
 
-1. **Ikon merek** bersiluet khas per aplikasi: `icons/brands/` (**3.369 ikon**, 96×96 WebP lossless, ±1,4 KB per ikon, ±4,8 MB total). Sumber: [Simple Icons](https://simpleicons.org), [lisensi](path://main_assets/icon_pack/LICENSE/simple-icons-LICENSE.md) CC0 (`LICENSES/`).
-2. **Glyph kategori** generik: `icons/apps/` (**109 glyph**, gaya NekOS) sebagai cadangan bila aplikasi tidak punya ikon merek.
+## Status integrasi saat ini
 
-![contoh](preview_brands.png)
+<ins>Icon pack ini belum digunakan oleh launcher NekOS saat runtime.</ins>
 
-## Status jujur
+Audit kode aplikasi menunjukkan:
 
-| | Jumlah |
-|---|---|
-| Ikon merek tersedia | 3.369 |
-| Aplikasi di peta pasti (`app_icon_map.json`) | 1.418 |
-| …yang terhubung ke ikon merek | **362** |
-| …sisanya | memakai glyph kategori |
+- `AppIconBitmapCache.kt` masih mengambil ikon melalui `LauncherActivityInfo.getBadgedIcon()` dan memakai ikon default Android jika gagal.
+- `app/build.gradle.kts` belum menambahkan `main_assets/icon_pack/` ke Android assets atau source set.
+- `IconCatalogRepository.kt` hanya memuat katalog ikon tag dari `icons/tag/`; repository tersebut bukan loader untuk app icon pack.
 
-Angka 3.000 **tidak** berarti 3.000 aplikasi Android terpetakan:
+Jadi, perubahan pada JSON atau file gambar di folder ini **belum mengubah ikon aplikasi yang terlihat di launcher**. Agar aktif, NekOS masih memerlukan integrasi runtime tersendiri: packaging assets, resolver aplikasi, cache, dan rendering. Jangan menganggap dokumen ini sebagai bukti bahwa integrasi tersebut sudah selesai.
 
-- Simple Icons berisi merek apa saja (termasuk situs dan perangkat lunak desktop), bukan hanya aplikasi Android. Dari 1.418 aplikasi di peta, 362 punya padanan ikon merek.
-- Set ini **tidak punya** banyak merek penting: Microsoft Office/Teams/Outlook, Amazon, Disney+, Slack, Skype, dan hampir semua aplikasi Indonesia (Tokopedia, Traveloka, DANA, OVO, BCA, dll.). Aplikasi itu jatuh ke glyph kategori. Menggambar logo merek akurat tidak bisa dilakukan secara otomatis.
-- Package name di peta ditulis dari pengetahuan umum dan **belum diverifikasi satu per satu** ke Play Store.
+Dokumentasi Android: [LauncherActivityInfo](https://developer.android.com/reference/android/content/pm/LauncherActivityInfo).
 
-## Urutan pencocokan (di launcher)
+## Isi dan jumlah aset
 
-1. `app_icon_map.json` → `apps[]` exact package: pakai `brand` bila ada, jika tidak `glyph`.
-2. Label aplikasi → `brand_index.json` (normalisasi: huruf kecil, `+`→`plus`, `&`→`and`, buang selain a-z0-9; cocokkan ke `slugs` atau `aliases`). Ini menangkap aplikasi tak terdaftar yang labelnya sama dengan merek.
-3. `app_icon_rules.json` → `prefix_rules` (awalan terpanjang) lalu `keyword_rules`.
-4. `default_glyph` = `paw`.
+| Komponen | Jumlah | Fungsi |
+|---|---:|---|
+| Ikon merek, `icons/brands/` | 3.369 | Identitas merek aplikasi |
+| Glyph kategori, `icons/apps/` | 109 | Fallback kategori generik |
+| Package exact, `app_icon_map.json` | 1.418 | Mapping package yang ditulis eksplisit |
+| Package exact dengan ikon merek | 362 | Mapping exact yang punya brand |
+| Glyph unik yang dipakai mapping exact | 88 | Bagian dari 109 glyph tersedia |
 
-Aturan (langkah 3) hanya tebakan. Uji internal pada 311 package di luar peta pasti: 123 cocok awalan, 84 cocok kata kunci, 104 jatuh ke `paw`; itu ukuran cakupan, bukan ketepatan.
+Jumlah ikon merek tidak harus sama dengan jumlah package Android. Direktori merek berasal dari katalog Simple Icons yang juga berisi layanan web, produk desktop, dan merek yang tidak mempunyai aplikasi Android. `brand_index.json` adalah katalog merek; `app_icon_map.json` adalah daftar package Android yang diketahui. Keduanya punya tujuan berbeda.
 
-## Isi
+Package name di `app_icon_map.json` disusun dari pengetahuan umum dan **belum diverifikasi satu per satu terhadap Play Store atau perangkat pengguna**. Mapping exact berarti package tersebut sengaja dicantumkan di file proyek, bukan jaminan bahwa package terpasang pada semua perangkat.
+
+## Struktur direktori
 
 ```
-icons/brands/<slug>.webp    3.369 ikon merek
-icons/apps/icon_<glyph>.webp + icons_index.json/.md   109 glyph kategori
-app_icon_map.json           package -> glyph (+ brand)   (schema_version 3)
-brand_index.json            daftar slug + alias + aturan normalisasi label
-app_icon_rules.json         prefix_rules, keyword_rules
-preview_brands.png, preview_glyphs.png
-LICENSES/simple-icons-LICENSE.md
-tools/map_packages.py       petakan daftar package (brand -> exact -> prefix -> rule)
-tools/validate_pack.py      validasi seluruh paket
+main_assets/icon_pack/
+├── app_icon_map.json
+├── app_icon_rules.json
+├── brand_index.json
+├── icons/
+│   ├── apps/
+│   │   ├── icon_<glyph>.webp
+│   │   └── icons_index.json
+│   └── brands/
+│       └── <slug>.webp
+├── tools/
+│   ├── map_packages.py
+│   └── validate_pack.py
+├── LICENSES/
+│   └── simple-icons-LICENSE.md
+├── preview_brands.png
+└── preview_glyphs.png
 ```
 
-## Cara pakai
+Semua path di dalam JSON bersifat relatif terhadap direktori `main_assets/icon_pack/`.
 
-- Warna tidak ada di file: tint glyph/ikon merek dengan warna `on_badge` di atas badge ber-tint Shared UI (komposisi sama dengan ikon tag), atau tint `foreground` tanpa badge. Warna `on_badge` otomatis berdasarkan kontras: lihat `nekos_skin_kit` v3 `docs/01 §3.5`.
-- Muat peta + `brand_index.json` sekali saat start; decode ikon malas + cache (±36 KB bitmap per ikon).
-- Ikon merek sudah dipusatkan dan dinormalkan ke maks 76 px dalam kanvas 96 (live area 80×80), sehingga ukuran optiknya seragam dengan glyph.
+## Aturan resolusi yang dimaksud
 
-## Memperluas
+Resolver aplikasi nantinya harus mengikuti aturan berikut. Urutan ini juga menjadi acuan `map_packages.py`.
+
+### 1. Package yang ada di `app_icon_map.json`
+
+- Jika entri exact memiliki `brand`, gunakan ikon merek sebagai ikon utama dan `glyph` sebagai fallback.
+- Jika entri exact tidak memiliki `brand`, gunakan `glyph` exact.
+- Entri exact tidak boleh ditimpa oleh tebakan dari label, prefix, atau keyword.
+
+### 2. Package yang belum ada di mapping exact
+
+- Normalisasi label aplikasi: huruf kecil, `+` menjadi `plus`, `&` menjadi `and`, lalu buang karakter selain `a-z0-9`.
+- Cocokkan hasilnya secara exact dengan slug atau alias di `brand_index.json`. Jika cocok, gunakan ikon merek.
+- Glyph kategori fallback dipilih secara terpisah: `prefix_rules` (prefix terpanjang), lalu `keyword_rules` (regex pertama yang cocok, case-insensitive), lalu `default_glyph`.
+
+Pencocokan label tidak memakai fuzzy matching atau pencocokan sebagian. Ini disengaja untuk mengurangi risiko aplikasi yang namanya hanya mirip mendapat logo merek yang salah. Alias generik seperti `foto` tidak digunakan karena dapat menunjuk ke banyak aplikasi galeri yang berbeda.
+
+### Arti field hasil mapper
+
+- `source`: asal pemilihan glyph, yaitu `exact`, `prefix`, `rule`, atau `default`.
+- `brand_source`: asal ikon merek, yaitu `exact` atau `label`.
+- `brand`: slug ikon merek. Field ini opsional; `glyph` tetap disediakan sebagai fallback.
+
+Dengan demikian, package yang cocok dengan brand melalui label tetap dapat mempunyai glyph kategori hasil prefix/keyword. Kedua field tersebut bukan dua keputusan yang saling menimpa.
+
+## Namespace ikon dan nama `paw`
+
+Jalur aset harus tetap terpisah:
+
+- `icons/apps/`: glyph kategori app icon pack.
+- `icons/brands/`: ikon merek app icon pack.
+- `icons/tag/`: katalog ikon tag skin NekOS.
+- `motifs/`: motif dekoratif skin, termasuk motif paw bila tersedia.
+
+Nama glyph `paw` pada app icon pack tidak bentrok dengan motif atau tag bernama serupa selama resolver memakai path dan katalog yang benar. Jangan gabungkan app icon pack ke `IconCatalogRepository`, karena repository tersebut secara sengaja membatasi path ke `icons/tag/`.
+
+## Format aset
+
+- Glyph dan ikon merek: WebP, 96×96, RGBA.
+- Foreground ikon adalah mask putih dengan alpha; warna diterapkan oleh renderer.
+- Ikon merek dinormalisasi ke kanvas 96×96 agar ukuran optiknya relatif konsisten.
+- Glyph kategori merupakan gambar generik proyek NekOS.
+- Ikon merek bersumber dari Simple Icons (CC0 1.0). CC0 pada file sumber tidak menghapus hak merek dagang atas logo; ikuti pedoman pemilik merek sebelum distribusi komersial.
+
+Lisensi: [LICENSES/simple-icons-LICENSE.md](LICENSES/simple-icons-LICENSE.md).
+
+## Menghasilkan mapping tambahan
+
+Ambil daftar package dari perangkat Android:
 
 ```bash
-adb shell pm list packages -3 | sed 's/package://' > packages.txt
+adb shell pm list packages | sed 's/package://' > packages.txt
 python3 tools/map_packages.py packages.txt -o extra_map.json
+```
+
+Gunakan `pm list packages -3` sebagai ganti perintah di atas jika hanya ingin aplikasi pihak ketiga.
+
+Hasil `extra_map.json` adalah mapping tambahan untuk ditinjau, bukan pengganti otomatis `app_icon_map.json`. Periksa kembali setiap hasil `prefix`, `rule`, dan `default`; hasil heuristic bukan identifikasi yang terverifikasi. Hasil brand dari label juga perlu ditinjau bila label aplikasi ambigu.
+
+## Validasi
+
+Validator memeriksa:
+
+- struktur JSON dan konsistensi jumlah metadata;
+- package duplikat, referensi glyph, brand, alias, dan default;
+- konsistensi aturan prefix/keyword dengan file glyph yang tersedia;
+- sinkronisasi `icons_index.json` dan `brand_index.json`;
+- format WebP, ukuran 96×96 RGBA, mask putih, dan batas live area.
+
+Jalankan dari direktori paket:
+
+```bash
+python3 -m pip install pillow numpy
 python3 -I tools/validate_pack.py
 ```
 
-Hasil bertanda `source`: `exact` (pasti), `prefix`/`rule` (tebakan; tinjau), `default`; `brand` bila ikon merek ditemukan dari label.
+Validator memeriksa file gambar sebenarnya, bukan hanya nama file atau JSON. Jalankan kembali setelah mengganti atau menambah aset.
 
-## Merek dagang dan lisensi
+## Batasan dan pekerjaan lanjutan
 
-File SVG Simple Icons berlisensi CC0, tetapi **logo adalah merek dagang pemiliknya**. Memakainya untuk mengidentifikasi aplikasi yang bersangkutan lazim dilakukan, namun pemilik merek bisa punya pedoman penggunaan sendiri. Tinjau (dan bila perlu minta nasihat hukum) sebelum merilis NekOS dengan ikon merek bawaan. Glyph kategori di `icons/apps/` adalah gambar generik milik proyek ini.
-
-## Perubahan dari v2
-
-- Ditambah 3.369 ikon merek, `brand_index.json`, `preview_brands.png`, dan lisensi.
-- `app_icon_map.json`: kolom `brand` (362 aplikasi), `schema_version` 3.
-- `map_packages.py` dan `validate_pack.py` mendukung ikon merek.
+- Mapping package exact belum diverifikasi satu per satu pada Play Store.
+- Brand index hanya mencakup merek yang tersedia di Simple Icons; banyak aplikasi lokal atau merek yang tidak tercakup akan memakai glyph kategori.
+- Prefix dan keyword adalah heuristik, bukan bukti identitas aplikasi.
+- Runtime resolver dan packaging Android belum dibuat. Integrasi itu harus dilakukan terpisah dan diuji tanpa mengubah katalog tag atau motif skin.
