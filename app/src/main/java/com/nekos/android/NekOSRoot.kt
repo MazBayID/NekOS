@@ -1503,11 +1503,9 @@ internal fun NekOSRoot(
                         storeBusySkinId = skin.id
                         val result = withContext(Dispatchers.IO) {
                             runCatching {
-                                if (pendingStoreSkinIds.contains(skin.id)) {
-                                    OfficialSkinStoreClient.switchPaymentProvider(context, skin, provider)
-                                } else {
-                                    OfficialSkinStoreClient.buy(context, skin, provider)
-                                }
+                                // The client falls back to a first purchase when no pending
+                                // order exists; otherwise the server reconciles before switching.
+                                OfficialSkinStoreClient.switchPaymentProvider(context, skin, provider)
                             }.getOrElse { StoreActionResult(false, it.message ?: "Store action failed.") }
                         }
                         storeBusySkinId = null
