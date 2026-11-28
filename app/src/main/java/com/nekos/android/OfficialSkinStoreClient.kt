@@ -169,7 +169,7 @@ internal object OfficialSkinStoreClient {
             // recovered after process death.
             return StoreActionResult(false,"Unable to save the pending payment. Please try again.")
         }
-        return StoreActionResult(true,"Complete payment in the opened payment page, then return to NekOS.",
+        return StoreActionResult(true,"Lanjutkan pembayaran melalui Midtrans, lalu kembali ke NekOS untuk verifikasi otomatis.",
             checkoutUrl=result.optString("checkout_url"),orderId=orderId,
             paymentProvider=provider.lowercase())
     }
