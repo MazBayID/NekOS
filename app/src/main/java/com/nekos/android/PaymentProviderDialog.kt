@@ -52,7 +52,7 @@ internal fun PaymentProviderDialog(
                         selected = selectedProvider == "paypal",
                         onClick = { selectedProvider = "paypal" }
                     )
-                    Text("PayPal · US\${String.format(java.util.Locale.US, "%.2f", priceUsd)}", fontSize = 14.sp)
+                    Text("PayPal · " + String.format(java.util.Locale.US, "US$%.2f", priceUsd), fontSize = 14.sp)
                 }
             }
         },
