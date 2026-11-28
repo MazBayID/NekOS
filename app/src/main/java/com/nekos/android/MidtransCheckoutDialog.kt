@@ -1,28 +1,26 @@
 package com.nekos.android
 
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
-import android.webkit.CookieManager
-import android.webkit.WebChromeClient
-import android.webkit.WebResourceRequest
-import android.webkit.WebView
-import android.webkit.WebViewClient
-import android.webkit.WebSettings
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,44 +28,40 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import androidx.compose.ui.platform.LocalContext
-
-private const val MIDTRANS_FINISH_HOST = "mazbayid.github.io"
-private const val MIDTRANS_FINISH_PATH = "/skin-payment-return/"
 
 private fun isTrustedStoreCheckout(value: String, provider: String): Boolean = runCatching {
     val uri = Uri.parse(value)
     val host = uri.host?.lowercase().orEmpty()
-    val allowedHosts = if (provider.equals("paypal", true)) {
-        setOf("www.paypal.com", "www.sandbox.paypal.com")
+    val paypalHosts = setOf("www.paypal.com", "www.sandbox.paypal.com")
+    val midtransHosts = setOf(
+        "app.midtrans.com",
+        "app.sandbox.midtrans.com",
+        "simulator.sandbox.midtrans.com",
+        "gopay.co.id",
+        "gojek.link",
+        "link.gojek.com"
+    )
+    val allowed = if (provider.equals("paypal", true)) {
+        host in paypalHosts
     } else {
-        setOf("app.midtrans.com", "app.sandbox.midtrans.com")
+        host in midtransHosts || host.endsWith(".gopay.co.id") || host.endsWith(".gojek.link")
     }
-    uri.scheme?.lowercase() == "https" && host in allowedHosts &&
+    uri.scheme?.lowercase() == "https" && allowed &&
         uri.userInfo == null && (uri.port == -1 || uri.port == 443)
 }.getOrDefault(false)
 
-private fun isPaymentAppLink(uri: Uri): Boolean {
-    val host = uri.host?.lowercase().orEmpty()
-    val scheme = uri.scheme?.lowercase().orEmpty()
-    return (scheme != "http" && scheme != "https") ||
-        host in setOf(
-            "gojek.link",
-            "gopay.co.id",
-            "gopayapp.page.link",
-            "gojek.page.link",
-            "wsa.wallet.airpay.co.id",
-            "tmrwbyuobid.page.link"
-        )
-}
+private fun isGoPayCheckout(value: String): Boolean = runCatching {
+    val host = Uri.parse(value).host?.lowercase().orEmpty()
+    host == "simulator.sandbox.midtrans.com" ||
+        host == "gopay.co.id" || host.endsWith(".gopay.co.id") ||
+        host == "gojek.link" || host.endsWith(".gojek.link") ||
+        host == "link.gojek.com"
+}.getOrDefault(false)
 
 @Composable
 internal fun StoreCheckoutDialog(
@@ -78,26 +72,14 @@ internal fun StoreCheckoutDialog(
     onCancelPurchase: () -> Unit
 ) {
     val context = LocalContext.current
-    var paymentWebView by remember { mutableStateOf<WebView?>(null) }
+    val isPaypal = provider.equals("paypal", ignoreCase = true)
+    val isGoPay = !isPaypal && isGoPayCheckout(checkoutUrl)
+    val trustedUrl = remember(checkoutUrl, provider) {
+        isTrustedStoreCheckout(checkoutUrl, provider)
+    }
     var showCancelConfirmation by remember { mutableStateOf(false) }
-    val trustedUrl = remember(checkoutUrl, provider) { isTrustedStoreCheckout(checkoutUrl, provider) }
 
-    BackHandler {
-        val webView = paymentWebView
-        if (webView?.canGoBack() == true) webView.goBack() else onDismiss()
-    }
-
-    DisposableEffect(Unit) {
-        onDispose {
-            paymentWebView?.apply {
-                stopLoading()
-                webChromeClient = null
-                webViewClient = WebViewClient()
-                destroy()
-            }
-            paymentWebView = null
-        }
-    }
+    BackHandler { onDismiss() }
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -105,9 +87,9 @@ internal fun StoreCheckoutDialog(
     ) {
         Surface(
             modifier = Modifier
-                .fillMaxWidth(0.94f)
-                .widthIn(max = 460.dp)
-                .fillMaxHeight(0.88f),
+                .fillMaxWidth(0.92f)
+                .widthIn(max = 420.dp)
+                .fillMaxHeight(0.48f),
             shape = RoundedCornerShape(24.dp),
             color = Color(0xFFF7F8FA),
             shadowElevation = 20.dp
@@ -118,12 +100,14 @@ internal fun StoreCheckoutDialog(
                         .fillMaxWidth()
                         .height(54.dp)
                         .background(Color(0xFF071A33))
-                        .padding(horizontal = 14.dp),
+                        .padding(horizontal = 16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        "PEMBAYARAN ${provider.uppercase()}",
+                        if (isPaypal) "PEMBAYARAN PAYPAL"
+                        else if (isGoPay) "PEMBAYARAN GOPAY"
+                        else "PEMBAYARAN MIDTRANS",
                         color = Color.White,
                         fontSize = 13.sp
                     )
@@ -132,99 +116,64 @@ internal fun StoreCheckoutDialog(
                     }
                 }
 
-                if (!trustedUrl) {
-                    Column(
-                        modifier = Modifier.weight(1f).fillMaxWidth().padding(24.dp),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            "Alamat pembayaran tidak dikenali. Demi keamanan, halaman tidak dibuka.",
-                            color = Color(0xFF34332F),
-                            fontSize = 14.sp
-                        )
-                        TextButton(onClick = onDismiss) { Text("Tutup") }
-                    }
-                } else {
-                    if (provider.equals("paypal", ignoreCase = true)) {
-                        Column(
-                            modifier = Modifier.weight(1f).fillMaxWidth().padding(24.dp),
-                            verticalArrangement = Arrangement.Center,
-                            horizontalAlignment = Alignment.CenterHorizontally
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .padding(horizontal = 22.dp, vertical = 18.dp),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        when {
+                            !trustedUrl -> "Alamat pembayaran tidak dikenali. Demi keamanan, tautan tidak akan dibuka."
+                            isPaypal -> "Lanjutkan pembayaran PayPal. Setelah selesai, kembali ke NekOS agar status pembayaran diperiksa otomatis."
+                            isGoPay -> "NekOS akan membuka aplikasi GoPay. Setelah pembayaran selesai, kamu akan diarahkan kembali ke NekOS dan statusnya diverifikasi otomatis."
+                            else -> "Lanjutkan pembayaran Midtrans melalui browser. Setelah selesai, kembali ke NekOS agar status pembayaran diperiksa otomatis."
+                        },
+                        color = Color(0xFF34332F),
+                        fontSize = 14.sp
+                    )
+                    if (trustedUrl) {
+                        TextButton(
+                            onClick = {
+                                try {
+                                    context.startActivity(
+                                        Intent(Intent.ACTION_VIEW, Uri.parse(checkoutUrl))
+                                    )
+                                } catch (_: ActivityNotFoundException) {
+                                    Toast.makeText(
+                                        context,
+                                        "Tidak ada aplikasi yang dapat membuka tautan pembayaran.",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                }
+                            },
+                            modifier = Modifier.padding(top = 12.dp)
                         ) {
                             Text(
-                                "Lanjutkan pembayaran PayPal melalui browser. Setelah selesai, kembali ke NekOS agar status pembayaran diperiksa otomatis.",
-                                color = Color(0xFF34332F),
-                                fontSize = 14.sp
-                            )
-                            TextButton(onClick = {
-                                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(checkoutUrl)))
-                            }) {
-                                Text("BUKA PAYPAL")
-                            }
-                        }
-                    } else {
-                    AndroidView(
-                        modifier = Modifier.weight(1f).fillMaxWidth(),
-                        factory = { context ->
-                            WebView(context).apply {
-                                paymentWebView = this
-                                settings.javaScriptEnabled = true
-                                settings.javaScriptCanOpenWindowsAutomatically = true
-                                settings.domStorageEnabled = true
-                                settings.databaseEnabled = true
-                                settings.cacheMode = WebSettings.LOAD_NO_CACHE
-                                settings.allowFileAccess = false
-                                settings.allowContentAccess = false
-                                settings.mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
-                                settings.setSupportMultipleWindows(false)
-                                CookieManager.getInstance().setAcceptCookie(true)
-                                CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
-                                webChromeClient = WebChromeClient()
-                                webViewClient = object : WebViewClient() {
-                                    override fun shouldOverrideUrlLoading(
-                                        view: WebView,
-                                        request: WebResourceRequest
-                                    ): Boolean {
-                                        val uri = request.url
-                                        if (uri.host == MIDTRANS_FINISH_HOST &&
-                                            uri.path?.startsWith(MIDTRANS_FINISH_PATH) == true
-                                        ) {
-                                            onPaymentFinished()
-                                            return true
-                                        }
-                                        if (isPaymentAppLink(uri)) {
-                                            return try {
-                                                if (uri.scheme == "intent") {
-                                                    val intent = Intent.parseUri(uri.toString(), Intent.URI_INTENT_SCHEME)
-                                                    context.startActivity(intent)
-                                                } else {
-                                                    context.startActivity(Intent(Intent.ACTION_VIEW, uri))
-                                                }
-                                                true
-                                            } catch (_: Exception) {
-                                                true
-                                            }
-                                        }
-                                        return false
-                                    }
+                                when {
+                                    isPaypal -> "BUKA PAYPAL"
+                                    isGoPay -> "BUKA GOPAY"
+                                    else -> "BUKA PEMBAYARAN"
                                 }
-                                loadUrl(checkoutUrl)
-                            }
-                        }
-                    )
-                    }
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp),
-                        horizontalArrangement = Arrangement.End
-                    ) {
-                        TextButton(onClick = { showCancelConfirmation = true }) {
-                            Text(
-                                "BATALKAN PEMBELIAN",
-                                color = Color(0xFF9B3D35),
-                                fontSize = 11.sp
                             )
                         }
+                    }
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = { showCancelConfirmation = true }) {
+                        Text(
+                            "BATALKAN PEMBELIAN",
+                            color = Color(0xFF9B3D35),
+                            fontSize = 11.sp
+                        )
                     }
                 }
             }
@@ -237,10 +186,11 @@ internal fun StoreCheckoutDialog(
             title = { Text("Batalkan pembelian?") },
             text = {
                 Text(
-                    if (provider.equals("paypal", true))
+                    if (isPaypal) {
                         "NekOS akan memeriksa status PayPal saat kamu kembali. Menutup halaman tidak membatalkan pesanan PayPal yang sudah dibuat; jika pembayaran disetujui, skin tetap akan diberikan."
-                    else
-                        "NekOS akan meminta Midtrans membatalkan transaksi. Jika pembayaran ternyata sudah berhasil, pembelian tidak akan dibatalkan dan skin tetap dipasang. Jika kamu belum memilih metode pembayaran sehingga transaksi belum dibuat, sesi checkout tidak dapat dibatalkan langsung dan akan kedaluwarsa otomatis dalam 15 menit."
+                    } else {
+                        "NekOS akan memeriksa status transaksi Midtrans terlebih dahulu. Jika pembayaran sudah berhasil, skin tetap akan diberikan. Jika belum dibayar, transaksi akan diminta untuk dibatalkan."
+                    }
                 )
             },
             confirmButton = {
@@ -250,7 +200,9 @@ internal fun StoreCheckoutDialog(
                 }) { Text("YA, BATALKAN") }
             },
             dismissButton = {
-                TextButton(onClick = { showCancelConfirmation = false }) { Text("KEMBALI") }
+                TextButton(onClick = { showCancelConfirmation = false }) {
+                    Text("KEMBALI")
+                }
             }
         )
     }
