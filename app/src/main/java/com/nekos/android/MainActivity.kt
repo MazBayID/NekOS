@@ -345,8 +345,12 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    fun startPayPalCheckout(providerOrderId: String) {
+    fun startPayPalCheckout(providerOrderId: String, fallbackCheckoutUrl: String) {
         paypalCheckout.start(this, providerOrderId) { message ->
+            val fallback = android.net.Uri.parse(fallbackCheckoutUrl)
+            if (fallback.scheme == "https" && fallback.host?.endsWith(".paypal.com") == true) {
+                runCatching { startActivity(Intent(Intent.ACTION_VIEW, fallback)) }
+            }
             paypalResultMessage = message.ifBlank { "PayPal checkout could not be started." }
             paypalResultToken++
         }
@@ -354,7 +358,9 @@ class MainActivity : ComponentActivity() {
 
     private fun handlePayPalReturn(sourceIntent: Intent?) {
         val data = sourceIntent?.data ?: return
-        if (data.scheme != "nekos" || data.host !in setOf("paypal-finish", "paypal-cancel")) return
+        if (data.scheme != "nekos" || data.host != "x-callback-url" ||
+            !data.path.orEmpty().startsWith("/paypal-sdk/paypal-checkout")
+        ) return
         val result = runCatching { paypalCheckout.finishStart(sourceIntent) }.getOrNull() ?: return
         when (result) {
             is com.paypal.android.paypalpayments.PayPalFinishStartResult.Success -> {
