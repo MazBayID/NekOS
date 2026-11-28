@@ -26,6 +26,7 @@ android {
                 "README.md",
                 "preview_*.png",
                 "tools/*.py",
+                "tools/tests/**",
                 "icons/apps/icons_index.*"
             )
         }
