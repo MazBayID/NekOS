@@ -2,7 +2,7 @@
   "_catatan": "Urutan penting: aturan pertama yang cocok menang. Kata kunci dicocokkan (huruf kecil) ke package name + nama aplikasi.",
   "rules": [
     [
-      "\\\\b9bit\\\\b",
+      "\\b9bit\\b",
       "globe"
     ],
     [
