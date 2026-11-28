@@ -47,5 +47,19 @@ Pulihkan alur pembayaran sampai skin terunduh dan terpasang, dengan transaksi ny
 - Migrasi lama `20261127160000_skin_store_reject_late_cancelled_payment.sql` tidak boleh diterapkan langsung: provider allowlist-nya masih `midtrans,duitku` dan dapat menimpa fungsi terbaru.
 - Belum ditemukan test integrasi otomatis untuk alur transaksi provider; test Android yang ada hanya mencakup pemilihan provider dan validasi installer.
 
+## Checkpoint 2–3 — perbaikan kode (28 Nov 2026)
+- PayPal webhook: dua validasi amount sebelumnya memakai regex double-escaped sehingga nominal valid ditolak. Diperbaiki ke regex digit/decimal yang benar.
+- Edge Function `skin-store` v49 telah dideploy; menambahkan log status PayPal (`CREATED`, `PAYER_ACTION_REQUIRED`, dll.) saat polling agar status provider bisa ditelusuri.
+- Android `OfficialSkinStoreClient` kini mengubah status provider menjadi pesan pending yang spesifik; `NekOSRoot` menampilkan feedback saat pemeriksaan gagal/tertunda.
+- Commit backend: `a2669bb` (diagnostik status) dan `6e2843c` (regex webhook). Commit Android: `6f15474` dan `40f4cbe`.
+- Deno type-check untuk Edge Function lulus di GitHub Actions. Build Android, unit tests, dan lint masih berjalan pada saat checkpoint ini ditulis.
+- Transaksi Aurum masih `pending`; `provider_payment_id` dan `provider_payload` kosong. Tidak ada pembayaran ulang atau perubahan status yang dilakukan.
+
+## Batas verifikasi yang tersisa
+- Log 28 Nov tidak menunjukkan POST webhook dari Midtrans atau PayPal. Registrasi URL webhook di dashboard provider dan keberadaan `PAYPAL_WEBHOOK_ID` belum dapat diperiksa melalui konektor yang tersedia.
+- `private.skin_payment_events` masih kosong dan webhook belum menyimpan event ke tabel ini.
+- Midtrans belum memiliki transaksi pada database untuk uji end-to-end; sandbox credential tidak dapat dibaca melalui konektor.
+- Status remote PayPal Aurum baru akan tercatat pada log setelah aplikasi melakukan pemeriksaan status berikutnya.
+
 ## Status
-Tahap 1 audit fondasi selesai. Tahap 2 review kode Midtrans selesai, tetapi sandbox end-to-end belum bisa diuji karena secret tidak dapat dibaca lewat connector. Tahap 3 review kode PayPal selesai; enam transaksi Sandbox terdahulu sukses, sedangkan Aurum masih pending dan status provider remote belum dapat dibuktikan. Belum ada kode aplikasi, konfigurasi, database, deployment, atau transaksi produksi yang diubah.
+Perbaikan kode backend sudah dideploy ke produksi sebagai `skin-store` v49. Perubahan Android sudah masuk ke `main`; validasi build APK masih berjalan. Audit dan perbaikan end-to-end belum dapat dinyatakan selesai sampai build Android lulus dan konfigurasi webhook provider diverifikasi.
