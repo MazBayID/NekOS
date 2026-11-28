@@ -24,10 +24,13 @@ Pulihkan alur pembayaran sampai skin terunduh dan terpasang, dengan transaksi ny
 - Edge Functions produksi: `skin-store` v48, `skin-manager` v34.
 - Tabel privat pembayaran tersedia: `device_installations`, `skin_orders`, `skin_payments`, `skin_entitlements`, `skin_payment_events`; RLS aktif.
 - Migrasi produksi terakhir: `20261128075520`.
-- RPC pembayaran ditemukan dan akses klien anon/authenticated ditolak; service_role dapat menjalankannya.
+- Kode `supabase/functions/skin-store/index.ts` identik byte-per-byte dengan source produksi v48 (53,350 karakter).
+- RPC pembayaran ditemukan; hak EXECUTE ditolak untuk anon/authenticated dan diberikan kepada service_role.
 - Advisor keamanan: `public.skin_manager_admins` memiliki RLS tanpa policy (INFO); perlindungan password bocor Auth nonaktif (WARN).
 - Advisor performa: FK `skin_entitlements.skin_id` belum berindeks (INFO).
-- `private.skin_payment_events` masih kosong; kode webhook belum mencatat event ke tabel tersebut.
+- `private.skin_payment_events` masih kosong; implementasi webhook belum menulis event ke tabel tersebut.
+- Log 28 Nov: 7 request purchase (terbaru 07:30 UTC), 8 download historis (terbaru 07:17 UTC), tidak ada POST ke `paypal-webhook`; hanya satu GET ke route tersebut (bukan bukti webhook diterima).
+- Status API terakhir yang terlihat pada 09:49 UTC tetap HTTP 200; HTTP 200 hanya menunjukkan endpoint merespons, bukan bukti pembayaran selesai.
 - Transaksi Aurum PayPal USD 1.49 masih `pending`; jangan ubah atau bayar ulang tanpa rekonsiliasi provider.
 
 ## Checkpoint 1 — temuan yang perlu ditelusuri
@@ -38,4 +41,4 @@ Pulihkan alur pembayaran sampai skin terunduh dan terpasang, dengan transaksi ny
 - Audit keamanan seluruh fungsi `SECURITY DEFINER` dan grants.
 
 ## Status
-Tahap 1 sedang berlangsung. Belum ada kode, konfigurasi, database, deployment, atau transaksi produksi yang diubah.
+Tahap 1 sedang berlangsung. Runbook dibuat dan diverifikasi di GitHub. Belum ada kode aplikasi, konfigurasi, database, deployment, atau transaksi produksi yang diubah.
