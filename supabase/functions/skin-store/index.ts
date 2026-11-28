@@ -412,7 +412,7 @@ async function handlePayPalWebhook(req: Request) {
     const amountText = String(unit.amount?.value ?? "");
     const currency = String(unit.amount?.currency_code ?? "").toUpperCase();
     if (!localOrderId || referenceId !== localOrderId || currency !== "USD" ||
-        !/^\\d+(\\.\\d{1,2})?$/.test(amountText)) {
+        !/^\d+(\.\d{1,2})?$/.test(amountText)) {
       return fail("paypal_order_reference_or_amount_invalid", 400);
     }
 
@@ -441,7 +441,7 @@ async function handlePayPalWebhook(req: Request) {
     const amountText = String(units[0].amount?.value ?? "");
     const currency = String(units[0].amount?.currency_code ?? "").toUpperCase();
     if (!localOrderId || String(units[0].reference_id ?? "") !== localOrderId ||
-        currency !== "USD" || !/^\\d+(\\.\\d{1,2})?$/.test(amountText)) {
+        currency !== "USD" || !/^\d+(\.\d{1,2})?$/.test(amountText)) {
       return fail("paypal_order_reference_or_amount_invalid", 400);
     }
     const verified = await grantPayPalEntitlement(paypalOrderId, localOrderId, Number(amountText));
