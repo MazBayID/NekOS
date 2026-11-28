@@ -4,7 +4,7 @@ Kumpulan ikon merek dan glyph kategori untuk rancangan sistem ikon aplikasi NekO
 
 ## Status integrasi saat ini
 
-<badge>Implementasi runtime pada branch work/icon-pack-runtime; validasi build masih berjalan.</badge>
+**Status:** runtime icon pack sudah terintegrasi pada branch `work/icon-pack-runtime`. Validasi GitHub Actions untuk commit `67fe2d7` berhasil, termasuk build Debug/Release, unit test, lint, dan Compose UI test. Branch ini belum digabung ke `main`.
 
 Implementasi pada branch kerja sekarang:
 
@@ -14,7 +14,7 @@ Implementasi pada branch kerja sekarang:
 - `InstalledApp.iconCacheKey` diberi versi cache baru agar bitmap ikon Android lama tidak menutupi hasil icon pack.
 - `IconCatalogRepository.kt` tetap khusus untuk `icons/tag/`; tidak digabung dengan app icon pack.
 
-Integrasi ini belum dianggap selesai sampai build, unit test, lint, dan Compose UI test pada GitHub Actions selesai dengan sukses. Perubahan masih berada di branch kerja dan belum digabung ke `main`.
+Perubahan masih berada di branch kerja dan belum digabung ke `main`. Build CI memastikan aset terpaket dan tes otomatis lolos; pemeriksaan visual pada perangkat fisik tetap disarankan sebelum integrasi ke branch utama.
 
 Dokumentasi Android: [LauncherActivityInfo](https://developer.android.com/reference/android/content/pm/LauncherActivityInfo).
 
@@ -140,7 +140,8 @@ Validator memeriksa file gambar sebenarnya, bukan hanya nama file atau JSON. Jal
 - Mapping package exact belum diverifikasi satu per satu pada Play Store.
 - Brand index hanya mencakup merek yang tersedia di Simple Icons; banyak aplikasi lokal atau merek yang tidak tercakup akan memakai glyph kategori.
 - Prefix dan keyword adalah heuristik, bukan bukti identitas aplikasi.
-- Runtime resolver dan packaging Android belum dibuat. Integrasi itu harus dilakukan terpisah dan diuji tanpa mengubah katalog tag atau motif skin.
+- Pencocokan brand melalui label bergantung pada nama aplikasi yang dilaporkan Android; label yang berbeda atau dilokalkan dapat jatuh ke glyph kategori.
+- Build CI dan Compose UI test sudah lolos, tetapi variasi tampilan ikon pada perangkat fisik, launcher density, serta profil kerja tetap perlu pemeriksaan visual.
 
 
 ## Validasi aset
