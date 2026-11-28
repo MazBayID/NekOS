@@ -209,9 +209,13 @@ class AppIconBitmapCache(
 
         if (packIcon != null) {
             return try {
-                renderIconBadge(packIcon, iconBadgeColorArgb)
+                if (packIcon.isGlyph) {
+                    renderIconBadge(packIcon.bitmap, iconBadgeColorArgb)
+                } else {
+                    normalizeFullIcon(packIcon.bitmap)
+                }
             } finally {
-                packIcon.recycle()
+                packIcon.bitmap.recycle()
             }
         }
 
@@ -220,6 +224,15 @@ class AppIconBitmapCache(
         } catch (_: Exception) {
             appContext.packageManager.defaultActivityIcon.toBitmap(96, 96)
         }
+    }
+
+    private fun normalizeFullIcon(source: Bitmap): Bitmap {
+        if (source.width == 96 && source.height == 96) {
+            return source.copy(Bitmap.Config.ARGB_8888, false) ?: source
+        }
+        val output = Bitmap.createBitmap(96, 96, Bitmap.Config.ARGB_8888)
+        Canvas(output).drawBitmap(source, null, RectF(0f, 0f, 96f, 96f), Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG))
+        return output
     }
 
     private fun renderIconBadge(source: Bitmap, badgeColor: Int): Bitmap {
