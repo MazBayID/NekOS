@@ -180,9 +180,9 @@ class AppIconBitmapCache(
 
     private fun createAppIcon(app: InstalledApp): Bitmap =
         runCatching {
-            appIconPackResolver
-                ?.resolve(app.packageName, app.label)
-                ?.let(appIconPackResolver::loadBitmap)
+            appIconPackResolver?.let { resolver ->
+                resolver.loadBitmap(resolver.resolve(app.packageName, app.label))
+            }
         }.getOrNull()
             ?: try {
                 app.launcherActivityInfo.getBadgedIcon(app.iconDensityDpi).toBitmap(96, 96)
