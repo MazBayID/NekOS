@@ -79,7 +79,7 @@ class AppIconBitmapCache(
 
     /** Adapt persisted legacy favorite keys to the current pack and theme namespace. */
     fun cacheKey(iconCacheKey: String): String =
-        "${iconCacheKey}::nekos-icon-pack-v2::${Integer.toHexString(iconBadgeColorArgb)}"
+        "${iconCacheKey}::nekos-icon-pack-v2-no-frame::${Integer.toHexString(iconBadgeColorArgb)}"
 
     /** Update the shared icon badge color without allowing old-color bitmaps to reappear. */
     @Synchronized
@@ -238,17 +238,15 @@ class AppIconBitmapCache(
     }
 
     private fun renderIconBadge(source: Bitmap, badgeColor: Int): Bitmap {
+        // Keep glyph artwork transparent: tint the glyph itself, never draw a
+        // launcher-colored tile behind it. This makes glyph and full icons
+        // follow the same frameless presentation.
         val output = Bitmap.createBitmap(96, 96, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(output)
-        val badgePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = badgeColor
-        }
-        canvas.drawRoundRect(RectF(4f, 4f, 92f, 92f), 22f, 22f, badgePaint)
-
         val glyphPaint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG).apply {
-            colorFilter = PorterDuffColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN)
+            colorFilter = PorterDuffColorFilter(badgeColor, PorterDuff.Mode.SRC_IN)
         }
-        canvas.drawBitmap(source, null, RectF(14f, 14f, 82f, 82f), glyphPaint)
+        canvas.drawBitmap(source, null, RectF(4f, 4f, 92f, 92f), glyphPaint)
         return output
     }
 
