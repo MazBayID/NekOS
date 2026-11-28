@@ -32,11 +32,7 @@ internal class NekOSPayPalCheckout(context: Context) {
     val instanceState: String
         get() = client.instanceState
 
-    fun start(
-        activity: Activity,
-        providerOrderId: String,
-        onResult: (PayPalPresentAuthChallengeResult) -> Unit
-    ) {
+    fun prepareSession() {
         client.createPayPalSession(
             tokenType = TokenType.ORDER_ID,
             userIdentity = null,
@@ -47,6 +43,13 @@ internal class NekOSPayPalCheckout(context: Context) {
             ),
             userAction = PayPalUserAction.PAY_NOW
         )
+    }
+
+    fun start(
+        activity: Activity,
+        providerOrderId: String,
+        onResult: (PayPalPresentAuthChallengeResult) -> Unit
+    ) {
         client.start(activity, providerOrderId) { result ->
             onResult(result)
         }

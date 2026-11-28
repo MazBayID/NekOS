@@ -345,6 +345,10 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    fun preparePayPalCheckout() {
+        paypalCheckout.prepareSession()
+    }
+
     fun startPayPalCheckout(providerOrderId: String, fallbackCheckoutUrl: String) {
         paypalCheckout.start(this, providerOrderId) { result ->
             getSharedPreferences(PAYPAL_PREFS, MODE_PRIVATE).edit()
@@ -368,25 +372,31 @@ class MainActivity : ComponentActivity() {
 
     private fun handlePayPalReturn(sourceIntent: Intent?) {
         val data = sourceIntent?.data ?: return
-        if (data.scheme != "nekos" || data.host != "x-callback-url" ||
-            !data.path.orEmpty().startsWith("/paypal-sdk/paypal-checkout")
-        ) return
+        val isPayPalReturn = data.scheme == "nekos" && (
+            data.host in setOf("paypal-finish", "paypal-cancel") ||
+                (data.host == "x-callback-url" &&
+                    data.path.orEmpty().startsWith("/paypal-sdk/paypal-checkout"))
+            )
+        if (!isPayPalReturn) return
         val result = runCatching { paypalCheckout.finishStart(sourceIntent) }.getOrNull() ?: return
         when (result) {
             is com.paypal.android.paypalpayments.PayPalFinishStartResult.Success -> {
                 paypalResultMessage = "approved"
                 getSharedPreferences(PAYPAL_PREFS, MODE_PRIVATE).edit().remove(PAYPAL_STATE_KEY).apply()
                 paypalResultToken++
+                resumeRefreshToken++
             }
             is com.paypal.android.paypalpayments.PayPalFinishStartResult.Canceled -> {
                 paypalResultMessage = "cancelled"
                 getSharedPreferences(PAYPAL_PREFS, MODE_PRIVATE).edit().remove(PAYPAL_STATE_KEY).apply()
                 paypalResultToken++
+                resumeRefreshToken++
             }
             is com.paypal.android.paypalpayments.PayPalFinishStartResult.Failure -> {
                 paypalResultMessage = result.error.errorDescription
                 getSharedPreferences(PAYPAL_PREFS, MODE_PRIVATE).edit().remove(PAYPAL_STATE_KEY).apply()
                 paypalResultToken++
+                resumeRefreshToken++
             }
             com.paypal.android.paypalpayments.PayPalFinishStartResult.NoResult -> Unit
         }
