@@ -96,7 +96,7 @@ for item in apps:
 
 # Ikon merek dan indeks merek
 brand_dir = os.path.join(ROOT, "icons", "brands")
-brand_files = validate_directory(brand_dir, r"[a-z0-9]+(?:[a-z0-9.-]*[a-z0-9])?\.webp", "brand")
+brand_files = validate_directory(brand_dir, r"[a-z0-9]+(?:[a-z0-9._-]*[a-z0-9])?\.webp", "brand")
 brand_slugs = {filename[:-5] for filename in brand_files}
 brand_index = read_json(os.path.join(ROOT, "brand_index.json"))
 indexed_slugs = brand_index.get("slugs", [])
