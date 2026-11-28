@@ -61,5 +61,16 @@ Pulihkan alur pembayaran sampai skin terunduh dan terpasang, dengan transaksi ny
 - Midtrans belum memiliki transaksi pada database untuk uji end-to-end; sandbox credential tidak dapat dibaca melalui konektor.
 - Status remote PayPal Aurum baru akan tercatat pada log setelah aplikasi melakukan pemeriksaan status berikutnya.
 
+## Checkpoint 4 — PayPal pending tidak boleh menggantung tanpa batas (28 Nov 2026)
+- Log polling terakhir pada 10:19 UTC menunjukkan order Aurum masih berstatus remote PayPal `CREATED`. Belum ada persetujuan pembeli (`APPROVED`) dan belum ada capture (`COMPLETED`); ini bukan bukti pembayaran berhasil.
+- Ditemukan bahwa backend sebelumnya tidak memiliki batas rekonsiliasi untuk order PayPal yang tetap `CREATED`, sehingga local order dapat terus `pending` dan RPC `skin_create_paypal_order` terus menggunakannya kembali.
+- Berdasarkan dokumentasi Orders v2 PayPal, jendela default untuk mengarahkan pembeli ke approval adalah 6 jam. Backend kini hanya menutup attempt lokal yang berstatus remote `CREATED` setelah 6 jam. Status `APPROVED` tetap diproses capture; `COMPLETED` tetap divalidasi sebelum entitlement; `PAYER_ACTION_REQUIRED` tidak dipaksa kedaluwarsa.
+- Penutupan lokal menggunakan RPC `skin_update_payment_status` dengan status `expired` (dipetakan menjadi `failed`), lalu order status direkonsiliasi ulang. Attempt terminal tidak lagi dipilih sebagai active payment sehingga pembelian berikutnya dapat membuat order baru. Callback terlambat tidak boleh menghidupkan kembali attempt terminal karena `skin_mark_paid` hanya menerima status aktif/completed.
+- Perubahan commit: `70424e3` (penambahan rekonsiliasi 6 jam), disempurnakan oleh `c9ebbf5` (hanya remote `CREATED` yang kedaluwarsa).
+- Supabase Edge Function `skin-store` berhasil dideploy sebagai **v51**. Pembacaan ulang deployment mengonfirmasi kode batas 6 jam aktif.
+- Order Aurum `19f0b2e4-0698-464a-84c2-1e3a97d4c31f` tetap `pending` saat diperiksa dan tidak diubah. Usianya saat pemeriksaan masih di bawah jendela 6 jam; karena itu belum aman untuk ditandai kedaluwarsa.
+- Pencarian kode NekOS tidak menemukan literal pesan UI generik “Tampaknya berbagai fitur tidak berfungsi saat ini.” Jadi sumber pesan tersebut belum terpetakan ke file aplikasi. Status remote PayPal yang tercatat adalah `CREATED`, bukan kegagalan capture.
+- GitHub Actions untuk commit `c9ebbf5` sedang berjalan saat checkpoint ditulis. Deno type-check lulus; tahapan Android build dan emulator belum selesai.
+
 ## Status
-Perbaikan kode backend sudah dideploy ke produksi sebagai `skin-store` v49. Perubahan Android sudah masuk ke `main`; build Debug/Release, unit tests, dan lint lulus. Compose UI test emulator masih berjalan. Audit end-to-end belum dapat dinyatakan selesai sampai uji emulator selesai dan konfigurasi webhook provider diverifikasi.
+Backend `skin-store` v51 aktif dengan rekonsiliasi batas 6 jam untuk PayPal order yang tetap `CREATED`. Order Aurum belum melewati batas 6 jam dan tidak disentuh. Perbaikan ini mengatasi pending lokal yang menggantung setelah jendela approval, tetapi belum membuktikan bahwa pesan UI generik yang dilihat pengguna sudah teratasi. CI commit `c9ebbf5` masih berjalan; webhook provider eksternal tetap belum terverifikasi.
