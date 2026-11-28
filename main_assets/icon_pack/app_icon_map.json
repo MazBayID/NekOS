@@ -1,21 +1,20 @@
 {
   "schema_version": 3,
-  "default_glyph": "paw",
   "glyph_dir": "icons/apps",
   "glyph_file_pattern": "icon_{glyph}.webp",
-  "total_apps": 1418,
+  "total_apps": 1423,
   "total_glyphs": 109,
-  "glyphs_used": 88,
+  "glyphs_used": 89,
   "resolution_order": [
-    "exact_package: apps[].brand (ikon merek utama jika tersedia)",
-    "exact_package: apps[].glyph (fallback kategori untuk package exact tanpa brand)",
-    "unmapped_package_label: brand_index.json (pencocokan label ternormalisasi secara exact)",
-    "unmapped_package_prefix: prefix_rules (awalan terpanjang)",
-    "unmapped_package_keyword: keyword_rules (regex pertama yang cocok)",
-    "default_glyph"
+    "exact_package: apps[].brand",
+    "exact_package: apps[].glyph",
+    "unmapped_package_keyword: keyword_rules",
+    "unmapped_package_prefix: prefix_rules (specific namespaces only)",
+    "unmapped_package_label: exact brand label matching, independent of glyph",
+    "unclassified_package: native Android launcher icon; no NekOS default glyph"
   ],
   "rules_file": "app_icon_rules.json",
-  "note": "Peta package exact adalah otoritas utama. Jika package exact tidak memiliki brand, glyph exact dipakai dan label tidak boleh menimpanya. Untuk package yang belum terdaftar, brand dicari dari label; glyph kategori tetap dipilih lewat prefix/keyword/default sebagai fallback. Nama package belum diverifikasi satu per satu ke Play Store. Brand memakai ikon Simple Icons; glyph selalu disediakan sebagai fallback.",
+  "note": "Exact package mapping is authoritative. Unmapped packages are classified by category keywords before specific package prefixes. Brand lookup from normalized app labels is independent. If no category or brand matches, the runtime uses the original Android app icon. NekOS has no default app glyph.",
   "apps": [
     {
       "package": "com.android.deskclock",
@@ -3054,7 +3053,7 @@
     {
       "package": "moe.shizuku.privileged.api",
       "name": "Shizuku",
-      "glyph": "gear"
+      "glyph": "terminal"
     },
     {
       "package": "com.android.cellbroadcastreceiver",
@@ -7468,11 +7467,42 @@
       "package": "com.tplink.tether",
       "name": "TP-Link Tether",
       "glyph": "wifi"
+    },
+    {
+      "package": "com.transsion.calculator",
+      "name": "Kalkulator Transsion",
+      "glyph": "calculator"
+    },
+    {
+      "package": "com.hihonor.calculator",
+      "name": "Kalkulator HONOR",
+      "glyph": "calculator"
+    },
+    {
+      "package": "com.android.pri.calculator",
+      "name": "Kalkulator Ulefone",
+      "glyph": "calculator"
+    },
+    {
+      "package": "com.xiaomi.midrop",
+      "name": "ShareMe",
+      "glyph": "share"
+    },
+    {
+      "package": "com.android.fmradio",
+      "name": "Radio FM Android",
+      "glyph": "radio"
     }
   ],
   "total_brand_icons": 3369,
   "apps_with_brand": 362,
   "brand_dir": "icons/brands",
   "brand_file_pattern": "{brand}.webp",
-  "brand_index_file": "brand_index.json"
+  "brand_index_file": "brand_index.json",
+  "audit_policy": {
+    "default_glyph": null,
+    "unmapped_behavior": "native_android_icon_when_unclassified",
+    "keyword_precedes_prefix": true,
+    "verify_package_before_exact_mapping": true
+  }
 }
