@@ -345,10 +345,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    fun preparePayPalCheckout() {
-        paypalCheckout.prepareSession()
-    }
-
     fun startPayPalCheckout(providerOrderId: String, fallbackCheckoutUrl: String) {
         paypalCheckout.start(this, providerOrderId) { result ->
             getSharedPreferences(PAYPAL_PREFS, MODE_PRIVATE).edit()
