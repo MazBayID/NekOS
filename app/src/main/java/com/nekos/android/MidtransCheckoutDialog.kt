@@ -38,6 +38,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.platform.LocalContext
 
 private const val MIDTRANS_FINISH_HOST = "mazbayid.github.io"
 private const val MIDTRANS_FINISH_PATH = "/skin-payment-return/"
@@ -45,7 +46,11 @@ private const val MIDTRANS_FINISH_PATH = "/skin-payment-return/"
 private fun isTrustedStoreCheckout(value: String, provider: String): Boolean = runCatching {
     val uri = Uri.parse(value)
     val host = uri.host?.lowercase().orEmpty()
-    val allowedHosts = setOf("app.midtrans.com", "app.sandbox.midtrans.com")
+    val allowedHosts = if (provider.equals("paypal", true)) {
+        setOf("www.paypal.com", "www.sandbox.paypal.com")
+    } else {
+        setOf("app.midtrans.com", "app.sandbox.midtrans.com")
+    }
     uri.scheme?.lowercase() == "https" && host in allowedHosts &&
         uri.userInfo == null && (uri.port == -1 || uri.port == 443)
 }.getOrDefault(false)
@@ -72,6 +77,7 @@ internal fun StoreCheckoutDialog(
     onPaymentFinished: () -> Unit,
     onCancelPurchase: () -> Unit
 ) {
+    val context = LocalContext.current
     var paymentWebView by remember { mutableStateOf<WebView?>(null) }
     var showCancelConfirmation by remember { mutableStateOf(false) }
     val trustedUrl = remember(checkoutUrl, provider) { isTrustedStoreCheckout(checkoutUrl, provider) }
@@ -140,6 +146,24 @@ internal fun StoreCheckoutDialog(
                         TextButton(onClick = onDismiss) { Text("Tutup") }
                     }
                 } else {
+                    if (provider.equals("paypal", ignoreCase = true)) {
+                        Column(
+                            modifier = Modifier.weight(1f).fillMaxWidth().padding(24.dp),
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                "Lanjutkan pembayaran PayPal melalui browser. Setelah selesai, kembali ke NekOS agar status pembayaran diperiksa otomatis.",
+                                color = Color(0xFF34332F),
+                                fontSize = 14.sp
+                            )
+                            TextButton(onClick = {
+                                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(checkoutUrl)))
+                            }) {
+                                Text("BUKA PAYPAL")
+                            }
+                        }
+                    } else {
                     AndroidView(
                         modifier = Modifier.weight(1f).fillMaxWidth(),
                         factory = { context ->
@@ -189,6 +213,7 @@ internal fun StoreCheckoutDialog(
                             }
                         }
                     )
+                    }
                     Row(
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp),
                         horizontalArrangement = Arrangement.End
@@ -212,7 +237,10 @@ internal fun StoreCheckoutDialog(
             title = { Text("Batalkan pembelian?") },
             text = {
                 Text(
-                    "NekOS akan meminta Midtrans membatalkan transaksi. Jika pembayaran ternyata sudah berhasil, pembelian tidak akan dibatalkan dan skin tetap dipasang. Jika kamu belum memilih metode pembayaran sehingga transaksi belum dibuat, sesi checkout tidak dapat dibatalkan langsung dan akan kedaluwarsa otomatis dalam 15 menit."
+                    if (provider.equals("paypal", true))
+                        "NekOS akan memeriksa status PayPal saat kamu kembali. Menutup halaman tidak membatalkan pesanan PayPal yang sudah dibuat; jika pembayaran disetujui, skin tetap akan diberikan."
+                    else
+                        "NekOS akan meminta Midtrans membatalkan transaksi. Jika pembayaran ternyata sudah berhasil, pembelian tidak akan dibatalkan dan skin tetap dipasang. Jika kamu belum memilih metode pembayaran sehingga transaksi belum dibuat, sesi checkout tidak dapat dibatalkan langsung dan akan kedaluwarsa otomatis dalam 15 menit."
                 )
             },
             confirmButton = {
