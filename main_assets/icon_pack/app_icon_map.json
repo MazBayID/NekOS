@@ -7500,9 +7500,9 @@
   "brand_file_pattern": "{brand}.webp",
   "brand_index_file": "brand_index.json",
   "audit_policy": {
-    "default_glyph": null,
     "unmapped_behavior": "native_android_icon_when_unclassified",
     "keyword_precedes_prefix": true,
-    "verify_package_before_exact_mapping": true
+    "verify_package_before_exact_mapping": true,
+    "default_icon_policy": "use_native_android_icon_when_unclassified"
   }
 }
