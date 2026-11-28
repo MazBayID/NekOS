@@ -42,7 +42,7 @@ internal fun PaymentProviderDialog(
                         selected = selectedProvider == "midtrans",
                         onClick = { selectedProvider = "midtrans" }
                     )
-                    Text("Midtrans · Rp${String.format("%,d", priceIdr)}", fontSize = 14.sp)
+                    Text("GoPay · Rp${String.format("%,d", priceIdr)}", fontSize = 14.sp)
                 }
                 Row(
                     modifier = Modifier.fillMaxWidth(),
