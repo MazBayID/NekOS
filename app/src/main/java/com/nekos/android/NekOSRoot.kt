@@ -1281,18 +1281,29 @@ internal fun NekOSRoot(
                         if (!result.success && result.message.isNotBlank()) {
                             Toast.makeText(context, result.message, Toast.LENGTH_LONG).show()
                         }
-                        if (!checkPayment && result.paymentProvider == "paypal" &&
-                            !result.providerOrderId.isNullOrBlank() &&
-                            !result.checkoutUrl.isNullOrBlank()
-                        ) {
+                        val canResumePayPalOrder =
+                            result.paymentProvider.equals("paypal", ignoreCase = true) &&
+                                !result.providerOrderId.isNullOrBlank() &&
+                                !result.checkoutUrl.isNullOrBlank() &&
+                                isTrustedPayPalApprovalUrl(result.checkoutUrl) &&
+                                (!checkPayment || (!result.success && !result.paymentFailed))
+                        if (canResumePayPalOrder) {
                             (context as? MainActivity)?.startPayPalCheckout(
-                                result.providerOrderId,
-                                result.checkoutUrl
+                                result.providerOrderId!!,
+                                result.checkoutUrl!!
                             ) ?: run {
                                 storeCheckout = Triple(skin, result.checkoutUrl, "paypal")
                             }
                         } else if (!checkPayment && !result.checkoutUrl.isNullOrBlank()) {
-                            storeCheckout = Triple(skin, result.checkoutUrl, result.paymentProvider ?: "midtrans")
+                            if (result.paymentProvider.equals("paypal", ignoreCase = true)) {
+                                Toast.makeText(
+                                    context,
+                                    "Tautan persetujuan PayPal tidak valid. NekOS tidak membukanya.",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            } else {
+                                storeCheckout = Triple(skin, result.checkoutUrl, result.paymentProvider ?: "midtrans")
+                            }
                         }
                         if (result.success && result.installedSkinId != null) {
                             installedSkins = skinRepository.listInstalledSkins()
