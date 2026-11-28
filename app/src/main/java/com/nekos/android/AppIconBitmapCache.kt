@@ -227,11 +227,13 @@ class AppIconBitmapCache(
     }
 
     private fun normalizeFullIcon(source: Bitmap): Bitmap {
-        if (source.width == 96 && source.height == 96) {
-            return source.copy(Bitmap.Config.ARGB_8888, false) ?: source
-        }
         val output = Bitmap.createBitmap(96, 96, Bitmap.Config.ARGB_8888)
-        Canvas(output).drawBitmap(source, null, RectF(0f, 0f, 96f, 96f), Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG))
+        Canvas(output).drawBitmap(
+            source,
+            null,
+            RectF(0f, 0f, 96f, 96f),
+            Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
+        )
         return output
     }
 
