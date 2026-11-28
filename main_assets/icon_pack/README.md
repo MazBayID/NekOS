@@ -24,7 +24,7 @@ Dokumentasi Android: [LauncherActivityInfo](https://developer.android.com/refere
 |---|---:|---|
 | Ikon merek, `icons/brands/` | 3.369 | Identitas merek aplikasi |
 | Glyph kategori, `icons/apps/` | 109 | Fallback kategori generik |
-| Package exact, `app_icon_map.json` | 1.423 | Mapping package yang ditulis eksplisit |
+| Package exact, `app_icon_map.json` | 1.422 | Mapping package yang ditulis eksplisit |
 | Package exact dengan ikon merek | 362 | Mapping exact yang punya brand |
 | Glyph unik yang dipakai mapping exact | 89 | Bagian dari 109 glyph tersedia |
 
@@ -154,5 +154,5 @@ Nama file ikon merek mendukung slug huruf kecil, angka, titik, tanda hubung, dan
 - NekOS tidak memiliki glyph default untuk aplikasi. Jika package/label tidak terklasifikasi dan tidak ada brand yang cocok, runtime mempertahankan ikon asli dari Android.
 - Keyword kategori diproses sebelum prefix; Kalkulator dan Radio tidak lagi tertimpa aturan vendor.
 - Prefix vendor generik yang mengarahkan semua aplikasi ke gear dihapus.
-- Mapping yang diverifikasi dan ditambahkan: Transsion/HONOR/Ulefone Calculator, ShareMe, dan AOSP FM Radio. Shizuku memakai glyph terminal.
+- Mapping yang diverifikasi dan ditambahkan: Transsion/HONOR Calculator, ShareMe, dan AOSP FM Radio. Shizuku memakai glyph terminal.
 - Referensi package: [Google Play ShareMe](https://play.google.com/store/apps/details?id=com.xiaomi.midrop), [Google Play Shizuku](https://play.google.com/store/apps/details?id=moe.shizuku.privileged.api), [AOSP Calculator](https://android.googlesource.com/platform/packages/apps/Calculator/), [AOSP FM Radio](https://android.googlesource.com/platform/packages/apps/FMRadio/), dan [Android system app package database](https://bayton.org/android/android-system-app-database/).
