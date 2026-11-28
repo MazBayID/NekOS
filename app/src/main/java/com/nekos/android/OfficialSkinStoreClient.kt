@@ -286,11 +286,21 @@ internal object OfficialSkinStoreClient {
             val checkoutUrl = activePayment?.optString("checkout_url")?.takeIf { it.isNotBlank() }
             val provider = activePayment?.optString("provider")?.takeIf { it.isNotBlank() }
             val providerOrderId = activePayment?.optString("provider_order_id")?.takeIf { it.isNotBlank() }
+            val providerStatus = result.optString("provider_status").uppercase()
+            val pendingMessage = when {
+                provider == "paypal" && providerStatus == "CREATED" ->
+                    "Order PayPal sudah dibuat, tetapi belum disetujui. Selesaikan pembayaran di PayPal lalu kembali ke NekOS."
+                provider == "paypal" && providerStatus == "PAYER_ACTION_REQUIRED" ->
+                    "PayPal masih menunggu tindakan persetujuan. Selesaikan langkah yang diminta di PayPal."
+                provider == "paypal" && providerStatus.isNotBlank() ->
+                    "Status PayPal: $providerStatus. Pembayaran belum selesai; lanjutkan checkout atau periksa kembali."
+                status == "pending" ->
+                    "Pembayaran belum dikonfirmasi. Lanjutkan checkout yang masih aktif atau periksa kembali beberapa saat lagi."
+                else -> "Status pembayaran: $status"
+            }
             return StoreActionResult(
                 false,
-                if(status=="pending")
-                    "Pembayaran belum dikonfirmasi. Lanjutkan checkout yang masih aktif atau periksa kembali beberapa saat lagi."
-                else "Status pembayaran: $status",
+                pendingMessage,
                 checkoutUrl = checkoutUrl,
                 orderId = orderId,
                 paymentProvider = provider,
