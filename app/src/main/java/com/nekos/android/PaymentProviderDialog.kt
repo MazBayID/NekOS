@@ -10,6 +10,10 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -18,9 +22,12 @@ import androidx.compose.ui.unit.sp
 @Composable
 internal fun PaymentProviderDialog(
     skinName: String,
+    priceIdr: Long,
+    priceUsd: Double,
     onDismiss: () -> Unit,
-    onConfirm: () -> Unit
+    onConfirm: (String) -> Unit
 ) {
+    var selectedProvider by remember(skinName) { mutableStateOf("midtrans") }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("PILIH PEMBAYARAN", fontSize = 16.sp) },
@@ -31,13 +38,26 @@ internal fun PaymentProviderDialog(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    RadioButton(selected = true, onClick = null)
-                    Text("Midtrans", fontSize = 14.sp)
+                    RadioButton(
+                        selected = selectedProvider == "midtrans",
+                        onClick = { selectedProvider = "midtrans" }
+                    )
+                    Text("Midtrans · Rp${String.format("%,d", priceIdr)}", fontSize = 14.sp)
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    RadioButton(
+                        selected = selectedProvider == "paypal",
+                        onClick = { selectedProvider = "paypal" }
+                    )
+                    Text("PayPal · US${String.format(java.util.Locale.US, "%.2f", priceUsd)}", fontSize = 14.sp)
                 }
             }
         },
         confirmButton = {
-            TextButton(onClick = onConfirm) {
+            TextButton(onClick = { onConfirm(selectedProvider) }) {
                 Text("LANJUTKAN")
             }
         },
