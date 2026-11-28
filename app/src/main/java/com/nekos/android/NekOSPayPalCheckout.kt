@@ -50,6 +50,9 @@ internal class NekOSPayPalCheckout(context: Context) {
         providerOrderId: String,
         onResult: (PayPalPresentAuthChallengeResult) -> Unit
     ) {
+        // Create the SDK session immediately before starting checkout, on the same client.
+        // This guarantees the session call is not skipped by a Compose Context cast.
+        prepareSession()
         client.start(activity, providerOrderId) { result ->
             onResult(result)
         }
