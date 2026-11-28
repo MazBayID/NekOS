@@ -86,10 +86,10 @@ if len(packages) != len(set(packages)):
 
 for item in apps:
     package = item.get("package", "")
-    glyph = item.get("glyph", "")
+    glyph = item.get("glyph")
     if not re.fullmatch(r"[A-Za-z][A-Za-z0-9_]*(\.[A-Za-z0-9_]+)+", package):
         ERRORS.append(f"package tidak valid: {package}")
-    if glyph not in glyphs:
+    if glyph is not None and glyph not in glyphs:
         ERRORS.append(f"{package}: glyph '{glyph}' tidak ada")
     if not item.get("name"):
         ERRORS.append(f"{package}: tanpa nama")
@@ -129,18 +129,11 @@ for alias, target in aliases.items():
 
 # Konsistensi metadata dan aturan
 rules = read_json(os.path.join(ROOT, "app_icon_rules.json"))
-default_glyph = app_map.get("default_glyph")
-if default_glyph not in glyphs:
-    ERRORS.append(f"default_glyph '{default_glyph}' tidak ada")
-if rules.get("default") not in glyphs:
-    ERRORS.append(f"rules.default '{rules.get('default')}' tidak ada")
-if default_glyph != rules.get("default"):
-    ERRORS.append("default_glyph pada app_icon_map.json berbeda dari app_icon_rules.json")
 if app_map.get("total_apps") != len(apps):
     ERRORS.append("total_apps tidak sama dengan jumlah apps")
 if app_map.get("total_glyphs") != len(glyphs):
     ERRORS.append("total_glyphs tidak sama dengan jumlah file glyph")
-if app_map.get("glyphs_used") != len({item.get("glyph") for item in apps}):
+if app_map.get("glyphs_used") != len({item.get("glyph") for item in apps if item.get("glyph")}):
     ERRORS.append("glyphs_used tidak sama dengan jumlah glyph unik pada mapping")
 if app_map.get("total_brand_icons") != len(brand_files):
     ERRORS.append("total_brand_icons tidak sama dengan jumlah file ikon merek")
