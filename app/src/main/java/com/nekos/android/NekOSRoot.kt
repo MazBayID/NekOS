@@ -358,6 +358,9 @@ internal fun NekOSRoot(
             )
         )
     }
+    SideEffect {
+        iconBitmapCache.setIconBadgeColor(launcherUiColorArgb)
+    }
     var backgroundPreset by remember {
         mutableStateOf(
             normalizeNekOSBackgroundPreset(preferences.getString("background_preset", "warm"))
@@ -1100,10 +1103,10 @@ internal fun NekOSRoot(
             val draggedApp = apps.firstOrNull { it.id == drag.appId }
             if (draggedApp != null) {
                 val cacheGeneration = iconBitmapCache.generation
-                val cachedBitmap = iconBitmapCache[draggedApp.iconCacheKey]
-                var bitmap by remember(draggedApp.iconCacheKey, cacheGeneration) { mutableStateOf(cachedBitmap) }
-                LaunchedEffect(draggedApp.iconCacheKey, cacheGeneration) {
-                    bitmap = iconBitmapCache[draggedApp.iconCacheKey]
+                val cachedBitmap = iconBitmapCache[iconBitmapCache.cacheKey(draggedApp)]
+                var bitmap by remember(iconBitmapCache.cacheKey(draggedApp), cacheGeneration) { mutableStateOf(cachedBitmap) }
+                LaunchedEffect(iconBitmapCache.cacheKey(draggedApp), cacheGeneration) {
+                    bitmap = iconBitmapCache[iconBitmapCache.cacheKey(draggedApp)]
                     if (bitmap == null) {
                         bitmap = iconBitmapCache.getOrLoad(draggedApp)
                     }

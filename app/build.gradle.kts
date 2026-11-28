@@ -19,6 +19,12 @@ android {
     namespace = "com.nekos.android"
     compileSdk = 35
 
+    sourceSets {
+        getByName("main") {
+            assets.srcDir("../main_assets/icon_pack-v2")
+        }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17

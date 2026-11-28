@@ -1,53 +1,158 @@
 #!/usr/bin/env python3
-"""Impor appfilter.xml (standar ADW/Nova, dipakai hampir semua icon pack) ke peta NekOS.
+"""Import package mappings from standard ADW/Nova appfilter.xml files.
 
-appfilter.xml dari icon pack open-source (mis. Lawnicons, Apache-2.0) memuat ribuan package name
-asli beserta nama aplikasinya. Skrip ini mengambil package + nama, lalu menentukan glyph NekOS:
-  1) app_icon_map.json (pasti)   2) keyword_rules.json (tebakan, bertanda "rule")   3) default (paw)
-
-Pemakaian:
-  python3 tools/import_appfilter.py appfilter.xml -o extra_map.json
-  python3 tools/import_appfilter.py appfilter.xml --merge      # gabung langsung ke app_icon_map.json
+Unmapped packages are stored as glyph-only entries (kind="glyph", icon=null).
+The NekOS runtime resolves those entries from the glyph catalog; the runner
+does not fabricate app-specific image files.
 """
-import argparse, json, os, re, sys
+import argparse
+import json
+import os
+import re
+import sys
+import tempfile
 import xml.etree.ElementTree as ET
-HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(HERE)
-CI = re.compile(r"ComponentInfo\{([^/}]+)/")
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.dirname(HERE)
+PACKAGE_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)+$")
+COMPONENT_RE = re.compile(r"ComponentInfo\{([^/}]+)/")
+
+
+def load_json(path):
+    with open(path, encoding="utf-8") as source:
+        return json.load(source)
+
+
+def write_json(path, data):
+    target = os.path.abspath(path)
+    directory = os.path.dirname(target)
+    os.makedirs(directory, exist_ok=True)
+    fd, temporary = tempfile.mkstemp(prefix=".nekos-icon-map-", suffix=".tmp", dir=directory)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as output:
+            json.dump(data, output, indent=2, ensure_ascii=False)
+            output.write("\n")
+        os.replace(temporary, target)
+    except Exception:
+        try:
+            os.unlink(temporary)
+        except OSError:
+            pass
+        raise
+
+
+def load_rules():
+    rules = load_json(os.path.join(HERE, "keyword_rules.json"))
+    compiled = [(re.compile(pattern, re.I), glyph) for pattern, glyph in rules["rules"]]
+    glyph_dir = os.path.join(ROOT, "icons", "apps")
+    required = {rules["default"], *(glyph for _, glyph in rules["rules"])}
+    missing = sorted(glyph for glyph in required if not os.path.isfile(
+        os.path.join(glyph_dir, f"icon_{glyph}.webp")
+    ))
+    if missing:
+        raise ValueError("Glyph tidak ditemukan: " + ", ".join(missing))
+    return rules, compiled
+
+
+def recount_metadata(base):
+    apps = base["apps"]
+    base["schema_version"] = 2
+    base["total_apps"] = len(apps)
+    base["glyphs_used"] = len({item["glyph"] for item in apps if item.get("glyph")})
+    base["icons_bespoke"] = sum(item.get("kind") == "bespoke" for item in apps)
+    base["icons_monogram"] = sum(item.get("kind") == "monogram" for item in apps)
+    return base
+
 
 def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("appfilter"); ap.add_argument("-o", "--output", default="extra_map.json")
-    ap.add_argument("--merge", action="store_true", help="gabungkan ke app_icon_map.json (entri lama tidak ditimpa)")
-    a = ap.parse_args()
-    mp = os.path.join(ROOT, "app_icon_map.json"); base = json.load(open(mp, encoding="utf-8"))
-    exact = {x["package"]: x for x in base["apps"]}
-    rules = json.load(open(os.path.join(HERE, "keyword_rules.json"), encoding="utf-8"))
-    comp = [(re.compile(p, re.I), g) for p, g in rules["rules"]]
-    out, seen, stat = [], set(), {"exact": 0, "rule": 0, "default": 0}
-    for it in ET.parse(a.appfilter).getroot().iter("item"):
-        m = CI.search(it.get("component", ""))
-        if not m: continue
-        pkg = m.group(1)
-        if pkg in seen: continue
-        seen.add(pkg)
-        name = it.get("name") or it.get("drawable") or pkg.split(".")[-1]
-        if pkg in exact:
-            e = dict(exact[pkg]); e["source"] = "exact"
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("appfilter", help="Path to appfilter.xml")
+    parser.add_argument("-o", "--output", default="extra_map.json")
+    parser.add_argument(
+        "--merge",
+        action="store_true",
+        help="gabungkan package baru sebagai entri glyph-only; entri lama tidak ditimpa",
+    )
+    args = parser.parse_args()
+
+    map_path = os.path.join(ROOT, "app_icon_map.json")
+    base = load_json(map_path)
+    exact = {item["package"]: item for item in base["apps"]}
+    rules, compiled = load_rules()
+
+    try:
+        root = ET.parse(args.appfilter).getroot()
+    except ET.ParseError as error:
+        raise ValueError(f"appfilter.xml tidak valid: {error}") from error
+
+    output = []
+    seen = set()
+    stats = {"exact": 0, "rule": 0, "default": 0, "invalid": 0}
+    for item in root.iter():
+        if item.tag.rsplit("}", 1)[-1] != "item":
+            continue
+        match = COMPONENT_RE.search(item.get("component", ""))
+        if not match:
+            continue
+        package = match.group(1).strip()
+        if not PACKAGE_RE.fullmatch(package):
+            stats["invalid"] += 1
+            continue
+        if package in seen:
+            continue
+        seen.add(package)
+        name = (item.get("name") or item.get("drawable") or package.rsplit(".", 1)[-1]).strip()
+
+        if package in exact:
+            entry = dict(exact[package])
+            entry["source"] = "exact"
         else:
-            hay = " ".join([pkg, name, it.get("drawable", "")]).lower(); g, src = rules["default"], "default"
-            for rx, gl in comp:
-                if rx.search(hay): g, src = gl, "rule"; break
-            e = {"package": pkg, "name": name, "glyph": g, "source": src}
-        stat[e["source"]] += 1; out.append(e)
-    if a.merge:
-        have = set(exact)
-        new = [e for e in out if e["package"] not in have]
-        for e in new: e.pop("source", None); base["apps"].append(e)
-        base["total_apps"] = len(base["apps"]); json.dump(base, open(mp, "w", encoding="utf-8"), indent=1, ensure_ascii=False)
-        print(f"{len(new)} aplikasi baru digabung -> total {base['total_apps']}  {stat}")
+            haystack = " ".join((package, name, item.get("drawable", ""))).lower()
+            glyph, source = rules["default"], "default"
+            for pattern, candidate in compiled:
+                if pattern.search(haystack):
+                    glyph, source = candidate, "rule"
+                    break
+            entry = {
+                "package": package,
+                "name": name,
+                "glyph": glyph,
+                "kind": "glyph",
+                "icon": None,
+                "source": source,
+            }
+        stats[entry["source"]] += 1
+        output.append(entry)
+
+    if args.merge:
+        existing = set(exact)
+        new_entries = []
+        for entry in output:
+            if entry["package"] in existing:
+                continue
+            clean = {key: value for key, value in entry.items() if key != "source"}
+            new_entries.append(clean)
+            existing.add(entry["package"])
+        base["apps"].extend(new_entries)
+        recount_metadata(base)
+        write_json(map_path, base)
+        print(
+            f"{len(new_entries)} aplikasi baru digabung -> total {base['total_apps']}  "
+            f"{stats}"
+        )
     else:
-        json.dump({"schema_version": 1, "default_glyph": rules["default"], "apps": out}, open(a.output, "w", encoding="utf-8"), indent=1, ensure_ascii=False)
-        print(f"{len(out)} aplikasi -> {a.output}  {stat}")
+        write_json(args.output, {
+            "schema_version": 2,
+            "default_glyph": rules["default"],
+            "apps": output,
+        })
+        print(f"{len(output)} aplikasi -> {args.output}  {stats}")
+
 
 if __name__ == "__main__":
-    sys.exit(main())
+    try:
+        main()
+    except (OSError, ValueError, KeyError, json.JSONDecodeError) as error:
+        print(f"Error: {error}", file=sys.stderr)
+        sys.exit(2)
