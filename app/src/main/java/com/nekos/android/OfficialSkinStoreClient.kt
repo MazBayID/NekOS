@@ -14,7 +14,8 @@ internal data class OfficialStoreSkin(
     val id: String, val skinKey: String, val name: String, val author: String,
     val description: String, val price: Long, val currency: String, val previewUrl: String,
     val category: String = "Basic",
-    val owned: Boolean = false
+    val owned: Boolean = false,
+    val priceUsd: Double = 0.0
 )
 internal data class StoreActionResult(
     val success: Boolean, val message: String, val checkoutUrl: String? = null,
@@ -112,7 +113,8 @@ internal object OfficialSkinStoreClient {
                     description=item.optString("description"), price=item.optDouble("price_amount",0.0).toLong(),
                     currency=item.optString("currency","IDR"), previewUrl=item.optString("preview_url"),
                     category=item.optString("category","Basic"),
-                    owned=item.optBoolean("owned", false)
+                    owned=item.optBoolean("owned", false),
+                    priceUsd=item.optDouble("price_usd",0.0)
                 ))
             }
         }
@@ -123,13 +125,14 @@ internal object OfficialSkinStoreClient {
 
     fun buy(
         context: Context,
-        skin: OfficialStoreSkin
+        skin: OfficialStoreSkin,
+        provider: String = "midtrans"
     ): StoreActionResult {
         val body = JSONObject()
             .put("android_id",androidId(context))
             .put("app_version",appVersion(context))
             .put("skin_id",skin.id)
-            .put("provider","midtrans")
+            .put("provider",provider.lowercase())
         val result = request("/purchase","POST",body)
         if (result.optBoolean("free")) {
             // The server may return an existing ownership grant instead of a
@@ -168,7 +171,7 @@ internal object OfficialSkinStoreClient {
         }
         return StoreActionResult(true,"Complete payment in the opened payment page, then return to NekOS.",
             checkoutUrl=result.optString("checkout_url"),orderId=orderId,
-            paymentProvider="midtrans")
+            paymentProvider=provider.lowercase())
     }
 
     @Synchronized
