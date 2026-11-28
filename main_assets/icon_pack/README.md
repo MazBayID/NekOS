@@ -14,7 +14,7 @@ Implementasi runtime saat ini:
 - `InstalledApp.iconCacheKey` diberi versi cache baru agar bitmap ikon Android lama tidak menutupi hasil icon pack.
 - `IconCatalogRepository.kt` tetap khusus untuk `icons/tag/`; tidak digabung dengan app icon pack.
 
-Perubahan masih berada di branch kerja dan belum digabung ke `main`. Build CI memastikan aset terpaket dan tes otomatis lolos; pemeriksaan visual pada perangkat fisik tetap disarankan sebelum integrasi ke branch utama.
+Build CI memastikan aset terpaket dan tes otomatis lolos; pemeriksaan visual pada perangkat fisik tetap disarankan untuk memastikan hasil akhir sesuai tampilan perangkat.
 
 Dokumentasi Android: [LauncherActivityInfo](https://developer.android.com/reference/android/content/pm/LauncherActivityInfo).
 
