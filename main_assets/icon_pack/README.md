@@ -139,3 +139,8 @@ Validator memeriksa file gambar sebenarnya, bukan hanya nama file atau JSON. Jal
 - Brand index hanya mencakup merek yang tersedia di Simple Icons; banyak aplikasi lokal atau merek yang tidak tercakup akan memakai glyph kategori.
 - Prefix dan keyword adalah heuristik, bukan bukti identitas aplikasi.
 - Runtime resolver dan packaging Android belum dibuat. Integrasi itu harus dilakukan terpisah dan diuji tanpa mengubah katalog tag atau motif skin.
+
+
+## Validasi aset
+
+Nama file ikon merek mendukung slug huruf kecil, angka, titik, tanda hubung, dan garis bawah. Validator memeriksa format gambar WebP, ukuran 96×96 RGBA, mask putih, live area, indeks, dan referensi mapping.
