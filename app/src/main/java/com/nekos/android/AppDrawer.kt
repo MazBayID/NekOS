@@ -249,12 +249,12 @@ internal fun AppDrawer(
             ) {
                 items(filteredApps, key = { it.id }) { app ->
                     val cacheGeneration = iconBitmapCache.generation
-                    val cachedBitmap = iconBitmapCache[app.iconCacheKey]
-                    var bitmap by remember(app.iconCacheKey, cacheGeneration) {
+                    val cachedBitmap = iconBitmapCache[iconBitmapCache.cacheKey(app)]
+                    var bitmap by remember(iconBitmapCache.cacheKey(app), cacheGeneration) {
                         mutableStateOf(cachedBitmap)
                     }
-                    LaunchedEffect(app.iconCacheKey, cacheGeneration) {
-                        bitmap = iconBitmapCache[app.iconCacheKey]
+                    LaunchedEffect(iconBitmapCache.cacheKey(app), cacheGeneration) {
+                        bitmap = iconBitmapCache[iconBitmapCache.cacheKey(app)]
                         if (bitmap == null) {
                             bitmap = iconBitmapCache.getOrLoad(app)
                         }
