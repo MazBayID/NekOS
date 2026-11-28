@@ -1442,18 +1442,20 @@ internal fun NekOSRoot(
         paymentProviderSkin?.let { skin ->
             PaymentProviderDialog(
                 skinName = skin.name,
+                priceIdr = skin.price,
+                priceUsd = skin.priceUsd,
                 onDismiss = {
                     paymentProviderSkin = null
                     paymentProviderInstallCallback = null
                 },
-                onConfirm = {
+                onConfirm = { provider ->
                     paymentProviderSkin = null
                     val installCallback = paymentProviderInstallCallback
                     paymentProviderInstallCallback = null
                     if (storeBusySkinId == null) skinPickerScope.launch {
                         storeBusySkinId = skin.id
                         val result = withContext(Dispatchers.IO) {
-                            runCatching { OfficialSkinStoreClient.buy(context, skin) }
+                            runCatching { OfficialSkinStoreClient.buy(context, skin, provider) }
                                 .getOrElse { StoreActionResult(false, it.message ?: "Store action failed.") }
                         }
                         storeBusySkinId = null
