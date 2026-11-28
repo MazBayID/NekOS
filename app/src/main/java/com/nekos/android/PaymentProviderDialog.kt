@@ -19,6 +19,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+internal fun preferredPaymentProvider(priceUsd: Double, currentProvider: String?): String {
+    val paypalAvailable = priceUsd.isFinite() && priceUsd > 0.0
+    return when {
+        currentProvider.equals("paypal", ignoreCase = true) -> "midtrans"
+        currentProvider.equals("midtrans", ignoreCase = true) && paypalAvailable -> "paypal"
+        paypalAvailable -> "paypal"
+        else -> "midtrans"
+    }
+}
+
 @Composable
 internal fun PaymentProviderDialog(
     skinName: String,
@@ -29,13 +39,8 @@ internal fun PaymentProviderDialog(
     onDismiss: () -> Unit,
     onConfirm: (String) -> Unit
 ) {
-    val paypalAvailable = priceUsd > 0.0
-    val initialProvider = when {
-        currentProvider.equals("paypal", true) -> "midtrans"
-        currentProvider.equals("midtrans", true) && paypalAvailable -> "paypal"
-        paypalAvailable -> "paypal"
-        else -> "midtrans"
-    }
+    val paypalAvailable = priceUsd.isFinite() && priceUsd > 0.0
+    val initialProvider = preferredPaymentProvider(priceUsd, currentProvider)
     var selectedProvider by remember(skinName, currentProvider, priceUsd) {
         mutableStateOf(initialProvider)
     }
