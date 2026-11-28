@@ -22,13 +22,6 @@ android {
     sourceSets {
         getByName("main") {
             assets.srcDir("../main_assets/icon_pack-v2")
-            assets.exclude(
-                "README.md",
-                "preview_*.png",
-                "tools/*.py",
-                "tools/tests/**",
-                "icons/apps/icons_index.*"
-            )
         }
     }
 
