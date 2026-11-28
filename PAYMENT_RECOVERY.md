@@ -69,7 +69,9 @@ Pulihkan alur pembayaran sampai skin terunduh dan terpasang, dengan transaksi ny
 - Perubahan commit: `70424e3` (penambahan rekonsiliasi 6 jam), disempurnakan oleh `c9ebbf5` (hanya remote `CREATED` yang kedaluwarsa).
 - Supabase Edge Function `skin-store` berhasil dideploy sebagai **v51**. Pembacaan ulang deployment mengonfirmasi kode batas 6 jam aktif.
 - Order Aurum `19f0b2e4-0698-464a-84c2-1e3a97d4c31f` tetap `pending` saat diperiksa dan tidak diubah. Usianya saat pemeriksaan masih di bawah jendela 6 jam; karena itu belum aman untuk ditandai kedaluwarsa.
-- Pencarian kode NekOS tidak menemukan literal pesan UI generik “Tampaknya berbagai fitur tidak berfungsi saat ini.” Jadi sumber pesan tersebut belum terpetakan ke file aplikasi. Status remote PayPal yang tercatat adalah `CREATED`, bukan kegagalan capture.
+- Pencarian kode NekOS tidak menemukan literal pesan UI generik “Tampaknya berbagai fitur tidak berfungsi saat ini.” Jalur aplikasi yang menampilkan teks error eksternal PayPal adalah callback `PayPalPresentAuthChallengeResult.Failure` melalui `result.error.errorDescription`; ini kandidat sumber pesan, tetapi belum terbukti tanpa log perangkat.
+- Perbaikan Android pada commit `a86960c`: saat SDK gagal memulai checkout, NekOS mencatat detail error ke Logcat (`NekOSPayPal`), membuka URL checkout PayPal di browser jika URL lolos validasi HTTPS/host, dan mengganti Toast generik SDK dengan instruksi yang jelas bila fallback berhasil dibuka. Jika fallback gagal, detail error SDK tetap ditampilkan.
+- Perubahan ini tidak mengubah status pembayaran dan tidak membuat order baru.
 - GitHub Actions untuk commit `c9ebbf5` sedang berjalan saat checkpoint ditulis. Deno type-check lulus; tahapan Android build dan emulator belum selesai.
 
 ## Status
