@@ -354,11 +354,20 @@ class MainActivity : ComponentActivity() {
                 is com.paypal.android.paypalpayments.PayPalPresentAuthChallengeResult.Success -> Unit
                 is com.paypal.android.paypalpayments.PayPalPresentAuthChallengeResult.Failure -> {
                     val fallback = android.net.Uri.parse(fallbackCheckoutUrl)
-                    if (fallback.scheme == "https" && fallback.host?.endsWith(".paypal.com") == true) {
-                        runCatching { startActivity(Intent(Intent.ACTION_VIEW, fallback)) }
+                    val fallbackOpened = fallback.scheme == "https" &&
+                        fallback.host?.endsWith(".paypal.com") == true &&
+                        runCatching {
+                            startActivity(Intent(Intent.ACTION_VIEW, fallback))
+                            true
+                        }.getOrDefault(false)
+                    val sdkError = result.error.errorDescription.ifBlank {
+                        "Unknown PayPal SDK error."
                     }
-                    paypalResultMessage = result.error.errorDescription.ifBlank {
-                        "PayPal checkout could not be started."
+                    Log.e("NekOSPayPal", "Native checkout failed; browserFallback=$fallbackOpened; error=$sdkError")
+                    paypalResultMessage = if (fallbackOpened) {
+                        "Checkout native PayPal tidak tersedia. NekOS membuka checkout aman di browser; selesaikan pembayaran di sana."
+                    } else {
+                        "PayPal checkout gagal dibuka. Detail: $sdkError"
                     }
                     paypalResultToken++
                 }
