@@ -52,7 +52,7 @@ Pulihkan alur pembayaran sampai skin terunduh dan terpasang, dengan transaksi ny
 - Edge Function `skin-store` v49 telah dideploy; menambahkan log status PayPal (`CREATED`, `PAYER_ACTION_REQUIRED`, dll.) saat polling agar status provider bisa ditelusuri.
 - Android `OfficialSkinStoreClient` kini mengubah status provider menjadi pesan pending yang spesifik; `NekOSRoot` menampilkan feedback saat pemeriksaan gagal/tertunda.
 - Commit backend: `a2669bb` (diagnostik status) dan `6e2843c` (regex webhook). Commit Android: `6f15474` dan `40f4cbe`.
-- Deno type-check untuk Edge Function lulus di GitHub Actions. Build Android, unit tests, dan lint masih berjalan pada saat checkpoint ini ditulis.
+- Deno type-check lulus. Android Debug/Release assemble, unit tests, dan lint lulus di GitHub Actions; Compose UI emulator test masih berjalan.
 - Transaksi Aurum masih `pending`; `provider_payment_id` dan `provider_payload` kosong. Tidak ada pembayaran ulang atau perubahan status yang dilakukan.
 
 ## Batas verifikasi yang tersisa
@@ -62,4 +62,4 @@ Pulihkan alur pembayaran sampai skin terunduh dan terpasang, dengan transaksi ny
 - Status remote PayPal Aurum baru akan tercatat pada log setelah aplikasi melakukan pemeriksaan status berikutnya.
 
 ## Status
-Perbaikan kode backend sudah dideploy ke produksi sebagai `skin-store` v49. Perubahan Android sudah masuk ke `main`; validasi build APK masih berjalan. Audit dan perbaikan end-to-end belum dapat dinyatakan selesai sampai build Android lulus dan konfigurasi webhook provider diverifikasi.
+Perbaikan kode backend sudah dideploy ke produksi sebagai `skin-store` v49. Perubahan Android sudah masuk ke `main`; build Debug/Release, unit tests, dan lint lulus. Compose UI test emulator masih berjalan. Audit end-to-end belum dapat dinyatakan selesai sampai uji emulator selesai dan konfigurasi webhook provider diverifikasi.
