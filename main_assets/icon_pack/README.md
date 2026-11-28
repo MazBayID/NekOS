@@ -24,9 +24,9 @@ Dokumentasi Android: [LauncherActivityInfo](https://developer.android.com/refere
 |---|---:|---|
 | Ikon merek, `icons/brands/` | 3.369 | Identitas merek aplikasi |
 | Glyph kategori, `icons/apps/` | 109 | Fallback kategori generik |
-| Package exact, `app_icon_map.json` | 1.418 | Mapping package yang ditulis eksplisit |
+| Package exact, `app_icon_map.json` | 1.423 | Mapping package yang ditulis eksplisit |
 | Package exact dengan ikon merek | 362 | Mapping exact yang punya brand |
-| Glyph unik yang dipakai mapping exact | 88 | Bagian dari 109 glyph tersedia |
+| Glyph unik yang dipakai mapping exact | 89 | Bagian dari 109 glyph tersedia |
 
 Jumlah ikon merek tidak harus sama dengan jumlah package Android. Direktori merek berasal dari katalog Simple Icons yang juga berisi layanan web, produk desktop, dan merek yang tidak mempunyai aplikasi Android. `brand_index.json` adalah katalog merek; `app_icon_map.json` adalah daftar package Android yang diketahui. Keduanya punya tujuan berbeda.
 
