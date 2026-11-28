@@ -79,7 +79,7 @@ class AppIconBitmapCache(
 
     /** Adapt persisted legacy favorite keys to the current pack and theme namespace. */
     fun cacheKey(iconCacheKey: String): String =
-        "${iconCacheKey}::nekos-icon-pack-v2-no-frame::${Integer.toHexString(iconBadgeColorArgb)}"
+        "${iconCacheKey}::nekos-icon-pack-v2-white-no-frame::${Integer.toHexString(iconBadgeColorArgb)}"
 
     /** Update the shared icon badge color without allowing old-color bitmaps to reappear. */
     @Synchronized
@@ -209,11 +209,7 @@ class AppIconBitmapCache(
 
         if (packIcon != null) {
             return try {
-                if (packIcon.isGlyph) {
-                    renderIconBadge(packIcon.bitmap, iconBadgeColorArgb)
-                } else {
-                    normalizeFullIcon(packIcon.bitmap)
-                }
+                renderMonochromeIcon(packIcon.bitmap)
             } finally {
                 packIcon.bitmap.recycle()
             }
@@ -226,27 +222,15 @@ class AppIconBitmapCache(
         }
     }
 
-    private fun normalizeFullIcon(source: Bitmap): Bitmap {
+    private fun renderMonochromeIcon(source: Bitmap): Bitmap {
+        // Render every bundled icon-pack asset as a white alpha mask. The
+        // transparent canvas keeps the icon frameless and consistent whether
+        // the source is a full app artwork or a catalog glyph.
         val output = Bitmap.createBitmap(96, 96, Bitmap.Config.ARGB_8888)
-        Canvas(output).drawBitmap(
-            source,
-            null,
-            RectF(0f, 0f, 96f, 96f),
-            Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
-        )
-        return output
-    }
-
-    private fun renderIconBadge(source: Bitmap, badgeColor: Int): Bitmap {
-        // Keep glyph artwork transparent: tint the glyph itself, never draw a
-        // launcher-colored tile behind it. This makes glyph and full icons
-        // follow the same frameless presentation.
-        val output = Bitmap.createBitmap(96, 96, Bitmap.Config.ARGB_8888)
-        val canvas = Canvas(output)
-        val glyphPaint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG).apply {
-            colorFilter = PorterDuffColorFilter(badgeColor, PorterDuff.Mode.SRC_IN)
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG).apply {
+            colorFilter = PorterDuffColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN)
         }
-        canvas.drawBitmap(source, null, RectF(4f, 4f, 92f, 92f), glyphPaint)
+        Canvas(output).drawBitmap(source, null, RectF(4f, 4f, 92f, 92f), paint)
         return output
     }
 
