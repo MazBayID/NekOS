@@ -11,7 +11,7 @@ import org.json.JSONObject
 import java.util.Locale
 
 internal data class ResolvedAppIcon(
-    val glyph: String?
+    val glyph: String?,
     val brand: String? = null
 )
 
