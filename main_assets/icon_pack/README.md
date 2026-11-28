@@ -4,9 +4,9 @@ Kumpulan ikon merek dan glyph kategori untuk rancangan sistem ikon aplikasi NekO
 
 ## Status integrasi saat ini
 
-**Status:** runtime icon pack sudah terintegrasi pada branch `work/icon-pack-runtime`. Validasi GitHub Actions untuk commit `67fe2d7` berhasil, termasuk build Debug/Release, unit test, lint, dan Compose UI test. Branch ini belum digabung ke `main`.
+**Status:** runtime icon pack sudah terintegrasi pada `main`. Validasi GitHub Actions untuk commit `67fe2d7` berhasil, termasuk build Debug/Release, unit test, lint, dan Compose UI test. Branch ini belum digabung ke `main`.
 
-Implementasi pada branch kerja sekarang:
+Implementasi runtime saat ini:
 
 - `app/build.gradle.kts` menyalin aset runtime dari `main_assets/icon_pack/` ke generated Android assets sebelum `preBuild`, tanpa memasukkan tools, lisensi, preview, atau README.
 - `AppIconPackResolver.kt` membaca mapping package, aturan glyph, alias, dan slug merek. Exact package selalu diprioritaskan; pencocokan label hanya digunakan untuk package yang tidak terdaftar.
@@ -70,13 +70,13 @@ Resolver runtime dan `map_packages.py` mengikuti aturan berikut.
 
 - Normalisasi label aplikasi: huruf kecil, `+` menjadi `plus`, `&` menjadi `and`, lalu buang karakter selain `a-z0-9`.
 - Cocokkan hasilnya secara exact dengan slug atau alias di `brand_index.json`. Jika cocok, gunakan ikon merek.
-- Glyph kategori fallback dipilih secara terpisah: `prefix_rules` (prefix terpanjang), lalu `keyword_rules` (regex pertama yang cocok, case-insensitive), lalu `default_glyph`.
+- Glyph kategori fallback dipilih secara terpisah: `prefix_rules` (prefix terpanjang), lalu `keyword_rules` (regex pertama yang cocok, case-insensitive), lalu gunakan ikon asli Android jika tidak terklasifikasi.
 
 Pencocokan label tidak memakai fuzzy matching atau pencocokan sebagian. Ini disengaja untuk mengurangi risiko aplikasi yang namanya hanya mirip mendapat logo merek yang salah. Alias generik seperti `foto` tidak digunakan karena dapat menunjuk ke banyak aplikasi galeri yang berbeda.
 
 ### Arti field hasil mapper
 
-- `source`: asal pemilihan glyph, yaitu `exact`, `prefix`, `rule`, atau `default`.
+- `source`: asal pemilihan glyph, yaitu `exact`, `rule`, `prefix`, atau `native` (ikon Android asli tanpa glyph pack).
 - `brand_source`: asal ikon merek, yaitu `exact` atau `label`.
 - `brand`: slug ikon merek. Field ini opsional; `glyph` tetap disediakan sebagai fallback.
 
@@ -91,7 +91,7 @@ Jalur aset harus tetap terpisah:
 - `icons/tag/`: katalog ikon tag skin NekOS.
 - `motifs/`: motif dekoratif skin, termasuk motif paw bila tersedia.
 
-Nama glyph `paw` pada app icon pack tidak bentrok dengan motif atau tag bernama serupa selama resolver memakai path dan katalog yang benar. Jangan gabungkan app icon pack ke `IconCatalogRepository`, karena repository tersebut secara sengaja membatasi path ke `icons/tag/`.
+Nama glyph `paw` pada app icon pack tidak bentrok dengan motif atau tag bernama serupa selama resolver memakai path dan katalog yang benar. `paw` bukan ikon default NekOS dan tidak digunakan untuk aplikasi yang tidak terklasifikasi. Jangan gabungkan app icon pack ke `IconCatalogRepository`, karena repository tersebut secara sengaja membatasi path ke `icons/tag/`.
 
 ## Format aset
 
@@ -139,7 +139,7 @@ Validator memeriksa file gambar sebenarnya, bukan hanya nama file atau JSON. Jal
 
 - Mapping package exact belum diverifikasi satu per satu pada Play Store.
 - Brand index hanya mencakup merek yang tersedia di Simple Icons; banyak aplikasi lokal atau merek yang tidak tercakup akan memakai glyph kategori.
-- Prefix dan keyword adalah heuristik, bukan bukti identitas aplikasi.
+- Keyword dan prefix adalah heuristik, bukan bukti identitas aplikasi. Keyword kategori diperiksa sebelum prefix agar nama/fungsi aplikasi tidak tertutup namespace vendor. Prefix vendor generik yang memaksa aplikasi ke gear dihapus.
 - Pencocokan brand melalui label bergantung pada nama aplikasi yang dilaporkan Android; label yang berbeda atau dilokalkan dapat jatuh ke glyph kategori.
 - Build CI dan Compose UI test sudah lolos, tetapi variasi tampilan ikon pada perangkat fisik, launcher density, serta profil kerja tetap perlu pemeriksaan visual.
 
@@ -147,3 +147,12 @@ Validator memeriksa file gambar sebenarnya, bukan hanya nama file atau JSON. Jal
 ## Validasi aset
 
 Nama file ikon merek mendukung slug huruf kecil, angka, titik, tanda hubung, dan garis bawah. Validator memeriksa format gambar WebP, ukuran 96×96 RGBA, mask putih, live area, indeks, dan referensi mapping.
+
+
+## Koreksi akurasi mapping dan fallback
+
+- NekOS tidak memiliki glyph default untuk aplikasi. Jika package/label tidak terklasifikasi dan tidak ada brand yang cocok, runtime mempertahankan ikon asli dari Android.
+- Keyword kategori diproses sebelum prefix; Kalkulator dan Radio tidak lagi tertimpa aturan vendor.
+- Prefix vendor generik yang mengarahkan semua aplikasi ke gear dihapus.
+- Mapping yang diverifikasi dan ditambahkan: Transsion/HONOR/Ulefone Calculator, ShareMe, dan AOSP FM Radio. Shizuku memakai glyph terminal.
+- Referensi package: [Google Play ShareMe](https://play.google.com/store/apps/details?id=com.xiaomi.midrop), [Google Play Shizuku](https://play.google.com/store/apps/details?id=moe.shizuku.privileged.api), [AOSP Calculator](https://android.googlesource.com/platform/packages/apps/Calculator/), [AOSP FM Radio](https://android.googlesource.com/platform/packages/apps/FMRadio/), dan [Android system app package database](https://bayton.org/android/android-system-app-database/).
