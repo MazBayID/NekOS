@@ -4906,14 +4906,14 @@
       "name": "SHAREit",
       "glyph": "share",
       "kind": "glyph",
-      "icon": "icons/apps/icon_share.webp"
+      "icon": null
     },
     {
       "package": "com.particlenews.newsbreak",
       "name": "NewsBreak",
       "glyph": "newspaper",
       "kind": "glyph",
-      "icon": "icons/apps/icon_newspaper.webp"
+      "icon": null
     },
     {
       "package": "com.superb.launcher",
