@@ -2,7 +2,7 @@
   "schema_version": 3,
   "glyph_dir": "icons/apps",
   "glyph_file_pattern": "icon_{glyph}.webp",
-  "total_apps": 1423,
+  "total_apps": 1422,
   "total_glyphs": 109,
   "glyphs_used": 89,
   "resolution_order": [
@@ -7476,11 +7476,6 @@
     {
       "package": "com.hihonor.calculator",
       "name": "Kalkulator HONOR",
-      "glyph": "calculator"
-    },
-    {
-      "package": "com.android.pri.calculator",
-      "name": "Kalkulator Ulefone",
       "glyph": "calculator"
     },
     {
