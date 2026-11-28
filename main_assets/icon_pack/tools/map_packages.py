@@ -12,7 +12,7 @@ Prioritas:
 - Package exact: glyph dan brand dari app_icon_map.json adalah otoritas.
 - Package yang belum terdaftar: cari brand dari label aplikasi (exact setelah normalisasi).
 - Glyph fallback package yang belum terdaftar: prefix terpanjang, keyword pertama yang cocok,
-  lalu default_glyph.
+  lalu gunakan ikon asli Android jika tidak terklasifikasi.
 
 Field "source" menjelaskan asal glyph fallback. Field "brand_source" menjelaskan asal ikon merek.
 """
@@ -35,18 +35,12 @@ def load(root=ROOT):
     rules = read_json(os.path.join(root, "app_icon_rules.json"))
     brand_index = read_json(os.path.join(root, "brand_index.json"))
 
-    if app_map.get("default_glyph") != rules.get("default"):
-        raise ValueError(
-            "default_glyph pada app_icon_map.json harus sama dengan "
-            "default pada app_icon_rules.json"
-        )
-
     exact = {item["package"]: item for item in app_map["apps"]}
     prefixes = sorted(rules["prefix_rules"], key=lambda item: -len(item[0]))
     keywords = [(re.compile(pattern, re.I), glyph)
                 for pattern, glyph in rules["keyword_rules"]]
     brand_data = (set(brand_index["slugs"]), brand_index.get("aliases", {}))
-    return exact, prefixes, keywords, rules["default"], brand_data
+    return exact, prefixes, keywords, brand_data
 
 
 def normalize_label(value):
@@ -57,7 +51,7 @@ def normalize_label(value):
 def brand_for(name, tables):
     if not name:
         return None
-    slugs, aliases = tables[4]
+    slugs, aliases = tables[3]
     # Parenthetical qualifiers such as "(Beta)" should not prevent a brand match.
     label = re.sub(r"\([^)]*\)", " ", name)
     normalized = normalize_label(label)
@@ -66,20 +60,20 @@ def brand_for(name, tables):
 
 
 def resolve_glyph(pkg, name, tables):
-    exact, prefixes, keywords, default, _ = tables
+    exact, prefixes, keywords, _ = tables
     if pkg in exact:
         return exact[pkg]["glyph"], "exact"
-
-    for prefix, glyph in prefixes:
-        if pkg.startswith(prefix):
-            return glyph, "prefix"
 
     haystack = (pkg + " " + name).casefold()
     for pattern, glyph in keywords:
         if pattern.search(haystack):
             return glyph, "rule"
 
-    return default, "default"
+    for prefix, glyph in prefixes:
+        if pkg.startswith(prefix):
+            return glyph, "prefix"
+
+    return None, "native"
 
 
 def main():
@@ -92,7 +86,7 @@ def main():
     exact = tables[0]
     output = []
     stats = {
-        "exact": 0, "prefix": 0, "rule": 0, "default": 0,
+        "exact": 0, "prefix": 0, "rule": 0, "native": 0,
         "brand_exact": 0, "brand_label": 0
     }
     seen = set()
@@ -122,9 +116,10 @@ def main():
             entry = {
                 "package": package,
                 "name": name or package.split(".")[-1],
-                "glyph": glyph,
                 "source": source
             }
+            if glyph:
+                entry["glyph"] = glyph
             if brand:
                 entry["brand"] = brand
                 entry["brand_source"] = brand_source
@@ -133,7 +128,6 @@ def main():
 
     result = {
         "schema_version": 3,
-        "default_glyph": tables[3],
         "apps": output
     }
     with open(args.output, "w", encoding="utf-8") as handle:
