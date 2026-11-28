@@ -900,6 +900,7 @@ Deno.serve(async(req:Request)=>{
               if(outcome.paid || outcome.cancelled) {
                 status=await rpc("skin_order_status",{p_order_id:orderId,p_device_hash:deviceHash});
               }
+            }
           } else if(!["200","201"].includes(providerStatusCode)) {
             console.error("skin_store_midtrans_status_error", JSON.stringify({
               order_id:orderId,
