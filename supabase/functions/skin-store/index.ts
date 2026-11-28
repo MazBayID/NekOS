@@ -849,14 +849,21 @@ Deno.serve(async(req:Request)=>{
         assertPaymentConfig("paypal");
         const paypalOrderId=String(activePayment.provider_order_id??"");
         let remote=await paypalRequest("/v2/checkout/orders/"+encodeURIComponent(paypalOrderId));
-        if(String(remote.status??"")==="APPROVED") {
+        let providerStatus=String(remote.status??"UNKNOWN").toUpperCase();
+        if(providerStatus==="APPROVED") {
           remote=await paypalRequest("/v2/checkout/orders/"+encodeURIComponent(paypalOrderId)+"/capture",{
             method:"POST",headers:{"PayPal-Request-Id":orderId+"-capture"},body:"{}"
           });
+          providerStatus=String(remote.status??"UNKNOWN").toUpperCase();
         }
-        if(String(remote.status??"")==="COMPLETED") {
+        console.info("skin_store_paypal_status",JSON.stringify({
+          order_id:orderId,provider_status:providerStatus
+        }));
+        if(providerStatus==="COMPLETED") {
           await grantPayPalEntitlement(paypalOrderId,orderId,Number(status.amount));
           status=await rpc("skin_order_status",{p_order_id:orderId,p_device_hash:deviceHash});
+        } else {
+          status={...status,provider_status:providerStatus};
         }
       }
       if(status.status==="pending" && activePayment?.provider==="midtrans") {
