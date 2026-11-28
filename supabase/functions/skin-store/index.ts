@@ -524,6 +524,8 @@ async function handleCancel(body:Record<string,unknown>, deviceHash:string, orig
   const statusUrl=midtransBase()+"/v2/"+encodeURIComponent(providerOrderId)+"/status";
   const fetchStatus=()=>fetch(statusUrl,{headers:{Authorization:authHeader(),"Accept":"application/json"}});
   let response=await fetchStatus();
+  let snapSessionConfirmedInactive=false;
+  let snapSessionInProgress=false;
   if(response.status===404) {
     const checkoutUrl=String(active.checkout_url??"");
     let snapToken="";
@@ -555,6 +557,8 @@ async function handleCancel(body:Record<string,unknown>, deviceHash:string, orig
     const sessionInProgress=Array.isArray(cancelSessionResult.error_messages) &&
       cancelSessionResult.error_messages.some((message:unknown)=>
         /transaction is on progress/i.test(String(message)));
+    snapSessionConfirmedInactive=sessionCancelled || sessionAlreadyInactive;
+    snapSessionInProgress=sessionInProgress;
 
     if(!sessionCancelled && !sessionAlreadyInactive && !sessionInProgress) {
       console.error("skin_store_midtrans_snap_cancel_not_confirmed",JSON.stringify({
@@ -580,17 +584,16 @@ async function handleCancel(body:Record<string,unknown>, deviceHash:string, orig
   if(!response.ok)return fail("midtrans_status_check_failed",503,origin);
   let verified=await response.json();
   if(String(verified.status_code??"")==="404") {
-    const createdAt=Date.parse(String(active.created_at??status.created_at??""));
-    const snapExpired=Number.isFinite(createdAt)&&Date.now()-createdAt>=SNAP_EXPIRY_RECONCILIATION_MS;
-    if(snapExpired) {
+    if(snapSessionConfirmedInactive) {
       await rpc("skin_update_payment_status",{p_provider:"midtrans",p_provider_order_id:providerOrderId,
-        p_status:"expire",p_payload:{reason:"snap_page_expired_without_payment_method",provider_response:verified,
-          expired_at:new Date().toISOString()}});
+        p_status:"cancel",p_payload:{reason:"snap_session_cancelled",provider_response:verified}});
       return json({success:true,cancelled:true,checkout_active:false,
-        message:"Sesi Snap Midtrans sudah melewati masa aktif 15 menit. Kamu bisa memilih metode pembayaran lain."},200,origin);
+        message:"Sesi checkout Snap lama sudah dibatalkan oleh Midtrans. Kamu bisa memilih metode pembayaran lain."},200,origin);
     }
+    if(snapSessionInProgress) return fail("midtrans_snap_session_in_progress",409,origin,
+      "Midtrans melaporkan transaksi sedang diproses. NekOS belum akan membuat pembayaran pengganti.");
     return json({success:true,cancelled:false,checkout_active:true,can_close_checkout:true,
-      message:"Checkout Midtrans belum membuat transaksi pembayaran. Sesi Snap masih mungkin digunakan sampai 15 menit sejak dibuat. NekOS akan memantau statusnya."},200,origin);
+      message:"Sesi Snap belum dapat dinyatakan tertutup oleh Midtrans. NekOS belum akan membuat pembayaran pengganti."},200,origin);
   }
   if(!["200","201"].includes(String(verified.status_code??""))||
      String(verified.order_id??"")!==providerOrderId||
