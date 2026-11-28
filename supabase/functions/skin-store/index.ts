@@ -862,7 +862,7 @@ Deno.serve(async(req:Request)=>{
         const paypalCreatedAt=Date.parse(String(activePayment.created_at??status.created_at??""));
         const paypalAgeMs=Number.isFinite(paypalCreatedAt)?Math.max(0,Date.now()-paypalCreatedAt):0;
         const paypalApprovalExpired=paypalAgeMs>=PAYPAL_ORDER_RECONCILIATION_MS &&
-          ["CREATED","PAYER_ACTION_REQUIRED","SAVED"].includes(providerStatus);
+          providerStatus==="CREATED";
         if(providerStatus==="VOIDED") {
           await rpc("skin_update_payment_status",{
             p_provider:"paypal",p_provider_order_id:paypalOrderId,p_status:"cancel",p_payload:remote
