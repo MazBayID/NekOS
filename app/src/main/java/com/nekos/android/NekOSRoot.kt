@@ -1267,16 +1267,9 @@ internal fun NekOSRoot(
                         val result = withContext(Dispatchers.IO) {
                             runCatching {
                                 if (checkPayment) {
-                                    val status = OfficialSkinStoreClient.checkPaymentAndInstall(context, skin)
-                                    if (!status.success && !status.paymentFailed &&
-                                        status.checkoutUrl.isNullOrBlank() &&
-                                        status.message.contains("belum dikonfirmasi", ignoreCase = true)
-                                    ) {
-                                        // Reuse the existing pending order and retrieve its Snap checkout URL.
-                                        OfficialSkinStoreClient.buy(context, skin)
-                                    } else {
-                                        status
-                                    }
+                                    // CHECK & INSTALL is status reconciliation only.
+                                    // Never reopen a provider checkout URL from a pending order.
+                                    OfficialSkinStoreClient.checkPaymentAndInstall(context, skin)
                                 } else if (skin.owned && skin.price > 0L) {
                                     OfficialSkinStoreClient.reinstall(context, skin)
                                 } else {
@@ -1288,7 +1281,7 @@ internal fun NekOSRoot(
                         if (!result.success && result.message.isNotBlank()) {
                             Toast.makeText(context, result.message, Toast.LENGTH_LONG).show()
                         }
-                        if (result.paymentProvider == "paypal" &&
+                        if (!checkPayment && result.paymentProvider == "paypal" &&
                             !result.providerOrderId.isNullOrBlank() &&
                             !result.checkoutUrl.isNullOrBlank()
                         ) {
@@ -1298,7 +1291,7 @@ internal fun NekOSRoot(
                             ) ?: run {
                                 storeCheckout = Triple(skin, result.checkoutUrl, "paypal")
                             }
-                        } else if (!result.checkoutUrl.isNullOrBlank()) {
+                        } else if (!checkPayment && !result.checkoutUrl.isNullOrBlank()) {
                             storeCheckout = Triple(skin, result.checkoutUrl, result.paymentProvider ?: "midtrans")
                         }
                         if (result.success && result.installedSkinId != null) {
