@@ -66,8 +66,6 @@ def validate(data):
         raise ValueError("icons_monogram metadata is incorrect")
     if data["icons_glyph_only"] != counts["glyph"]:
         raise ValueError("icons_glyph_only metadata is incorrect")
-    if any(item["package"] not in packages for item in []):
-        raise ValueError("unreachable")
     expected = {package: glyph for package, _, glyph in EXACT_MAPPINGS}
     actual = {item["package"]: item["glyph"] for item in apps}
     missing = [package for package in expected if actual.get(package) != expected[package]]
