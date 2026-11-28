@@ -34,11 +34,16 @@ Pulihkan alur pembayaran sampai skin terunduh dan terpasang, dengan transaksi ny
 - Transaksi Aurum PayPal USD 1.49 masih `pending`; jangan ubah atau bayar ulang tanpa rekonsiliasi provider.
 
 ## Checkpoint 1 — temuan yang perlu ditelusuri
-- Cocokkan seluruh kode aplikasi dan migrasi di GitHub dengan produksi.
-- Audit konfigurasi environment Midtrans/PayPal tanpa menampilkan nilai rahasia.
-- Periksa log aplikasi (bukan hanya HTTP 200 gateway) untuk alasan status belum berubah.
-- Pastikan webhook PayPal benar-benar terdaftar dan event masuk.
-- Audit keamanan seluruh fungsi `SECURITY DEFINER` dan grants.
+- Kode backend `skin-store` sama dengan source produksi v48; RPC payment sudah dibatasi ke service_role.
+- Android `NekOSPayPalCheckout.kt` mengunci `CoreEnvironment.SANDBOX`, sedangkan backend `PAYPAL_MODE` dapat `sandbox` atau `live`. Mode dan client ID SDK belum disinkronkan dari konfigurasi backend; ini berisiko mismatch saat backend live.
+- PayPal return URL web diarahkan ke halaman instruksi statis; pemasangan tetap harus dilanjutkan dari aplikasi.
+- Android mengirim order ID ke `/status`; backend akan capture bila PayPal order `APPROVED`, dan entitlement hanya diberikan setelah capture `COMPLETED` serta validasi amount/currency/reference.
+- Log 28 Nov: 53 request `/status` HTTP 200, 7 `/purchase` HTTP 201, 8 `/download` HTTP 200; tidak ada request POST ke `/webhook` maupun `/paypal-webhook` pada rentang log yang diperiksa.
+- `skin_payment_events` kosong dan webhook tidak menyimpan event. Status polling tetap tersedia sebagai jalur rekonsiliasi.
+- Midtrans Snap membuat payment attempt sebelum memanggil API provider; retry dapat memakai order yang sama dan attach payment di-upsert. Midtrans status/webhook memverifikasi status provider, order ID, nominal, mata uang, dan signature.
+- Koneksi Supabase saat ini tidak menyediakan pembacaan daftar secret Edge Function; nilai/keberadaan secret dan mode aktif belum dapat diverifikasi tanpa endpoint diagnostik aman atau akses dashboard.
+- Migrasi lama `20261127160000_skin_store_reject_late_cancelled_payment.sql` tidak boleh diterapkan langsung: provider allowlist-nya masih `midtrans,duitku` dan dapat menimpa fungsi terbaru.
+- Belum ditemukan test integrasi otomatis untuk alur transaksi provider; test Android yang ada hanya mencakup pemilihan provider dan validasi installer.
 
 ## Status
-Tahap 1 sedang berlangsung. Runbook dibuat dan diverifikasi di GitHub. Belum ada kode aplikasi, konfigurasi, database, deployment, atau transaksi produksi yang diubah.
+Tahap 1 audit kode dan database selesai; verifikasi secret aktif masih terbatas oleh akses connector. Belum ada kode aplikasi, konfigurasi, database, deployment, atau transaksi produksi yang diubah. Berikutnya: Tahap 2 — audit dan uji Midtrans sandbox.
