@@ -43,9 +43,7 @@ def validate(data):
         raise ValueError(f"Invalid Android package names remain: {invalid[:10]}")
     for item in apps:
         if item["kind"] == "glyph" and item.get("icon") is not None:
-            # Existing legacy glyph-only records may still point directly to glyph assets.
-            if not str(item["icon"]).startswith("icons/apps/"):
-                raise ValueError(f"Glyph entry has a non-glyph icon path: {item['package']}")
+            raise ValueError(f"Glyph entry must use icon: null: {item['package']}")
         if item.get("source") in {"rule", "default"}:
             if item["kind"] != "glyph" or item.get("icon") is not None:
                 raise ValueError(f"Generated entry is not glyph-only: {item['package']}")
@@ -98,6 +96,7 @@ def normalize(data):
     for item in apps:
         if item.get("source") in {"rule", "default"}:
             item["kind"] = "glyph"
+        if item["kind"] == "glyph":
             item["icon"] = None
 
     data["schema_version"] = 2
