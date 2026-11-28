@@ -75,8 +75,11 @@ class AppIconBitmapCache(
         memoryState.ifEnabled { memoryCache.get(cacheKey) }
 
     /** Stable cache identity for the active built-in icon pack and badge color. */
-    fun cacheKey(app: InstalledApp): String =
-        "${app.iconCacheKey}::nekos-icon-pack-v2::${Integer.toHexString(iconBadgeColorArgb)}"
+    fun cacheKey(app: InstalledApp): String = cacheKey(app.iconCacheKey)
+
+    /** Adapt persisted legacy favorite keys to the current pack and theme namespace. */
+    fun cacheKey(iconCacheKey: String): String =
+        "${iconCacheKey}::nekos-icon-pack-v2::${Integer.toHexString(iconBadgeColorArgb)}"
 
     /** Update the shared icon badge color without allowing old-color bitmaps to reappear. */
     @Synchronized
