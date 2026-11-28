@@ -2,7 +2,7 @@
 
 Ikon aplikasi bawaan NekOS: monochrome (mask putih + alpha), bisa di-tint, ringan. Dua lapis:
 
-1. **Ikon merek** bersiluet khas per aplikasi: `icons/brands/` (**3.369 ikon**, 96×96 WebP lossless, ±1,4 KB per ikon, ±4,8 MB total). Sumber: [Simple Icons](https://simpleicons.org), [lisensi](NekOS/main_assets/icon_pack/LICENSE/simple-icons-LICENSE.md) CC0 (`LICENSES/`).
+1. **Ikon merek** bersiluet khas per aplikasi: `icons/brands/` (**3.369 ikon**, 96×96 WebP lossless, ±1,4 KB per ikon, ±4,8 MB total). Sumber: [Simple Icons](https://simpleicons.org), [lisensi](path://main_assets/icon_pack/LICENSE/simple-icons-LICENSE.md) CC0 (`LICENSES/`).
 2. **Glyph kategori** generik: `icons/apps/` (**109 glyph**, gaya NekOS) sebagai cadangan bila aplikasi tidak punya ikon merek.
 
 ![contoh](preview_brands.png)
