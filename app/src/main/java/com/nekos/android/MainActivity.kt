@@ -346,16 +346,23 @@ class MainActivity : ComponentActivity() {
     }
 
     fun startPayPalCheckout(providerOrderId: String, fallbackCheckoutUrl: String) {
-        paypalCheckout.start(this, providerOrderId) { message ->
+        paypalCheckout.start(this, providerOrderId) { result ->
             getSharedPreferences(PAYPAL_PREFS, MODE_PRIVATE).edit()
                 .putString(PAYPAL_STATE_KEY, paypalCheckout.instanceState)
                 .apply()
-            val fallback = android.net.Uri.parse(fallbackCheckoutUrl)
-            if (fallback.scheme == "https" && fallback.host?.endsWith(".paypal.com") == true) {
-                runCatching { startActivity(Intent(Intent.ACTION_VIEW, fallback)) }
+            when (result) {
+                is com.paypal.android.paypalpayments.PayPalPresentAuthChallengeResult.Success -> Unit
+                is com.paypal.android.paypalpayments.PayPalPresentAuthChallengeResult.Failure -> {
+                    val fallback = android.net.Uri.parse(fallbackCheckoutUrl)
+                    if (fallback.scheme == "https" && fallback.host?.endsWith(".paypal.com") == true) {
+                        runCatching { startActivity(Intent(Intent.ACTION_VIEW, fallback)) }
+                    }
+                    paypalResultMessage = result.error.errorDescription.ifBlank {
+                        "PayPal checkout could not be started."
+                    }
+                    paypalResultToken++
+                }
             }
-            paypalResultMessage = message.ifBlank { "PayPal checkout could not be started." }
-            paypalResultToken++
         }
     }
 
