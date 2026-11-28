@@ -280,6 +280,7 @@ internal fun NekOSSettingsDialog(
     isOfficialStoreLoading: Boolean,
     storeBusySkinId: String?,
     pendingStoreSkinIds: Set<String>,
+    onCancelStorePayment: (OfficialStoreSkin) -> Unit,
     onRefreshOfficialStore: () -> Unit,
     onStoreAction: (OfficialStoreSkin, Boolean, (String?) -> Unit) -> Unit,
     onImportSkin: () -> Unit,
@@ -291,6 +292,7 @@ internal fun NekOSSettingsDialog(
     var managedSkin by remember { mutableStateOf<InstalledSkin?>(null) }
     var pendingSkinRemoval by remember { mutableStateOf<InstalledSkin?>(null) }
     var storeInstallPrompt by remember { mutableStateOf<Pair<String, String>?>(null) }
+    var pendingPaymentCancellation by remember { mutableStateOf<OfficialStoreSkin?>(null) }
     LaunchedEffect(page) { if (page == SettingsPage.OFFICIAL_SKIN_STORE) onRefreshOfficialStore() }
     val surfaceColor = launcherThemeColor(launcherThemeKey)
     val optionSurface = lerp(surfaceColor, Color.White, 0.48f)
@@ -970,16 +972,34 @@ internal fun NekOSSettingsDialog(
                                             maxLines = 1,
                                             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                                         )
-                                        OfficialStoreActionButton(
-                                            label = actionLabel,
-                                            enabled = actionEnabled,
-                                            isInstall = skin.price <= 0L || pending || canReinstall,
-                                            onClick = {
-                                                onStoreAction(skin, pending) { installedId ->
-                                                    if (installedId != null) storeInstallPrompt = installedId to skin.name
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(2.dp)
+                                        ) {
+                                            if (pending) {
+                                                TextButton(
+                                                    onClick = { pendingPaymentCancellation = skin },
+                                                    enabled = storeBusySkinId != skin.id
+                                                ) {
+                                                    Text(
+                                                        "CANCEL",
+                                                        color = Color(0xFFFFB3A8),
+                                                        fontSize = 9.sp,
+                                                        fontWeight = FontWeight.Bold
+                                                    )
                                                 }
                                             }
-                                        )
+                                            OfficialStoreActionButton(
+                                                label = actionLabel,
+                                                enabled = actionEnabled,
+                                                isInstall = skin.price <= 0L || pending || canReinstall,
+                                                onClick = {
+                                                    onStoreAction(skin, pending) { installedId ->
+                                                        if (installedId != null) storeInstallPrompt = installedId to skin.name
+                                                    }
+                                                }
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -1040,6 +1060,34 @@ internal fun NekOSSettingsDialog(
             confirmButton = {
                 TextButton(onClick = { onDeleteSkin(skin.id); pendingSkinRemoval = null; managedSkin = null }) {
                     Text("Remove", color = Color(0xFFB3261E), fontWeight = FontWeight.SemiBold)
+                }
+            }
+        )
+    }
+
+    pendingPaymentCancellation?.let { skin ->
+        NekOSAlertDialog(
+            topFrameColorArgb = launcherUiColor,
+            onDismissRequest = { pendingPaymentCancellation = null },
+            containerColor = surfaceColor,
+            title = { Text("Batalkan pembayaran?", color = SettingsInk) },
+            text = {
+                Text(
+                    "NekOS akan memeriksa status transaksi terlebih dahulu. Jika pembayaran sudah berhasil, skin tetap diberikan. PayPal tidak menyediakan pembatalan langsung untuk order yang belum disetujui; NekOS akan tetap memantau dan mengakhiri order CREATED yang kedaluwarsa.",
+                    color = SettingsMuted
+                )
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingPaymentCancellation = null }) {
+                    Text("Kembali", color = SettingsAccent)
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    pendingPaymentCancellation = null
+                    onCancelStorePayment(skin)
+                }) {
+                    Text("Ya, batalkan", color = Color(0xFFB3261E), fontWeight = FontWeight.SemiBold)
                 }
             }
         )
