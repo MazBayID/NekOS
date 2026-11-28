@@ -21,7 +21,8 @@ internal data class StoreActionResult(
     val success: Boolean, val message: String, val checkoutUrl: String? = null,
     val orderId: String? = null, val installedSkinId: String? = null,
     val paymentFailed: Boolean = false,
-    val paymentProvider: String? = null
+    val paymentProvider: String? = null,
+    val providerOrderId: String? = null
 )
 
 /** Resolves a Store item against its permanent package identity and catalog identity. */
@@ -172,7 +173,8 @@ internal object OfficialSkinStoreClient {
         }
         return StoreActionResult(true,"Lanjutkan pembayaran melalui Midtrans, lalu kembali ke NekOS untuk verifikasi otomatis.",
             checkoutUrl=result.optString("checkout_url"),orderId=orderId,
-            paymentProvider=provider.lowercase())
+            paymentProvider=provider.lowercase(),
+            providerOrderId=result.optString("provider_order_id").takeIf { it.isNotBlank() })
     }
 
     @Synchronized
@@ -226,6 +228,7 @@ internal object OfficialSkinStoreClient {
             val activePayment = result.optJSONObject("active_payment")
             val checkoutUrl = activePayment?.optString("checkout_url")?.takeIf { it.isNotBlank() }
             val provider = activePayment?.optString("provider")?.takeIf { it.isNotBlank() }
+            val providerOrderId = activePayment?.optString("provider_order_id")?.takeIf { it.isNotBlank() }
             return StoreActionResult(
                 false,
                 if(status=="pending")
@@ -233,7 +236,8 @@ internal object OfficialSkinStoreClient {
                 else "Status pembayaran: $status",
                 checkoutUrl = checkoutUrl,
                 orderId = orderId,
-                paymentProvider = provider
+                paymentProvider = provider,
+                providerOrderId = providerOrderId
             )
         }
         val installedSkin = findInstalledStoreSkin(
