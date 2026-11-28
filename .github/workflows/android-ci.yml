@@ -47,6 +47,7 @@ jobs:
         with:
           deno-version: v2.x
 
+      # Keep backend TypeScript errors visible alongside the Android checks.
       - name: Type-check skin-store Edge Function
         run: deno check --no-lock supabase/functions/skin-store/index.ts
 
