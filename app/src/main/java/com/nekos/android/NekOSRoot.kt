@@ -1493,6 +1493,9 @@ internal fun NekOSRoot(
                     paymentProviderSkin = null
                     val installCallback = paymentProviderInstallCallback
                     paymentProviderInstallCallback = null
+                    if (provider.equals("paypal", ignoreCase = true)) {
+                        (context as? MainActivity)?.preparePayPalCheckout()
+                    }
                     if (storeBusySkinId == null) skinPickerScope.launch {
                         storeBusySkinId = skin.id
                         val result = withContext(Dispatchers.IO) {
