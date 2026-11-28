@@ -18,6 +18,7 @@ const PAYPAL_WEBHOOK_ID = Deno.env.get("PAYPAL_WEBHOOK_ID") ?? "";
 const PAYPAL_BASE = PAYPAL_MODE === "live" ? "https://api-m.paypal.com" : "https://api-m.sandbox.paypal.com";
 const ORIGIN = "https://mazbayid.github.io";
 const PREVIEWS = "skin-previews";
+const SNAP_EXPIRY_RECONCILIATION_MS = 16 * 60 * 1000;
 const db = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
 
 function json(data: unknown, status = 200, origin = "") {
@@ -479,10 +480,23 @@ async function handleCancel(body:Record<string,unknown>, deviceHash:string, orig
     return json({success:true,paid:true,cancelled:false,message:"Pembayaran sudah berhasil. NekOS akan menyelesaikan pemasangan skin."},200,origin);
   }
   const active=status.active_payment??null;
+  if(active && !["midtrans","paypal"].includes(String(active.provider))) {
+    return fail("unsupported_active_payment_provider",409,origin);
+  }
   if(active && String(active.provider)==="paypal") {
     assertPaymentConfig("paypal");
     const paypalOrderId=String(active.provider_order_id??"");
     let remote=await paypalRequest("/v2/checkout/orders/"+encodeURIComponent(paypalOrderId));
+    const units=Array.isArray(remote.purchase_units)?remote.purchase_units:[];
+    const unit=units[0]??{};
+    const remoteAmount=String(unit.amount?.value??"");
+    if(String(remote.id??"")!==paypalOrderId || units.length!==1 ||
+       String(unit.custom_id??"")!==orderId || String(unit.reference_id??"")!==orderId ||
+       String(unit.amount?.currency_code??"").toUpperCase()!=="USD" ||
+       !/^\d+(\.\d{1,2})?$/.test(remoteAmount) ||
+       Number(remoteAmount).toFixed(2)!==Number(status.amount).toFixed(2)) {
+      return fail("paypal_order_reference_or_amount_mismatch",409,origin);
+    }
     if(String(remote.status??"")==="APPROVED") {
       remote=await paypalRequest("/v2/checkout/orders/"+encodeURIComponent(paypalOrderId)+"/capture",{
         method:"POST",headers:{"PayPal-Request-Id":orderId+"-capture"},body:"{}"
@@ -513,7 +527,7 @@ async function handleCancel(body:Record<string,unknown>, deviceHash:string, orig
   let response=await fetchStatus();
   if(response.status===404) {
     const createdAt=Date.parse(String(active.created_at??status.created_at??""));
-    const snapExpired=Number.isFinite(createdAt)&&Date.now()-createdAt>=15*60*1000;
+    const snapExpired=Number.isFinite(createdAt)&&Date.now()-createdAt>=SNAP_EXPIRY_RECONCILIATION_MS;
     if(snapExpired) {
       await rpc("skin_update_payment_status",{p_provider:"midtrans",p_provider_order_id:providerOrderId,
         p_status:"expire",p_payload:{reason:"snap_page_expired_without_payment_method",expired_at:new Date().toISOString()}});
@@ -527,7 +541,7 @@ async function handleCancel(body:Record<string,unknown>, deviceHash:string, orig
   let verified=await response.json();
   if(String(verified.status_code??"")==="404") {
     const createdAt=Date.parse(String(active.created_at??status.created_at??""));
-    const snapExpired=Number.isFinite(createdAt)&&Date.now()-createdAt>=15*60*1000;
+    const snapExpired=Number.isFinite(createdAt)&&Date.now()-createdAt>=SNAP_EXPIRY_RECONCILIATION_MS;
     if(snapExpired) {
       await rpc("skin_update_payment_status",{p_provider:"midtrans",p_provider_order_id:providerOrderId,
         p_status:"expire",p_payload:{reason:"snap_page_expired_without_payment_method",provider_response:verified,
@@ -644,7 +658,7 @@ async function handlePaymentSwitch(body:Record<string,unknown>, deviceHash:strin
     }
   }
 
-  const skinId=String(body.skin_id??status.skin_id??"");
+  const skinId=String(status.skin_id??"");
   const {data:skin,error:skinError}=await db.from("skins")
     .select("id,skin_key,name,price_amount,price_usd,currency,status")
     .eq("id",skinId).eq("status","published").maybeSingle();
@@ -802,7 +816,7 @@ Deno.serve(async(req:Request)=>{
       if(status.status==="pending" && activePayment?.provider==="midtrans") {
         assertPaymentConfig("midtrans");
         const createdAt=Date.parse(String(activePayment.created_at??status.created_at??""));
-        const expiryReached=Number.isFinite(createdAt) && Date.now()-createdAt>=15*60*1000;
+        const expiryReached=Number.isFinite(createdAt) && Date.now()-createdAt>=SNAP_EXPIRY_RECONCILIATION_MS;
         const statusUrl=midtransBase()+"/v2/"+encodeURIComponent(orderId)+"/status";
         const verifiedResponse=await fetch(statusUrl,{
           headers:{Authorization:authHeader(),"Accept":"application/json"}
