@@ -956,13 +956,25 @@ internal fun NekOSSettingsDialog(
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
-                                        Text(
-                                            if (skin.price <= 0L) "FREE" else "Rp ${"%,d".format(skin.price)}",
-                                            color = if (skin.price <= 0L) Color(0xFFB9F2A5) else Color(0xFFFFD6A6),
-                                            fontSize = 11.sp,
-                                            fontWeight = if (skin.price <= 0L) FontWeight.SemiBold else FontWeight.Bold,
-                                            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
-                                        )
+                                        Column(
+                                            verticalArrangement = Arrangement.spacedBy(1.dp)
+                                        ) {
+                                            Text(
+                                                if (skin.price <= 0L) "FREE" else "Rp ${"%,d".format(skin.price)}",
+                                                color = if (skin.price <= 0L) Color(0xFFB9F2A5) else Color(0xFFFFD6A6),
+                                                fontSize = 11.sp,
+                                                fontWeight = if (skin.price <= 0L) FontWeight.SemiBold else FontWeight.Bold,
+                                                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+                                            )
+                                            if (skin.priceUsd > 0.0) {
+                                                Text(
+                                                    "US$ ${String.format(java.util.Locale.US, "%.2f", skin.priceUsd)}",
+                                                    color = Color(0xFFB8D0E2),
+                                                    fontSize = 9.sp,
+                                                    fontWeight = FontWeight.Medium
+                                                )
+                                            }
+                                        }
                                         OfficialStoreActionButton(
                                             label = actionLabel,
                                             enabled = actionEnabled,
