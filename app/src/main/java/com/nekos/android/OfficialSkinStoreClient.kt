@@ -48,6 +48,16 @@ internal fun isTrustedSkinDownloadUrl(value: String): Boolean = runCatching {
         !uri.rawQuery.isNullOrBlank()
 }.getOrDefault(false)
 
+/** Accept only PayPal-hosted HTTPS approval links returned for the stored provider order. */
+internal fun isTrustedPayPalApprovalUrl(value: String): Boolean = runCatching {
+    val uri = URI(value)
+    val host = uri.host?.lowercase() ?: return@runCatching false
+    uri.scheme == "https" &&
+        (host == "paypal.com" || host.endsWith(".paypal.com")) &&
+        (uri.port == -1 || uri.port == 443) &&
+        uri.userInfo == null
+}.getOrDefault(false)
+
 internal object OfficialSkinStoreClient {
     private const val API = "https://vizmufbfaghqucsoukne.supabase.co/functions/v1/skin-store"
     private const val MAX_PACKAGE_BYTES = 32L * 1024L * 1024L
