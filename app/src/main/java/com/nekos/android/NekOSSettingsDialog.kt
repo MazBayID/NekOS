@@ -972,33 +972,33 @@ internal fun NekOSSettingsDialog(
                                             maxLines = 1,
                                             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                                         )
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(2.dp)
-                                        ) {
-                                            if (pending) {
-                                                TextButton(
-                                                    onClick = { pendingPaymentCancellation = skin },
-                                                    enabled = storeBusySkinId != skin.id
-                                                ) {
-                                                    Text(
-                                                        "CANCEL",
-                                                        color = Color(0xFFFFB3A8),
-                                                        fontSize = 9.sp,
-                                                        fontWeight = FontWeight.Bold
-                                                    )
+                                        OfficialStoreActionButton(
+                                            label = actionLabel,
+                                            enabled = actionEnabled,
+                                            isInstall = skin.price <= 0L || pending || canReinstall,
+                                            onClick = {
+                                                onStoreAction(skin, pending) { installedId ->
+                                                    if (installedId != null) storeInstallPrompt = installedId to skin.name
                                                 }
                                             }
-                                            OfficialStoreActionButton(
-                                                label = actionLabel,
-                                                enabled = actionEnabled,
-                                                isInstall = skin.price <= 0L || pending || canReinstall,
-                                                onClick = {
-                                                    onStoreAction(skin, pending) { installedId ->
-                                                        if (installedId != null) storeInstallPrompt = installedId to skin.name
-                                                    }
-                                                }
-                                            )
+                                        )
+                                    }
+                                    if (pending) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.End
+                                        ) {
+                                            TextButton(
+                                                onClick = { pendingPaymentCancellation = skin },
+                                                enabled = storeBusySkinId != skin.id
+                                            ) {
+                                                Text(
+                                                    "BATALKAN PEMBAYARAN",
+                                                    color = Color(0xFFFFB3A8),
+                                                    fontSize = 9.sp,
+                                                    fontWeight = FontWeight.Bold
+                                                )
+                                            }
                                         }
                                     }
                                 }
