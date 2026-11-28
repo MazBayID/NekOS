@@ -90,7 +90,7 @@ internal fun FavoriteSlot(
 ) {
     val diagnosticContext = LocalContext.current
     val cacheGeneration = iconBitmapCache.generation
-    val iconCacheKey = app?.let(iconBitmapCache::cacheKey) ?: snapshot?.iconCacheKey
+    val iconCacheKey = app?.let(iconBitmapCache::cacheKey) ?: snapshot?.iconCacheKey?.let(iconBitmapCache::cacheKey)
 
     LaunchedEffect(slotIndex, app?.id, snapshot?.appId) {
         if (app == null && snapshot != null) {
