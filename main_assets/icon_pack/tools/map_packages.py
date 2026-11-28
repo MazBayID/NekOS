@@ -1,58 +1,147 @@
 #!/usr/bin/env python3
-"""Petakan daftar package name ke glyph NekOS.
+"""Petakan daftar package Android ke glyph NekOS dan ikon merek bila cocok.
 
+Contoh:
   python3 tools/map_packages.py packages.txt -o extra_map.json
 
 packages.txt: satu baris per aplikasi, "package.name" atau "package.name,Nama Aplikasi".
-Daftar dari perangkat:  adb shell pm list packages -3 | sed 's/package://' > packages.txt
-Urutan: 0) ikon merek (brand) bila ada / label cocok brand_index.json  1) app_icon_map.json (exact)  2) prefix_rules (awalan terpanjang)  3) keyword_rules  4) default (paw).
-Hasil diberi "source": exact | prefix | rule | default agar mudah ditinjau. Hanya "exact" yang dianggap pasti.
+Daftar dari perangkat:
+  adb shell pm list packages -3 | sed 's/package://' > packages.txt
+
+Prioritas:
+- Package exact: glyph dan brand dari app_icon_map.json adalah otoritas.
+- Package yang belum terdaftar: cari brand dari label aplikasi (exact setelah normalisasi).
+- Glyph fallback package yang belum terdaftar: prefix terpanjang, keyword pertama yang cocok,
+  lalu default_glyph.
+
+Field "source" menjelaskan asal glyph fallback. Field "brand_source" menjelaskan asal ikon merek.
 """
-import argparse, json, os, re, sys
+import argparse
+import json
+import os
+import re
+import sys
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-def load(root=ROOT):
-    exact = {x["package"]: x for x in json.load(open(os.path.join(root, "app_icon_map.json")))["apps"]}
-    r = json.load(open(os.path.join(root, "app_icon_rules.json")))
-    prefixes = sorted(r["prefix_rules"], key=lambda t: -len(t[0]))
-    comp = [(re.compile(p, re.I), g) for p, g in r["keyword_rules"]]
-    bi = json.load(open(os.path.join(root, "brand_index.json")))
-    return exact, prefixes, comp, r["default"], (set(bi["slugs"]), bi["aliases"])
 
-def norm(s):
-    return re.sub(r"[^a-z0-9]", "", s.lower().replace("+", "plus").replace("&", "and"))
+def read_json(path):
+    with open(path, encoding="utf-8") as handle:
+        return json.load(handle)
+
+
+def load(root=ROOT):
+    app_map = read_json(os.path.join(root, "app_icon_map.json"))
+    rules = read_json(os.path.join(root, "app_icon_rules.json"))
+    brand_index = read_json(os.path.join(root, "brand_index.json"))
+
+    if app_map.get("default_glyph") != rules.get("default"):
+        raise ValueError(
+            "default_glyph pada app_icon_map.json harus sama dengan "
+            "default pada app_icon_rules.json"
+        )
+
+    exact = {item["package"]: item for item in app_map["apps"]}
+    prefixes = sorted(rules["prefix_rules"], key=lambda item: -len(item[0]))
+    keywords = [(re.compile(pattern, re.I), glyph)
+                for pattern, glyph in rules["keyword_rules"]]
+    brand_data = (set(brand_index["slugs"]), brand_index.get("aliases", {}))
+    return exact, prefixes, keywords, rules["default"], brand_data
+
+
+def normalize_label(value):
+    value = value.casefold().replace("+", " plus ").replace("&", " and ")
+    return re.sub(r"[^a-z0-9]", "", value)
+
 
 def brand_for(name, tables):
+    if not name:
+        return None
     slugs, aliases = tables[4]
-    n = norm(re.sub(r"\(.*?\)", "", name))
-    n = aliases.get(n, n)
-    return n if n in slugs else None
+    # Parenthetical qualifiers such as "(Beta)" should not prevent a brand match.
+    label = re.sub(r"\([^)]*\)", " ", name)
+    normalized = normalize_label(label)
+    slug = aliases.get(normalized, normalized)
+    return slug if slug in slugs else None
 
-def resolve(pkg, name, tables):
-    exact, prefixes, comp, default = tables[:4]
-    if pkg in exact: return exact[pkg]["glyph"], "exact"
-    for pre, g in prefixes:
-        if pkg.startswith(pre): return g, "prefix"
-    hay = (pkg + " " + name).lower()
-    for rx, g in comp:
-        if rx.search(hay): return g, "rule"
+
+def resolve_glyph(pkg, name, tables):
+    exact, prefixes, keywords, default, _ = tables
+    if pkg in exact:
+        return exact[pkg]["glyph"], "exact"
+
+    for prefix, glyph in prefixes:
+        if pkg.startswith(prefix):
+            return glyph, "prefix"
+
+    haystack = (pkg + " " + name).casefold()
+    for pattern, glyph in keywords:
+        if pattern.search(haystack):
+            return glyph, "rule"
+
     return default, "default"
 
+
 def main():
-    ap = argparse.ArgumentParser(); ap.add_argument("input"); ap.add_argument("-o", "--output", default="extra_map.json")
-    a = ap.parse_args(); t = load(); out, stat, seen = [], {"exact": 0, "prefix": 0, "rule": 0, "default": 0, "brand": 0}, set()
-    for line in open(a.input, encoding="utf-8"):
-        line = line.strip()
-        if not line or line.startswith("#"): continue
-        pkg, _, name = line.partition(","); pkg, name = pkg.strip(), name.strip()
-        if pkg in seen: continue
-        seen.add(pkg); g, src = resolve(pkg, name, t); stat[src] += 1
-        e = {"package": pkg, "name": name or pkg.split(".")[-1], "glyph": g, "source": src}
-        b = t[0][pkg].get("brand") if pkg in t[0] else (brand_for(name, t) if name else None)
-        if b: e["brand"] = b; stat["brand"] += 1
-        out.append(e)
-    json.dump({"schema_version": 3, "default_glyph": t[3], "apps": out}, open(a.output, "w"), indent=1, ensure_ascii=False)
-    print(f"{len(out)} aplikasi -> {a.output}  {stat}")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("input", help="Daftar package, satu per baris")
+    parser.add_argument("-o", "--output", default="extra_map.json")
+    args = parser.parse_args()
+
+    tables = load()
+    exact = tables[0]
+    output = []
+    stats = {
+        "exact": 0, "prefix": 0, "rule": 0, "default": 0,
+        "brand_exact": 0, "brand_label": 0
+    }
+    seen = set()
+
+    with open(args.input, encoding="utf-8") as handle:
+        for line in handle:
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+
+            package, _, name = line.partition(",")
+            package = package.strip()
+            name = name.strip()
+            if not package or package in seen:
+                continue
+            seen.add(package)
+
+            glyph, source = resolve_glyph(package, name, tables)
+            if package in exact:
+                brand = exact[package].get("brand")
+                brand_source = "exact" if brand else None
+            else:
+                brand = brand_for(name, tables)
+                brand_source = "label" if brand else None
+
+            stats[source] += 1
+            entry = {
+                "package": package,
+                "name": name or package.split(".")[-1],
+                "glyph": glyph,
+                "source": source
+            }
+            if brand:
+                entry["brand"] = brand
+                entry["brand_source"] = brand_source
+                stats["brand_" + brand_source] += 1
+            output.append(entry)
+
+    result = {
+        "schema_version": 3,
+        "default_glyph": tables[3],
+        "apps": output
+    }
+    with open(args.output, "w", encoding="utf-8") as handle:
+        json.dump(result, handle, indent=2, ensure_ascii=False)
+        handle.write("\n")
+
+    print(f"{len(output)} aplikasi -> {args.output}  {stats}")
+
 
 if __name__ == "__main__":
     sys.exit(main())
