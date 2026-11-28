@@ -347,6 +347,9 @@ class MainActivity : ComponentActivity() {
 
     fun startPayPalCheckout(providerOrderId: String, fallbackCheckoutUrl: String) {
         paypalCheckout.start(this, providerOrderId) { message ->
+            getSharedPreferences(PAYPAL_PREFS, MODE_PRIVATE).edit()
+                .putString(PAYPAL_STATE_KEY, paypalCheckout.instanceState)
+                .apply()
             val fallback = android.net.Uri.parse(fallbackCheckoutUrl)
             if (fallback.scheme == "https" && fallback.host?.endsWith(".paypal.com") == true) {
                 runCatching { startActivity(Intent(Intent.ACTION_VIEW, fallback)) }
