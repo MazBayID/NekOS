@@ -80,6 +80,7 @@ internal object OfficialSkinStoreClient {
                 throw IllegalStateException(json.optString("details").ifBlank {
                     when (json.optString("error")) {
                         "payment_provider_not_configured", "midtrans_not_configured" -> "Midtrans belum dikonfigurasi di server."
+                        "payment_provider_inactive" -> "Midtrans sementara nonaktif. Silakan gunakan PayPal."
                         "active_payment_provider_mismatch" -> "Masih ada pembayaran aktif melalui gateway lain. Selesaikan atau tunggu transaksi tersebut berakhir sebelum memilih gateway berbeda."
                         "purchase_required" -> "This skin has not been purchased on this device."
                         "already_owned" -> "This device already owns this skin."
