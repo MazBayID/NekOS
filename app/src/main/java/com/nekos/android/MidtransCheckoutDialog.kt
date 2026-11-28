@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.webkit.CookieManager
+import java.net.URI
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
@@ -47,7 +48,7 @@ private const val MIDTRANS_FINISH_HOST = "mazbayid.github.io"
 private const val MIDTRANS_FINISH_PATH = "/skin-payment-return/"
 
 internal fun isTrustedStoreCheckout(value: String, provider: String): Boolean = runCatching {
-    val uri = Uri.parse(value)
+    val uri = URI(value)
     val host = uri.host?.lowercase().orEmpty()
     val allowedHosts = when (provider.lowercase()) {
         "midtrans" -> setOf("app.midtrans.com", "app.sandbox.midtrans.com")
