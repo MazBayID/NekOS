@@ -358,6 +358,9 @@ internal fun NekOSRoot(
             )
         )
     }
+    SideEffect {
+        iconBitmapCache.setIconBadgeColor(launcherUiColorArgb)
+    }
     var backgroundPreset by remember {
         mutableStateOf(
             normalizeNekOSBackgroundPreset(preferences.getString("background_preset", "warm"))
