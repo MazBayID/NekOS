@@ -69,7 +69,8 @@ internal fun StoreCheckoutDialog(
     provider: String,
     onDismiss: () -> Unit,
     onPaymentFinished: () -> Unit,
-    onCancelPurchase: () -> Unit
+    onCancelPurchase: () -> Unit,
+    onSwitchProvider: () -> Unit
 ) {
     val context = LocalContext.current
     val isPaypal = provider.equals("paypal", ignoreCase = true)
@@ -166,8 +167,11 @@ internal fun StoreCheckoutDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 12.dp, vertical = 6.dp),
-                    horizontalArrangement = Arrangement.End
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
+                    TextButton(onClick = onSwitchProvider) {
+                        Text("GANTI METODE", color = Color(0xFF164B82), fontSize = 11.sp)
+                    }
                     TextButton(onClick = { showCancelConfirmation = true }) {
                         Text(
                             "BATALKAN PEMBELIAN",
