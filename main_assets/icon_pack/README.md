@@ -4,7 +4,7 @@ Kumpulan ikon merek dan glyph kategori untuk rancangan sistem ikon aplikasi NekO
 
 ## Status integrasi saat ini
 
-**Status:** runtime icon pack sudah terintegrasi pada `main`. Validasi GitHub Actions untuk commit `67fe2d7` berhasil, termasuk build Debug/Release, unit test, lint, dan Compose UI test. Branch ini belum digabung ke `main`.
+**Status:** runtime icon pack sudah terintegrasi pada `main`. Build CI sebelumnya lulus; pemeriksaan visual pada perangkat tetap diperlukan.
 
 Implementasi runtime saat ini:
 
@@ -30,7 +30,7 @@ Dokumentasi Android: [LauncherActivityInfo](https://developer.android.com/refere
 
 Jumlah ikon merek tidak harus sama dengan jumlah package Android. Direktori merek berasal dari katalog Simple Icons yang juga berisi layanan web, produk desktop, dan merek yang tidak mempunyai aplikasi Android. `brand_index.json` adalah katalog merek; `app_icon_map.json` adalah daftar package Android yang diketahui. Keduanya punya tujuan berbeda.
 
-Package name di `app_icon_map.json` disusun dari pengetahuan umum dan **belum diverifikasi satu per satu terhadap Play Store atau perangkat pengguna**. Mapping exact berarti package tersebut sengaja dicantumkan di file proyek, bukan jaminan bahwa package terpasang pada semua perangkat.
+Package name di `app_icon_map.json` merupakan daftar package yang diketahui. Entri yang ditambahkan pada koreksi ini diverifikasi dengan sumber publik yang dicantumkan di bawah; package vendor lain tidak boleh ditebak hanya dari nama merek. Mapping exact berarti package tersebut sengaja dicantumkan di file proyek, bukan jaminan bahwa package terpasang pada semua perangkat.
 
 ## Struktur direktori
 
@@ -91,7 +91,7 @@ Jalur aset harus tetap terpisah:
 - `icons/tag/`: katalog ikon tag skin NekOS.
 - `motifs/`: motif dekoratif skin, termasuk motif paw bila tersedia.
 
-Nama glyph `paw` pada app icon pack tidak bentrok dengan motif atau tag bernama serupa selama resolver memakai path dan katalog yang benar. `paw` bukan ikon default NekOS dan tidak digunakan untuk aplikasi yang tidak terklasifikasi. Jangan gabungkan app icon pack ke `IconCatalogRepository`, karena repository tersebut secara sengaja membatasi path ke `icons/tag/`.
+Nama glyph `paw` pada app icon pack tidak bentrok dengan motif atau tag bernama serupa selama resolver memakai path dan katalog yang benar. `paw` bukan ikon default NekOS dan tidak digunakan untuk aplikasi yang tidak terklasifikasi. `paw` bukan ikon default NekOS dan tidak digunakan untuk aplikasi yang tidak terklasifikasi. Jangan gabungkan app icon pack ke `IconCatalogRepository`, karena repository tersebut secara sengaja membatasi path ke `icons/tag/`.
 
 ## Format aset
 
