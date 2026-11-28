@@ -1,5 +1,6 @@
 package com.nekos.android
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.webkit.CookieManager
@@ -9,6 +10,7 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.webkit.WebSettings
 import androidx.activity.compose.BackHandler
+import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -23,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,6 +33,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -42,13 +46,31 @@ import androidx.compose.ui.window.DialogProperties
 private const val MIDTRANS_FINISH_HOST = "mazbayid.github.io"
 private const val MIDTRANS_FINISH_PATH = "/skin-payment-return/"
 
-private fun isTrustedStoreCheckout(value: String, provider: String): Boolean = runCatching {
+internal fun isTrustedStoreCheckout(value: String, provider: String): Boolean = runCatching {
     val uri = Uri.parse(value)
     val host = uri.host?.lowercase().orEmpty()
-    val allowedHosts = setOf("app.midtrans.com", "app.sandbox.midtrans.com")
+    val allowedHosts = when (provider.lowercase()) {
+        "midtrans" -> setOf("app.midtrans.com", "app.sandbox.midtrans.com")
+        "paypal" -> setOf("www.paypal.com", "www.sandbox.paypal.com")
+        else -> emptySet()
+    }
     uri.scheme?.lowercase() == "https" && host in allowedHosts &&
         uri.userInfo == null && (uri.port == -1 || uri.port == 443)
 }.getOrDefault(false)
+
+internal fun launchPayPalCheckout(context: Context, checkoutUrl: String): Boolean {
+    if (!isTrustedStoreCheckout(checkoutUrl, "paypal")) return false
+    val uri = Uri.parse(checkoutUrl)
+    return runCatching {
+        CustomTabsIntent.Builder().build().launchUrl(context, uri)
+        true
+    }.getOrElse {
+        runCatching {
+            context.startActivity(Intent(Intent.ACTION_VIEW, uri))
+            true
+        }.getOrDefault(false)
+    }
+}
 
 private fun isPaymentAppLink(uri: Uri): Boolean {
     val host = uri.host?.lowercase().orEmpty()
@@ -74,7 +96,16 @@ internal fun StoreCheckoutDialog(
 ) {
     var paymentWebView by remember { mutableStateOf<WebView?>(null) }
     var showCancelConfirmation by remember { mutableStateOf(false) }
+    var paypalLaunchFailed by remember(checkoutUrl) { mutableStateOf(false) }
+    val context = LocalContext.current
+    val isPaypal = provider.equals("paypal", ignoreCase = true)
     val trustedUrl = remember(checkoutUrl, provider) { isTrustedStoreCheckout(checkoutUrl, provider) }
+
+    LaunchedEffect(checkoutUrl, provider, trustedUrl) {
+        if (isPaypal && trustedUrl) {
+            paypalLaunchFailed = !launchPayPalCheckout(context, checkoutUrl)
+        }
+    }
 
     BackHandler {
         val webView = paymentWebView
@@ -138,6 +169,34 @@ internal fun StoreCheckoutDialog(
                             fontSize = 14.sp
                         )
                         TextButton(onClick = onDismiss) { Text("Tutup") }
+                    }
+                } else if (isPaypal) {
+                    Column(
+                        modifier = Modifier.weight(1f).fillMaxWidth().padding(24.dp),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            if (paypalLaunchFailed) {
+                                "NekOS tidak dapat membuka checkout PayPal. Pastikan browser tersedia, lalu coba lagi."
+                            } else {
+                                "Checkout PayPal dibuka di browser. Selesaikan atau batalkan pembayaran di sana, lalu kembali ke NekOS."
+                            },
+                            color = Color(0xFF34332F),
+                            fontSize = 14.sp
+                        )
+                        if (paypalLaunchFailed) {
+                            TextButton(onClick = {
+                                paypalLaunchFailed = !launchPayPalCheckout(context, checkoutUrl)
+                            }) { Text("COBA BUKA PAYPAL LAGI") }
+                        } else {
+                            TextButton(onClick = onPaymentFinished) {
+                                Text("SUDAH KEMBALI — PERIKSA STATUS")
+                            }
+                        }
+                        TextButton(onClick = { showCancelConfirmation = true }) {
+                            Text("BATALKAN PEMBELIAN", color = Color(0xFF9B3D35), fontSize = 11.sp)
+                        }
                     }
                 } else {
                     AndroidView(
@@ -212,7 +271,7 @@ internal fun StoreCheckoutDialog(
             title = { Text("Batalkan pembelian?") },
             text = {
                 Text(
-                    "NekOS akan meminta Midtrans membatalkan transaksi. Jika pembayaran ternyata sudah berhasil, pembelian tidak akan dibatalkan dan skin tetap dipasang. Jika kamu belum memilih metode pembayaran sehingga transaksi belum dibuat, sesi checkout tidak dapat dibatalkan langsung dan akan kedaluwarsa otomatis dalam 15 menit."
+                    "NekOS akan meminta penyedia pembayaran membatalkan transaksi. Jika pembayaran ternyata sudah berhasil, pembelian tidak akan dibatalkan dan skin tetap dipasang. Jika penyedia belum mengonfirmasi pembayaran, periksa kembali statusnya sebelum mencoba membeli lagi."
                 )
             },
             confirmButton = {
