@@ -29,7 +29,7 @@ class AppIconPackResolverTest {
         val resolved = resolver.resolve("org.example.unknown", "Google Chrome")
 
         assertEquals("googlechrome", resolved.brand)
-        assertEquals("paw", resolved.glyph)
+        assertEquals("globe", resolved.glyph)
         assertNotNull(resolver.loadBitmap(resolved))
     }
 
