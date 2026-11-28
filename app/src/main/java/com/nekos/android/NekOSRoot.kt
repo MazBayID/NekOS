@@ -77,6 +77,8 @@ internal val TagSurface = Color(0xFFE7E1D6)
 internal fun NekOSRoot(
     refreshToken: Int,
     resumeToken: Int = 0,
+    paypalResultToken: Int = 0,
+    paypalResultMessage: String? = null,
     homeSignal: Int = 0,
     backgroundSignal: Int = 0,
     temporarilyUnavailableAppIds: Set<String> = emptySet(),
@@ -105,10 +107,31 @@ internal fun NekOSRoot(
     var paymentProviderSkin by remember { mutableStateOf<OfficialStoreSkin?>(null) }
     var paymentProviderInstallCallback by remember { mutableStateOf<((String?) -> Unit)?>(null) }
 
+    LaunchedEffect(paypalResultToken) {
+        if (paypalResultToken == 0) return@LaunchedEffect
+        when (paypalResultMessage) {
+            "approved" -> Toast.makeText(
+                context,
+                "Persetujuan PayPal diterima. NekOS sedang memverifikasi pembayaran.",
+                Toast.LENGTH_LONG
+            ).show()
+            "cancelled" -> Toast.makeText(
+                context,
+                "Checkout PayPal dibatalkan. Status pembayaran tetap dapat diperiksa.",
+                Toast.LENGTH_LONG
+            ).show()
+            null -> Unit
+            else -> Toast.makeText(
+                context,
+                "PayPal: $paypalResultMessage",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
+
     // Reconcile unfinished Store payments whenever NekOS returns to foreground.
-    // The checkout page may be closed without a Midtrans webhook (e.g. the buyer
-    // never selects a payment method), so the client must query pending
-    // orders on resume rather than rely on a manual button.
+    // PayPal's status endpoint performs server-side capture and grants access only
+    // after PayPal confirms a completed capture.
     LaunchedEffect(resumeToken) {
         val pendingIds = OfficialSkinStoreClient.pendingSkinIds(context)
         if (pendingIds.isEmpty() || storeBusySkinId != null) return@LaunchedEffect
@@ -1259,7 +1282,17 @@ internal fun NekOSRoot(
                             }.getOrElse { StoreActionResult(false, it.message ?: "Store action failed.") }
                         }
                         storeBusySkinId = null
-                        if (!result.checkoutUrl.isNullOrBlank()) {
+                        if (result.paymentProvider == "paypal" &&
+                            !result.providerOrderId.isNullOrBlank() &&
+                            !result.checkoutUrl.isNullOrBlank()
+                        ) {
+                            (context as? MainActivity)?.startPayPalCheckout(
+                                result.providerOrderId,
+                                result.checkoutUrl
+                            ) ?: run {
+                                storeCheckout = Triple(skin, result.checkoutUrl, "paypal")
+                            }
+                        } else if (!result.checkoutUrl.isNullOrBlank()) {
                             storeCheckout = Triple(skin, result.checkoutUrl, result.paymentProvider ?: "midtrans")
                         }
                         if (result.success && result.installedSkinId != null) {
