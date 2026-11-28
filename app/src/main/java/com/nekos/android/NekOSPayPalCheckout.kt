@@ -35,7 +35,7 @@ internal class NekOSPayPalCheckout(context: Context) {
     fun start(
         activity: Activity,
         providerOrderId: String,
-        onFailure: (String) -> Unit
+        onResult: (PayPalPresentAuthChallengeResult) -> Unit
     ) {
         client.createPayPalSession(
             tokenType = TokenType.ORDER_ID,
@@ -48,9 +48,7 @@ internal class NekOSPayPalCheckout(context: Context) {
             userAction = PayPalUserAction.PAY_NOW
         )
         client.start(activity, providerOrderId) { result ->
-            if (result is PayPalPresentAuthChallengeResult.Failure) {
-                onFailure(result.error.errorDescription)
-            }
+            onResult(result)
         }
     }
 
