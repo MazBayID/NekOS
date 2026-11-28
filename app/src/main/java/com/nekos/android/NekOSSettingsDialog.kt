@@ -957,11 +957,18 @@ internal fun NekOSSettingsDialog(
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
                                         Text(
-                                            if (skin.price <= 0L) "FREE" else "Rp ${"%,d".format(skin.price)}",
+                                            if (skin.price <= 0L) {
+                                                "FREE"
+                                            } else {
+                                                "IDR Rp ${"%,d".format(skin.price)}  ·  USD " +
+                                                    String.format(java.util.Locale.US, "$%.2f", skin.priceUsd)
+                                            },
                                             color = if (skin.price <= 0L) Color(0xFFB9F2A5) else Color(0xFFFFD6A6),
-                                            fontSize = 11.sp,
+                                            fontSize = 10.sp,
                                             fontWeight = if (skin.price <= 0L) FontWeight.SemiBold else FontWeight.Bold,
-                                            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+                                            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                                            maxLines = 1,
+                                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                                         )
                                         OfficialStoreActionButton(
                                             label = actionLabel,
