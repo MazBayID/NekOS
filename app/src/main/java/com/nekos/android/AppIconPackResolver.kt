@@ -54,10 +54,11 @@ internal class AppIconPackResolver(context: Context) {
                 }
             }
         }
-        slugs = brandIndex.getJSONObject("slugs").let { json ->
+        slugs = brandIndex.getJSONArray("slugs").let { json ->
             buildSet {
-                val keys = json.keys()
-                while (keys.hasNext()) add(json.getString(keys.next()))
+                for (index in 0 until json.length()) {
+                    add(json.getString(index))
+                }
             }
         }
 
