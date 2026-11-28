@@ -1,0 +1,1002 @@
+{
+  "category": "app_icon_glyphs",
+  "total": 109,
+  "size": "96x96",
+  "canvas_px": {
+    "width": 96,
+    "height": 96
+  },
+  "live_area_px": {
+    "x": 8,
+    "y": 8,
+    "width": 80,
+    "height": 80
+  },
+  "color_mode": "alpha_mask_white",
+  "format": "webp_lossless",
+  "tint_role": "on_badge",
+  "composition": "badge (tint: Shared UI Color) + glyph (tint: on_badge); atau glyph saja dengan tint foreground",
+  "items": [
+    {
+      "id": 1,
+      "file": "icon_mail.webp",
+      "name": "mail",
+      "visual": "Amplop",
+      "description": "email / surat",
+      "origin": "nekos_tag",
+      "apps": 56
+    },
+    {
+      "id": 2,
+      "file": "icon_chat.webp",
+      "name": "chat",
+      "visual": "Gelembung chat",
+      "description": "pesan / chat / sosial",
+      "origin": "nekos_tag",
+      "apps": 54
+    },
+    {
+      "id": 3,
+      "file": "icon_contacts.webp",
+      "name": "contacts",
+      "visual": "Buku kontak",
+      "description": "kontak / buku alamat",
+      "origin": "nekos_tag",
+      "apps": 7
+    },
+    {
+      "id": 4,
+      "file": "icon_music_note.webp",
+      "name": "music_note",
+      "visual": "Not musik",
+      "description": "musik / audio",
+      "origin": "nekos_tag",
+      "apps": 40
+    },
+    {
+      "id": 5,
+      "file": "icon_film.webp",
+      "name": "film",
+      "visual": "Klaper film dengan tombol play",
+      "description": "video / film / streaming",
+      "origin": "nekos_tag",
+      "apps": 10
+    },
+    {
+      "id": 6,
+      "file": "icon_camera.webp",
+      "name": "camera",
+      "visual": "Kamera",
+      "description": "kamera / foto",
+      "origin": "nekos_tag",
+      "apps": 50
+    },
+    {
+      "id": 7,
+      "file": "icon_image.webp",
+      "name": "image",
+      "visual": "Gambar pemandangan",
+      "description": "galeri / foto / wallpaper",
+      "origin": "nekos_tag",
+      "apps": 35
+    },
+    {
+      "id": 8,
+      "file": "icon_gamepad.webp",
+      "name": "gamepad",
+      "visual": "Stik gim",
+      "description": "game",
+      "origin": "nekos_tag",
+      "apps": 101
+    },
+    {
+      "id": 9,
+      "file": "icon_palette.webp",
+      "name": "palette",
+      "visual": "Palet cat",
+      "description": "seni / desain / kustomisasi",
+      "origin": "nekos_tag",
+      "apps": 10
+    },
+    {
+      "id": 10,
+      "file": "icon_globe.webp",
+      "name": "globe",
+      "visual": "Globe",
+      "description": "browser / internet",
+      "origin": "nekos_tag",
+      "apps": 29
+    },
+    {
+      "id": 11,
+      "file": "icon_cloud.webp",
+      "name": "cloud",
+      "visual": "Awan",
+      "description": "cloud / sinkronisasi",
+      "origin": "nekos_tag",
+      "apps": 15
+    },
+    {
+      "id": 12,
+      "file": "icon_google.webp",
+      "name": "google",
+      "visual": "Huruf G",
+      "description": "layanan Google",
+      "origin": "nekos_tag",
+      "apps": 4
+    },
+    {
+      "id": 13,
+      "file": "icon_network.webp",
+      "name": "network",
+      "visual": "Diagram hierarki / jaringan",
+      "description": "jaringan / hirarki / server",
+      "origin": "nekos_tag",
+      "apps": 3
+    },
+    {
+      "id": 14,
+      "file": "icon_download.webp",
+      "name": "download",
+      "visual": "Panah turun ke baki",
+      "description": "unduhan",
+      "origin": "nekos_tag",
+      "apps": 0
+    },
+    {
+      "id": 15,
+      "file": "icon_briefcase.webp",
+      "name": "briefcase",
+      "visual": "Koper kerja",
+      "description": "kerja / bisnis",
+      "origin": "nekos_tag",
+      "apps": 0
+    },
+    {
+      "id": 16,
+      "file": "icon_calendar.webp",
+      "name": "calendar",
+      "visual": "Kalender",
+      "description": "kalender / agenda",
+      "origin": "nekos_tag",
+      "apps": 7
+    },
+    {
+      "id": 17,
+      "file": "icon_alarm_clock.webp",
+      "name": "alarm_clock",
+      "visual": "Jam beker",
+      "description": "jam / alarm / waktu",
+      "origin": "nekos_tag",
+      "apps": 7
+    },
+    {
+      "id": 18,
+      "file": "icon_folder.webp",
+      "name": "folder",
+      "visual": "Folder",
+      "description": "berkas / file manager",
+      "origin": "nekos_tag",
+      "apps": 16
+    },
+    {
+      "id": 19,
+      "file": "icon_newspaper.webp",
+      "name": "newspaper",
+      "visual": "Koran",
+      "description": "berita / bacaan",
+      "origin": "nekos_tag",
+      "apps": 8
+    },
+    {
+      "id": 20,
+      "file": "icon_book.webp",
+      "name": "book",
+      "visual": "Buku terbuka",
+      "description": "buku / baca",
+      "origin": "nekos_tag",
+      "apps": 1
+    },
+    {
+      "id": 21,
+      "file": "icon_graduation_cap.webp",
+      "name": "graduation_cap",
+      "visual": "Topi toga",
+      "description": "pendidikan / belajar",
+      "origin": "nekos_tag",
+      "apps": 29
+    },
+    {
+      "id": 22,
+      "file": "icon_calculator.webp",
+      "name": "calculator",
+      "visual": "Kalkulator",
+      "description": "kalkulator / utilitas",
+      "origin": "nekos_tag",
+      "apps": 7
+    },
+    {
+      "id": 23,
+      "file": "icon_bar_chart.webp",
+      "name": "bar_chart",
+      "visual": "Grafik batang",
+      "description": "keuangan / statistik",
+      "origin": "nekos_tag",
+      "apps": 3
+    },
+    {
+      "id": 24,
+      "file": "icon_cart.webp",
+      "name": "cart",
+      "visual": "Keranjang belanja",
+      "description": "belanja / e-commerce",
+      "origin": "nekos_tag",
+      "apps": 17
+    },
+    {
+      "id": 25,
+      "file": "icon_weather.webp",
+      "name": "weather",
+      "visual": "Matahari di balik awan",
+      "description": "cuaca",
+      "origin": "nekos_tag",
+      "apps": 9
+    },
+    {
+      "id": 26,
+      "file": "icon_location_pin.webp",
+      "name": "location_pin",
+      "visual": "Pin lokasi",
+      "description": "peta / navigasi / lokasi",
+      "origin": "nekos_tag",
+      "apps": 4
+    },
+    {
+      "id": 27,
+      "file": "icon_medical_cross.webp",
+      "name": "medical_cross",
+      "visual": "Tanda plus tebal",
+      "description": "kesehatan / medis",
+      "origin": "nekos_tag",
+      "apps": 8
+    },
+    {
+      "id": 28,
+      "file": "icon_running.webp",
+      "name": "running",
+      "visual": "Orang berlari",
+      "description": "olahraga / kebugaran",
+      "origin": "nekos_tag",
+      "apps": 4
+    },
+    {
+      "id": 29,
+      "file": "icon_home.webp",
+      "name": "home",
+      "visual": "Rumah",
+      "description": "beranda / rumah pintar",
+      "origin": "nekos_tag",
+      "apps": 6
+    },
+    {
+      "id": 30,
+      "file": "icon_star.webp",
+      "name": "star",
+      "visual": "Bintang",
+      "description": "favorit",
+      "origin": "nekos_tag",
+      "apps": 1
+    },
+    {
+      "id": 31,
+      "file": "icon_gear_wrench.webp",
+      "name": "gear_wrench",
+      "visual": "Roda gigi dengan kunci pas",
+      "description": "sistem / alat",
+      "origin": "nekos_tag",
+      "apps": 2
+    },
+    {
+      "id": 32,
+      "file": "icon_shield.webp",
+      "name": "shield",
+      "visual": "Perisai",
+      "description": "keamanan / privasi",
+      "origin": "nekos_tag",
+      "apps": 97
+    },
+    {
+      "id": 33,
+      "file": "icon_brain.webp",
+      "name": "brain",
+      "visual": "Otak",
+      "description": "AI / pengetahuan",
+      "origin": "nekos_tag",
+      "apps": 0
+    },
+    {
+      "id": 34,
+      "file": "icon_terminal.webp",
+      "name": "terminal",
+      "visual": "Jendela terminal",
+      "description": "terminal / shell",
+      "origin": "nekos_tag",
+      "apps": 11
+    },
+    {
+      "id": 35,
+      "file": "icon_code.webp",
+      "name": "code",
+      "visual": "Kurung sudut </>",
+      "description": "pemrograman / developer",
+      "origin": "nekos_tag",
+      "apps": 10
+    },
+    {
+      "id": 36,
+      "file": "icon_database.webp",
+      "name": "database",
+      "visual": "Tumpukan silinder",
+      "description": "database / penyimpanan data",
+      "origin": "nekos_tag",
+      "apps": 0
+    },
+    {
+      "id": 37,
+      "file": "icon_gear.webp",
+      "name": "gear",
+      "visual": "Roda gigi",
+      "description": "pengaturan",
+      "origin": "nekos_ui",
+      "apps": 124
+    },
+    {
+      "id": 38,
+      "file": "icon_user.webp",
+      "name": "user",
+      "visual": "Siluet orang",
+      "description": "profil",
+      "origin": "nekos_ui",
+      "apps": 0
+    },
+    {
+      "id": 39,
+      "file": "icon_bell.webp",
+      "name": "bell",
+      "visual": "Lonceng",
+      "description": "notifikasi",
+      "origin": "nekos_ui",
+      "apps": 1
+    },
+    {
+      "id": 40,
+      "file": "icon_lock.webp",
+      "name": "lock",
+      "visual": "Gembok tertutup",
+      "description": "terkunci",
+      "origin": "nekos_ui",
+      "apps": 0
+    },
+    {
+      "id": 41,
+      "file": "icon_share.webp",
+      "name": "share",
+      "visual": "Tiga titik terhubung",
+      "description": "bagikan",
+      "origin": "nekos_ui",
+      "apps": 0
+    },
+    {
+      "id": 42,
+      "file": "icon_tag.webp",
+      "name": "tag",
+      "visual": "Label harga",
+      "description": "tag / label",
+      "origin": "nekos_ui",
+      "apps": 1
+    },
+    {
+      "id": 43,
+      "file": "icon_pencil.webp",
+      "name": "pencil",
+      "visual": "Pensil",
+      "description": "edit",
+      "origin": "nekos_ui",
+      "apps": 3
+    },
+    {
+      "id": 44,
+      "file": "icon_search.webp",
+      "name": "search",
+      "visual": "Kaca pembesar",
+      "description": "cari",
+      "origin": "nekos_ui",
+      "apps": 1
+    },
+    {
+      "id": 45,
+      "file": "icon_heart.webp",
+      "name": "heart",
+      "visual": "Hati",
+      "description": "suka",
+      "origin": "nekos_ui",
+      "apps": 7
+    },
+    {
+      "id": 46,
+      "file": "icon_trash.webp",
+      "name": "trash",
+      "visual": "Tong sampah",
+      "description": "hapus",
+      "origin": "nekos_ui",
+      "apps": 0
+    },
+    {
+      "id": 47,
+      "file": "icon_upload.webp",
+      "name": "upload",
+      "visual": "Panah naik dari baki",
+      "description": "unggah / ekspor",
+      "origin": "nekos_ui",
+      "apps": 0
+    },
+    {
+      "id": 48,
+      "file": "icon_refresh.webp",
+      "name": "refresh",
+      "visual": "Panah melingkar",
+      "description": "muat ulang / reset",
+      "origin": "nekos_ui",
+      "apps": 0
+    },
+    {
+      "id": 49,
+      "file": "icon_grid.webp",
+      "name": "grid",
+      "visual": "Empat kotak",
+      "description": "tampilan grid / semua aplikasi",
+      "origin": "nekos_ui",
+      "apps": 49
+    },
+    {
+      "id": 50,
+      "file": "icon_list.webp",
+      "name": "list",
+      "visual": "Daftar berbutir",
+      "description": "tampilan daftar",
+      "origin": "nekos_ui",
+      "apps": 0
+    },
+    {
+      "id": 51,
+      "file": "icon_info.webp",
+      "name": "info",
+      "visual": "Huruf i dalam lingkaran",
+      "description": "informasi",
+      "origin": "nekos_ui",
+      "apps": 0
+    },
+    {
+      "id": 52,
+      "file": "icon_warning.webp",
+      "name": "warning",
+      "visual": "Segitiga tanda seru",
+      "description": "peringatan",
+      "origin": "nekos_ui",
+      "apps": 0
+    },
+    {
+      "id": 53,
+      "file": "icon_bookmark.webp",
+      "name": "bookmark",
+      "visual": "Penanda buku",
+      "description": "simpan",
+      "origin": "nekos_ui",
+      "apps": 1
+    },
+    {
+      "id": 54,
+      "file": "icon_phone.webp",
+      "name": "phone",
+      "visual": "Gagang telepon",
+      "description": "telepon / dialer",
+      "origin": "new",
+      "apps": 19
+    },
+    {
+      "id": 55,
+      "file": "icon_video.webp",
+      "name": "video",
+      "visual": "Kamera video",
+      "description": "video call / rapat",
+      "origin": "new",
+      "apps": 5
+    },
+    {
+      "id": 56,
+      "file": "icon_play.webp",
+      "name": "play",
+      "visual": "Tombol play dalam kotak",
+      "description": "streaming video",
+      "origin": "new",
+      "apps": 51
+    },
+    {
+      "id": 57,
+      "file": "icon_headphones.webp",
+      "name": "headphones",
+      "visual": "Headphone",
+      "description": "audio / buku audio / earbuds",
+      "origin": "new",
+      "apps": 5
+    },
+    {
+      "id": 58,
+      "file": "icon_wallet.webp",
+      "name": "wallet",
+      "visual": "Dompet",
+      "description": "dompet digital / e-wallet",
+      "origin": "new",
+      "apps": 74
+    },
+    {
+      "id": 59,
+      "file": "icon_bank.webp",
+      "name": "bank",
+      "visual": "Gedung bank berpilar",
+      "description": "perbankan",
+      "origin": "new",
+      "apps": 19
+    },
+    {
+      "id": 60,
+      "file": "icon_bag.webp",
+      "name": "bag",
+      "visual": "Tas belanja",
+      "description": "marketplace / belanja",
+      "origin": "new",
+      "apps": 34
+    },
+    {
+      "id": 61,
+      "file": "icon_bike.webp",
+      "name": "bike",
+      "visual": "Sepeda motor",
+      "description": "ojek online / motor",
+      "origin": "new",
+      "apps": 4
+    },
+    {
+      "id": 62,
+      "file": "icon_car.webp",
+      "name": "car",
+      "visual": "Mobil",
+      "description": "taksi online / mobil",
+      "origin": "new",
+      "apps": 8
+    },
+    {
+      "id": 63,
+      "file": "icon_food.webp",
+      "name": "food",
+      "visual": "Garpu dan pisau",
+      "description": "makanan / pesan antar",
+      "origin": "new",
+      "apps": 19
+    },
+    {
+      "id": 64,
+      "file": "icon_plane.webp",
+      "name": "plane",
+      "visual": "Pesawat",
+      "description": "tiket pesawat / perjalanan",
+      "origin": "new",
+      "apps": 27
+    },
+    {
+      "id": 65,
+      "file": "icon_ticket.webp",
+      "name": "ticket",
+      "visual": "Tiket",
+      "description": "tiket / acara",
+      "origin": "new",
+      "apps": 0
+    },
+    {
+      "id": 66,
+      "file": "icon_bus.webp",
+      "name": "bus",
+      "visual": "Bus tampak depan",
+      "description": "bus / transportasi umum",
+      "origin": "new",
+      "apps": 4
+    },
+    {
+      "id": 67,
+      "file": "icon_train.webp",
+      "name": "train",
+      "visual": "Kereta tampak depan",
+      "description": "kereta api",
+      "origin": "new",
+      "apps": 7
+    },
+    {
+      "id": 68,
+      "file": "icon_qr.webp",
+      "name": "qr",
+      "visual": "Kode QR",
+      "description": "QR / pembayaran QR",
+      "origin": "new",
+      "apps": 3
+    },
+    {
+      "id": 69,
+      "file": "icon_bolt.webp",
+      "name": "bolt",
+      "visual": "Petir",
+      "description": "listrik / PLN / energi",
+      "origin": "new",
+      "apps": 1
+    },
+    {
+      "id": 70,
+      "file": "icon_pulse.webp",
+      "name": "pulse",
+      "visual": "Hati berdenyut",
+      "description": "kesehatan / kebugaran",
+      "origin": "new",
+      "apps": 25
+    },
+    {
+      "id": 71,
+      "file": "icon_note.webp",
+      "name": "note",
+      "visual": "Buku catatan",
+      "description": "catatan",
+      "origin": "new",
+      "apps": 14
+    },
+    {
+      "id": 72,
+      "file": "icon_map.webp",
+      "name": "map",
+      "visual": "Peta lipat",
+      "description": "peta / navigasi",
+      "origin": "new",
+      "apps": 16
+    },
+    {
+      "id": 73,
+      "file": "icon_key.webp",
+      "name": "key",
+      "visual": "Kunci",
+      "description": "kata sandi / autentikator",
+      "origin": "new",
+      "apps": 6
+    },
+    {
+      "id": 74,
+      "file": "icon_doc.webp",
+      "name": "doc",
+      "visual": "Dokumen",
+      "description": "dokumen / pengolah kata / PDF",
+      "origin": "new",
+      "apps": 16
+    },
+    {
+      "id": 75,
+      "file": "icon_mic.webp",
+      "name": "mic",
+      "visual": "Mikrofon",
+      "description": "perekam suara",
+      "origin": "new",
+      "apps": 6
+    },
+    {
+      "id": 76,
+      "file": "icon_compass.webp",
+      "name": "compass",
+      "visual": "Kompas",
+      "description": "jelajah / wisata",
+      "origin": "new",
+      "apps": 1
+    },
+    {
+      "id": 77,
+      "file": "icon_send.webp",
+      "name": "send",
+      "visual": "Pesawat kertas",
+      "description": "kirim / pesan",
+      "origin": "new",
+      "apps": 0
+    },
+    {
+      "id": 78,
+      "file": "icon_people.webp",
+      "name": "people",
+      "visual": "Dua pengguna",
+      "description": "komunitas / jejaring sosial",
+      "origin": "new",
+      "apps": 41
+    },
+    {
+      "id": 79,
+      "file": "icon_monitor.webp",
+      "name": "monitor",
+      "visual": "Monitor",
+      "description": "layar / presentasi / remote desktop",
+      "origin": "new",
+      "apps": 9
+    },
+    {
+      "id": 80,
+      "file": "icon_battery.webp",
+      "name": "battery",
+      "visual": "Baterai",
+      "description": "baterai / perawatan perangkat",
+      "origin": "new",
+      "apps": 1
+    },
+    {
+      "id": 81,
+      "file": "icon_wifi.webp",
+      "name": "wifi",
+      "visual": "Sinyal Wi-Fi",
+      "description": "Wi-Fi / internet rumah",
+      "origin": "new",
+      "apps": 2
+    },
+    {
+      "id": 82,
+      "file": "icon_coin.webp",
+      "name": "coin",
+      "visual": "Koin",
+      "description": "kripto / mata uang",
+      "origin": "new",
+      "apps": 4
+    },
+    {
+      "id": 83,
+      "file": "icon_trend.webp",
+      "name": "trend",
+      "visual": "Grafik naik",
+      "description": "saham / investasi",
+      "origin": "new",
+      "apps": 6
+    },
+    {
+      "id": 84,
+      "file": "icon_pie.webp",
+      "name": "pie",
+      "visual": "Diagram lingkaran",
+      "description": "statistik",
+      "origin": "new",
+      "apps": 0
+    },
+    {
+      "id": 85,
+      "file": "icon_gift.webp",
+      "name": "gift",
+      "visual": "Kado",
+      "description": "hadiah / voucher",
+      "origin": "new",
+      "apps": 0
+    },
+    {
+      "id": 86,
+      "file": "icon_smile.webp",
+      "name": "smile",
+      "visual": "Wajah tersenyum",
+      "description": "stiker / kesejahteraan",
+      "origin": "new",
+      "apps": 4
+    },
+    {
+      "id": 87,
+      "file": "icon_crescent.webp",
+      "name": "crescent",
+      "visual": "Bulan sabit dan bintang",
+      "description": "aplikasi ibadah / tidur",
+      "origin": "new",
+      "apps": 4
+    },
+    {
+      "id": 88,
+      "file": "icon_sparkle.webp",
+      "name": "sparkle",
+      "visual": "Kilau empat sudut",
+      "description": "asisten AI",
+      "origin": "new",
+      "apps": 11
+    },
+    {
+      "id": 89,
+      "file": "icon_translate.webp",
+      "name": "translate",
+      "visual": "Dua balon A dan 文",
+      "description": "penerjemah",
+      "origin": "new",
+      "apps": 3
+    },
+    {
+      "id": 90,
+      "file": "icon_store.webp",
+      "name": "store",
+      "visual": "Toko berkanopi",
+      "description": "toko aplikasi / toko",
+      "origin": "new",
+      "apps": 12
+    },
+    {
+      "id": 91,
+      "file": "icon_box.webp",
+      "name": "box",
+      "visual": "Kotak paket",
+      "description": "kurir / pengiriman",
+      "origin": "new",
+      "apps": 3
+    },
+    {
+      "id": 92,
+      "file": "icon_drop.webp",
+      "name": "drop",
+      "visual": "Tetesan",
+      "description": "air / bahan bakar",
+      "origin": "new",
+      "apps": 0
+    },
+    {
+      "id": 93,
+      "file": "icon_tasks.webp",
+      "name": "tasks",
+      "visual": "Papan tugas centang",
+      "description": "to-do / manajemen tugas",
+      "origin": "new",
+      "apps": 7
+    },
+    {
+      "id": 94,
+      "file": "icon_chip.webp",
+      "name": "chip",
+      "visual": "Chip prosesor",
+      "description": "sistem / perangkat keras",
+      "origin": "new",
+      "apps": 0
+    },
+    {
+      "id": 95,
+      "file": "icon_broom.webp",
+      "name": "broom",
+      "visual": "Sapu",
+      "description": "pembersih / optimasi",
+      "origin": "new",
+      "apps": 3
+    },
+    {
+      "id": 96,
+      "file": "icon_keyboard.webp",
+      "name": "keyboard",
+      "visual": "Papan ketik",
+      "description": "keyboard / input",
+      "origin": "new",
+      "apps": 6
+    },
+    {
+      "id": 97,
+      "file": "icon_bookopen.webp",
+      "name": "bookopen",
+      "visual": "Buku terbuka",
+      "description": "e-book / bacaan",
+      "origin": "new",
+      "apps": 28
+    },
+    {
+      "id": 98,
+      "file": "icon_idcard.webp",
+      "name": "idcard",
+      "visual": "Kartu identitas",
+      "description": "identitas / layanan publik",
+      "origin": "new",
+      "apps": 0
+    },
+    {
+      "id": 99,
+      "file": "icon_radio.webp",
+      "name": "radio",
+      "visual": "Pemancar siaran",
+      "description": "podcast / radio",
+      "origin": "new",
+      "apps": 6
+    },
+    {
+      "id": 100,
+      "file": "icon_scan.webp",
+      "name": "scan",
+      "visual": "Bingkai pindai",
+      "description": "scanner / lensa",
+      "origin": "new",
+      "apps": 5
+    },
+    {
+      "id": 101,
+      "file": "icon_bed.webp",
+      "name": "bed",
+      "visual": "Tempat tidur",
+      "description": "hotel / penginapan",
+      "origin": "new",
+      "apps": 4
+    },
+    {
+      "id": 102,
+      "file": "icon_paw.webp",
+      "name": "paw",
+      "visual": "Telapak kaki kucing",
+      "description": "ikon bawaan NekOS / aplikasi tak dikenal",
+      "origin": "new",
+      "apps": 0
+    },
+    {
+      "id": 103,
+      "file": "icon_watch.webp",
+      "name": "watch",
+      "visual": "Jam tangan pintar",
+      "description": "wearable / smartwatch",
+      "origin": "new",
+      "apps": 6
+    },
+    {
+      "id": 104,
+      "file": "icon_ball.webp",
+      "name": "ball",
+      "visual": "Bola basket",
+      "description": "olahraga / sepak bola / liga",
+      "origin": "new",
+      "apps": 8
+    },
+    {
+      "id": 105,
+      "file": "icon_dice.webp",
+      "name": "dice",
+      "visual": "Dadu",
+      "description": "game papan / kasino / kartu",
+      "origin": "new",
+      "apps": 6
+    },
+    {
+      "id": 106,
+      "file": "icon_tv.webp",
+      "name": "tv",
+      "visual": "Televisi berantena",
+      "description": "TV / streaming / cast",
+      "origin": "new",
+      "apps": 9
+    },
+    {
+      "id": 107,
+      "file": "icon_printer.webp",
+      "name": "printer",
+      "visual": "Printer",
+      "description": "cetak / pindai dokumen",
+      "origin": "new",
+      "apps": 4
+    },
+    {
+      "id": 108,
+      "file": "icon_bulb.webp",
+      "name": "bulb",
+      "visual": "Bohlam",
+      "description": "senter / lampu pintar / ide",
+      "origin": "new",
+      "apps": 5
+    },
+    {
+      "id": 109,
+      "file": "icon_tshirt.webp",
+      "name": "tshirt",
+      "visual": "Kaos",
+      "description": "fashion / pakaian",
+      "origin": "new",
+      "apps": 9
+    }
+  ]
+}
