@@ -49,7 +49,9 @@ class AppIconBitmapCache(
     private val maxDiskSizeBytes: Long = 32L * 1024L * 1024L
 ) {
     private val appContext = context.applicationContext
-    private val appIconPackResolver = runCatching { AppIconPackResolver(appContext) }.getOrNull()
+    private val appIconPackResolver by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
+        runCatching { AppIconPackResolver(appContext) }.getOrNull()
+    }
     private val diskDirectory = File(appContext.filesDir, "icon_cache")
     private val memoryCache = object : LruCache<String, ImageBitmap>(maxSizeKb) {
         override fun sizeOf(key: String, bitmap: ImageBitmap): Int =
