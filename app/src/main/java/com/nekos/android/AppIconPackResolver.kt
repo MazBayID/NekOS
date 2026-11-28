@@ -11,7 +11,7 @@ import org.json.JSONObject
 import java.util.Locale
 
 internal data class ResolvedAppIcon(
-    val glyph: String,
+    val glyph: String?
     val brand: String? = null
 )
 
@@ -27,7 +27,6 @@ internal class AppIconPackResolver(context: Context) {
     private val slugs: Set<String>
     private val prefixRules: List<Pair<String, String>>
     private val keywordRules: List<Pair<Regex, String>>
-    private val defaultGlyph: String
 
     init {
         val map = JSONObject(assets.open("app_icon_map.json").bufferedReader().use { it.readText() })
@@ -62,7 +61,6 @@ internal class AppIconPackResolver(context: Context) {
             }
         }
 
-        defaultGlyph = rules.optString("default", map.optString("default_glyph", "paw"))
         prefixRules = buildList {
             val rows = rules.getJSONArray("prefix_rules")
             for (index in 0 until rows.length()) {
@@ -89,16 +87,15 @@ internal class AppIconPackResolver(context: Context) {
         val labelBrand = aliases[normalizedLabel]
             ?: normalizedLabel.takeIf { it in slugs }
 
-        val glyph = prefixRules.firstOrNull { packageName.startsWith(it.first) }?.second
-            ?: keywordRules.firstOrNull { it.first.containsMatchIn("$packageName $label") }?.second
-            ?: defaultGlyph
+        val glyph = keywordRules.firstOrNull { it.first.containsMatchIn("$packageName $label") }?.second
+            ?: prefixRules.firstOrNull { packageName.startsWith(it.first) }?.second
 
         return ResolvedAppIcon(glyph, labelBrand)
     }
 
     fun loadBitmap(resolved: ResolvedAppIcon): Bitmap? {
         val source = resolved.brand?.let { loadAssetBitmap("icons/brands/$it.webp") }
-            ?: loadAssetBitmap("icons/apps/icon_${resolved.glyph}.webp")
+            ?: resolved.glyph?.let { loadAssetBitmap("icons/apps/icon_${it}.webp") }
             ?: return null
 
         // App pack images are white alpha masks. Tint them for legibility on NekOS'
