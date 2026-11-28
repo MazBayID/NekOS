@@ -1,12 +1,7 @@
 {
   "schema_version": 1,
-  "default": "paw",
-  "note": "Aturan ini hanya menentukan glyph kategori untuk package yang tidak tercantum di app_icon_map.json. Prefix diperiksa dari yang terpanjang; jika tidak cocok, keyword_rules diperiksa berurutan (regex, case-insensitive); jika tetap tidak cocok gunakan default. Ikon merek untuk package yang tidak terpetakan dicari terpisah melalui label aplikasi di brand_index.json. Entri package exact selalu mengalahkan aturan ini.",
+  "note": "Rules apply only to packages absent from app_icon_map.json. Category keywords are checked before specific package prefixes so app function is not masked by OEM namespaces. If no rule matches, no glyph is assigned and Android's original app icon is used. Brand matching is independent and exact package entries always win.",
   "prefix_rules": [
-    [
-      "com.android.",
-      "gear"
-    ],
     [
       "com.google.android.apps.",
       "google"
@@ -18,114 +13,6 @@
     [
       "com.google.",
       "google"
-    ],
-    [
-      "com.samsung.android.",
-      "gear"
-    ],
-    [
-      "com.sec.android.",
-      "gear"
-    ],
-    [
-      "com.samsung.",
-      "gear"
-    ],
-    [
-      "com.miui.",
-      "gear"
-    ],
-    [
-      "com.xiaomi.",
-      "gear"
-    ],
-    [
-      "com.mi.android.",
-      "gear"
-    ],
-    [
-      "com.mi.",
-      "gear"
-    ],
-    [
-      "com.huawei.",
-      "gear"
-    ],
-    [
-      "com.hihonor.",
-      "gear"
-    ],
-    [
-      "com.honor.",
-      "gear"
-    ],
-    [
-      "com.oppo.",
-      "gear"
-    ],
-    [
-      "com.coloros.",
-      "gear"
-    ],
-    [
-      "com.heytap.",
-      "gear"
-    ],
-    [
-      "com.oplus.",
-      "gear"
-    ],
-    [
-      "com.realme.",
-      "gear"
-    ],
-    [
-      "com.vivo.",
-      "gear"
-    ],
-    [
-      "com.bbk.",
-      "gear"
-    ],
-    [
-      "com.iqoo.",
-      "gear"
-    ],
-    [
-      "com.oneplus.",
-      "gear"
-    ],
-    [
-      "net.oneplus.",
-      "gear"
-    ],
-    [
-      "com.motorola.",
-      "gear"
-    ],
-    [
-      "com.sonyericsson.",
-      "gear"
-    ],
-    [
-      "com.sonymobile.",
-      "gear"
-    ],
-    [
-      "com.asus.",
-      "gear"
-    ],
-    [
-      "com.lge.",
-      "gear"
-    ],
-    [
-      "com.transsion.",
-      "gear"
-    ],
-    [
-      "com.nothing.",
-      "gear"
     ],
     [
       "com.qualcomm.",
@@ -144,20 +31,12 @@
       "terminal"
     ],
     [
-      "org.lineageos.",
-      "gear"
-    ],
-    [
       "com.microsoft.office.",
       "doc"
     ],
     [
       "com.adobe.",
       "palette"
-    ],
-    [
-      "com.simplemobiletools.",
-      "gear"
     ],
     [
       "com.supercell.",
