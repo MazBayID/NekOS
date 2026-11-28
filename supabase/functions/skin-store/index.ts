@@ -18,6 +18,9 @@ const PAYPAL_WEBHOOK_ID = Deno.env.get("PAYPAL_WEBHOOK_ID") ?? "";
 const PAYPAL_BASE = PAYPAL_MODE === "live" ? "https://api-m.paypal.com" : "https://api-m.sandbox.paypal.com";
 const ORIGIN = "https://mazbayid.github.io";
 const PREVIEWS = "skin-previews";
+// Snap sessions and their selected payment methods are configured for 15 minutes.
+// Reconcile at 16 minutes to allow a small provider-side expiry processing buffer.
+const SNAP_EXPIRY_RECONCILIATION_MS = 16 * 60 * 1000;
 const db = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
 
 function json(data: unknown, status = 200, origin = "") {
