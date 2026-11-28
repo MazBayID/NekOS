@@ -18,7 +18,6 @@ const PAYPAL_WEBHOOK_ID = Deno.env.get("PAYPAL_WEBHOOK_ID") ?? "";
 const PAYPAL_BASE = PAYPAL_MODE === "live" ? "https://api-m.paypal.com" : "https://api-m.sandbox.paypal.com";
 const ORIGIN = "https://mazbayid.github.io";
 const PREVIEWS = "skin-previews";
-const SNAP_EXPIRY_RECONCILIATION_MS = 16 * 60 * 1000;
 const db = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
 
 function json(data: unknown, status = 200, origin = "") {
@@ -526,16 +525,57 @@ async function handleCancel(body:Record<string,unknown>, deviceHash:string, orig
   const fetchStatus=()=>fetch(statusUrl,{headers:{Authorization:authHeader(),"Accept":"application/json"}});
   let response=await fetchStatus();
   if(response.status===404) {
-    const createdAt=Date.parse(String(active.created_at??status.created_at??""));
-    const snapExpired=Number.isFinite(createdAt)&&Date.now()-createdAt>=SNAP_EXPIRY_RECONCILIATION_MS;
-    if(snapExpired) {
-      await rpc("skin_update_payment_status",{p_provider:"midtrans",p_provider_order_id:providerOrderId,
-        p_status:"expire",p_payload:{reason:"snap_page_expired_without_payment_method",expired_at:new Date().toISOString()}});
-      return json({success:true,cancelled:true,checkout_active:false,
-        message:"Sesi Snap Midtrans sudah melewati masa aktif 15 menit. Kamu bisa memilih metode pembayaran lain."},200,origin);
+    const checkoutUrl=String(active.checkout_url??"");
+    let snapToken="";
+    try {
+      const checkout=new URL(checkoutUrl);
+      const parts=checkout.pathname.split("/").filter(Boolean);
+      const marker=parts.lastIndexOf("vtweb");
+      if(checkout.protocol==="https:" &&
+         checkout.hostname===(MIDTRANS_ENV==="production"?"app.midtrans.com":"app.sandbox.midtrans.com") &&
+         marker>=0 && parts[marker+1]) {
+        snapToken=parts[marker+1];
+      }
+    } catch { /* Invalid or absent Snap URL: never infer that the session is inactive. */ }
+
+    if(!snapToken) {
+      return fail("midtrans_snap_session_token_missing",409,origin,
+        "Midtrans belum menyediakan status transaksi dan token sesi Snap tidak tersedia. NekOS belum dapat memastikan checkout lama sudah tertutup.");
     }
-    return json({success:true,cancelled:false,checkout_active:true,can_close_checkout:true,
-      message:"Checkout Midtrans belum membuat transaksi pembayaran. Sesi Snap masih mungkin digunakan sampai 15 menit sejak dibuat. NekOS akan memantau statusnya."},200,origin);
+
+    const cancelSessionResponse=await fetch(
+      snapBase()+"/snap/v1/transactions/"+encodeURIComponent(snapToken)+"/cancel",
+      {method:"POST",headers:{Authorization:authHeader(),"Accept":"application/json","Content-Type":"application/json"}}
+    );
+    const cancelSessionResult=await cancelSessionResponse.json().catch(()=>({}));
+    const sessionCancelled=cancelSessionResponse.ok && Boolean(cancelSessionResult.canceled_at);
+    const sessionAlreadyInactive=Array.isArray(cancelSessionResult.error_messages) &&
+      cancelSessionResult.error_messages.some((message:unknown)=>
+        /token already canceled|token not found/i.test(String(message)));
+    const sessionInProgress=Array.isArray(cancelSessionResult.error_messages) &&
+      cancelSessionResult.error_messages.some((message:unknown)=>
+        /transaction is on progress/i.test(String(message)));
+
+    if(!sessionCancelled && !sessionAlreadyInactive && !sessionInProgress) {
+      console.error("skin_store_midtrans_snap_cancel_not_confirmed",JSON.stringify({
+        order_id:orderId,http_status:cancelSessionResponse.status,
+        error_messages:cancelSessionResult.error_messages??[]
+      }));
+      return fail("midtrans_snap_cancel_not_confirmed",409,origin,
+        "Midtrans belum mengonfirmasi pembatalan sesi checkout lama. Belum ada pembayaran baru yang dibuat.");
+    }
+
+    response=await fetchStatus();
+    if(response.status===404) {
+      if(sessionCancelled || sessionAlreadyInactive) {
+        await rpc("skin_update_payment_status",{p_provider:"midtrans",p_provider_order_id:providerOrderId,
+          p_status:"cancel",p_payload:{reason:"snap_session_cancelled",cancel_response:cancelSessionResult}});
+        return json({success:true,cancelled:true,checkout_active:false,
+          message:"Sesi checkout Snap lama sudah dibatalkan oleh Midtrans. Kamu bisa memilih metode pembayaran lain."},200,origin);
+      }
+      return fail("midtrans_snap_session_in_progress",409,origin,
+        "Midtrans melaporkan transaksi sedang diproses. NekOS belum akan membuat pembayaran pengganti.");
+    }
   }
   if(!response.ok)return fail("midtrans_status_check_failed",503,origin);
   let verified=await response.json();
