@@ -372,9 +372,12 @@ class MainActivity : ComponentActivity() {
 
     private fun handlePayPalReturn(sourceIntent: Intent?) {
         val data = sourceIntent?.data ?: return
-        if (data.scheme != "nekos" ||
-            data.host !in setOf("paypal-finish", "paypal-cancel")
-        ) return
+        val isPayPalReturn = data.scheme == "nekos" && (
+            data.host in setOf("paypal-finish", "paypal-cancel") ||
+                (data.host == "x-callback-url" &&
+                    data.path.orEmpty().startsWith("/paypal-sdk/paypal-checkout"))
+            )
+        if (!isPayPalReturn) return
         val result = runCatching { paypalCheckout.finishStart(sourceIntent) }.getOrNull() ?: return
         when (result) {
             is com.paypal.android.paypalpayments.PayPalFinishStartResult.Success -> {
