@@ -4,15 +4,17 @@ Kumpulan ikon merek dan glyph kategori untuk rancangan sistem ikon aplikasi NekO
 
 ## Status integrasi saat ini
 
-<ins>Icon pack ini belum digunakan oleh launcher NekOS saat runtime.</ins>
+<badge>Implementasi runtime pada branch work/icon-pack-runtime; validasi build masih berjalan.</badge>
 
-Audit kode aplikasi menunjukkan:
+Implementasi pada branch kerja sekarang:
 
-- `AppIconBitmapCache.kt` masih mengambil ikon melalui `LauncherActivityInfo.getBadgedIcon()` dan memakai ikon default Android jika gagal.
-- `app/build.gradle.kts` kini mendaftarkan `main_assets/icon_pack/` sebagai Android `main` assets. File paket akan disertakan saat proses packaging APK.
-- `IconCatalogRepository.kt` hanya memuat katalog ikon tag dari `icons/tag/`; repository tersebut bukan loader untuk app icon pack.
+- `app/build.gradle.kts` menyalin aset runtime dari `main_assets/icon_pack/` ke generated Android assets sebelum `preBuild`, tanpa memasukkan tools, lisensi, preview, atau README.
+- `AppIconPackResolver.kt` membaca mapping package, aturan glyph, alias, dan slug merek. Exact package selalu diprioritaskan; pencocokan label hanya digunakan untuk package yang tidak terdaftar.
+- `AppIconBitmapCache.kt` mencoba ikon pack terlebih dahulu, kemudian kembali ke ikon Android jika resolver atau aset gagal dimuat.
+- `InstalledApp.iconCacheKey` diberi versi cache baru agar bitmap ikon Android lama tidak menutupi hasil icon pack.
+- `IconCatalogRepository.kt` tetap khusus untuk `icons/tag/`; tidak digabung dengan app icon pack.
 
-Jadi, perubahan pada JSON atau file gambar di folder ini **belum mengubah ikon aplikasi yang terlihat di launcher**. Tahap packaging assets sudah disiapkan, tetapi runtime masih memerlukan resolver aplikasi, cache, dan rendering. Build APK belum dijalankan untuk membuktikan seluruh aset benar-benar masuk ke APK.
+Integrasi ini belum dianggap selesai sampai build, unit test, lint, dan Compose UI test pada GitHub Actions selesai dengan sukses. Perubahan masih berada di branch kerja dan belum digabung ke `main`.
 
 Dokumentasi Android: [LauncherActivityInfo](https://developer.android.com/reference/android/content/pm/LauncherActivityInfo).
 
@@ -56,7 +58,7 @@ Semua path di dalam JSON bersifat relatif terhadap direktori `main_assets/icon_p
 
 ## Aturan resolusi yang dimaksud
 
-Resolver aplikasi nantinya harus mengikuti aturan berikut. Urutan ini juga menjadi acuan `map_packages.py`.
+Resolver runtime dan `map_packages.py` mengikuti aturan berikut.
 
 ### 1. Package yang ada di `app_icon_map.json`
 
