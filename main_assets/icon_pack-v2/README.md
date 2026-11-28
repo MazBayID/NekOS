@@ -72,3 +72,5 @@ Setiap hasil mencantumkan `source`:
 - Pemetaan menggunakan package name Android; package dapat berbeda antarnegara atau versi aplikasi.
 - Urutan aturan keyword bersifat penting: aturan pertama yang cocok akan digunakan.
 - `paw` adalah glyph biasa sekaligus nilai default glyph saat ini. Runtime icon pack mengelola namespace-nya secara terpisah dari Skin, Tag Icons, dan Motifs.
+
+The `9BIT` WebAPK may expose an opaque generated package ID, so its label rule (`\\b9bit\\b`) is intentionally kept first in `keyword_rules.json`. Keep this rule ahead of broader browser rules so the installed label can resolve to the `globe` glyph.
