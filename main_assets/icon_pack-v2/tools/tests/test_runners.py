@@ -4,11 +4,10 @@ import subprocess
 import sys
 import tempfile
 import unittest
-import xml.etree.ElementTree as ET
 from pathlib import Path
 
 
-TOOLS = Path(__file__).resolve().parent.parent / "tools"
+TOOLS = Path(__file__).resolve().parent.parent
 PACK_ROOT = TOOLS.parent
 
 
