@@ -59,6 +59,12 @@ android {
         }
     }
 
+    sourceSets {
+        getByName("main") {
+            assets.srcDir("../main_assets/icon_pack")
+        }
+    }
+
     buildFeatures {
         compose = true
     }
