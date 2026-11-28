@@ -3,6 +3,7 @@ package com.nekos.android
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.drawable.BitmapDrawable
 import android.util.LruCache
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -49,6 +50,9 @@ class AppIconBitmapCache(
     private val maxDiskSizeBytes: Long = 32L * 1024L * 1024L
 ) {
     private val appContext = context.applicationContext
+    private val appIconPackResolver by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
+        runCatching { AppIconPackResolver(appContext) }.getOrNull()
+    }
     private val diskDirectory = File(appContext.filesDir, "icon_cache")
     private val memoryCache = object : LruCache<String, ImageBitmap>(maxSizeKb) {
         override fun sizeOf(key: String, bitmap: ImageBitmap): Int =
@@ -177,12 +181,30 @@ class AppIconBitmapCache(
         }
     }
 
-    private fun createAppIcon(app: InstalledApp): Bitmap =
-        try {
+    private fun createAppIcon(app: InstalledApp): Bitmap {
+        val packedIcon = runCatching {
+            appIconPackResolver?.let { resolver ->
+                resolver.loadBitmap(resolver.resolve(app.packageName, app.label))
+            }
+        }.getOrNull()
+
+        if (packedIcon != null) {
+            return runCatching {
+                appContext.packageManager
+                    .getUserBadgedIcon(
+                        BitmapDrawable(appContext.resources, packedIcon),
+                        app.user
+                    )
+                    .toBitmap(96, 96)
+            }.getOrDefault(packedIcon)
+        }
+
+        return try {
             app.launcherActivityInfo.getBadgedIcon(app.iconDensityDpi).toBitmap(96, 96)
         } catch (_: Exception) {
             appContext.packageManager.defaultActivityIcon.toBitmap(96, 96)
         }
+    }
 
     private fun readDiskBitmap(cacheKey: String): Bitmap? {
         val file = diskFile(cacheKey)

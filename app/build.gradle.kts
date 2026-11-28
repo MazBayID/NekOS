@@ -15,6 +15,14 @@ val hasReleaseSigning = listOf(
     releaseKeyPassword
 ).all { !it.isNullOrBlank() }
 
+val generatedIconPackAssets = layout.buildDirectory.dir("generated/iconPackAssets")
+val syncIconPackAssets = tasks.register<org.gradle.api.tasks.Sync>("syncIconPackAssets") {
+    from("../main_assets/icon_pack") {
+        exclude("tools/**", "LICENSES/**", "preview_*.png", "README.md")
+    }
+    into(generatedIconPackAssets)
+}
+
 android {
     namespace = "com.nekos.android"
     compileSdk = 35
@@ -59,9 +67,19 @@ android {
         }
     }
 
+    sourceSets {
+        getByName("main") {
+            assets.srcDir(generatedIconPackAssets)
+        }
+    }
+
     buildFeatures {
         compose = true
     }
+}
+
+tasks.named("preBuild").configure {
+    dependsOn(syncIconPackAssets)
 }
 
 dependencies {

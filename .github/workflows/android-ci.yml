@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - work/icon-pack-runtime
   pull_request:
     branches:
       - main
@@ -52,6 +53,9 @@ jobs:
 
       - name: Validate bundled default skin
         run: python3 -I nekos_skin_kit/tools/validate_skin.py nekos_skin_kit/default_skin --strict
+
+      - name: Validate app icon pack
+        run: python3 -I main_assets/icon_pack/tools/validate_pack.py main_assets/icon_pack
 
       - name: Test stable skin glyph identities
         run: python3 -m unittest discover -s nekos_skin_kit/tests -p 'test_*.py' -v

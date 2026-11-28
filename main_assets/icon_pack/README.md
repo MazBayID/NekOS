@@ -4,15 +4,17 @@ Kumpulan ikon merek dan glyph kategori untuk rancangan sistem ikon aplikasi NekO
 
 ## Status integrasi saat ini
 
-<ins>Icon pack ini belum digunakan oleh launcher NekOS saat runtime.</ins>
+**Status:** runtime icon pack sudah terintegrasi pada branch `work/icon-pack-runtime`. Validasi GitHub Actions untuk commit `67fe2d7` berhasil, termasuk build Debug/Release, unit test, lint, dan Compose UI test. Branch ini belum digabung ke `main`.
 
-Audit kode aplikasi menunjukkan:
+Implementasi pada branch kerja sekarang:
 
-- `AppIconBitmapCache.kt` masih mengambil ikon melalui `LauncherActivityInfo.getBadgedIcon()` dan memakai ikon default Android jika gagal.
-- `app/build.gradle.kts` belum menambahkan `main_assets/icon_pack/` ke Android assets atau source set.
-- `IconCatalogRepository.kt` hanya memuat katalog ikon tag dari `icons/tag/`; repository tersebut bukan loader untuk app icon pack.
+- `app/build.gradle.kts` menyalin aset runtime dari `main_assets/icon_pack/` ke generated Android assets sebelum `preBuild`, tanpa memasukkan tools, lisensi, preview, atau README.
+- `AppIconPackResolver.kt` membaca mapping package, aturan glyph, alias, dan slug merek. Exact package selalu diprioritaskan; pencocokan label hanya digunakan untuk package yang tidak terdaftar.
+- `AppIconBitmapCache.kt` mencoba ikon pack terlebih dahulu, kemudian kembali ke ikon Android jika resolver atau aset gagal dimuat.
+- `InstalledApp.iconCacheKey` diberi versi cache baru agar bitmap ikon Android lama tidak menutupi hasil icon pack.
+- `IconCatalogRepository.kt` tetap khusus untuk `icons/tag/`; tidak digabung dengan app icon pack.
 
-Jadi, perubahan pada JSON atau file gambar di folder ini **belum mengubah ikon aplikasi yang terlihat di launcher**. Agar aktif, NekOS masih memerlukan integrasi runtime tersendiri: packaging assets, resolver aplikasi, cache, dan rendering. Jangan menganggap dokumen ini sebagai bukti bahwa integrasi tersebut sudah selesai.
+Perubahan masih berada di branch kerja dan belum digabung ke `main`. Build CI memastikan aset terpaket dan tes otomatis lolos; pemeriksaan visual pada perangkat fisik tetap disarankan sebelum integrasi ke branch utama.
 
 Dokumentasi Android: [LauncherActivityInfo](https://developer.android.com/reference/android/content/pm/LauncherActivityInfo).
 
@@ -56,7 +58,7 @@ Semua path di dalam JSON bersifat relatif terhadap direktori `main_assets/icon_p
 
 ## Aturan resolusi yang dimaksud
 
-Resolver aplikasi nantinya harus mengikuti aturan berikut. Urutan ini juga menjadi acuan `map_packages.py`.
+Resolver runtime dan `map_packages.py` mengikuti aturan berikut.
 
 ### 1. Package yang ada di `app_icon_map.json`
 
@@ -138,4 +140,10 @@ Validator memeriksa file gambar sebenarnya, bukan hanya nama file atau JSON. Jal
 - Mapping package exact belum diverifikasi satu per satu pada Play Store.
 - Brand index hanya mencakup merek yang tersedia di Simple Icons; banyak aplikasi lokal atau merek yang tidak tercakup akan memakai glyph kategori.
 - Prefix dan keyword adalah heuristik, bukan bukti identitas aplikasi.
-- Runtime resolver dan packaging Android belum dibuat. Integrasi itu harus dilakukan terpisah dan diuji tanpa mengubah katalog tag atau motif skin.
+- Pencocokan brand melalui label bergantung pada nama aplikasi yang dilaporkan Android; label yang berbeda atau dilokalkan dapat jatuh ke glyph kategori.
+- Build CI dan Compose UI test sudah lolos, tetapi variasi tampilan ikon pada perangkat fisik, launcher density, serta profil kerja tetap perlu pemeriksaan visual.
+
+
+## Validasi aset
+
+Nama file ikon merek mendukung slug huruf kecil, angka, titik, tanda hubung, dan garis bawah. Validator memeriksa format gambar WebP, ukuran 96×96 RGBA, mask putih, live area, indeks, dan referensi mapping.
