@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.content.res.AssetManager
+import android.util.Log
 import org.json.JSONObject
 
 internal data class AppIconPackEntry(
@@ -31,16 +32,56 @@ internal class AppIconPackRepository(context: Context) {
     private val entries by lazy(LazyThreadSafetyMode.SYNCHRONIZED) { loadEntries() }
     private val defaultGlyph by lazy(LazyThreadSafetyMode.SYNCHRONIZED) { loadDefaultGlyph() }
     private val keywordRules by lazy(LazyThreadSafetyMode.SYNCHRONIZED) { loadKeywordRules() }
+    private val reportedPackages = java.util.concurrent.ConcurrentHashMap.newKeySet<String>()
 
     fun loadIcon(packageName: String, label: String): ResolvedAppIcon? {
         val entry = entries[packageName]
         entry?.iconPath?.let { path ->
-            decode(path)?.let { return ResolvedAppIcon(it, isGlyph = false) }
+            decode(path)?.let {
+                reportOnce(packageName, label, "manifest-full-icon", path)
+                return ResolvedAppIcon(it, isGlyph = false)
+            }
         }
 
-        val glyph = entry?.glyph ?: resolveKeywordGlyph(packageName, label) ?: defaultGlyph
-        return decode(glyphAssetPath(glyph))?.let { ResolvedAppIcon(it, isGlyph = true) }
+        if (entry != null) {
+            decode(glyphAssetPath(entry.glyph))?.let {
+                reportOnce(packageName, label, "manifest-glyph", entry.glyph)
+                return ResolvedAppIcon(it, isGlyph = true)
+            }
+
+        }
+
+        val keywordGlyph = resolveKeywordGlyph(packageName, label)
+        if (keywordGlyph != null) {
+            decode(glyphAssetPath(keywordGlyph))?.let {
+                reportOnce(packageName, label, "keyword-fallback", keywordGlyph)
+                return ResolvedAppIcon(it, isGlyph = true)
+            }
+
+        }
+
+        val fallback = defaultGlyph
+        decode(glyphAssetPath(fallback))?.let {
+            reportOnce(packageName, label, "default-fallback", fallback)
+            return ResolvedAppIcon(it, isGlyph = true)
+        }
+        reportOnce(packageName, label, "icon-resolution-failed", fallback)
+        return null
     }
+
+    private fun reportOnce(packageName: String, label: String, reason: String, detail: String) {
+        if (!reportedPackages.add(packageName)) return
+        val summary = diagnosticSummary()
+        val level = if (reason == "default-fallback" || reason == "icon-resolution-failed") Log.WARN else Log.INFO
+        if (level == Log.WARN) {
+            Log.w(TAG, "Icon resolution: package=$packageName label=$label source=$reason detail=$detail; $summary")
+        } else {
+            Log.i(TAG, "Icon resolution: package=$packageName label=$label source=$reason detail=$detail; $summary")
+        }
+    }
+
+    internal fun diagnosticSummary(): String =
+        "manifestEntries=${entries.size}, keywordRules=${keywordRules.size}, defaultGlyph=$defaultGlyph"
 
     private fun resolveKeywordGlyph(packageName: String, label: String): String? {
         val haystack = "$packageName $label"
@@ -63,12 +104,14 @@ internal class AppIconPackRepository(context: Context) {
                 putIfAbsent(packageName, AppIconPackEntry(iconPath, glyph))
             }
         }
-    }.getOrDefault(emptyMap())
+    }.onFailure { Log.e(TAG, "Failed to load app_icon_map.json; icon mappings disabled", it) }
+        .getOrDefault(emptyMap())
 
     private fun loadDefaultGlyph(): String = runCatching {
         val root = assets.open("app_icon_map.json").bufferedReader().use { JSONObject(it.readText()) }
         root.optString("default_glyph", "paw").takeIf(::isSafeGlyphName) ?: "paw"
-    }.getOrDefault("paw")
+    }.onFailure { Log.e(TAG, "Failed to read default glyph; using paw", it) }
+        .getOrDefault("paw")
 
     private fun loadKeywordRules(): List<AppIconKeywordRule> = runCatching {
         val root = assets.open("tools/keyword_rules.json").bufferedReader().use { JSONObject(it.readText()) }
@@ -83,7 +126,8 @@ internal class AppIconPackRepository(context: Context) {
                 add(AppIconKeywordRule(pattern, glyph))
             }
         }
-    }.getOrDefault(emptyList())
+    }.onFailure { Log.e(TAG, "Failed to load keyword_rules.json; keyword fallback disabled", it) }
+        .getOrDefault(emptyList())
 
     private fun decode(path: String): Bitmap? {
         if (!isSafeIconAssetPath(path)) return null
@@ -94,6 +138,10 @@ internal class AppIconPackRepository(context: Context) {
 
     private fun glyphAssetPath(glyph: String): String =
         "icons/apps/icon_$glyph.webp"
+
+    private companion object {
+        const val TAG = "NekOSAppIconResolver"
+    }
 
     private fun isSafePackageName(value: String): Boolean =
         value.matches(Regex("[A-Za-z_][A-Za-z0-9_]*(?:\\.[A-Za-z_][A-Za-z0-9_]*)+"))
