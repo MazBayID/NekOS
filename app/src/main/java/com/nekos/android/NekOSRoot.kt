@@ -143,6 +143,14 @@ internal fun NekOSRoot(
             } else if (result.success && result.installedSkinId != null) {
                 installedSkins = skinRepository.listInstalledSkins()
                 iconCatalogRepository.invalidateSkinCache()
+                if (storeCheckout?.first?.id == skin.id) {
+                    storeCheckout = null
+                }
+                Toast.makeText(
+                    context,
+                    "Pembayaran berhasil. Skin berhasil dipasang.",
+                    Toast.LENGTH_LONG
+                ).show()
             }
         }
         pendingStoreSkinIds = OfficialSkinStoreClient.pendingSkinIds(context)
