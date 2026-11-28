@@ -19,7 +19,7 @@ Schema versi 2 mendukung dua jenis entri:
 - `kind: "bespoke"` atau `kind: "monogram"`: `icon` menunjuk ke file di `icons/apps_full/`.
 - `kind: "glyph"`: `icon: null`; runtime mengambil `glyph` dari `icons/apps/` dan dapat merendernya tanpa membuat file per aplikasi.
 
-Setiap entri menyimpan `package`, `name`, dan `glyph`. Resolver memprioritaskan ikon khusus jika tersedia, lalu glyph aplikasi. Package yang tidak terdaftar dicocokkan dengan `keyword_rules.json`; jika tidak ada aturan yang cocok, `default_glyph` digunakan.
+Setiap entri menyimpan `package`, `name`, dan `glyph`. Resolver memprioritaskan ikon khusus jika tersedia. Entri `source: exact` dan `source: rule` mempertahankan glyph katalog; entri `source: default` menjalankan ulang `keyword_rules.json` memakai package name dan label aplikasi yang terpasang sebelum memakai `default_glyph`. Package yang tidak terdaftar juga dicocokkan dengan `keyword_rules.json`.
 
 ## Aset ikon per aplikasi
 
@@ -65,10 +65,12 @@ Format input: satu package per baris atau CSV `package.name,Nama Aplikasi`. Nama
 Setiap hasil mencantumkan `source`:
 - `exact`: package sudah ada di peta.
 - `rule`: glyph dipilih oleh aturan keyword.
-- `default`: tidak ada aturan yang cocok; memakai `default_glyph`.
+- `default`: tidak ada aturan yang cocok pada saat pembuatan katalog; runtime akan mencoba aturan lagi memakai label aplikasi yang terpasang sebelum memakai `default_glyph`.
 
 ## Catatan
 
 - Pemetaan menggunakan package name Android; package dapat berbeda antarnegara atau versi aplikasi.
 - Urutan aturan keyword bersifat penting: aturan pertama yang cocok akan digunakan.
 - `paw` adalah glyph biasa sekaligus nilai default glyph saat ini. Runtime icon pack mengelola namespace-nya secara terpisah dari Skin, Tag Icons, dan Motifs.
+
+The `9BIT` WebAPK may expose an opaque generated package ID, so its label rule (`\b9bit\b`) is intentionally kept first in `keyword_rules.json`. Keep this rule ahead of broader browser rules so the installed label can resolve to the `globe` glyph.
