@@ -38,6 +38,9 @@ class MainActivity : ComponentActivity() {
     private var resumeRefreshToken by mutableIntStateOf(0)
     /** Bumped when the Home button is pressed while NekOS is already open. */
     private var homeSignal by mutableIntStateOf(0)
+    private var paypalResultToken by mutableIntStateOf(0)
+    private var paypalResultMessage by mutableStateOf<String?>(null)
+    private val paypalCheckout by lazy { NekOSPayPalCheckout(this) }
     /** Bumped when the launcher stops being visible so transient drawer UI can reset. */
     private var backgroundSignal by mutableIntStateOf(0)
     /** Package IDs whose launcher activities are temporarily unavailable. */
@@ -276,6 +279,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
+        handlePayPalReturn(intent)
         mainHandler.removeCallbacks(refreshInstalledAppsRunnable)
         // Refresh the catalog only after a pending package event or a longer absence.
         // Ordinary returns only refresh the lightweight default-launcher role state.
@@ -294,6 +298,7 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
+        handlePayPalReturn(intent)
         // Pressing Home while NekOS is open returns to a clean Home screen.
         if (intent.hasCategory(Intent.CATEGORY_HOME)) {
             homeSignal++
@@ -306,6 +311,11 @@ class MainActivity : ComponentActivity() {
         val isRestoredActivity = savedInstanceState != null
         installSplashScreen()
         super.onCreate(savedInstanceState)
+        paypalCheckout.restore(
+            savedInstanceState?.getString(PAYPAL_STATE_KEY)
+                ?: getSharedPreferences(PAYPAL_PREFS, MODE_PRIVATE).getString(PAYPAL_STATE_KEY, null)
+        )
+        handlePayPalReturn(intent)
         logProcessDiagnostics(savedInstanceState != null)
         temporarilyUnavailableAppIds = TemporarilyUnavailableAppStore.load(this)
         suspendedAppIds = SuspendedAppStore.load(this)
@@ -323,6 +333,8 @@ class MainActivity : ComponentActivity() {
                     NekOSRoot(
                         refreshToken = appRefreshToken,
                         resumeToken = resumeRefreshToken,
+                        paypalResultToken = paypalResultToken,
+                        paypalResultMessage = paypalResultMessage,
                         homeSignal = homeSignal,
                         backgroundSignal = backgroundSignal,
                         temporarilyUnavailableAppIds = temporarilyUnavailableAppIds + suspendedAppIds,
@@ -331,6 +343,46 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    fun startPayPalCheckout(providerOrderId: String) {
+        paypalCheckout.start(this, providerOrderId) { message ->
+            paypalResultMessage = message.ifBlank { "PayPal checkout could not be started." }
+            paypalResultToken++
+        }
+    }
+
+    private fun handlePayPalReturn(sourceIntent: Intent?) {
+        val data = sourceIntent?.data ?: return
+        if (data.scheme != "nekos" || data.host !in setOf("paypal-finish", "paypal-cancel")) return
+        val result = runCatching { paypalCheckout.finishStart(sourceIntent) }.getOrNull() ?: return
+        when (result) {
+            is com.paypal.android.paypalpayments.PayPalFinishStartResult.Success -> {
+                paypalResultMessage = "approved"
+                getSharedPreferences(PAYPAL_PREFS, MODE_PRIVATE).edit().remove(PAYPAL_STATE_KEY).apply()
+                paypalResultToken++
+            }
+            is com.paypal.android.paypalpayments.PayPalFinishStartResult.Canceled -> {
+                paypalResultMessage = "cancelled"
+                getSharedPreferences(PAYPAL_PREFS, MODE_PRIVATE).edit().remove(PAYPAL_STATE_KEY).apply()
+                paypalResultToken++
+            }
+            is com.paypal.android.paypalpayments.PayPalFinishStartResult.Failure -> {
+                paypalResultMessage = result.error.errorDescription
+                getSharedPreferences(PAYPAL_PREFS, MODE_PRIVATE).edit().remove(PAYPAL_STATE_KEY).apply()
+                paypalResultToken++
+            }
+            com.paypal.android.paypalpayments.PayPalFinishStartResult.NoResult -> Unit
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        val state = paypalCheckout.instanceState
+        outState.putString(PAYPAL_STATE_KEY, state)
+        getSharedPreferences(PAYPAL_PREFS, MODE_PRIVATE).edit()
+            .putString(PAYPAL_STATE_KEY, state)
+            .apply()
+        super.onSaveInstanceState(outState)
     }
 
     override fun onDestroy() {
@@ -367,5 +419,7 @@ class MainActivity : ComponentActivity() {
     private companion object {
         const val LONG_ABSENCE_MILLIS = 30_000L
         const val LIFECYCLE_TAG = "NekOSLifecycle"
+        const val PAYPAL_PREFS = "nekos_paypal_sdk"
+        const val PAYPAL_STATE_KEY = "paypal_instance_state"
     }
 }
