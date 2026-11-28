@@ -19,36 +19,63 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+internal fun preferredPaymentProvider(priceUsd: Double, currentProvider: String?): String {
+    val paypalAvailable = priceUsd.isFinite() && priceUsd > 0.0
+    return when {
+        currentProvider.equals("paypal", ignoreCase = true) -> "midtrans"
+        currentProvider.equals("midtrans", ignoreCase = true) && paypalAvailable -> "paypal"
+        paypalAvailable -> "paypal"
+        else -> "midtrans"
+    }
+}
+
 @Composable
 internal fun PaymentProviderDialog(
     skinName: String,
     priceIdr: Long,
     priceUsd: Double,
+    hasPendingPayment: Boolean = false,
+    currentProvider: String? = null,
     onDismiss: () -> Unit,
     onConfirm: (String) -> Unit
 ) {
-    var selectedProvider by remember(skinName) { mutableStateOf("paypal") }
+    val paypalAvailable = priceUsd.isFinite() && priceUsd > 0.0
+    val initialProvider = preferredPaymentProvider(priceUsd, currentProvider)
+    var selectedProvider by remember(skinName, currentProvider, priceUsd) {
+        mutableStateOf(initialProvider)
+    }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("PILIH PEMBAYARAN", fontSize = 16.sp) },
+        title = {
+            Text(
+                if (hasPendingPayment) "GANTI METODE PEMBAYARAN" else "PILIH PEMBAYARAN",
+                fontSize = 16.sp
+            )
+        },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(skinName, fontSize = 13.sp)
+                if (hasPendingPayment) {
+                    Text(
+                        "NekOS akan memeriksa transaksi sebelumnya terlebih dahulu. Pembayaran baru hanya dibuat jika transaksi lama sudah tidak aktif.",
+                        fontSize = 11.sp,
+                        color = Color.Gray
+                    )
+                }
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     RadioButton(
-                        selected = false,
-                        onClick = {},
-                        enabled = false
+                        selected = selectedProvider == "midtrans",
+                        onClick = { selectedProvider = "midtrans" },
+                        enabled = true
                     )
                     Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
-                        Text("Midtrans · NON-ACTIVE", fontSize = 14.sp, color = Color.Gray)
+                        Text("Midtrans", fontSize = 14.sp)
                         Text(
                             "Rp${String.format("%,d", priceIdr)}",
-                            fontSize = 11.sp,
-                            color = Color.Gray
+                            fontSize = 11.sp
                         )
                     }
                 }
@@ -59,20 +86,22 @@ internal fun PaymentProviderDialog(
                     RadioButton(
                         selected = selectedProvider == "paypal",
                         onClick = { selectedProvider = "paypal" },
-                        enabled = true
+                        enabled = paypalAvailable
                     )
                     Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
-                        Text("PayPal", fontSize = 14.sp)
+                        Text("PayPal", fontSize = 14.sp, color = if (paypalAvailable) Color.Unspecified else Color.Gray)
                         Text(
-                            String.format(java.util.Locale.US, "US$%.2f", priceUsd),
-                            fontSize = 11.sp
+                            if (paypalAvailable) String.format(java.util.Locale.US, "US$%.2f", priceUsd)
+                            else "Belum tersedia untuk skin ini",
+                            fontSize = 11.sp,
+                            color = if (paypalAvailable) Color.Unspecified else Color.Gray
                         )
                     }
                 }
             }
         },
         confirmButton = {
-            TextButton(onClick = { onConfirm("paypal") }) {
+            TextButton(onClick = { onConfirm(selectedProvider) }) {
                 Text("LANJUTKAN")
             }
         },

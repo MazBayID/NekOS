@@ -105,6 +105,7 @@ internal fun NekOSRoot(
     var pendingStoreSkinIds by remember { mutableStateOf(emptySet<String>()) }
     var storeCheckout by remember { mutableStateOf<Triple<OfficialStoreSkin, String, String>?>(null) }
     var paymentProviderSkin by remember { mutableStateOf<OfficialStoreSkin?>(null) }
+    var paymentProviderCurrent by remember { mutableStateOf<String?>(null) }
     var paymentProviderInstallCallback by remember { mutableStateOf<((String?) -> Unit)?>(null) }
 
     LaunchedEffect(paypalResultToken) {
@@ -1257,6 +1258,7 @@ internal fun NekOSRoot(
                     if (!checkPayment && skin.price > 0L && !skin.owned) {
                         if (storeBusySkinId == null) {
                             paymentProviderSkin = skin
+                            paymentProviderCurrent = null
                             paymentProviderInstallCallback = onInstalled
                         }
                     } else if (storeBusySkinId == null) skinPickerScope.launch {
@@ -1485,19 +1487,26 @@ internal fun NekOSRoot(
                 skinName = skin.name,
                 priceIdr = skin.price,
                 priceUsd = skin.priceUsd,
+                hasPendingPayment = pendingStoreSkinIds.contains(skin.id),
+                currentProvider = paymentProviderCurrent,
                 onDismiss = {
                     paymentProviderSkin = null
+                    paymentProviderCurrent = null
                     paymentProviderInstallCallback = null
                 },
                 onConfirm = { provider ->
                     paymentProviderSkin = null
+                    paymentProviderCurrent = null
                     val installCallback = paymentProviderInstallCallback
                     paymentProviderInstallCallback = null
                     if (storeBusySkinId == null) skinPickerScope.launch {
                         storeBusySkinId = skin.id
                         val result = withContext(Dispatchers.IO) {
-                            runCatching { OfficialSkinStoreClient.buy(context, skin, provider) }
-                                .getOrElse { StoreActionResult(false, it.message ?: "Store action failed.") }
+                            runCatching {
+                                // The client falls back to a first purchase when no pending
+                                // order exists; otherwise the server reconciles before switching.
+                                OfficialSkinStoreClient.switchPaymentProvider(context, skin, provider)
+                            }.getOrElse { StoreActionResult(false, it.message ?: "Store action failed.") }
                         }
                         storeBusySkinId = null
                         if (result.paymentProvider == "paypal" &&
@@ -1531,7 +1540,13 @@ internal fun NekOSRoot(
                 provider = provider,
                 onDismiss = { closeStoreCheckout(skin) },
                 onPaymentFinished = { closeStoreCheckout(skin) },
-                onCancelPurchase = { cancelStoreCheckout(skin) }
+                onCancelPurchase = { cancelStoreCheckout(skin) },
+                onSwitchProvider = {
+                    storeCheckout = null
+                    paymentProviderSkin = skin
+                    paymentProviderCurrent = provider
+                    paymentProviderInstallCallback = null
+                }
             )
         }
     }
