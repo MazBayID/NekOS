@@ -21,6 +21,9 @@ const PREVIEWS = "skin-previews";
 // Snap sessions and their selected payment methods are configured for 15 minutes.
 // Reconcile at 16 minutes to allow a small provider-side expiry processing buffer.
 const SNAP_EXPIRY_RECONCILIATION_MS = 16 * 60 * 1000;
+// PayPal Orders v2 defaults to a 6-hour buyer-approval window.
+// Never keep an unapproved CREATED/PAYER_ACTION_REQUIRED attempt active forever.
+const PAYPAL_ORDER_RECONCILIATION_MS = 6 * 60 * 60 * 1000;
 const db = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
 
 function json(data: unknown, status = 200, origin = "") {
@@ -856,13 +859,36 @@ Deno.serve(async(req:Request)=>{
           });
           providerStatus=String(remote.status??"UNKNOWN").toUpperCase();
         }
+        const paypalCreatedAt=Date.parse(String(activePayment.created_at??status.created_at??""));
+        const paypalAgeMs=Number.isFinite(paypalCreatedAt)?Math.max(0,Date.now()-paypalCreatedAt):0;
+        const paypalApprovalExpired=paypalAgeMs>=PAYPAL_ORDER_RECONCILIATION_MS &&
+          ["CREATED","PAYER_ACTION_REQUIRED","SAVED"].includes(providerStatus);
+        if(providerStatus==="VOIDED") {
+          await rpc("skin_update_payment_status",{
+            p_provider:"paypal",p_provider_order_id:paypalOrderId,p_status:"cancel",p_payload:remote
+          });
+          status=await rpc("skin_order_status",{p_order_id:orderId,p_device_hash:deviceHash});
+        } else if(paypalApprovalExpired) {
+          // PayPal's default buyer-approval window has elapsed. Mark only this
+          // unapproved local attempt terminal; never capture or grant it later.
+          await rpc("skin_update_payment_status",{
+            p_provider:"paypal",p_provider_order_id:paypalOrderId,p_status:"expired",
+            p_payload:{provider_status:providerStatus,reason:"approval_window_elapsed",age_ms:paypalAgeMs}
+          });
+          console.info("skin_store_paypal_expired",JSON.stringify({
+            order_id:orderId,provider_order_id:paypalOrderId,provider_status:providerStatus,
+            age_ms:paypalAgeMs
+          }));
+          status=await rpc("skin_order_status",{p_order_id:orderId,p_device_hash:deviceHash});
+        }
         console.info("skin_store_paypal_status",JSON.stringify({
-          order_id:orderId,provider_status:providerStatus
+          order_id:orderId,provider_status:providerStatus,age_ms:paypalAgeMs,
+          approval_expired:paypalApprovalExpired
         }));
         if(providerStatus==="COMPLETED") {
           await grantPayPalEntitlement(paypalOrderId,orderId,Number(status.amount));
           status=await rpc("skin_order_status",{p_order_id:orderId,p_device_hash:deviceHash});
-        } else {
+        } else if(!paypalApprovalExpired && providerStatus!=="VOIDED") {
           status={...status,provider_status:providerStatus};
         }
       }
