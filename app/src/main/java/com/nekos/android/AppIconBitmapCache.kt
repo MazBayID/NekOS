@@ -1,8 +1,10 @@
 package com.nekos.android
 
 import android.content.Context
+import android.content.pm.LauncherApps
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.drawable.BitmapDrawable
 import android.util.LruCache
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -180,17 +182,30 @@ class AppIconBitmapCache(
         }
     }
 
-    private fun createAppIcon(app: InstalledApp): Bitmap =
-        runCatching {
+    private fun createAppIcon(app: InstalledApp): Bitmap {
+        val packedIcon = runCatching {
             appIconPackResolver?.let { resolver ->
                 resolver.loadBitmap(resolver.resolve(app.packageName, app.label))
             }
         }.getOrNull()
-            ?: try {
-                app.launcherActivityInfo.getBadgedIcon(app.iconDensityDpi).toBitmap(96, 96)
-            } catch (_: Exception) {
-                appContext.packageManager.defaultActivityIcon.toBitmap(96, 96)
-            }
+
+        if (packedIcon != null) {
+            return runCatching {
+                appContext.getSystemService(LauncherApps::class.java)
+                    .getBadgedDrawableForUser(
+                        BitmapDrawable(appContext.resources, packedIcon),
+                        app.user
+                    )
+                    .toBitmap(96, 96)
+            }.getOrDefault(packedIcon)
+        }
+
+        return try {
+            app.launcherActivityInfo.getBadgedIcon(app.iconDensityDpi).toBitmap(96, 96)
+        } catch (_: Exception) {
+            appContext.packageManager.defaultActivityIcon.toBitmap(96, 96)
+        }
+    }
 
     private fun readDiskBitmap(cacheKey: String): Bitmap? {
         val file = diskFile(cacheKey)
