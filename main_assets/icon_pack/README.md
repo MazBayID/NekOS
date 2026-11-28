@@ -9,10 +9,10 @@ Kumpulan ikon merek dan glyph kategori untuk rancangan sistem ikon aplikasi NekO
 Audit kode aplikasi menunjukkan:
 
 - `AppIconBitmapCache.kt` masih mengambil ikon melalui `LauncherActivityInfo.getBadgedIcon()` dan memakai ikon default Android jika gagal.
-- `app/build.gradle.kts` belum menambahkan `main_assets/icon_pack/` ke Android assets atau source set.
+- `app/build.gradle.kts` kini mendaftarkan `main_assets/icon_pack/` sebagai Android `main` assets. File paket akan disertakan saat proses packaging APK.
 - `IconCatalogRepository.kt` hanya memuat katalog ikon tag dari `icons/tag/`; repository tersebut bukan loader untuk app icon pack.
 
-Jadi, perubahan pada JSON atau file gambar di folder ini **belum mengubah ikon aplikasi yang terlihat di launcher**. Agar aktif, NekOS masih memerlukan integrasi runtime tersendiri: packaging assets, resolver aplikasi, cache, dan rendering. Jangan menganggap dokumen ini sebagai bukti bahwa integrasi tersebut sudah selesai.
+Jadi, perubahan pada JSON atau file gambar di folder ini **belum mengubah ikon aplikasi yang terlihat di launcher**. Tahap packaging assets sudah disiapkan, tetapi runtime masih memerlukan resolver aplikasi, cache, dan rendering. Build APK belum dijalankan untuk membuktikan seluruh aset benar-benar masuk ke APK.
 
 Dokumentasi Android: [LauncherActivityInfo](https://developer.android.com/reference/android/content/pm/LauncherActivityInfo).
 
