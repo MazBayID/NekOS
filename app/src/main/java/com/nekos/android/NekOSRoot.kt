@@ -77,8 +77,6 @@ internal val TagSurface = Color(0xFFE7E1D6)
 internal fun NekOSRoot(
     refreshToken: Int,
     resumeToken: Int = 0,
-    paypalResultToken: Int = 0,
-    paypalResultMessage: String? = null,
     homeSignal: Int = 0,
     backgroundSignal: Int = 0,
     temporarilyUnavailableAppIds: Set<String> = emptySet(),
@@ -105,34 +103,12 @@ internal fun NekOSRoot(
     var pendingStoreSkinIds by remember { mutableStateOf(emptySet<String>()) }
     var storeCheckout by remember { mutableStateOf<Triple<OfficialStoreSkin, String, String>?>(null) }
     var paymentProviderSkin by remember { mutableStateOf<OfficialStoreSkin?>(null) }
-    var paymentProviderCurrent by remember { mutableStateOf<String?>(null) }
     var paymentProviderInstallCallback by remember { mutableStateOf<((String?) -> Unit)?>(null) }
 
-    LaunchedEffect(paypalResultToken) {
-        if (paypalResultToken == 0) return@LaunchedEffect
-        when (paypalResultMessage) {
-            "approved" -> Toast.makeText(
-                context,
-                "Persetujuan PayPal diterima. NekOS sedang memverifikasi pembayaran.",
-                Toast.LENGTH_LONG
-            ).show()
-            "cancelled" -> Toast.makeText(
-                context,
-                "Checkout PayPal dibatalkan. Status pembayaran tetap dapat diperiksa.",
-                Toast.LENGTH_LONG
-            ).show()
-            null -> Unit
-            else -> Toast.makeText(
-                context,
-                "PayPal: $paypalResultMessage",
-                Toast.LENGTH_LONG
-            ).show()
-        }
-    }
-
     // Reconcile unfinished Store payments whenever NekOS returns to foreground.
-    // PayPal's status endpoint performs server-side capture and grants access only
-    // after PayPal confirms a completed capture.
+    // The checkout page may be closed without a Midtrans webhook (e.g. the buyer
+    // never selects a payment method), so the client must query pending
+    // orders on resume rather than rely on a manual button.
     LaunchedEffect(resumeToken) {
         val pendingIds = OfficialSkinStoreClient.pendingSkinIds(context)
         if (pendingIds.isEmpty() || storeBusySkinId != null) return@LaunchedEffect
@@ -167,14 +143,6 @@ internal fun NekOSRoot(
             } else if (result.success && result.installedSkinId != null) {
                 installedSkins = skinRepository.listInstalledSkins()
                 iconCatalogRepository.invalidateSkinCache()
-                if (storeCheckout?.first?.id == skin.id) {
-                    storeCheckout = null
-                }
-                Toast.makeText(
-                    context,
-                    "Pembayaran berhasil. Skin berhasil dipasang.",
-                    Toast.LENGTH_LONG
-                ).show()
             }
         }
         pendingStoreSkinIds = OfficialSkinStoreClient.pendingSkinIds(context)
@@ -1244,7 +1212,6 @@ internal fun NekOSRoot(
                 isOfficialStoreLoading = isOfficialStoreLoading,
                 storeBusySkinId = storeBusySkinId,
                 pendingStoreSkinIds = pendingStoreSkinIds,
-                onCancelStorePayment = { skin -> cancelStoreCheckout(skin) },
                 onRefreshOfficialStore = {
                     if (!isOfficialStoreLoading) skinPickerScope.launch {
                         isOfficialStoreLoading = true
@@ -1259,7 +1226,6 @@ internal fun NekOSRoot(
                     if (!checkPayment && skin.price > 0L && !skin.owned) {
                         if (storeBusySkinId == null) {
                             paymentProviderSkin = skin
-                            paymentProviderCurrent = null
                             paymentProviderInstallCallback = onInstalled
                         }
                     } else if (storeBusySkinId == null) skinPickerScope.launch {
@@ -1267,9 +1233,16 @@ internal fun NekOSRoot(
                         val result = withContext(Dispatchers.IO) {
                             runCatching {
                                 if (checkPayment) {
-                                    // CHECK & INSTALL is status reconciliation only.
-                                    // Never reopen a provider checkout URL from a pending order.
-                                    OfficialSkinStoreClient.checkPaymentAndInstall(context, skin)
+                                    val status = OfficialSkinStoreClient.checkPaymentAndInstall(context, skin)
+                                    if (!status.success && !status.paymentFailed &&
+                                        status.checkoutUrl.isNullOrBlank() &&
+                                        status.message.contains("belum dikonfirmasi", ignoreCase = true)
+                                    ) {
+                                        // Reuse the existing pending order and retrieve its Snap checkout URL.
+                                        OfficialSkinStoreClient.buy(context, skin)
+                                    } else {
+                                        status
+                                    }
                                 } else if (skin.owned && skin.price > 0L) {
                                     OfficialSkinStoreClient.reinstall(context, skin)
                                 } else {
@@ -1278,32 +1251,8 @@ internal fun NekOSRoot(
                             }.getOrElse { StoreActionResult(false, it.message ?: "Store action failed.") }
                         }
                         storeBusySkinId = null
-                        if (!result.success && result.message.isNotBlank()) {
-                            Toast.makeText(context, result.message, Toast.LENGTH_LONG).show()
-                        }
-                        val canResumePayPalOrder =
-                            result.paymentProvider.equals("paypal", ignoreCase = true) &&
-                                !result.providerOrderId.isNullOrBlank() &&
-                                !result.checkoutUrl.isNullOrBlank() &&
-                                isTrustedPayPalApprovalUrl(result.checkoutUrl) &&
-                                (!checkPayment || (!result.success && !result.paymentFailed))
-                        if (canResumePayPalOrder) {
-                            (context as? MainActivity)?.startPayPalCheckout(
-                                result.providerOrderId!!,
-                                result.checkoutUrl!!
-                            ) ?: run {
-                                storeCheckout = Triple(skin, result.checkoutUrl, "paypal")
-                            }
-                        } else if (!checkPayment && !result.checkoutUrl.isNullOrBlank()) {
-                            if (result.paymentProvider.equals("paypal", ignoreCase = true)) {
-                                Toast.makeText(
-                                    context,
-                                    "Tautan persetujuan PayPal tidak valid. NekOS tidak membukanya.",
-                                    Toast.LENGTH_LONG
-                                ).show()
-                            } else {
-                                storeCheckout = Triple(skin, result.checkoutUrl, result.paymentProvider ?: "midtrans")
-                            }
+                        if (!result.checkoutUrl.isNullOrBlank()) {
+                            storeCheckout = Triple(skin, result.checkoutUrl, result.paymentProvider ?: "midtrans")
                         }
                         if (result.success && result.installedSkinId != null) {
                             installedSkins = skinRepository.listInstalledSkins()
@@ -1495,39 +1444,22 @@ internal fun NekOSRoot(
                 skinName = skin.name,
                 priceIdr = skin.price,
                 priceUsd = skin.priceUsd,
-                hasPendingPayment = pendingStoreSkinIds.contains(skin.id),
-                currentProvider = paymentProviderCurrent,
                 onDismiss = {
                     paymentProviderSkin = null
-                    paymentProviderCurrent = null
                     paymentProviderInstallCallback = null
                 },
                 onConfirm = { provider ->
                     paymentProviderSkin = null
-                    paymentProviderCurrent = null
                     val installCallback = paymentProviderInstallCallback
                     paymentProviderInstallCallback = null
                     if (storeBusySkinId == null) skinPickerScope.launch {
                         storeBusySkinId = skin.id
                         val result = withContext(Dispatchers.IO) {
-                            runCatching {
-                                // The client falls back to a first purchase when no pending
-                                // order exists; otherwise the server reconciles before switching.
-                                OfficialSkinStoreClient.switchPaymentProvider(context, skin, provider)
-                            }.getOrElse { StoreActionResult(false, it.message ?: "Store action failed.") }
+                            runCatching { OfficialSkinStoreClient.buy(context, skin, provider) }
+                                .getOrElse { StoreActionResult(false, it.message ?: "Store action failed.") }
                         }
                         storeBusySkinId = null
-                        if (result.paymentProvider == "paypal" &&
-                            !result.providerOrderId.isNullOrBlank() &&
-                            !result.checkoutUrl.isNullOrBlank()
-                        ) {
-                            (context as? MainActivity)?.startPayPalCheckout(
-                                result.providerOrderId,
-                                result.checkoutUrl
-                            ) ?: run {
-                                storeCheckout = Triple(skin, result.checkoutUrl, "paypal")
-                            }
-                        } else if (!result.checkoutUrl.isNullOrBlank()) {
+                        if (!result.checkoutUrl.isNullOrBlank()) {
                             storeCheckout = Triple(skin, result.checkoutUrl, result.paymentProvider ?: "midtrans")
                         }
                         if (result.success && result.installedSkinId != null) {
@@ -1548,13 +1480,7 @@ internal fun NekOSRoot(
                 provider = provider,
                 onDismiss = { closeStoreCheckout(skin) },
                 onPaymentFinished = { closeStoreCheckout(skin) },
-                onCancelPurchase = { cancelStoreCheckout(skin) },
-                onSwitchProvider = {
-                    storeCheckout = null
-                    paymentProviderSkin = skin
-                    paymentProviderCurrent = provider
-                    paymentProviderInstallCallback = null
-                }
+                onCancelPurchase = { cancelStoreCheckout(skin) }
             )
         }
     }

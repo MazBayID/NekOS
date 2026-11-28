@@ -8,14 +8,6 @@ import org.junit.Test
 
 class OfficialSkinStoreClientTest {
     @Test
-    fun recognizesMissingOrderErrorCodesOnly() {
-        assertTrue(isMissingStoreOrderError("order_not_found"))
-        assertTrue(isMissingStoreOrderError("not_found_order"))
-        assertFalse(isMissingStoreOrderError("midtrans_status_check_failed"))
-        assertFalse(isMissingStoreOrderError("paypal_payment_not_completed"))
-    }
-
-    @Test
     fun purchasedSkinCanBeReinstalledOnlyWhenMissingLocally() {
         val purchasedSkin = OfficialStoreSkin(
             id = "catalog-row-id",

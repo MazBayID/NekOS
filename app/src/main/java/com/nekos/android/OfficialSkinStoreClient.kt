@@ -17,21 +17,11 @@ internal data class OfficialStoreSkin(
     val owned: Boolean = false,
     val priceUsd: Double = 0.0
 )
-internal class StoreApiException(
-    val errorCode: String,
-    message: String
-) : IllegalStateException(message)
-
-internal fun isMissingStoreOrderError(errorCode: String): Boolean =
-    errorCode.equals("order_not_found", ignoreCase = true) ||
-        errorCode.equals("not_found_order", ignoreCase = true)
-
 internal data class StoreActionResult(
     val success: Boolean, val message: String, val checkoutUrl: String? = null,
     val orderId: String? = null, val installedSkinId: String? = null,
     val paymentFailed: Boolean = false,
-    val paymentProvider: String? = null,
-    val providerOrderId: String? = null
+    val paymentProvider: String? = null
 )
 
 /** Resolves a Store item against its permanent package identity and catalog identity. */
@@ -55,16 +45,6 @@ internal fun isTrustedSkinDownloadUrl(value: String): Boolean = runCatching {
         uri.userInfo == null &&
         uri.path.startsWith("/storage/v1/object/sign/") &&
         !uri.rawQuery.isNullOrBlank()
-}.getOrDefault(false)
-
-/** Accept only PayPal-hosted HTTPS approval links returned for the stored provider order. */
-internal fun isTrustedPayPalApprovalUrl(value: String): Boolean = runCatching {
-    val uri = URI(value)
-    val host = uri.host?.lowercase() ?: return@runCatching false
-    uri.scheme == "https" &&
-        (host == "paypal.com" || host.endsWith(".paypal.com")) &&
-        (uri.port == -1 || uri.port == 443) &&
-        uri.userInfo == null
 }.getOrDefault(false)
 
 internal object OfficialSkinStoreClient {
@@ -97,13 +77,10 @@ internal object OfficialSkinStoreClient {
                 throw IllegalStateException("Store server returned an invalid response ($code)")
             }
             if (code !in 200..299) {
-                val errorCode = json.optString("error")
-                throw StoreApiException(errorCode, json.optString("details").ifBlank {
-                    when (errorCode) {
+                throw IllegalStateException(json.optString("details").ifBlank {
+                    when (json.optString("error")) {
                         "payment_provider_not_configured", "midtrans_not_configured" -> "Midtrans belum dikonfigurasi di server."
-                        "active_payment_provider_mismatch" -> "Masih ada pembayaran aktif melalui gateway lain. Selesaikan atau rekonsiliasi transaksi tersebut sebelum memilih gateway berbeda."
-                        "payment_switch_blocked" -> "Transaksi lama masih aktif. NekOS belum membuat pembayaran baru."
-                        "paypal_checkout_still_active" -> "Order PayPal masih aktif dan belum dapat dibatalkan. Tunggu sampai PayPal menyatakan order tidak aktif."
+                        "active_payment_provider_mismatch" -> "Masih ada pembayaran aktif melalui gateway lain. Selesaikan atau tunggu transaksi tersebut berakhir sebelum memilih gateway berbeda."
                         "purchase_required" -> "This skin has not been purchased on this device."
                         "already_owned" -> "This device already owns this skin."
                         "midtrans_expire_permission_required" -> "Agar transaksi otomatis ditutup setelah 15 menit, aktifkan izin 'Expire transaction: Write' pada Access Key Midtrans."
@@ -192,66 +169,9 @@ internal object OfficialSkinStoreClient {
             // recovered after process death.
             return StoreActionResult(false,"Unable to save the pending payment. Please try again.")
         }
-        return StoreActionResult(true,
-            if (provider.equals("paypal", true)) "Lanjutkan pembayaran melalui PayPal, lalu kembali ke NekOS untuk verifikasi otomatis."
-            else "Lanjutkan pembayaran melalui Midtrans, lalu kembali ke NekOS untuk verifikasi otomatis.",
+        return StoreActionResult(true,"Complete payment in the opened payment page, then return to NekOS.",
             checkoutUrl=result.optString("checkout_url"),orderId=orderId,
-            paymentProvider=provider.lowercase(),
-            providerOrderId=result.optString("provider_order_id").takeIf { it.isNotBlank() })
-    }
-
-
-    @Synchronized
-    fun switchPaymentProvider(
-        context: Context,
-        skin: OfficialStoreSkin,
-        provider: String
-    ): StoreActionResult {
-        val prefs = context.getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE)
-        val currentOrderId = prefs.getString(PENDING_PREFIX + skin.id, null)
-            ?: return buy(context, skin, provider)
-
-        val result = request("/switch", "POST", JSONObject()
-            .put("android_id", androidId(context))
-            .put("app_version", appVersion(context))
-            .put("skin_id", skin.id)
-            .put("order_id", currentOrderId)
-            .put("provider", provider.lowercase())
-        )
-        if (result.optBoolean("paid") || result.optBoolean("owned")) {
-            return checkPaymentAndInstall(context, skin)
-        }
-
-        val nextOrderId = result.optString("order_id").ifBlank { currentOrderId }
-        val checkoutUrl = result.optString("checkout_url")
-        if (!result.optBoolean("success") || checkoutUrl.isBlank()) {
-            return StoreActionResult(
-                false,
-                result.optString("message", "NekOS belum dapat mengganti metode pembayaran."),
-                orderId = currentOrderId
-            )
-        }
-
-        if (!prefs.edit().putString(PENDING_PREFIX + skin.id, nextOrderId).commit()) {
-            return StoreActionResult(
-                false,
-                "Metode pembayaran sudah disiapkan di server, tetapi catatan pemulihannya gagal disimpan. Buka kembali Store untuk melanjutkan.",
-                orderId = nextOrderId
-            )
-        }
-
-        val selectedProvider = result.optString("provider", provider).lowercase()
-        return StoreActionResult(
-            true,
-            if (selectedProvider == "paypal")
-                "Lanjutkan pembayaran melalui PayPal."
-            else
-                "Lanjutkan pembayaran melalui Midtrans.",
-            checkoutUrl = checkoutUrl,
-            orderId = nextOrderId,
-            paymentProvider = selectedProvider,
-            providerOrderId = result.optString("provider_order_id").takeIf { it.isNotBlank() }
-        )
+            paymentProvider=provider.lowercase())
     }
 
     @Synchronized
@@ -286,23 +206,8 @@ internal object OfficialSkinStoreClient {
         val prefs=context.getSharedPreferences(PREFERENCES,Context.MODE_PRIVATE)
         val orderId=prefs.getString(PENDING_PREFIX+skin.id,null)
             ?: return StoreActionResult(false,"No pending payment found for this skin.")
-        val result = try {
-            request("/status", "POST", JSONObject().put("android_id", androidId(context))
-                .put("app_version", appVersion(context)).put("order_id", orderId))
-        } catch (error: StoreApiException) {
-            if (!isMissingStoreOrderError(error.errorCode)) throw error
-            val cleared = prefs.edit().remove(PENDING_PREFIX + skin.id).commit()
-            return StoreActionResult(
-                false,
-                if (cleared) {
-                    "Pesanan sebelumnya tidak ditemukan. Tombol BUY tersedia kembali untuk memulai pembelian baru."
-                } else {
-                    "Pesanan tidak ditemukan, tetapi catatan pembelian lokal gagal dibersihkan. Coba CHECK & INSTALL lagi."
-                },
-                orderId = orderId,
-                paymentFailed = cleared
-            )
-        }
+        val result=request("/status","POST",JSONObject().put("android_id",androidId(context))
+            .put("app_version",appVersion(context)).put("order_id",orderId))
         if (!result.optBoolean("owned")) {
             val status=result.optString("status").lowercase()
             val failureMessage = when (status) {
@@ -320,26 +225,14 @@ internal object OfficialSkinStoreClient {
             val activePayment = result.optJSONObject("active_payment")
             val checkoutUrl = activePayment?.optString("checkout_url")?.takeIf { it.isNotBlank() }
             val provider = activePayment?.optString("provider")?.takeIf { it.isNotBlank() }
-            val providerOrderId = activePayment?.optString("provider_order_id")?.takeIf { it.isNotBlank() }
-            val providerStatus = result.optString("provider_status").uppercase()
-            val pendingMessage = when {
-                provider == "paypal" && providerStatus == "CREATED" ->
-                    "Order PayPal sudah dibuat, tetapi belum disetujui. Selesaikan pembayaran di PayPal lalu kembali ke NekOS."
-                provider == "paypal" && providerStatus == "PAYER_ACTION_REQUIRED" ->
-                    "PayPal masih menunggu tindakan persetujuan. Selesaikan langkah yang diminta di PayPal."
-                provider == "paypal" && providerStatus.isNotBlank() ->
-                    "Status PayPal: $providerStatus. Pembayaran belum selesai; lanjutkan checkout atau periksa kembali."
-                status == "pending" ->
-                    "Pembayaran belum dikonfirmasi. Lanjutkan checkout yang masih aktif atau periksa kembali beberapa saat lagi."
-                else -> "Status pembayaran: $status"
-            }
             return StoreActionResult(
                 false,
-                pendingMessage,
+                if(status=="pending")
+                    "Pembayaran belum dikonfirmasi. Lanjutkan checkout yang masih aktif atau periksa kembali beberapa saat lagi."
+                else "Status pembayaran: $status",
                 checkoutUrl = checkoutUrl,
                 orderId = orderId,
-                paymentProvider = provider,
-                providerOrderId = providerOrderId
+                paymentProvider = provider
             )
         }
         val installedSkin = findInstalledStoreSkin(

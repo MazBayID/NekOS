@@ -74,8 +74,6 @@ dependencies {
     implementation("androidx.compose.material3:material3:1.3.1")
     implementation("androidx.compose.foundation:foundation:1.7.8")
     implementation("sh.calvin.reorderable:reorderable:3.1.0")
-    // PayPal Mobile SDK v3: PayPal checkout approval flow.
-    implementation("com.paypal.android:paypal-payments:3.1.0")
 
     debugImplementation("androidx.compose.ui:ui-tooling:1.7.8")
     debugImplementation("androidx.compose.ui:ui-test-manifest:1.7.8")

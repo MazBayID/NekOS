@@ -280,7 +280,6 @@ internal fun NekOSSettingsDialog(
     isOfficialStoreLoading: Boolean,
     storeBusySkinId: String?,
     pendingStoreSkinIds: Set<String>,
-    onCancelStorePayment: (OfficialStoreSkin) -> Unit,
     onRefreshOfficialStore: () -> Unit,
     onStoreAction: (OfficialStoreSkin, Boolean, (String?) -> Unit) -> Unit,
     onImportSkin: () -> Unit,
@@ -292,7 +291,6 @@ internal fun NekOSSettingsDialog(
     var managedSkin by remember { mutableStateOf<InstalledSkin?>(null) }
     var pendingSkinRemoval by remember { mutableStateOf<InstalledSkin?>(null) }
     var storeInstallPrompt by remember { mutableStateOf<Pair<String, String>?>(null) }
-    var pendingPaymentCancellation by remember { mutableStateOf<OfficialStoreSkin?>(null) }
     LaunchedEffect(page) { if (page == SettingsPage.OFFICIAL_SKIN_STORE) onRefreshOfficialStore() }
     val surfaceColor = launcherThemeColor(launcherThemeKey)
     val optionSurface = lerp(surfaceColor, Color.White, 0.48f)
@@ -959,18 +957,11 @@ internal fun NekOSSettingsDialog(
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
                                         Text(
-                                            if (skin.price <= 0L) {
-                                                "FREE"
-                                            } else {
-                                                "IDR Rp ${"%,d".format(skin.price)}  ·  USD " +
-                                                    String.format(java.util.Locale.US, "$%.2f", skin.priceUsd)
-                                            },
+                                            if (skin.price <= 0L) "FREE" else "Rp ${"%,d".format(skin.price)}",
                                             color = if (skin.price <= 0L) Color(0xFFB9F2A5) else Color(0xFFFFD6A6),
-                                            fontSize = 10.sp,
+                                            fontSize = 11.sp,
                                             fontWeight = if (skin.price <= 0L) FontWeight.SemiBold else FontWeight.Bold,
-                                            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
-                                            maxLines = 1,
-                                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
                                         )
                                         OfficialStoreActionButton(
                                             label = actionLabel,
@@ -982,24 +973,6 @@ internal fun NekOSSettingsDialog(
                                                 }
                                             }
                                         )
-                                    }
-                                    if (pending) {
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.End
-                                        ) {
-                                            TextButton(
-                                                onClick = { pendingPaymentCancellation = skin },
-                                                enabled = storeBusySkinId != skin.id
-                                            ) {
-                                                Text(
-                                                    "BATALKAN PEMBAYARAN",
-                                                    color = Color(0xFFFFB3A8),
-                                                    fontSize = 9.sp,
-                                                    fontWeight = FontWeight.Bold
-                                                )
-                                            }
-                                        }
                                     }
                                 }
                             }
@@ -1060,34 +1033,6 @@ internal fun NekOSSettingsDialog(
             confirmButton = {
                 TextButton(onClick = { onDeleteSkin(skin.id); pendingSkinRemoval = null; managedSkin = null }) {
                     Text("Remove", color = Color(0xFFB3261E), fontWeight = FontWeight.SemiBold)
-                }
-            }
-        )
-    }
-
-    pendingPaymentCancellation?.let { skin ->
-        NekOSAlertDialog(
-            topFrameColorArgb = launcherUiColor,
-            onDismissRequest = { pendingPaymentCancellation = null },
-            containerColor = surfaceColor,
-            title = { Text("Batalkan pembayaran?", color = SettingsInk) },
-            text = {
-                Text(
-                    "NekOS akan memeriksa status transaksi terlebih dahulu. Jika pembayaran sudah berhasil, skin tetap diberikan. PayPal tidak menyediakan pembatalan langsung untuk order yang belum disetujui; NekOS akan tetap memantau dan mengakhiri order CREATED yang kedaluwarsa.",
-                    color = SettingsMuted
-                )
-            },
-            dismissButton = {
-                TextButton(onClick = { pendingPaymentCancellation = null }) {
-                    Text("Kembali", color = SettingsAccent)
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    pendingPaymentCancellation = null
-                    onCancelStorePayment(skin)
-                }) {
-                    Text("Ya, batalkan", color = Color(0xFFB3261E), fontWeight = FontWeight.SemiBold)
                 }
             }
         )
