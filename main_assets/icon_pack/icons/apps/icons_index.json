@@ -931,7 +931,7 @@
       "file": "icon_paw.webp",
       "name": "paw",
       "visual": "Telapak kaki kucing",
-      "description": "ikon bawaan NekOS / aplikasi tak dikenal",
+      "description": "glyph paw for a specific category; not a NekOS default or unknown-app fallback",
       "origin": "new",
       "apps": 0
     },
