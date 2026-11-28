@@ -5,7 +5,6 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.content.res.AssetManager
 import org.json.JSONObject
-import java.util.concurrent.ConcurrentHashMap
 
 internal data class AppIconPackEntry(
     val iconPath: String?,
@@ -27,7 +26,6 @@ internal class AppIconPackRepository(context: Context) {
     private val entries by lazy(LazyThreadSafetyMode.SYNCHRONIZED) { loadEntries() }
     private val defaultGlyph by lazy(LazyThreadSafetyMode.SYNCHRONIZED) { loadDefaultGlyph() }
     private val keywordRules by lazy(LazyThreadSafetyMode.SYNCHRONIZED) { loadKeywordRules() }
-    private val decoded = ConcurrentHashMap<String, Bitmap>()
 
     fun loadIcon(packageName: String, label: String): Bitmap? {
         val entry = entries[packageName]
@@ -84,11 +82,9 @@ internal class AppIconPackRepository(context: Context) {
 
     private fun decode(path: String): Bitmap? {
         if (!isSafeIconAssetPath(path)) return null
-        decoded[path]?.let { return it }
-        val bitmap = runCatching {
+        return runCatching {
             assets.open(path).use { input -> BitmapFactory.decodeStream(input) }
-        }.getOrNull() ?: return null
-        return decoded.putIfAbsent(path, bitmap) ?: bitmap
+        }.getOrNull()
     }
 
     private fun glyphAssetPath(glyph: String): String =
