@@ -867,14 +867,15 @@ Deno.serve(async(req:Request)=>{
           expiry_reached: expiryReached
         }));
         if(verifiedResponse.status===404) {
-          // Snap has no Core API transaction until the customer selects a payment method.
-          // The Snap page itself expires after 15 minutes, and does not send a webhook.
-          if(expiryReached) {
-            await rpc("skin_update_payment_status",{
-              p_provider:"midtrans",p_provider_order_id:orderId,p_status:"expire",
-              p_payload:{reason:"snap_page_expired_without_payment_method",expired_at:new Date().toISOString()}
-            });
-            status=await rpc("skin_order_status",{p_order_id:orderId,p_device_hash:deviceHash});
+          // A Snap page can exist without a Core API transaction. Cancel its token
+          // after the configured expiry before marking the local attempt terminal.
+          if(expiryReached && activePayment.checkout_url) {
+            const reconciliation=await handleCancel({order_id:orderId},deviceHash,origin);
+            const outcome=await reconciliation.clone().json().catch(()=>({}));
+            if(!reconciliation.ok)return reconciliation;
+            if(outcome.paid || outcome.cancelled) {
+              status=await rpc("skin_order_status",{p_order_id:orderId,p_device_hash:deviceHash});
+            }
           }
         } else if(!verifiedResponse.ok) {
           return fail("midtrans_status_check_failed",503,origin);
@@ -889,14 +890,13 @@ Deno.serve(async(req:Request)=>{
               expiry_reached:expiryReached,
               status_message:String(verified.status_message??"")
             }));
-            if(expiryReached) {
-              await rpc("skin_update_payment_status",{
-                p_provider:"midtrans",p_provider_order_id:orderId,p_status:"expire",
-                p_payload:{reason:"snap_page_expired_without_payment_method",provider_response:verified,
-                  expired_at:new Date().toISOString()}
-              });
-              status=await rpc("skin_order_status",{p_order_id:orderId,p_device_hash:deviceHash});
-            }
+            if(expiryReached && activePayment.checkout_url) {
+              const reconciliation=await handleCancel({order_id:orderId},deviceHash,origin);
+              const outcome=await reconciliation.clone().json().catch(()=>({}));
+              if(!reconciliation.ok)return reconciliation;
+              if(outcome.paid || outcome.cancelled) {
+                status=await rpc("skin_order_status",{p_order_id:orderId,p_device_hash:deviceHash});
+              }
           } else if(!["200","201"].includes(providerStatusCode)) {
             console.error("skin_store_midtrans_status_error", JSON.stringify({
               order_id:orderId,
